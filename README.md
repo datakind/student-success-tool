@@ -20,7 +20,7 @@ This repo is where the google.org fellows team will collaborate with DataKind to
 ## What's in this repo?
 
 Current PDP pipeline code: to be built into an actual installable python package
-- Base schema:
+- Base schema: defines the standard data schema for PDP schools, with no customization
 - Constants: defined for all schools
 - Dataio: ingests the PDP data and restructures it for our workflow
 - Features: subpackage for each grouping of features with a function that takes school customization arguments and adds the features to the data you give it as new columns.
