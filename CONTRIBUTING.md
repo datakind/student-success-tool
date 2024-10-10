@@ -58,9 +58,6 @@ Pull Request guidelines:
 - Hotfix branches should be started from main and must be merged back to main and develop. It is also possible to start hotfix branches from a release branch and merged back to main, develop, and the release branch.
 - Any release branch should start from the develop branch. Starting a release branch unblocks new feature development. Merging a release branch to main indicates a new version in production.
 
-A diagram of how this works in practice:
-
-![Alt text](assets/image.png)
 
 ### Tips
 
