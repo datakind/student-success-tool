@@ -1,0 +1,23 @@
+name: appenv
+channels:
+- conda-forge
+- defaults
+dependencies:
+- python=3.9
+- geopandas=0.10.2
+- pip
+- pip:
+  - numpy>=1.19.0
+  - pandas>=1.2.0
+  - pyyaml
+  - adjusttext
+  - matplotlib
+  - descartes
+  - usaddress
+  - usaddress-scourgify
+  # dev dependencies
+  - notebook
+  - black
+  - pytest
+  - pre-commit
+  - openpyxl
