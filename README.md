@@ -1,23 +1,36 @@
-< DELETE TEXT BELOW AND REPLACE WITH TEXT FOR YOUR REPO >
+# DataKind's Student Success Tool (SST)
+Customized and easily actionable insights for data-assisted advising, at no cost
 
-## What's in the github template used for your repo?
+Data-assisted advising helps advisors use their limited time to more efficiently identify and reach out to those most in need of help. 
+Using the Student Success Tool to implement data-assisted advising, John Jay College has reported a 32% increase in senior graduation rates in two years via their CUSP program.
+Based on the success of this implementation, DataKind is supported by Google.org to develop this solution with additional postsecondary institutions, at no institutional cost.
+This repo is where the google.org fellows team will collaborate with DataKind to develop and ultimately share the open source components of the tool.
 
-- Standard files for open source, README, CONTRIBUTION, CODE_OF_CONDUCT etc
-- Issue templates, bug, enhancement request etc
-- Pre-commit checks
-- Github actions hooks for linting/black
-- Self tests framework (Python)
-- Repo configuration
-- Git attributes to handle line endings on windows and linux
-- Conda environment for CI
+### DataKind's Product Principles
+- Transparent: Our features and models will be openly shared with the institution, so you can know exactly what variables are leading to identifying those student most at risk of non graduation. Our end-to-end tool code will be openly shared in this github repo.
+- Dedicated to bias reduction: We use bias-reducing techniques and regularly review our implementations for fairness and equity.
+- Humans in the loop by design: Our interventions are designed to be additive to the student experience, and all algorithms are implemented through human actors (advisors).
 
-## After using the GitHub template to create your repo ...
 
-- Familiarize yourself with activating pre-commit hooks, see [CONTRIBUTION.md](./CONTRIBUTION.md)
-- If you are a public repo, you should activate code quality actions under the repo configuration
-- Adjust your license as needed
-- You may want to extend, or add new workflows relevant to your language. GitHub has a market place
-- Extend self-tests to be relavent for your project
-- You might want to extend your conda environment
+## Model Training and Prediction Workflow
 
-< DELETE TEXT ABOVE AND REPLACE WITH TEXT FOR YOUR REPO >
+![Student Success Tool (SST) model training and implementation workflow (4)](https://github.com/user-attachments/assets/1a3816bc-acd5-4b53-ad92-929a66bebbac)
+
+
+## What's in this repo?
+
+Current PDP pipeline code: to be built into an actual installable python package
+- Base schema:
+- Constants: defined for all schools
+- Dataio: ingests the PDP data and restructures it for our workflow
+- Features: subpackage for each grouping of features with a function that takes school customization arguments and adds the features to the data you give it as new columns.
+- EDA: produces exploratory visualizations, summary statistics, and coorelation analysis for features
+- Targets: defines and filters the data based on the student population, modeling checkpoint, and outcome variable
+- Dataops: other functions frequently used across the process
+- Tests: unit tests, to be built out into full unit testing suite (possibly fellows can help with this to get us set up for open source)
+
+
+## Contributing
+
+Please read the [CONTRIBUTING](CONTRIBUTING.md) to learn how to contribute to the tool development. 
+
