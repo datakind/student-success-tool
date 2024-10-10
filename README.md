@@ -27,7 +27,9 @@ Current PDP pipeline code: to be built into an actual installable python package
 - EDA: produces exploratory visualizations, summary statistics, and coorelation analysis for features
 - Targets: defines and filters the data based on the student population, modeling checkpoint, and outcome variable
 - Dataops: other functions frequently used across the process
+- Modeling: AutoML.py is the main code that can be used for running and evaluating models, configured with parameters accepted from the config.yaml
 - Tests: unit tests, to be built out into full unit testing suite (possibly fellows can help with this to get us set up for open source)
+- Synthetic_data: Fake data for testing purposes
 
 
 ## Contributing
