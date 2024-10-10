@@ -1,7 +1,6 @@
-# Contributing to DOT
+# Contributing to SST
 
-Hi! Thanks for your interest in contributing to this project, we're really excited to see you! In this document we'll try to
-summarize everything that you need to know to do a good job.
+Hi! Thanks for your interest in contributing to DataKind's Student Success Tool, we're really excited to see you! In this document we'll try to summarize everything that you need to know to do a good job.
 
 ## New contributor guide
 
@@ -11,90 +10,25 @@ To get an overview of the project, please read the [README](README.md) and our [
 ## Getting started
 ### Creating Issues
 
-If you spot a problem, [search if an issue already exists](https://github.com/datakind/Data-Observation-Toolkit/issues). If a related issue doesn't exist,
-you can open a new issue using a relevant [issue form](https://github.com/datakind/Data-Observation-Toolkit/issues/new).
+If you spot a problem, [search if an issue already exists](https://github.com/datakind/Student-Success-Tool/issues). If a related issue doesn't exist,
+you can open a new issue using a relevant [issue form](https://github.com/datakind/Student-Success-Tool/issues/new).
 
 As a general rule, we don’t assign issues to anyone. If you find an issue to work on, you are welcome to open a PR with a fix.
 
 ## Making Code changes
 
-## Development setup
-
-1. Create and activate conda environment
-2. Install pre-commit hooks
-3. Run unit tests
-
-### Create and activate conda environment
-
-For the following you will need [miniconda](https://docs.conda.io/en/main/miniconda.html) installed.
-
-```bash
-# From the repo root directory
-conda env create
-conda activate appenv
+### Environment
+We use [Poetry](https://github.com/python-poetry/poetry/tree/master) for package management. To get up and running quickly, install the environment with:
 ```
-
-If successful, you should see:
-```bash
-# To activate this environment, use
-#
-#     $ conda activate appenv
-#
-# To deactivate an active environment, use
-#
-#     $ conda deactivate
-```
-
-### Install pre-commit hooks
-
-```bash
-# From the application/backend directory
-pre-commit install
-```
-
-If successful, you should see:
-```
-pre-commit installed at .git/hooks/pre-commit
-```
-
-Now whenever you commit any file, all the hooks listed in `.pre-commit-config.yaml` will run against the commited file(s). For example, upon adding sample files to the `data` folder, you would see in your terminal:
-```
-(bwdc) jtan@Jonathans-MacBook-Pro-2 backend % git add data
-(bwdc) jtan@Jonathans-MacBook-Pro-2 backend % git commit -m "Add sample data used in template config"
-Trim Trailing Whitespace.................................................Passed
-Fix End of Files.........................................................Passed
-Check Yaml...........................................(no files to check)Skipped
-Check for merge conflicts................................................Passed
-Check Toml...........................................(no files to check)Skipped
-Don't commit to branch...................................................Passed
-Detect Private Key.......................................................Passed
-absolufy-imports.....................................(no files to check)Skipped
-Lint Dockerfiles.....................................(no files to check)Skipped
-black................................................(no files to check)Skipped
-isort................................................(no files to check)Skipped
-flake8...............................................(no files to check)Skipped
-[JT-migrate-existing-spatial-targeting-code aabfc50] Add sample data used in template config
- 3 files changed, 224 insertions(+)
- create mode 100644 application/backend/data/sample_census_tracts.geojson
- create mode 100644 application/backend/data/sample_event_sites.geojson
- create mode 100644 application/backend/data/sample_housing_loss_indicator_data.csv
-```
-
-### Run unit tests
-
-To run all tests, from the root directory, run:
-```bash
-python -m pytest
+poetry install --no-interaction
 ```
 
 ### GitHub Workflow
 
-As many other open source projects, we use the famous
-[gitflow](https://nvie.com/posts/a-successful-git-branching-model/) to manage our
-branches.
+As many other open source projects, we use the famous [gitflow](https://nvie.com/posts/a-successful-git-branching-model/) to manage our branches.
 
 Summary of our git branching model:
-- Get all the latest work from the upstream `datakind/Data-Observation-Toolkit` repository
+- Get all the latest work from the upstream `datakind/Student-Success-Tool` repository
   (`git checkout main`)
 - Create a new branch off with a descriptive name (for example:
   `feature/new-test-macro`, `bugfix/bug-when-uploading-results`). You can
@@ -109,11 +43,28 @@ Summary of our git branching model:
 - Wait for comments and respond as-needed
 - Once PR review is complete, your code will be merged. Thanks!!
 
+Some branch definitions:
+- `main`: always stable and release ready branch
+- `develop`: default branch, contains latest features and fixes, on which developers should orient
+- `feature-*`: branches for feature development and dependency updates
+- `release-*`: branches for release versions
+- `hotfix-*`: branches for release or production fixes
+- `refactor-*`: branches for semantic changes
+- `institution_id-*`: For partner-specific analyses and programming, use the institution ID as the branch prefix.
+
+Pull Request guidelines:
+- For each pull request, there should be an associated Asana ticket linked.
+- Except for quick fixes, the develop branch should be started from develop and merged back.
+- Hotfix branches should be started from main and must be merged back to main and develop. It is also possible to start hotfix branches from a release branch and merged back to main, develop, and the release branch.
+- Any release branch should start from the develop branch. Starting a release branch unblocks new feature development. Merging a release branch to main indicates a new version in production.
+
+A diagram of how this works in practice:
+
+![Alt text](assets/image.png)
 
 ### Tips
 
-- Write [helpful commit
-  messages](https://robots.thoughtbot.com/5-useful-tips-for-a-better-commit-message)
+- Write [helpful commit messages](https://robots.thoughtbot.com/5-useful-tips-for-a-better-commit-message)
 - Anything in your branch must have no failing tests. You can check by looking at your PR
   online in GitHub
 - Never use `git add .`: it can add unwanted files;
@@ -130,8 +81,6 @@ Summary of our git branching model:
 
 - Use [PEP8](https://www.python.org/dev/peps/pep-0008/);
 - Write tests for your new features (please see "Tests" topic below);
-- Always remember that [commented code is dead
-  code](https://www.codinghorror.com/blog/2008/07/coding-without-comments.html);
 - Name identifiers (variables, classes, functions, module names) with readable
   names (`x` is always wrong);
 - When manipulating strings, we prefer either [f-string
@@ -141,6 +90,7 @@ Summary of our git branching model:
   (`'{} = {}'.format(a, b)`), instead of the old-style formatting (`'%s = %s' % (a, b)`);
 - You will know if any test breaks when you commit, and the tests will be run
   again in the continuous integration pipeline (see below);
+
 
 ## Tests
 
@@ -165,3 +115,17 @@ for continuous integration.
 See [here](https://docs.github.com/en/actions) for GitHub's documentation.
 
 The [`.github/workflows/lint.yml`](.github/workflows/ci.yml) file configures the CI.
+
+
+## Versioning
+
+Each release should be documented in the HISTORY.md file.
+
+Releases to `main` should be tagged with a [semantic version number](https://semver.org/). If you use git flow hooks, this is as simple as `git flow release start 1.X.Y`.  When you finish the release, the hook will tag your production release appropriately.  If you don't use that, you need to checkout `main`, then `git tag 1.X.Y -m "some message about this release"`.
+
+Semver format:
+MAJOR.MINOR.BUGFIX
+
+* `MAJOR`: Means breaking changes happen from one version to the next.
+* `MINOR`: Extends the existing code, but should be backwards compatible with old code.
+* `BUGFIX`: Doesn't add much new, but fixes issues along the way.
