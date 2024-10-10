@@ -29,7 +29,7 @@ Current PDP pipeline code: to be built into an actual installable python package
 - Dataops: other functions frequently used across the process
 - Modeling: AutoML.py is the main code that can be used for running and evaluating models, configured with parameters accepted from the config.yaml
 - Tests: unit tests, to be built out into full unit testing suite (possibly fellows can help with this to get us set up for open source)
-- Synthetic_data: Fake data for testing purposes
+- Synthetic_data: Code for creating fake data for testing purposes
 
 
 ## Contributing
