@@ -224,7 +224,9 @@ def num_courses_grade_above_section_avg(
     grade_col: str = "course_grade_numeric",
     section_grade_col: str = "section_course_grade_numeric_mean",
 ) -> int:
-    return df[grade_col].gt(df[section_grade_col]).sum()
+    result = df[grade_col].gt(df[section_grade_col]).sum()
+    assert isinstance(result, int)  # type guard
+    return result
 
 
 def num_courses_col_agg(col: str = "course_id") -> pd.NamedAgg:
@@ -262,7 +264,9 @@ def course_subject_areas_col_agg(col: str = "course_subject_area") -> pd.NamedAg
 
 
 def _agg_values_in_list(ser: pd.Series) -> list:
-    return ser.tolist()
+    result = ser.tolist()
+    assert isinstance(result, list)  # type guard
+    return result
 
 
 def course_id_nunique_col_agg(col: str = "course_id") -> pd.NamedAgg:
