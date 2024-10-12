@@ -1,7 +1,7 @@
 # DataKind's Student Success Tool (SST)
 Customized and easily actionable insights for data-assisted advising, at no cost
 
-Data-assisted advising helps advisors use their limited time to more efficiently identify and reach out to those most in need of help. 
+Data-assisted advising helps advisors use their limited time to more efficiently identify and reach out to those most in need of help.
 Using the Student Success Tool to implement data-assisted advising, John Jay College has reported a 32% increase in senior graduation rates in two years via their CUSP program.
 Based on the success of this implementation, DataKind is supported by Google.org to develop this solution with additional postsecondary institutions, at no institutional cost.
 This repo is where the google.org fellows team will collaborate with DataKind to develop and ultimately share the open source components of the tool.
@@ -34,5 +34,11 @@ Current PDP pipeline code: to be built into an actual installable python package
 
 ## Contributing
 
-Please read the [CONTRIBUTING](CONTRIBUTING.md) to learn how to contribute to the tool development. 
+Please read the [CONTRIBUTING](CONTRIBUTING.md) to learn how to contribute to the tool development.
 
+
+## Setup
+
+1. Install `uv` (instructions [here](https://docs.astral.sh/uv/getting-started/installation)).
+1. Install Python (instructions [here](https://docs.astral.sh/uv/guides/install-python)). When running on Databricks, we're constrained to PY3.10: `uv python install 3.10`
+1. Install this package: `uv pip install -e .`
