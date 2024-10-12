@@ -8,9 +8,6 @@ from . import shared
 
 LOGGER = logging.getLogger(__name__)
 
-# TODO: figure out if "most recent" enrollments are *prior*, or not
-# the data dictionary is super unclear on this, especially in comparison with
-# the "first [credential]" fields
 # TODO: rename feature?
 # student_program_of_study_changed_first_year => student_program_of_study_changed_year_1
 
@@ -27,13 +24,16 @@ def add_features(df: pd.DataFrame, *, institution_state: str) -> pd.DataFrame:
     """
     LOGGER.info("adding student features ...")
     feature_name_funcs: dict[str, t.Callable[[pd.DataFrame], pd.Series]] = {
-        "student_has_prior_enrollment_at_other_inst": ft.partial(
-            student_has_prior_enrollment_at_other_inst
-        ),
-        "student_prior_enrollment_at_other_inst_was_in_state": ft.partial(
-            student_prior_enrollment_at_other_inst_was_in_state,
-            institution_state=institution_state,
-        ),
+        # NOTE: it's likely that this the "most recent" enrollments info
+        # comes from "the future" wrt predictions, so we can't include as model features
+        # holding space here in case PDP tells us otherwise!
+        # "student_has_prior_enrollment_at_other_inst": ft.partial(
+        #     student_has_prior_enrollment_at_other_inst
+        # ),
+        # "student_prior_enrollment_at_other_inst_was_in_state": ft.partial(
+        #     student_prior_enrollment_at_other_inst_was_in_state,
+        #     institution_state=institution_state,
+        # ),
         "student_program_of_study_area_term_1": ft.partial(
             student_program_of_study_area, col="program_of_study_term_1"
         ),
