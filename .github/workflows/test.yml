@@ -3,7 +3,7 @@ name: lint
 on: pull_request
 
 jobs:
-  lint:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -13,3 +13,6 @@ jobs:
       - name: Run tests
         run: |
           uv run python -m pytest
+      - name: Check types
+        run: |
+          uv run mypy --install-types --non-interactive
