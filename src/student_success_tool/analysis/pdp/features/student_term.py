@@ -223,10 +223,10 @@ def num_courses_grade_above_section_avg(
     *,
     grade_col: str = "course_grade_numeric",
     section_grade_col: str = "section_course_grade_numeric_mean",
-) -> int:
-    result = df[grade_col].gt(df[section_grade_col]).sum()
-    assert isinstance(result, int)  # type guard
-    return result
+) -> object:
+    # NOTE: pydata has gone off the rails....sum() is return np.int64 value, not an int
+    # and mypy won't let me annotate with np.int64, so... "object" it is
+    return df[grade_col].gt(df[section_grade_col]).sum()
 
 
 def num_courses_col_agg(col: str = "course_id") -> pd.NamedAgg:
