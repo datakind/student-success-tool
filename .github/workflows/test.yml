@@ -15,4 +15,4 @@ jobs:
           uv run python -m pytest
       - name: Check types
         run: |
-          uv run mypy --install-types --non-interactive
+          uv run python -m mypy --install-types --non-interactive
