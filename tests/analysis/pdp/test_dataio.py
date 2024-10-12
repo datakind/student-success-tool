@@ -9,9 +9,6 @@ from student_success_tool.analysis.pdp import dataio, schemas
 
 FIXTURES_PATH = "tests/fixtures"
 
-# TODO: once the base raw data schemas have been generalized for multiple schools
-# we should update the raw test fixture files to match the base schema, not [SCHOOL]'s
-
 
 @pytest.mark.parametrize(
     ["file_name", "schema", "kwargs"],
