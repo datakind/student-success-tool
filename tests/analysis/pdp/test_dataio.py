@@ -42,7 +42,7 @@ def test_read_raw_pdp_course_data_from_file(file_name, schema, kwargs):
         (
             "raw_pdp_course_data_invalid.csv",
             schemas.base.RawPDPCourseDataSchema,
-            lambda df: df.drop_duplicates(subset=["Institution ID", "Student GUID"]),
+            lambda df: df.drop_duplicates(subset=["institution_id", "student_guid"]),
             does_not_raise(),
         ),
     ],
