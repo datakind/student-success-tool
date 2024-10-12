@@ -12,11 +12,12 @@ jobs:
         uses: ./.github/actions/setup-python-env
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@v45.0.1
+        uses: tj-actions/changed-files@v45
         with:
           files: |
             **.py
             **.ipynb
       - name: Check style
+        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           uv tool run ruff check ${{ steps.changed-files.outputs.all_changed_files }}
