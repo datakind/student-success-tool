@@ -12,4 +12,4 @@ jobs:
         uses: ./.github/actions/setup-python-env
       - name: Run tests
         run: |
-          uv tool run pytest
+          uv run python -m pytest
