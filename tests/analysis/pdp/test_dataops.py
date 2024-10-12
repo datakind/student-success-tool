@@ -46,17 +46,17 @@ def test_infer_num_terms_in_year(series, exp):
         (
             pd.DataFrame(
                 {
-                    "Cohort": ["2024-25", "2023-24"],
-                    "Cohort Term": ["FALL", "SPRING"],
-                    "Time to Credential": [2.5, 3.0],
-                    "Attendance Status Term 1": [
+                    "cohort": ["2024-25", "2023-24"],
+                    "cohort_term": ["FALL", "SPRING"],
+                    "time_to_credential": [2.5, 3.0],
+                    "attendance_status_term_1": [
                         "FIRST-TIME FULL-TIME",
                         "TRANSFER-IN PART-TIME",
                     ],
-                    "Number of Credits Attempted Year 1": [10.0, 5.0],
-                    "Number of Credits Earned Year 1": [10.0, 5.0],
-                    "Gateway Math Status": ["R", "N"],
-                    "GPA Group Year 1": [3.0, 4.0],
+                    "number_of_credits_attempted_year_1": [10.0, 5.0],
+                    "number_of_credits_earned_year_1": [10.0, 5.0],
+                    "gateway_math_status": ["R", "N"],
+                    "gpa_group_year_1": [3.0, 4.0],
                 }
             ),
             None,
@@ -71,9 +71,9 @@ def test_infer_num_terms_in_year(series, exp):
         (
             pd.DataFrame(
                 {
-                    "Cohort": ["2024-25", "2023-24"],
-                    "Cohort Term": ["FALL", "SPRING"],
-                    "GPA Group Year 1": [3.0, 4.0],
+                    "cohort": ["2024-25", "2023-24"],
+                    "cohort_term": ["FALL", "SPRING"],
+                    "gpa_group_year_1": [3.0, 4.0],
                 }
             ),
             1,
@@ -98,34 +98,34 @@ def test_standardize_cohort_dataset(df, num_terms_checkin, exp):
         (
             pd.DataFrame(
                 {
-                    "Academic Year": ["2020-21", "2020-21", "2021-22"],
-                    "Academic Term": ["FALL", "SPRING", "FALL"],
-                    "Course Prefix": ["MATH", "MATH", "PHYS"],
-                    "Course Number": ["101", "202", "303"],
-                    "Course Name": ["NAME1", "NAME2", "NAME3"],
-                    "Course Type": ["CU", "CU", "CC"],
-                    "Grade": ["4", "1", "W"],
-                    "Core Course": ["Y", "N", "Y"],
-                    "Core Course Type": ["TYPE1", "TYPE2", "TYPE3"],
-                    "Core Competency Completed": ["Y", None, None],
-                    "Cohort": ["2020-21", "2020-21", "2020-21"],
-                    "Cohort Term": ["FALL", "FALL", "SPRING"],
-                    "Student Age": ["20 AND YOUNGER", ">20 - 24", "OLDER THAN 24"],
-                    "Race": ["WHITE", "HISPANIC", "ASIAN"],
-                    "Ethnicity": ["N", "H", "N"],
-                    "Gender": ["M", "F", "X"],
-                    "Credential Engine Identifier": [None, None, None],
-                    "Enrollment Record at Other Institution(s) STATE(s)": [
+                    "academic_year": ["2020-21", "2020-21", "2021-22"],
+                    "academic_term": ["FALL", "SPRING", "FALL"],
+                    "course_prefix": ["MATH", "MATH", "PHYS"],
+                    "course_number": ["101", "202", "303"],
+                    "course_name": ["NAME1", "NAME2", "NAME3"],
+                    "course_type": ["CU", "CU", "CC"],
+                    "grade": ["4", "1", "W"],
+                    "core_course": ["Y", "N", "Y"],
+                    "core_course_type": ["TYPE1", "TYPE2", "TYPE3"],
+                    "core_competency_completed": ["Y", None, None],
+                    "cohort": ["2020-21", "2020-21", "2020-21"],
+                    "cohort_term": ["FALL", "FALL", "SPRING"],
+                    "student_age": ["20 AND YOUNGER", ">20 - 24", "OLDER THAN 24"],
+                    "race": ["WHITE", "HISPANIC", "ASIAN"],
+                    "ethnicity": ["N", "H", "N"],
+                    "gender": ["M", "F", "X"],
+                    "credential_engine_identifier": [None, None, None],
+                    "enrollment_record_at_other_institution_s_state_s": [
                         "VT",
                         None,
                         None,
                     ],
-                    "Enrollment Record at Other Institution(s) CARNEGIE(s)": [
+                    "enrollment_record_at_other_institution_s_carnegie_s": [
                         "Doctoral Universities",
                         None,
                         None,
                     ],
-                    "Enrollment Record at Other Institution(s) LOCALE(s)": [
+                    "enrollment_record_at_other_institution_s_locale_s": [
                         "Urban",
                         None,
                         None,
