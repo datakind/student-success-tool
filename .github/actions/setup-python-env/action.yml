@@ -22,3 +22,4 @@ runs:
 
     - name: Install project and dependencies
       run: uv sync --frozen --dev
+      shell: bash
