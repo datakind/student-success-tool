@@ -185,8 +185,9 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     math_placement: pt.Series[pd.CategoricalDtype] = pda.Field(nullable=True)
     # NOTE: categories set in a parser, which forces "UK" values to null
     english_placement: pt.Series[pd.CategoricalDtype] = pda.Field(nullable=True)
+    # NOTE: categories set in a parser, which forces "UK" values to null
     dual_and_summer_enrollment: pt.Series[pd.CategoricalDtype] = pda.Field(
-        dtype_kwargs={"categories": ["DE", "SE", "DS"]},
+        nullable=True
     )
     race: pt.Series[pd.CategoricalDtype] = RaceField()
     ethnicity: pt.Series[pd.CategoricalDtype] = EthnicityField()
@@ -194,9 +195,8 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     first_gen: pt.Series[pd.CategoricalDtype] = pda.Field(
         nullable=True, dtype_kwargs={"categories": ["P", "C", "A", "B"]}
     )
-    pell_status_first_year: pt.Series[pd.CategoricalDtype] = pda.Field(
-        dtype_kwargs={"categories": ["Y", "N"]}
-    )
+    # NOTE: categories set in a parser, which forces "UK" values to null
+    pell_status_first_year: pt.Series[pd.CategoricalDtype] = pda.Field(nullable=True)
     attendance_status_term_1: pt.Series[pd.CategoricalDtype] = pda.Field(
         dtype_kwargs={
             "categories": [
@@ -374,6 +374,14 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     @pda.parser("math_placement", "english_placement", "reading_placement")
     def set_subj_placement_categories(cls, series):
         return series.cat.set_categories(["C", "N"])
+
+    @pda.parser("dual_and_summer_enrollment")
+    def set_dual_and_summer_enrollment_categories(cls, series):
+        return series.cat.set_categories(["DE", "SE", "DS"])
+
+    @pda.parser("pell_status_first_year")
+    def set_pell_status_first_year_categories(cls, series):
+        return series.cat.set_categories(["Y", "N"])
 
     @pda.parser("gateway_math_status", "gateway_english_status")
     def set_gateway_math_english_status_categories(cls, series):
