@@ -1,0 +1,36 @@
+[project]
+name = "student-success-tool"
+version = "0.1.0"
+description = "School-agnostic lib for implementing Student Success Tool workflows."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "databricks-connect~=13.3",
+    "ipywidgets~=8.1.2",
+    "matplotlib~=3.9.0",
+    "missingno~=0.5.0",
+    "mlflow~=2.11",
+    "pandas~=2.2.0",
+    "pandera~=0.20.0",
+    "pillow~=9.3.0",
+    "pyarrow~=14.0",
+    "pyyaml~=6.0",
+    "scikit-learn~=1.1.1",
+    "seaborn~=0.13.2",
+    "statsmodels~=0.14.1",
+    "textwrap3~=0.9.2",
+    # "shap~=0.45.0"  # does not install!
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "ipykernel~=6.29.4",
+    "jupyterlab~=4.2.0",
+    "mypy~=1.11.0",
+    "pytest~=8.3.0",
+    "ruff~=0.6.3",
+]
