@@ -36,7 +36,10 @@ def extract_training_data_from_model(
     Returns:
         the data used for training a model, with train/test/validation flags
     """
-    run_df = mlflow.search_runs(experiment_ids=[automl_experiment_id])
+    run_df = mlflow.search_runs(
+        experiment_ids=[automl_experiment_id], output_format="pandas"
+    )
+    assert isinstance(run_df, pd.DataFrame)  # type guard
     data_run_id = run_df[run_df["tags.mlflow.runName"] == data_runname]["run_id"].item()
 
     # Create temp directory to download input data from MLflow
@@ -123,7 +126,7 @@ def create_calibration_curve(
     if not check_array_of_arrays(y_true):
         y_true = [y_true]
         risk_score = [risk_score]
-        keys = [keys]
+        keys = [keys]  # type: ignore
 
     fig2, ax2 = plt.subplots()
 
@@ -133,7 +136,7 @@ def create_calibration_curve(
             risk_score[j],
             n_bins=10,
             strategy="uniform",
-            pos_label=pos_label,
+            pos_label=pos_label,  # type: ignore
         )
         if lowess_frac:
             # When we create calibration curves with less data points (i.e. for subgroups),
@@ -162,8 +165,8 @@ def create_calibration_curve(
         label="Perfectly calibrated",
     )
 
-    ax2.set_xlim([-0.05, 1.05])
-    ax2.set_ylim([-0.05, 1.05])
+    ax2.set_xlim(left=-0.05, right=1.05)
+    ax2.set_ylim(bottom=-0.05, top=1.05)
     ax2.set_xlabel("Mean predicted value")
     ax2.set_ylabel("Fraction of positives")
     ax2.set_title(f"Calibration Curve - {title_suffix}")
@@ -203,7 +206,9 @@ def get_sensitivity_of_top_q_pctl_thresh(
     # convert actual outcome to booleans to match high_risk array
     y_true = y_true.apply(lambda x: True if x == pos_label else False)
 
-    return recall_score(y_true, high_risk)
+    result = recall_score(y_true, high_risk)
+    assert isinstance(result, float)
+    return result
 
 
 def plot_sla_curve(
@@ -234,7 +239,7 @@ def plot_sla_curve(
     if not check_array_of_arrays(y_true):
         y_true = [y_true]
         risk_score = [risk_score]
-        keys = [keys]
+        keys = [keys]  # type: ignore
 
     fig, ax = plt.subplots()
 
@@ -261,7 +266,7 @@ def plot_sla_curve(
         )
 
     ax.set_ylabel("sensitivity (true positive rate)")
-    ax.set_ylim([-0.02, 1.02])
+    ax.set_ylim(bottom=-0.02, top=1.02)
     ax.set_xlabel("Alert rate")
     ax.legend(loc="lower right")
     ax.set_title(f"Sensitivity vs. Low Alert Rate - {title_suffix}")
@@ -283,7 +288,10 @@ def compare_trained_models(
     Returns:
         DataFrame containing model types and highest scores for the given metric.
     """
-    runs = mlflow.search_runs(automl_experiment_id)
+    runs = mlflow.search_runs(
+        experiment_ids=[automl_experiment_id], output_format="pandas"
+    )
+    assert isinstance(runs, pd.DataFrame)  # type guard
     metric = str.lower(automl_metric)
     metric_score_column = (
         f"metrics.val_{metric}"

@@ -37,7 +37,7 @@ def select_students_by_criteria(
 
     student_id_cols = utils.to_list(student_id_cols)
     is_eligibles = [
-        df[key].isin(set(val))
+        df[key].isin(set(val))  # type: ignore
         if utils.is_collection_but_not_string(val)
         else df[key].eq(val).fillna(value=False)  # type: ignore
         for key, val in criteria.items()

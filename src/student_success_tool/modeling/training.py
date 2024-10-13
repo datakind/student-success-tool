@@ -68,9 +68,10 @@ def run_automl_classification(
         kwargs["timeout_minutes"] = (
             5  # TODO: tune this! https://app.asana.com/0/0/1206779161097924/f
         )
-    kwargs["exclude_cols"] = kwargs.get("exclude_cols", [])
+    exclude_cols = kwargs.pop("exclude_cols", [])
+    assert isinstance(exclude_cols, list)  # type guard
     if student_id_col is not None:
-        kwargs["exclude_cols"].append(student_id_col)
+        exclude_cols.append(student_id_col)
 
     # TODO: need to install this to poetry environment
     from databricks import automl  # importing here for mocking in tests
@@ -81,6 +82,7 @@ def run_automl_classification(
         dataset=train_df,
         target_col=outcome_col,
         primary_metric=optimization_metric,
+        exclude_cols=exclude_cols,
         **kwargs,
     )
 
