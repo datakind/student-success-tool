@@ -2365,7 +2365,7 @@ requires-dist = [
     { name = "ipywidgets", specifier = "~=8.1.2" },
     { name = "matplotlib", specifier = "~=3.9.0" },
     { name = "missingno", specifier = "~=0.5.0" },
-    { name = "mlflow", specifier = "~=2.11" },
+    { name = "mlflow", specifier = "~=2.17.0" },
     { name = "numpy", specifier = "~=2.1.0" },
     { name = "pandas", specifier = "~=2.2.0" },
     { name = "pandera", specifier = "~=0.20.0" },
