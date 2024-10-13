@@ -1,6 +1,9 @@
 name: "Set Up Python Environment"
 
 inputs:
+  python-version:
+    description: "Python version to use"
+    required: true
   uv-version:
     description: "uv version to use"
     required: false
@@ -12,7 +15,7 @@ runs:
     - name: Install python
       uses: actions/setup-python@v5
       with:
-        python-version-file: "pyproject.toml"
+        python-version: ${{ inputs.python-version }}
 
     - name: Install uv
       uses: astral-sh/setup-uv@v3
