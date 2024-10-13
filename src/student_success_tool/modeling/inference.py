@@ -3,21 +3,26 @@ import pandas as pd
 
 
 def select_top_features_for_display(
-    features, unique_ids, predicted_probabilities, shap_values, n_features=3
-):
-    """Select most important features from SHAP for each student
+    features: pd.DataFrame,
+    unique_ids: pd.Series,
+    predicted_probabilities: list[float],
+    shap_values: pd.Series,
+    n_features: int = 3,
+) -> pd.DataFrame:
+    """
+    Select most important features from SHAP for each student
     and format for display
 
     Args:
-        features (pd.DataFrame): features used in modeling
-        unique_ids (pd.Series of length features.shape[0]): student IDs
-        predicted_probabilities (list of shape len(unique_ids)): predicted probabilities for each student, in the same
-            order as unique_ids
-        shap_values (array-like of shape len(unique_ids)): array of arrays of SHAP values
-        n_features (int): number of important features to return
+        features: features used in modeling
+        unique_ids: student IDs, of length ``features.shape[0]``
+        predicted_probabilities: predicted probabilities for each student, in the same
+            order as unique_ids, of shape len(unique_ids)
+        shap_values: array of arrays of SHAP values, of shape len(unique_ids)
+        n_features: number of important features to return
 
     Returns:
-        pd.DataFrame: explainability dataframe for display
+        explainability dataframe for display
     """
     top_features_info = []
 

@@ -1,7 +1,10 @@
 import os
 import shutil
+import typing as t
 import uuid
+from collections.abc import Sequence
 
+import matplotlib.figure
 import matplotlib.pyplot as plt
 import mlflow
 import numpy as np
@@ -15,20 +18,23 @@ palette = sns.color_palette(
     "Paired"
 )  # TODO: eventually we should use the custom_style.mplstyle colors, but currently the color palette does not have distinct enough colors for calibration by group where there are a lot of subgroups
 
+PosLabelType = t.Optional[int | float | bool | str]
+
 
 def extract_training_data_from_model(
-    automl_experiment_id, data_runname="Training Data Storage and Analysis"
-):
-    """Read training data from a model into a pandas DataFrame. This allows us to run more
+    automl_experiment_id: str, data_runname: str = "Training Data Storage and Analysis"
+) -> pd.DataFrame:
+    """
+    Read training data from a model into a pandas DataFrame. This allows us to run more
     evaluations of the model, ensuring that we are using the same train/test/validation split
 
     Args:
-        automl_experiment_id (str): Experiment ID of the AutoML experiment
-        data_runname (str, optional): The runName tag designating where there training data is
+        automl_experiment_id: Experiment ID of the AutoML experiment
+        data_runname: The runName tag designating where there training data is
             stored. Defaults to 'Training Data Storage and Analysis'.
 
     Returns:
-        pd.DataFrame: the data used for training a model, with train/test/validation flags
+        the data used for training a model, with train/test/validation flags
     """
     run_df = mlflow.search_runs(experiment_ids=[automl_experiment_id])
     data_run_id = run_df[run_df["tags.mlflow.runName"] == data_runname]["run_id"].item()
@@ -51,15 +57,15 @@ def extract_training_data_from_model(
     return df_loaded
 
 
-def create_risk_score_histogram(risk_score, title_suffix):
-    """Create histogram of risk scores
+def create_risk_score_histogram(
+    risk_score: str | Sequence, title_suffix: str
+) -> matplotlib.figure.Figure:
+    """
+    Create histogram of risk scores
 
     Args:
-        risk_score (array-like): risk scores
-        title_suffix (str): suffix for plot title
-
-    Returns:
-        matplotlib.figure
+        risk_score: risk scores
+        title_suffix: suffix for plot title
     """
 
     fig1, ax1 = plt.subplots()
@@ -73,15 +79,16 @@ def create_risk_score_histogram(risk_score, title_suffix):
     return fig1
 
 
-def check_array_of_arrays(input_array):
-    """Check if an input array contains sub-arrays. Used for plotting different
+def check_array_of_arrays(input_array: pd.Series) -> bool:
+    """
+    Check if an input array contains sub-arrays. Used for plotting different
     groups of predictions
 
     Args:
-        input_array (array-like)
+        input_array
 
     Returns:
-        bool: True if the input_array contains sub-arrays
+        True if the input_array contains sub-arrays
     """
     try:
         assert isinstance(input_array, pd.Series)
@@ -92,19 +99,25 @@ def check_array_of_arrays(input_array):
 
 
 def create_calibration_curve(
-    y_true, risk_score, keys, title_suffix, pos_label, lowess_frac=None
-):
-    """Create calibration plot
+    y_true: pd.Series,
+    risk_score: pd.Series,
+    keys: str | list[str],
+    title_suffix: str,
+    pos_label: PosLabelType,
+    lowess_frac: t.Optional[float] = None,
+) -> matplotlib.figure.Figure:
+    """
+    Create calibration plot
 
     Args:
         y_true (array-like of shape (n_samples,) or (n_groups,)): overall or group-level true outcome class
         risk_score (array-like of shape (n_samples,) or (n_groups,)): overall or group level predicted risk scores
-        keys (list[str] or str): overall or subgroup level labels for labeling lines
-        title_suffix (str): suffix for plot title
-        pos_label (int, float, bool or str, optional): label identifying the positive class. Defaults to True.
+        keys: overall or subgroup level labels for labeling lines
+        title_suffix: suffix for plot title
+        pos_label: label identifying the positive class. Defaults to True.
 
     Returns:
-        matplotlib.figure: line plot of prediction bins X fraction of positive class
+        line plot of prediction bins X fraction of positive class
     """
 
     if not check_array_of_arrays(y_true):
@@ -159,21 +172,25 @@ def create_calibration_curve(
     return fig2
 
 
-def get_sensitivity_of_top_q_pctl_thresh(y_true, risk_score, q, pos_label):
-    """Report sensitivity (AKA recall score) using some percentile threshold.
+def get_sensitivity_of_top_q_pctl_thresh(
+    y_true: pd.Series,
+    risk_score: pd.Series,
+    q: float,
+    pos_label: PosLabelType,
+) -> float:
+    """
+    Report sensitivity (AKA recall score) using some percentile threshold.
+
     Calculation:
         number of true positivies / (number of true positives + number of false negatives)
         OR
         number of true positives / total number of actual true class
 
     Args:
-        y_true (pd.Series of length n_samples): true outcome class
-        risk_score (pd.Series of length n_samples): predicted risk scores
-        q (float): probability for the quantiles to compute
-        pos_label (int, float, bool or str): label identifying the positive class in y_true
-
-    Returns:
-        float
+        y_true: true outcome class, of length n_samples
+        risk_score: predicted risk scores, of length n_samples
+        q: probability for the quantiles to compute
+        pos_label: label identifying the positive class in y_true
     """
     if not isinstance(y_true, pd.Series):
         y_true = pd.Series(y_true)
@@ -190,27 +207,28 @@ def get_sensitivity_of_top_q_pctl_thresh(y_true, risk_score, q, pos_label):
 
 
 def plot_sla_curve(
-    y_true,
-    risk_score,
-    keys,
-    title_suffix,
-    pos_label,
-    alert_rates=[0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06],
-    label_alert_rate=0.01,
-):
-    """Create Sensitivity at Low Alert Rates plot
+    y_true: pd.Series,
+    risk_score: pd.Series,
+    keys: str | list[str],
+    title_suffix: str,
+    pos_label: PosLabelType,
+    alert_rates: list[float] = [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06],
+    label_alert_rate: float = 0.01,
+) -> matplotlib.figure.Figure:
+    """
+    Create Sensitivity at Low Alert Rates plot
 
     Args:
         y_true (array-like of shape (n_samples,) or (n_groups,)): overall or group-level true outcome class
         risk_score (array-like of shape (n_samples,) or (n_groups,)): overall or group level predicted risk scores
-        keys (list[str] or str): overall or subgroup level labels for labeling lines
-        title_suffix (str): suffix for plot title
-        pos_label (int, float, bool or str): label identifying the positive class in y_true
-        alert_rates (list, optional): alert rates to plot. Defaults to [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06].
-        label_alert_rate (float, optional): alert rate of interest to report sensitivity at. Defaults to 0.01.
+        keys: overall or subgroup level labels for labeling lines
+        title_suffix: suffix for plot title
+        pos_label: label identifying the positive class in y_true
+        alert_rates: alert rates to plot. Defaults to [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06].
+        label_alert_rate: alert rate of interest to report sensitivity at. Defaults to 0.01.
 
     Returns:
-        matplotlib.figure: line plot of sensitivity at small alert rates
+        line plot of sensitivity at small alert rates
     """
 
     if not check_array_of_arrays(y_true):
@@ -251,15 +269,19 @@ def plot_sla_curve(
     return fig
 
 
-def compare_trained_models(automl_experiment_id, automl_metric):
-    """Retrieve, aggregate and sort performance data for models trained in a specified AutoML experiment.
+def compare_trained_models(
+    automl_experiment_id: str, automl_metric: str
+) -> tuple[pd.DataFrame, str]:
+    """
+    Retrieve, aggregate and sort performance data for models trained in a specified AutoML experiment.
     The validation dataset is used to tune hyperparameters. Metrics on the validation dataset are used to rank models, so we also use this metric to compare across models.
 
     Args:
-        automl_experiment_id (str): Experiment ID of the AutoML experiment
-        automl_metric (str): Chosen AutoML optimization metric
+        automl_experiment_id: Experiment ID of the AutoML experiment
+        automl_metric: Chosen AutoML optimization metric
+
     Returns:
-        pandas.DataFrame: DataFrame containing model types and highest scores for the given metric.
+        DataFrame containing model types and highest scores for the given metric.
     """
     runs = mlflow.search_runs(automl_experiment_id)
     metric = str.lower(automl_metric)
@@ -280,14 +302,18 @@ def compare_trained_models(automl_experiment_id, automl_metric):
     return df_sorted, metric_score_column
 
 
-def compare_trained_models_plot(automl_experiment_id, automl_metric):
-    """Create a plot to evaluate all the models trained by AutoML.
+def compare_trained_models_plot(
+    automl_experiment_id: str, automl_metric: str
+) -> matplotlib.figure.Figure:
+    """
+    Create a plot to evaluate all the models trained by AutoML.
 
     Args:
-        automl_experiment_id (str): Experiment ID of the AutoML experiment
-        automl_metric (str): Chosen AutoML optimization metric
+        automl_experiment_id: Experiment ID of the AutoML experiment
+        automl_metric: Chosen AutoML optimization metric
+
     Returns:
-        matplotlib.figure.Figure: bar chart of model performance on test data by optimization metric.
+        bar chart of model performance on test data by optimization metric.
     """
 
     df_sorted, metric_score_column = compare_trained_models(
@@ -352,20 +378,26 @@ def compare_trained_models_plot(automl_experiment_id, automl_metric):
     return fig
 
 
-def create_evaluation_plots(data, risk_score_col, y_true_col, pos_label, split_type):
-    """Create plots to evaluate a model overall - risk score histogram,
+def create_evaluation_plots(
+    data: pd.DataFrame,
+    risk_score_col: str,
+    y_true_col: str,
+    pos_label: PosLabelType,
+    split_type: str,
+) -> tuple[matplotlib.figure.Figure, ...]:
+    """
+    Create plots to evaluate a model overall - risk score histogram,
     calibration curve, and sensitivity at low alert rates
 
     Args:
-        data (pd.DataFrame): containing predicted and actual outcome data
-        risk_score_col (str): column name containing data of predicted risk scores
-        y_true_col (str): column name containing data of actual outcome classes
-        pos_label (int, float, bool or str): label identifying the positive class in y_true
-        split_type (str): type of data being plotted for labeling plots - train, test, or validation
+        data: containing predicted and actual outcome data
+        risk_score_col: column name containing data of predicted risk scores
+        y_true_col: column name containing data of actual outcome classes
+        pos_label: label identifying the positive class in y_true
+        split_type: type of data being plotted for labeling plots - train, test, or validation
 
     Returns:
-        list[matplotlib.figure]: risk score histogram, calibration curve, and
-        sensitivity at low alert rates figures
+        risk score histogram, calibration curve, and sensitivity at low alert rates figures
     """
     title_suffix = f"{split_type} data - Overall"
     hist_fig = create_risk_score_histogram(data[risk_score_col], title_suffix)
@@ -379,22 +411,27 @@ def create_evaluation_plots(data, risk_score_col, y_true_col, pos_label, split_t
 
 
 def create_evaluation_plots_by_subgroup(
-    data, risk_score_col, y_true_col, pos_label, group_col, split_type
-):
-    """Create plots to evaluate a model by group - calibration curve
+    data: pd.DataFrame,
+    risk_score_col: str,
+    y_true_col: str,
+    pos_label: PosLabelType,
+    group_col: str,
+    split_type: str,
+) -> tuple[matplotlib.figure.Figure, ...]:
+    """
+    Create plots to evaluate a model by group - calibration curve
     and sensitivity at low alert rates
 
     Args:
-        data (pd.DataFrame): containing predicted and actual outcome data, as well as group label
-        risk_score_col (str): column name containing data of predicted risk scores
-        y_true_col (str): column name containing data of actual outcome classes
-        pos_label (int, float, bool or str): label identifying the positive class in y_true
-        group_col (str): column name containing data of subgroup labels
-        split_type (str): type of data being plotted for labeling plots - train, test, or validation
+        data: containing predicted and actual outcome data, as well as group label
+        risk_score_col: column name containing data of predicted risk scores
+        y_true_col: column name containing data of actual outcome classes
+        pos_label: label identifying the positive class in y_true
+        group_col: column name containing data of subgroup labels
+        split_type: type of data being plotted for labeling plots - train, test, or validation
 
     Returns:
-        list[matplotlib.figure]: calibration curve sensitivity at low alert rates
-        figures by group
+        calibration curve sensitivity at low alert rates figures by group
     """
     title_suffix = f"{split_type} data - {group_col}"
 

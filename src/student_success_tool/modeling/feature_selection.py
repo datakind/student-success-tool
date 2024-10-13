@@ -6,25 +6,26 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 
 def select_features(
-    train_df,
-    not_features_cols,
-    force_include_cols,
-    incomplete_threshold=0.5,
-    low_variance_threshold=0.0,
-):
-    """Select features by dropping incomplete features, low variance features,
+    train_df: pd.DataFrame,
+    not_features_cols: list[str],
+    force_include_cols: list[str],
+    incomplete_threshold: float = 0.5,
+    low_variance_threshold: float = 0.0,
+) -> pd.DataFrame:
+    """
+    Select features by dropping incomplete features, low variance features,
     and variables with high correlations to others.
 
     Args:
-        train_df (pd.DataFrame): dataframe of features to select
-        not_features_cols (list[str]): list of column names that are not features and should not
+        train_df: dataframe of features to select
+        not_features_cols: list of column names that are not features and should not
             be run through the feature selection algorithm. For example, demographics, IDs, outcome variables, etc.
-        force_include_cols (list[str]): list of features to force include in the final dataset.
-        incomplete_threshold (float, optional): threshold for level of incompleteness. Defaults to 0.5.
-        low_variance_threshold (float, optional): threshold for level of low variance. Defaults to 0.0.
+        force_include_cols: list of features to force include in the final dataset.
+        incomplete_threshold: threshold for level of incompleteness. Defaults to 0.5.
+        low_variance_threshold: threshold for level of low variance. Defaults to 0.0.
 
     Returns:
-        pd.DataFrame: train_df with not_features_cols, force_include_cols, and any other columns selected
+        train_df with not_features_cols, force_include_cols, and any other columns selected
             by the algorithms
     """
 
@@ -69,16 +70,17 @@ def select_features(
     return selected_features_df
 
 
-def drop_incomplete_features(features, threshold):
-    """Drop columns from dataframe that have at least some fraction of nulls.
+def drop_incomplete_features(features: pd.DataFrame, threshold: float) -> pd.DataFrame:
+    """
+    Drop columns from dataframe that have at least some fraction of nulls.
 
     Args:
-        features (pd.DataFrame): dataframe of columns to assess nulls across
-        threshold (float): fraction of nulls deemed unacceptable. Any columns in
+        features: dataframe of columns to assess nulls across
+        threshold: fraction of nulls deemed unacceptable. Any columns in
             the features dataframe with this fraction of nulls or more will be dropped.
 
     Returns:
-        pd.DataFrame: features data without the incomplete columns
+        features data without the incomplete columns
     """
     pct_null = features.isna().sum() / features.shape[0]
     incomplete_features = pct_null[pct_null >= threshold].index
@@ -90,15 +92,18 @@ def drop_incomplete_features(features, threshold):
         return features
 
 
-def drop_low_variance_features(features, threshold):
-    """Drop columns with low or no variance, according to a threshold.
+def drop_low_variance_features(
+    features: pd.DataFrame, threshold: float
+) -> pd.DataFrame:
+    """
+    Drop columns with low or no variance, according to a threshold.
 
     Args:
-        features (pd.DataFrame): dataframe of columns to assess variance
-        threshold (float): Features with a training-set variance lower than this threshold will be removed.
+        features: dataframe of columns to assess variance
+        threshold: Features with a training-set variance lower than this threshold will be removed.
 
     Returns:
-        pd.DataFrame: features data without the low variance columns
+        features data without the low variance columns
     """
     selector = VarianceThreshold(threshold=threshold)
     numeric_features = features.select_dtypes(include="number")
@@ -120,8 +125,11 @@ def drop_low_variance_features(features, threshold):
         return features
 
 
-def drop_collinear_features_iteratively(features, force_include_cols):
-    """Use Variance Inflation Factor (VIF) to drop collinear features iteratively.
+def drop_collinear_features_iteratively(
+    features: pd.DataFrame, force_include_cols: list[str]
+) -> pd.DataFrame:
+    """
+    Use Variance Inflation Factor (VIF) to drop collinear features iteratively.
     The function takes the following steps:
     1. Selects only numeric features for VIF analysis
     2. Impute missing values - this is required by the variance_inflation_factor()
@@ -143,10 +151,11 @@ def drop_collinear_features_iteratively(features, force_include_cols):
         mlflow.autolog(disable=True)
 
     Args:
-        features (pd.DataFrame): dataframe of features to assess for multicollinearity
+        features: dataframe of features to assess for multicollinearity
+        force_include_cols
 
     Returns:
-        pd.DataFrame: features not considered collinear according to a VIF threshold of 10
+        features not considered collinear according to a VIF threshold of 10
     """
 
     np.seterr(divide="ignore", invalid="ignore")

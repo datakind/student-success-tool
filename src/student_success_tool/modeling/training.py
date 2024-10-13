@@ -4,27 +4,28 @@ import pandas as pd
 
 
 def run_automl_classification(
-    institution_id,
-    job_run_id,
-    train_df,
-    outcome_col,
-    optimization_metric,
-    student_id_col,
-    **kwargs,
-):
-    """Wrap around databricks.automl.classify to allow testing and ensure that
+    institution_id: str,
+    job_run_id: str,
+    train_df: pd.DataFrame,
+    outcome_col: str,
+    optimization_metric: str,
+    student_id_col: str,
+    **kwargs: object,
+) -> object:
+    """
+    Wrap around databricks.automl.classify to allow testing and ensure that
     our parameters are used properly.
 
     Args:
-        institution_id (str): institution ID for labeling experiment
-        job_run_id (str): job run ID of Databricks workflow for labeling experiment
-        train_df (pd.DataFrame): data containing features and outcome to model, as well as the student_id_col and any other columns
+        institution_id: institution ID for labeling experiment
+        job_run_id: job run ID of Databricks workflow for labeling experiment
+        train_df: data containing features and outcome to model, as well as the student_id_col and any other columns
             specified in the optional **kwargs
-        outcome_col (str): column name for the target to predict
-        optimization_metric (str): Metric used to evaluate and rank model performance.
+        outcome_col: column name for the target to predict
+        optimization_metric: Metric used to evaluate and rank model performance.
             Supported metrics for classification: “f1” (default), “log_loss”,
             “precision”, “accuracy”, “roc_auc”
-        student_id_col (str): column name containing student IDs to exclude from training.
+        student_id_col: column name containing student IDs to exclude from training.
         **kwargs: keyword arguments to be passed to databricks.automl.classify(). For more information on the
             available optional arguments, see the API documentation here: https://docs.databricks.com/en/machine-learning/automl/automl-api-reference.html#classify.
             - If time_col is provided, AutoML tries to split the dataset into training, validation,
