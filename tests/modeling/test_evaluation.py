@@ -84,7 +84,10 @@ def patch_mlflow(monkeypatch):
 def test_compare_trained_models(
     data, metric, expected_order, expected_columns, patch_mlflow, monkeypatch
 ):
-    monkeypatch.setattr(mlflow, "search_runs", lambda x: pd.DataFrame(data))
+    def _search_runs_patch(experiment_ids, output_format):
+        return pd.DataFrame(data)
+
+    monkeypatch.setattr(mlflow, "search_runs", _search_runs_patch)
     result, _ = compare_trained_models("dummy_id", metric)
     print(result["tags.model_type"].tolist())
     assert isinstance(result, pd.DataFrame), "The result should be a pandas DataFrame."
