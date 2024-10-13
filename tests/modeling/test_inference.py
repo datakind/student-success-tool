@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from student_success_tool.modeling.inference_helpers import (
+from student_success_tool.modeling.inference import (
     select_top_features_for_display,
 )
 
