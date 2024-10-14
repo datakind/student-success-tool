@@ -1,159 +1,135 @@
-import logging
-import typing as t
-from collections.abc import Collection
-
 import numpy as np
 import pandas as pd
-import sklearn.feature_selection
-import sklearn.impute
+from sklearn.feature_selection import VarianceThreshold
+from sklearn.impute import SimpleImputer
 from statsmodels.stats.outliers_influence import variance_inflation_factor
-
-LOGGER = logging.getLogger(__name__)
 
 
 def select_features(
-    df: pd.DataFrame,
-    *,
-    non_feature_cols: t.Optional[list[str]] = None,
-    force_include_cols: t.Optional[list[str]] = None,
+    train_df: pd.DataFrame,
+    not_features_cols: list[str],
+    force_include_cols: list[str],
     incomplete_threshold: float = 0.5,
     low_variance_threshold: float = 0.0,
-    collinear_threshold: float = 10.0,
 ) -> pd.DataFrame:
     """
     Select features by dropping incomplete features, low variance features,
     and variables with high correlations to others.
 
     Args:
-        df: dataframe of features to select
-        non_features_cols: list of column names that are not features and should not
+        train_df: dataframe of features to select
+        not_features_cols: list of column names that are not features and should not
             be run through the feature selection algorithm. For example, demographics, IDs, outcome variables, etc.
         force_include_cols: list of features to force include in the final dataset.
-        incomplete_threshold: Threshold for determining incomplete features.
-        low_variance_threshold: Threshold for determining low-variance features.
-        collinear_threshold: Threshold for determining collinear features.
+        incomplete_threshold: threshold for level of incompleteness. Defaults to 0.5.
+        low_variance_threshold: threshold for level of low variance. Defaults to 0.0.
 
     Returns:
-        df with non_features_cols, force_include_cols, and any other columns selected
-        by the algorithms
+        train_df with not_features_cols, force_include_cols, and any other columns selected
+            by the algorithms
     """
-    LOGGER.info("selecting features ...")
-    non_feature_cols = non_feature_cols or []
-    force_include_cols = force_include_cols or []
-    df_dropped = (
-        df.drop(columns=non_feature_cols + force_include_cols)
-        # incomplete features - features with lots of nulls
-        # Note: we should create dummy variables for categoricals prior to running this
-        # if one of the dummies represents NaN, we won't drop the categoricals that have lots of nulls,
-        # but instead can capture any patterns that may relate to the nulls.
-        # If there are non-dummy categorical variables that get dropped here,
-        # consider pre-processing into dummy variables for this reason.
-        # TODO: tune this threshold over time?
-        .pipe(drop_incomplete_features, threshold=incomplete_threshold)
-        # features with low variance
-        # Note: only removing features with 0 variance for now, as features with low
-        # but non-zero variance may be powerful in predicting the outcome
-        .pipe(drop_low_variance_features, threshold=low_variance_threshold)
-    )
-    df_selected = (
-        df.loc[:, list(set(df_dropped.columns.tolist() + force_include_cols))]
-        # multi-collinearity: it may not interfere with the model's performance
-        # but it does negatively impact the interpretation of the predictors
-        .pipe(
-            drop_collinear_features_iteratively,
-            threshold=collinear_threshold,
-            force_include_cols=force_include_cols,
-        )
+
+    X = train_df.drop(columns=not_features_cols + force_include_cols)
+
+    ###################################
+    ##### Unsupervised selection ######
+    ###################################
+
+    # incomplete features - features with lots of nulls
+    # Note: we should create dummy variables prior to running this process. If one of the dummies represents NaN, we won't drop the categoricals that have lots of nulls, but instead can capture any patterns that may relate to the nulls. If there are non-dummy categorical variables that get dropped here, consider pre-processing into dummy variables for this reason.
+    X = drop_incomplete_features(
+        X, threshold=incomplete_threshold
+    )  # TODO: tune this threshold over time
+
+    # features with low variance
+    # Note: only removing features with 0 variance for now, as features with low
+    # but non-zero variance may be powerful in predicting the outcome
+    X = drop_low_variance_features(X, threshold=low_variance_threshold)
+
+    # multi-collinearity: it may not interfere with the model's performance, but it does negatively impact the interpretation of the predictors
+    features_force_include_df = train_df[
+        list(set(list(X.columns.values) + force_include_cols))
+    ]
+    selected_features_df = drop_collinear_features_iteratively(
+        features_force_include_df, force_include_cols
     )
 
-    orig_feature_cols = set(df.columns) - set(non_feature_cols)
-    selected_feature_cols = set(df_selected.columns)
-    keep_cols = set(non_feature_cols) | selected_feature_cols
-    LOGGER.info(
-        "selected %s out of %s feature columns: %s",
-        len(selected_feature_cols),
-        len(orig_feature_cols),
-        selected_feature_cols,
+    selected_cols = set(list(selected_features_df.columns.values)) - set(
+        force_include_cols
     )
-    # maintain the original column order, in case that's meaningful
-    return df.loc[:, df.columns.isin(keep_cols)]
+    print(f"Original N features: {train_df.shape[1]}")
+    print(f"Selected {len(selected_cols)} features: {selected_cols}")
+
+    keep_cols = list(selected_cols)
+    additional_keep_cols = not_features_cols + force_include_cols
+    keep_cols.extend(additional_keep_cols)
+    print(
+        f"Plus {len(additional_keep_cols)} demographic, outcome, and force-included columns: {additional_keep_cols}"
+    )
+    selected_features_df = train_df[keep_cols]
+    return selected_features_df
 
 
-def drop_incomplete_features(
-    df: pd.DataFrame, *, threshold: float = 0.5
-) -> pd.DataFrame:
+def drop_incomplete_features(features: pd.DataFrame, threshold: float) -> pd.DataFrame:
     """
-    Drop columns from dataframe that have at least ``threshold`` fraction of null values.
+    Drop columns from dataframe that have at least some fraction of nulls.
 
     Args:
-        df
-        threshold: Fraction of null values above which columns are deemed "incomplete"
-            and dropped from ``df`` .
+        features: dataframe of columns to assess nulls across
+        threshold: fraction of nulls deemed unacceptable. Any columns in
+            the features dataframe with this fraction of nulls or more will be dropped.
 
     Returns:
-        ``df`` without the incomplete feature columns
+        features data without the incomplete columns
     """
-    frac_null = df.isna().sum(axis="index") / df.shape[0]
-    incomplete_cols = frac_null.loc[frac_null.ge(threshold)].index.tolist()
-    if incomplete_cols:
-        LOGGER.info(
-            "dropping %s incomplete features: %s",
-            len(incomplete_cols),
-            incomplete_cols,
-        )
-        return df.drop(columns=incomplete_cols)
+    pct_null = features.isna().sum() / features.shape[0]
+    incomplete_features = pct_null[pct_null >= threshold].index
+    if len(incomplete_features) > 0:
+        print(f"Dropping incomplete features: {incomplete_features}")
+        return features.drop(columns=incomplete_features)
     else:
-        LOGGER.info("no features found with a fraction of null values >= %s", threshold)
-        return df
+        print(f"No features with at least {threshold} proportion of nulls.")
+        return features
 
 
 def drop_low_variance_features(
-    df: pd.DataFrame, *, threshold: float = 0.0
+    features: pd.DataFrame, threshold: float
 ) -> pd.DataFrame:
     """
     Drop columns with low or no variance, according to a threshold.
 
     Args:
-        df
-        threshold: Variance of values below which columns are dropped from ``df`` .
+        features: dataframe of columns to assess variance
+        threshold: Features with a training-set variance lower than this threshold will be removed.
 
     Returns:
-        ``df`` without the low-variance columns
+        features data without the low variance columns
     """
-    selector = sklearn.feature_selection.VarianceThreshold(threshold=threshold)
-    df_numeric = df.select_dtypes(include="number")
+    selector = VarianceThreshold(threshold=threshold)
+    numeric_features = features.select_dtypes(include="number")
 
-    column_contains_inf = np.isinf(df_numeric).any()
+    column_contains_inf = np.isinf(numeric_features).any()
     if column_contains_inf.any():
-        inf_cols = df_numeric.columns[column_contains_inf].tolist()  # type: ignore
-        LOGGER.error(
-            "Columns %s contain infinite values -- remove and try again!", inf_cols
+        print("The following columns contain infinity. Remove and try again!")
+        print(list(numeric_features.columns[column_contains_inf]))
+        raise Exception
+    selector.fit(numeric_features)
+    no_variance_features = numeric_features.columns.values[~selector.get_support()]
+    if (n := len(no_variance_features)) > 0:
+        print(
+            f"Dropping {n} low variance (<={threshold}) features: {no_variance_features}"
         )
-        raise ValueError()
-
-    selector.fit(df_numeric)
-    low_variance_cols = df_numeric.columns[~selector.get_support()].tolist()
-    if low_variance_cols:
-        LOGGER.info(
-            "dropping %s low-variance features: %s",
-            len(low_variance_cols),
-            low_variance_cols,
-        )
-        return df.drop(columns=low_variance_cols)
+        return features.drop(columns=no_variance_features)
     else:
-        LOGGER.info("no features found with variance < %s", threshold)
-        return df
+        print(f"No features with less than {threshold} variance.")
+        return features
 
 
 def drop_collinear_features_iteratively(
-    df: pd.DataFrame,
-    *,
-    threshold: float = 10.0,
-    force_include_cols: t.Optional[Collection[str]] = None,
+    features: pd.DataFrame, force_include_cols: list[str]
 ) -> pd.DataFrame:
     """
     Use Variance Inflation Factor (VIF) to drop collinear features iteratively.
-
     The function takes the following steps:
     1. Selects only numeric features for VIF analysis
     2. Impute missing values - this is required by the variance_inflation_factor()
@@ -161,9 +137,9 @@ def drop_collinear_features_iteratively(
     we expect to have null values in our data. TODO: we may want to revisit this
     decision if we want more consistent imputation between the VIF analysis and the
     modeling, perhaps deciding to do our own imputation prior to this VIF analysis.
-    3. Find the highest VIF. If it is over threshold, it is considered too high and the
+    3. Find the highest VIF. If it is over 10, it is considered too high and the
     feature is contributing to multicollinearity - we drop this feature.
-    4. Repeat step 3 with the remaining features until there are no VIF >= threshold.
+    4. Repeat step 3 with the remaining features until there are no VIF > 10.
 
     Note: the function used, variance_inflation_factor(), does not take an
     intercept into account. See: https://github.com/statsmodels/statsmodels/issues/2376
@@ -175,98 +151,49 @@ def drop_collinear_features_iteratively(
         mlflow.autolog(disable=True)
 
     Args:
-        df
-        threshold: Variance Inflaction Factor (VIF) above which columns are considered
-            "multicollinear" and dropped from ``df`` . A VIF of 1 indicates no correlation
-            with any other feature; a VIF of 10 is considered "very high" and contributing
-            to multicollinearity.
+        features: dataframe of features to assess for multicollinearity
         force_include_cols
 
     Returns:
-        features not considered collinear according to a VIF threshold
+        features not considered collinear according to a VIF threshold of 10
     """
+
     np.seterr(divide="ignore", invalid="ignore")
-    force_include_cols = force_include_cols or []
 
-    df_features = df.select_dtypes(include="number")
-    if df_features.shape[1] == 0:
-        LOGGER.warning("no numeric columns found, so no collinear features to drop")
-        return df
+    numeric_features = features.select_dtypes(include="number")
+    imp = SimpleImputer(missing_values=np.nan, strategy="mean")
+    numeric_features_imputed = pd.DataFrame(imp.fit_transform(numeric_features))
+    numeric_features_imputed.columns = numeric_features.columns.values
 
-    imputer: sklearn.impute.SimpleImputer = sklearn.impute.SimpleImputer(
-        missing_values=np.nan, strategy="mean"
-    ).set_output(transform="pandas")  # type: ignore
-    df_features = imputer.fit_transform(df_features)
-    assert isinstance(df_features, pd.DataFrame)  # type guard
-
+    # A VIF of 1 indicates the feature has no correlation with any of the other features. A VIF exceeding 10 is too high and contributing to multicollinearity
     n_features_dropped_so_far = 0
     while (
         max_vif := max(
             (
                 uncentered_vif_dict := {
-                    # calculate VIF of features that are not force-included
-                    # against all numeric variables
-                    col: variance_inflation_factor(df_features, col_index)
-                    for col_index, col in enumerate(df_features.columns.tolist())
+                    # calculate VIF of features that are not force-included, against all numeric variables
+                    col: variance_inflation_factor(numeric_features_imputed, col_index)
+                    for col_index, col in enumerate(
+                        numeric_features_imputed.columns.values
+                    )
                     if col not in force_include_cols
                 }
             ).values()
         )
-    ) >= threshold:
+    ) > 10:
         highest_vif_cols = [
             col for col, vif in uncentered_vif_dict.items() if vif == max_vif
         ]
         n_drop_this_round = len(highest_vif_cols)
         n_features_dropped_so_far += n_drop_this_round
-        LOGGER.info(
-            "dropping %s columns with VIF >= %s: %s ...",
-            len(highest_vif_cols),
-            threshold,
-            highest_vif_cols,
+        print(f"Dropping {n_drop_this_round} column(s) with VIF {max_vif}")
+        print(highest_vif_cols)
+        features = features.drop(columns=highest_vif_cols)
+        numeric_features_imputed = numeric_features_imputed.drop(
+            columns=highest_vif_cols
         )
-        df = df.drop(columns=highest_vif_cols)
-        df_features = df_features.drop(columns=highest_vif_cols)
-    LOGGER.info("dropping %s collinear features", n_features_dropped_so_far)
-
+    print(f"Dropped {n_features_dropped_so_far} collinear features.")
     assert all(
-        [col in df.columns for col in force_include_cols]
+        [col in features.columns for col in force_include_cols]
     ), "The dataset with selected features is missing one of the force include variables!"
-    return df
-
-    # TODO: figure out why this below code gives different results from the original :/
-    # collinear_cols = []
-    # while True:
-    #     candidate_cols = [
-    #         col for col in df_imputed.columns if col not in force_include_cols
-    #     ]
-    #     if not candidate_cols:
-    #         break
-
-    #     col_vifs = {
-    #         col: variance_inflation_factor(df_imputed, col_index)
-    #         for col_index, col in enumerate(candidate_cols)
-    #     }
-    #     max_vif = max(col_vifs.values())
-    #     if max_vif < threshold:
-    #         break
-
-    #     max_vif_cols = [col for col, vif in col_vifs.items() if vif == max_vif]
-    #     LOGGER.info(
-    #         "dropping %s columns with VIF >= %s: %s ...",
-    #         len(max_vif_cols),
-    #         threshold,
-    #         max_vif_cols,
-    #     )
-    #     df_imputed = df_imputed.drop(columns=max_vif_cols)
-    #     collinear_cols.extend(max_vif_cols)
-
-    # if collinear_cols:
-    #     LOGGER.info(
-    #         "dropping %s collinear features: %s",
-    #         len(collinear_cols),
-    #         collinear_cols,
-    #     )
-    #     return df.drop(columns=collinear_cols)
-    # else:
-    #     LOGGER.info("no collinear features found with VIF >= %s", threshold)
-    #     return df
+    return features
