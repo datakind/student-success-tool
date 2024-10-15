@@ -24,7 +24,7 @@ jobs:
         uses: tj-actions/changed-files@v45
         with:
           files: |
-            src/**.py
+            src/**/*.py
       - name: Run tests
         run: |
           uv run python -m pytest
