@@ -15,6 +15,7 @@ def aggregate_from_course_level_features(
     *,
     student_term_id_cols: list[str],
     key_course_subject_areas: t.Optional[list[int]] = None,
+    key_courses: t.Optional[list[int]] = None,
 ) -> pd.DataFrame:
     """
     Aggregate course-level features up to student-term-level features
@@ -98,6 +99,10 @@ def aggregate_from_course_level_features(
     if key_course_subject_areas is not None:
         agg_col_vals.extend(
             ("course_subject_area", kcsa) for kcsa in key_course_subject_areas
+        )
+    if key_courses is not None:
+        agg_col_vals.extend(
+            ("course_id", kc) for kc in key_courses
         )
     df_val_equals = sum_val_equal_cols_by_group(
         df, grp_cols=student_term_id_cols, agg_col_vals=agg_col_vals
