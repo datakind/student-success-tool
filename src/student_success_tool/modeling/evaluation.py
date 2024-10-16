@@ -7,6 +7,7 @@ from collections.abc import Sequence
 import matplotlib.figure
 import matplotlib.pyplot as plt
 import mlflow
+import mlflow.artifacts
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -14,9 +15,10 @@ from sklearn.calibration import calibration_curve
 from sklearn.metrics import recall_score
 from statsmodels.nonparametric.smoothers_lowess import lowess
 
-palette = sns.color_palette(
-    "Paired"
-)  # TODO: eventually we should use the custom_style.mplstyle colors, but currently the color palette does not have distinct enough colors for calibration by group where there are a lot of subgroups
+# TODO: eventually we should use the custom_style.mplstyle colors, but currently
+# the color palette does not have distinct enough colors for calibration by group
+# where there are a lot of subgroups
+PALETTE = sns.color_palette("Paired")
 
 PosLabelType = t.Optional[int | float | bool | str]
 
@@ -30,11 +32,10 @@ def extract_training_data_from_model(
 
     Args:
         automl_experiment_id: Experiment ID of the AutoML experiment
-        data_runname: The runName tag designating where there training data is
-            stored. Defaults to 'Training Data Storage and Analysis'.
+        data_runname: The runName tag designating where there training data is stored
 
     Returns:
-        the data used for training a model, with train/test/validation flags
+        The data used for training a model, with train/test/validation flags
     """
     run_df = mlflow.search_runs(
         experiment_ids=[automl_experiment_id], output_format="pandas"
@@ -52,7 +53,6 @@ def extract_training_data_from_model(
     input_data_path = mlflow.artifacts.download_artifacts(
         run_id=data_run_id, artifact_path="data", dst_path=input_temp_dir
     )
-
     df_loaded = pd.read_parquet(os.path.join(input_data_path, "training_data"))
     # Delete the temp data
     shutil.rmtree(input_temp_dir)
@@ -70,16 +70,10 @@ def create_risk_score_histogram(
         risk_score: risk scores
         title_suffix: suffix for plot title
     """
-
-    fig1, ax1 = plt.subplots()
-    sns.histplot(
-        x=risk_score,
-        ax=ax1,
-        color=palette[1],
-    )
-    ax1.set_xlabel("Risk Score")
-    ax1.set_title(f"Distribution of risk scores - {title_suffix}")
-    return fig1
+    fig, ax = plt.subplots()
+    sns.histplot(x=risk_score, ax=ax, color=PALETTE[1])
+    ax.set(xlabel="Risk Score", title=f"Distribution of risk scores - {title_suffix}")
+    return fig
 
 
 def check_array_of_arrays(input_array: pd.Series) -> bool:
@@ -122,13 +116,12 @@ def create_calibration_curve(
     Returns:
         line plot of prediction bins X fraction of positive class
     """
-
     if not check_array_of_arrays(y_true):
         y_true = [y_true]
         risk_score = [risk_score]
         keys = [keys]  # type: ignore
 
-    fig2, ax2 = plt.subplots()
+    fig, ax = plt.subplots()
 
     for j in range(len(y_true)):
         prob_true, prob_pred = calibration_curve(
@@ -154,30 +147,31 @@ def create_calibration_curve(
                 return_sorted=False,
             )
         sns.lineplot(
-            x=prob_pred, y=prob_true, color=palette[j + 1], ax=ax2, label=keys[j]
+            x=prob_pred, y=prob_true, color=PALETTE[j + 1], ax=ax, label=keys[j]
         )
     sns.lineplot(
         x=[0, 1],
         y=[0, 1],
         linestyle="dashed",
-        color=palette[0],
-        ax=ax2,
+        color=PALETTE[0],
+        ax=ax,
         label="Perfectly calibrated",
     )
 
-    ax2.set_xlim(left=-0.05, right=1.05)
-    ax2.set_ylim(bottom=-0.05, top=1.05)
-    ax2.set_xlabel("Mean predicted value")
-    ax2.set_ylabel("Fraction of positives")
-    ax2.set_title(f"Calibration Curve - {title_suffix}")
-    ax2.legend(loc="lower right")
-
-    return fig2
+    ax.set(
+        xlabel="Mean predicted value",
+        ylabel="Fraction of positives",
+        title=f"Calibration Curve - {title_suffix}",
+    )
+    ax.set_xlim(left=-0.05, right=1.05)
+    ax.set_ylim(bottom=-0.05, top=1.05)
+    ax.legend(loc="lower right")
+    return fig
 
 
 def get_sensitivity_of_top_q_pctl_thresh(
-    y_true: pd.Series,
-    risk_score: pd.Series,
+    y_true: pd.Series | Sequence,
+    risk_score: pd.Series | Sequence,
     q: float,
     pos_label: PosLabelType,
 ) -> float:
@@ -235,7 +229,6 @@ def plot_sla_curve(
     Returns:
         line plot of sensitivity at small alert rates
     """
-
     if not check_array_of_arrays(y_true):
         y_true = [y_true]
         risk_score = [risk_score]
@@ -259,17 +252,19 @@ def plot_sla_curve(
         ax.plot(
             alert_rates,
             ss,
-            color=palette[j + 1],
+            color=PALETTE[j + 1],
             label="{} (Sensitivity at {}% alert rate={})".format(
                 keys[j], label_alert_rate * 100, s_lab
             ),
         )
 
-    ax.set_ylabel("sensitivity (true positive rate)")
+    ax.set(
+        xlabel="Alert rate",
+        ylabel="sensitivity (true positive rate)",
+        title=f"Sensitivity vs. Low Alert Rate - {title_suffix}",
+    )
     ax.set_ylim(bottom=-0.02, top=1.02)
-    ax.set_xlabel("Alert rate")
     ax.legend(loc="lower right")
-    ax.set_title(f"Sensitivity vs. Low Alert Rate - {title_suffix}")
 
     return fig
 
@@ -323,7 +318,6 @@ def compare_trained_models_plot(
     Returns:
         bar chart of model performance on test data by optimization metric.
     """
-
     df_sorted, metric_score_column = compare_trained_models(
         automl_experiment_id, automl_metric
     )
@@ -374,13 +368,14 @@ def compare_trained_models_plot(
         else f"{automl_metric.capitalize()} Score"
     )
 
-    ax.set_title(f"{automl_metric} by Model Type {sort_order}")
+    ax.set(
+        title=f"{automl_metric} by Model Type {sort_order}",
+        facecolor="none",
+        frame_on=False,
+    )
     ax.tick_params(axis="y", which="both", left=False, right=False, labelleft=True)
     ax.tick_params(axis="x", colors="lightgrey", which="both")  # Color of ticks
     ax.xaxis.grid(True, color="lightgrey", linestyle="--", linewidth=0.5)
-
-    ax.set_facecolor("none")
-    ax.set_frame_on(False)
     fig.tight_layout()
 
     return fig
