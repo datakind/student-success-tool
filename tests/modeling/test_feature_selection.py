@@ -24,7 +24,7 @@ def test_drop_incomplete_features(threshold, expected_columns):
             "incomplete_feature": [np.nan, 2, np.nan, np.nan, np.nan],
         }
     )
-    returned_df = drop_incomplete_features(test_features, threshold)
+    returned_df = drop_incomplete_features(test_features, threshold=threshold)
     assert set(returned_df.columns.values) == set(expected_columns)
     assert returned_df.shape[0] == test_features.shape[0]
 
@@ -33,7 +33,7 @@ def test_drop_low_variance_features():
     low_variance_features = pd.DataFrame(
         {"has_variance": [1, 2, 3, 4, 5], "no_variance": [1, 1, 1, 1, 1]}
     )
-    returned_df = drop_low_variance_features(low_variance_features, 0.0)
+    returned_df = drop_low_variance_features(low_variance_features, threshold=0.0)
     assert set(returned_df.columns.values) == {"has_variance"}
     assert returned_df.shape[0] == low_variance_features.shape[0]
 
@@ -45,7 +45,7 @@ def test_drop_low_variance_features_no_dropped_columns_incl_categorical():
             "categorical": ["cat", "eg", "or", "ic", "al"],
         }
     )
-    returned_df = drop_low_variance_features(low_variance_features, 0.0)
+    returned_df = drop_low_variance_features(low_variance_features, threshold=0.0)
     assert set(returned_df.columns.values) == set(low_variance_features.columns.values)
     assert returned_df.shape[0] == low_variance_features.shape[0]
 
