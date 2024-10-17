@@ -17,6 +17,7 @@ runs:
       with:
         version: "0.4.22"
         enable-cache: true
+        cache-dependency-glob: "uv.lock"
     - name: Install project and dependencies
       run: uv sync --frozen --dev
       shell: bash
