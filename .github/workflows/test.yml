@@ -1,6 +1,9 @@
 name: test
 
-on: pull_request  # any pull request
+on:
+  pull_request:  # any pull request
+  schedule:  # run weekly
+    - cron: "0 12 * * 0"
 
 jobs:
   test:

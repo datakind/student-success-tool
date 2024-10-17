@@ -1,6 +1,7 @@
 name: type-check
 
-on: pull_request  # any pull request
+on:
+  pull_request:  # any pull request
 
 jobs:
   type-check:

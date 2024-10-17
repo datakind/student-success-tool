@@ -1,6 +1,7 @@
 name: lint
 
-on: pull_request  # any pull request
+on:
+  pull_request:  # any pull request
 
 jobs:
   lint:
