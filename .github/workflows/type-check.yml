@@ -1,9 +1,9 @@
-name: lint
+name: "type check"
 
 on: pull_request
 
 jobs:
-  lint:
+  type-check:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Python environment
@@ -15,9 +15,8 @@ jobs:
         uses: tj-actions/changed-files@v45
         with:
           files: |
-            **.py
-            **.ipynb
-      - name: Check style
+            src/**/*.py
+      - name: Check types
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
-          uv tool run ruff check ${{ steps.changed-files.outputs.all_changed_files }}
+          uv run python -m mypy --install-types --non-interactive ${{ steps.changed-files.outputs.all_changed_files }}
