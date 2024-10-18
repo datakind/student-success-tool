@@ -18,7 +18,7 @@ def make_student_term_dataset(
     peak_covid_terms: set[tuple[str, str]] = constants.DEFAULT_PEAK_COVID_TERMS,
     num_terms_checkin: t.Optional[int] = None,
     key_course_subject_areas: t.Optional[list[int]] = None,
-    key_courses: t.Optional[list[int]] = None,
+    key_course_ids: t.Optional[list[int]] = None,
 ) -> pd.DataFrame:
     """
     Make a student-term dataset from raw cohort- and course-level datasets,
@@ -38,7 +38,7 @@ def make_student_term_dataset(
             If 1, all columns only known after the first year will be dropped
             to prevent data leakage.
         key_course_subject_areas
-        key_courses
+        key_courses_ids
 
     TODO: Get rid of num_terms_checkin plus associated logic, maybe?
     """
@@ -64,7 +64,7 @@ def make_student_term_dataset(
             df_courses_plus,
             student_term_id_cols=["student_guid", "term_id"],
             key_course_subject_areas=key_course_subject_areas,
-            key_courses=key_courses,
+            key_course_ids=key_course_ids,
         )
         .merge(df_students, how="inner", on=["institution_id", "student_guid"])
         .pipe(features.student_term.add_features)
