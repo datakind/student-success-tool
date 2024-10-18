@@ -55,6 +55,11 @@ def add_features(df: pd.DataFrame, *, institution_state: str) -> pd.DataFrame:
                 term_col="student_program_of_study_area_term_1",
                 year_col="student_program_of_study_area_year_1",
             ),
+            "diff_gpa_year_1_to_term_1": ft.partial(
+                diff_gpa_year_1_to_term_1,
+                term_col="gpa_group_term_1",
+                year_col="gpa_group_year_1",
+            ),
         }
     return df.assign(**feature_name_funcs)
 
@@ -84,3 +89,7 @@ def student_program_of_study_changed_first_year(
     df: pd.DataFrame, *, term_col: str, year_col: str
 ) -> pd.Series:
     return df[term_col].ne(df[year_col]).astype("boolean")
+
+
+def diff_gpa_year_1_to_term_1(df: pd.DataFrame, *, term_col: str, year_col: str) -> pd.Series:
+    return df[year_col] - df[term_col]

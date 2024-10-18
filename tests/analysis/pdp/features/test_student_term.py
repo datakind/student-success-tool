@@ -76,6 +76,30 @@ def test_sum_dummy_cols_by_group(df, grp_cols, agg_cols, exp):
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
 
+@pytest.mark.parametrize(
+        ["df", "exp"],
+        [(pd.DataFrame({'num_courses_grade_1': [1, 0, 0, 1, 2],
+                        'num_courses_grade_2': [0, 1, 0, 1, 2],
+                        'num_courses_grade_3': [2, 1, 4, 0, 0],
+                        'num_courses_grade_4': [1, 0, 1, 0, 0],
+                        'num_courses_grade_P': [0, 0, 0, 1, 1],
+                        'num_courses_grade_F': [1, 0, 0, 0, 1],
+                        'num_courses_grade_W': [1, 0, 1, 0, 1],
+                        'num_courses_grade_M': [0, 0, 0, 1, 0]}),
+         (pd.Series([3, 0, 1, 1, 4], dtype="int64"))),
+
+         (pd.DataFrame({'num_courses_grade_P': [0, 0, 0, 1, 1],
+                        'num_courses_grade_F': [1, 0, 0, 0, 1],
+                        'num_courses_grade_W': [1, 0, 1, 0, 1],
+                        'num_courses_grade_M': [0, 0, 0, 1, 0]}),
+         (pd.Series([2, 0, 1, 0, 2], dtype="int64"))),
+         ]
+)
+def test_sum_num_dfw_courses(df, exp):
+    obs = student_term.sum_num_dfw_courses(df)
+    assert isinstance(obs, pd.Series) and not obs.empty
+    assert obs.equals(exp) or obs.compare(exp).empty
+
 
 @pytest.mark.parametrize(
     ["df", "grp_cols", "agg_col_vals", "exp"],
