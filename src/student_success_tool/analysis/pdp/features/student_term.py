@@ -363,7 +363,7 @@ def sum_dummy_cols_by_group(
     )
 
 
-def sum_num_dfw_courses(df: pd.DataFrame):
+def sum_num_dfw_courses(df: pd.DataFrame) -> pd.Series:
     """Add number of courses where student received a D, F, or W.
 
     Args:
