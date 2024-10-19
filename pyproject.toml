@@ -20,7 +20,7 @@ dependencies = [
     "seaborn~=0.12",
     "statsmodels~=0.14",
     "textwrap3~=0.9",
-    # "shap~=0.45.0"  # does not install!
+    "shap~=0.45.0",
 ]
 
 [project.urls]
