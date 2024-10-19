@@ -1472,5 +1472,3 @@ risk_df
 # COMMAND ----------
 
 df
-
-# COMMAND ----------
