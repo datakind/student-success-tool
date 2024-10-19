@@ -7,17 +7,55 @@ from ...analysis.pdp import utils
 
 
 class Provider(BaseProvider):
-    def raw_course_record(self, normalize_col_names: bool = False) -> dict[str, object]:
+    def raw_course_record(
+        self, cohort_record: t.Optional[dict] = None, normalize_col_names: bool = False
+    ) -> dict[str, object]:
+        if cohort_record is not None:
+            cr = cohort_record  # for more compact lines below
+            # use existing values where records overlap
+            student_guid = cr.get("student_guid", cr["Student GUID"])
+            student_age = cr.get("student_age", cr["Student Age"])
+            race = cr.get("race", cr["Race"])
+            ethnicity = cr.get("ethnicity", cr["Ethnicity"])
+            gender = cr.get("gender", cr["Gender"])
+            institution_id = cr.get("institution_id", cr["Institution ID"])
+            cohort = cr.get("cohort", cr["Cohort"])
+            cohort_term = cr.get("cohort_term", cr["Cohort Term"])
+        else:
+            student_guid = self.student_guid()
+            student_age = self.student_age()
+            race = self.race()
+            ethnicity = self.ethnicity()
+            gender = self.gender()
+            institution_id = self.institution_id()
+            cohort = self.cohort()
+            cohort_term = self.cohort_term()
+        # derive a few more values, for self-consistency
+        _min_academic_yr = int(cohort.split("-")[0])
+        academic_year = self.academic_year(min_yr=_min_academic_yr)
+        _min_course_yr = int(academic_year.split("-")[0])
+        _max_course_yr = _min_course_yr + 1
+        course_begin_date = self.course_begin_date(
+            min_yr=_min_course_yr, max_yr=_max_course_yr
+        )
+        course_end_date = self.course_end_date(
+            min_yr=_min_course_yr, max_yr=_max_course_yr
+        )
+        course_begin_date, course_end_date = sorted(
+            [course_begin_date, course_end_date], reverse=False
+        )  # ensure that begin date comes before end date
+        core_course = self.core_course()
+        core_course_type = self.core_course_type(core_course)
         record = {
-            "Student GUID": self.student_guid(),
-            "Student Age": self.student_age(),
-            "Race": self.race(),
-            "Ethnicity": self.ethnicity(),
-            "Gender": self.gender(),
-            "Institution ID": self.institution_id(),
-            "Cohort": self.cohort(),
-            "Cohort Term": self.cohort_term(),
-            "Academic Year": self.academic_year(),
+            "Student GUID": student_guid,
+            "Student Age": student_age,
+            "Race": race,
+            "Ethnicity": ethnicity,
+            "Gender": gender,
+            "Institution ID": institution_id,
+            "Cohort": cohort,
+            "Cohort Term": cohort_term,
+            "Academic Year": academic_year,
             "Academic Term": self.academic_term(),
             "Course Prefix": self.course_prefix(),
             "Course Number": self.course_number(),
@@ -27,14 +65,14 @@ class Provider(BaseProvider):
             "Course Type": self.course_type(),
             "Math or English Gateway": self.math_or_english_gateway(),
             "Co-requisite Course": self.co_requisite_course(),
-            "Course Begin Date": self.course_begin_date(),
-            "Course End Date": self.course_end_date(),
+            "Course Begin Date": course_begin_date,
+            "Course End Date": course_end_date,
             "Grade": self.grade(),
             "Number of Credits Attempted": self.number_of_credits_attempted(),
             "Number of Credits Earned": self.number_of_credits_earned(),
             "Delivery Method": self.delivery_method(),
-            "Core Course": self.core_course(),
-            "Core Course Type": self.core_course_type(),
+            "Core Course": core_course,
+            "Core Course Type": core_course_type,
             "Core Competency Completed": self.core_competency_completed(),
             "Enrolled at Other Institution(s)": self.enrolled_at_other_institution_s(),
             "Credential Engine Identifier": self.credential_engine_identifier(),
@@ -165,9 +203,12 @@ class Provider(BaseProvider):
     def core_course(self) -> str:
         return self.random_element(["Y", "N"])
 
-    def core_course_type(self) -> t.Optional[str]:
-        # TODO
-        return None
+    def core_course_type(self, core_course: t.Optional[str] = None) -> t.Optional[str]:
+        if core_course and core_course == "N":
+            return None
+        else:
+            # TODO
+            return "CORE COURSE TYPE"
 
     def core_competency_completed(self) -> str:
         return self.random_element(["Y", "N"])
