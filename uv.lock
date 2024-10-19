@@ -2355,7 +2355,7 @@ requires-dist = [
     { name = "numpy", specifier = "~=1.23" },
     { name = "pandas", specifier = "~=2.1" },
     { name = "pandera", specifier = "~=0.20" },
-    { name = "pillow", specifier = "~=9.4" },
+    { name = "pillow", specifier = "~=9.3" },
     { name = "pyarrow", specifier = "~=14.0" },
     { name = "pyyaml", specifier = "~=6.0" },
     { name = "scikit-learn", specifier = "~=1.3" },
