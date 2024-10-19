@@ -1,0 +1,101 @@
+StuNum,First_Enrollment_Date,FirstGenFlag,AgeGroup,Gender,Race,Ethnicity,IncarceratedFlag,DualEnrollFlag,ABEFlag,Zip,DisabilityFlag,HighSchoolStatus,HighSchoolGradDate,HighSchoolGPA,StudentAthlete,EarnedAward,AwardsEarned
+66215,03/24/2021,Y,25-29,Female,Hispanic,Caucasian/White,1,1,0,79953,Y,GED,02/25/2020,0.11,N,,
+39216,11/06/2002,Y,25-29,Male,Non-Hispanic,Nonresident Alien,1,0,0,15821,N,No High School Record,03/19/1993,,Y,,
+77249,07/19/2013,U,30-39,Not Specified,Hispanic,Asian,1,1,1,00561,Y,No High School Record,,,N,,8.0
+81743,02/14/2000,U,50-64,Female,Non-Hispanic,Caucasian/White,0,1,0,36775,Y,GED,04/20/2004,,N,Y,
+77018,02/17/2001,U,30-39,Female,Non-Hispanic,Nonresident Alien,0,1,1,71428,Y,TraditionalHighSchoolDiploma,,,N,,
+62162,04/03/2016,Y,30-39,Male,Hispanic,Native Hawaiian or Other Pacific Islander,0,0,1,35940,N,No High School Record,,,Y,Y,
+18826,12/30/2012,U,25-29,Not Specified,Non-Hispanic,Black or African American,1,0,0,18676,Y,GED,,,Y,,
+30343,10/28/2021,U,50-64,Not Specified,Hispanic,Nonresident Alien,1,0,1,92930,Y,TraditionalHighSchoolDiploma,,2.0,Y,,
+98112,07/15/2021,U,65+,Not Specified,Non-Hispanic,American Indian or Alaska Native,1,1,0,01176,Y,GED,,1.31,Y,,
+94376,06/29/2013,U,40-49,Not Specified,Hispanic,Black or African American,0,0,1,55170,N,TraditionalHighSchoolDiploma,07/27/2003,3.22,N,Y,
+85292,05/22/2001,Y,20-24,Not Specified,Hispanic,Black or African American,0,1,1,60963,Y,GED,01/27/2024,,Y,,
+98843,05/22/2015,Y,20-24,Not Specified,Non-Hispanic,Two or more races,1,1,0,84042,N,TraditionalHighSchoolDiploma,04/20/1991,,Y,,9.0
+40865,06/18/2012,N,30-39,Female,Non-Hispanic,Caucasian/White,0,1,1,50301,N,GED,,,Y,,
+87430,11/05/2022,N,20-24,Female,Hispanic,Two or more races,0,0,0,92982,Y,GED,04/20/2000,,Y,,
+71499,01/23/2002,N,65+,Not Specified,Hispanic,Caucasian/White,0,1,0,07929,Y,GED,,,Y,,
+42435,03/23/2021,U,25-29,Female,Hispanic,Asian,1,1,0,71692,Y,TraditionalHighSchoolDiploma,,,N,,
+13178,09/05/2012,Y,Under 18,Not Specified,Non-Hispanic,Nonresident Alien,0,1,0,55955,Y,GED,,,N,,
+98607,12/04/2003,U,20-24,Female,Hispanic,Caucasian/White,0,0,1,58022,N,GED,10/22/1997,,Y,,6.0
+99014,01/25/2000,Y,18-19,Not Specified,Hispanic,Unknown,1,0,0,47219,N,No High School Record,03/17/2001,,Y,Y,
+38720,08/14/2015,Y,25-29,Male,Non-Hispanic,Nonresident Alien,0,1,1,38847,Y,GED,04/15/1992,,N,,7.0
+84039,12/02/2015,N,18-19,Not Specified,Non-Hispanic,Native Hawaiian or Other Pacific Islander,1,1,0,06489,Y,GED,,,N,,8.0
+19388,01/23/2007,N,30-39,Female,Hispanic,Nonresident Alien,1,0,1,83885,N,GED,,,N,Y,3.0
+92060,06/22/2005,N,30-39,Male,Hispanic,Nonresident Alien,1,0,1,25943,N,No High School Record,04/18/2001,,Y,,
+16095,07/16/2022,U,65+,Male,Hispanic,Asian,0,0,1,35326,Y,GED,,1.77,N,,
+11393,09/13/2007,U,18-19,Male,Non-Hispanic,Nonresident Alien,1,0,1,83717,N,GED,,,N,,7.0
+13937,11/23/2021,U,65+,Not Specified,Non-Hispanic,American Indian or Alaska Native,1,1,0,70268,Y,GED,08/16/1999,,Y,,
+75293,02/15/2012,Y,50-64,Female,Non-Hispanic,Black or African American,1,0,1,43712,N,GED,09/05/2014,,Y,,
+31306,12/30/2016,Y,20-24,Not Specified,Non-Hispanic,Two or more races,1,1,0,95372,N,No High School Record,,,N,,2.0
+49386,07/11/2012,N,25-29,Not Specified,Non-Hispanic,Asian,1,0,0,13215,N,TraditionalHighSchoolDiploma,11/28/2005,2.78,N,,
+23487,03/21/2011,U,50-64,Female,Non-Hispanic,Two or more races,1,1,1,74837,N,GED,,,N,,
+94237,05/16/2003,N,40-49,Female,Hispanic,Native Hawaiian or Other Pacific Islander,0,1,1,42447,Y,TraditionalHighSchoolDiploma,01/22/1997,,N,,3.0
+72257,11/06/2016,U,Under 18,Female,Hispanic,Asian,1,0,0,38488,Y,GED,08/01/2009,,N,Y,
+62215,09/29/2019,Y,Under 18,Female,Hispanic,Asian,0,0,1,80857,N,GED,06/06/1993,,N,,4.0
+42105,05/17/2019,N,40-49,Male,Hispanic,Native Hawaiian or Other Pacific Islander,1,1,1,96160,Y,No High School Record,,,N,,
+78384,08/04/2001,N,65+,Male,Hispanic,Asian,0,0,0,22190,N,No High School Record,12/21/2010,,Y,,
+89843,08/22/2006,N,20-24,Male,Hispanic,Asian,1,1,1,30240,Y,GED,,2.95,Y,Y,
+38921,08/29/2008,N,30-39,Not Specified,Non-Hispanic,Asian,0,0,0,85319,N,GED,,,Y,,
+33900,10/30/2003,Y,25-29,Female,Hispanic,Native Hawaiian or Other Pacific Islander,1,1,0,22575,Y,TraditionalHighSchoolDiploma,12/23/2017,,N,Y,
+22363,01/03/2011,U,50-64,Female,Non-Hispanic,Native Hawaiian or Other Pacific Islander,1,0,0,88047,N,GED,05/24/2010,,Y,,
+44151,11/04/2003,N,18-19,Female,Hispanic,Unknown,0,1,0,51442,Y,TraditionalHighSchoolDiploma,12/25/2014,,N,Y,
+82690,11/13/2014,N,18-19,Male,Non-Hispanic,Two or more races,1,1,0,98538,Y,GED,01/13/1994,1.75,Y,Y,9.0
+68133,12/04/2021,Y,65+,Not Specified,Non-Hispanic,Nonresident Alien,0,0,1,57324,N,TraditionalHighSchoolDiploma,01/07/2020,,Y,Y,2.0
+17632,12/09/2007,Y,50-64,Not Specified,Hispanic,Asian,0,0,0,77944,Y,TraditionalHighSchoolDiploma,11/23/2022,,Y,,
+34203,11/15/2014,N,18-19,Female,Non-Hispanic,Asian,1,0,1,85905,Y,No High School Record,01/07/2009,,N,,
+61908,06/08/2006,U,20-24,Not Specified,Hispanic,Caucasian/White,1,1,0,68993,N,GED,,,N,Y,
+94522,05/02/2018,N,50-64,Male,Hispanic,American Indian or Alaska Native,1,0,0,30174,Y,TraditionalHighSchoolDiploma,11/29/2017,,N,,
+95726,04/07/2016,Y,65+,Male,Non-Hispanic,Native Hawaiian or Other Pacific Islander,1,0,0,39801,Y,TraditionalHighSchoolDiploma,04/25/2016,,Y,,
+33413,07/27/2020,U,20-24,Male,Non-Hispanic,American Indian or Alaska Native,0,0,1,04438,N,No High School Record,,3.14,N,,
+15787,10/27/2016,Y,Under 18,Male,Hispanic,Native Hawaiian or Other Pacific Islander,1,0,0,24531,Y,TraditionalHighSchoolDiploma,,,Y,,
+57958,07/12/2004,Y,40-49,Male,Hispanic,Asian,1,0,0,26325,N,No High School Record,,,N,,
+85466,10/07/2023,U,40-49,Female,Hispanic,American Indian or Alaska Native,0,0,0,20342,N,GED,02/25/2004,,N,,
+36939,04/04/2021,N,20-24,Female,Non-Hispanic,Nonresident Alien,0,0,1,23520,N,TraditionalHighSchoolDiploma,,,Y,Y,10.0
+32701,05/29/2014,N,30-39,Male,Non-Hispanic,Black or African American,0,0,1,25648,N,GED,02/15/2017,,N,,
+89860,01/02/2007,N,25-29,Female,Hispanic,American Indian or Alaska Native,0,0,0,13987,N,GED,08/21/2017,,Y,Y,
+40791,08/12/2007,Y,25-29,Not Specified,Non-Hispanic,Nonresident Alien,1,0,1,78803,N,GED,,,Y,,1.0
+14504,07/25/2021,N,30-39,Female,Hispanic,Caucasian/White,0,1,0,06558,N,GED,,,N,Y,
+30094,03/16/2016,Y,25-29,Male,Hispanic,Unknown,0,1,1,46173,N,TraditionalHighSchoolDiploma,03/03/1992,,N,,
+71195,11/30/2009,U,20-24,Female,Non-Hispanic,Native Hawaiian or Other Pacific Islander,1,0,0,02168,N,TraditionalHighSchoolDiploma,04/13/1991,,Y,,
+51377,01/06/2000,N,65+,Not Specified,Non-Hispanic,American Indian or Alaska Native,0,1,1,76616,Y,GED,09/06/2000,,Y,,
+39367,09/05/2008,N,40-49,Female,Hispanic,American Indian or Alaska Native,1,1,0,68037,N,TraditionalHighSchoolDiploma,04/05/2016,2.33,N,,
+44629,11/17/2003,Y,40-49,Female,Hispanic,Black or African American,0,0,0,33979,Y,TraditionalHighSchoolDiploma,,,Y,,
+50152,09/20/2020,N,25-29,Male,Hispanic,Asian,1,1,0,90421,N,GED,01/24/1997,3.78,N,,
+44659,12/10/2007,N,40-49,Female,Hispanic,Native Hawaiian or Other Pacific Islander,1,0,1,81393,N,TraditionalHighSchoolDiploma,08/22/1992,,Y,,
+67316,09/11/2014,Y,40-49,Male,Non-Hispanic,Black or African American,0,1,1,83077,N,No High School Record,11/23/2014,,N,Y,4.0
+88182,07/09/2000,N,30-39,Not Specified,Non-Hispanic,Unknown,1,0,0,69726,N,GED,,2.24,N,Y,
+82295,02/07/2009,U,30-39,Not Specified,Non-Hispanic,Unknown,1,0,0,20618,Y,No High School Record,11/19/2014,,Y,Y,
+44014,06/02/2010,N,18-19,Not Specified,Hispanic,Native Hawaiian or Other Pacific Islander,0,0,0,13736,Y,TraditionalHighSchoolDiploma,01/25/2012,,Y,,
+34462,01/14/2013,Y,Under 18,Female,Hispanic,Two or more races,0,1,1,94464,N,TraditionalHighSchoolDiploma,,,Y,Y,5.0
+62063,01/08/2004,U,30-39,Not Specified,Non-Hispanic,American Indian or Alaska Native,1,1,1,48131,Y,GED,04/05/2020,,N,Y,
+92119,01/27/2003,N,20-24,Male,Non-Hispanic,American Indian or Alaska Native,1,1,1,58264,N,No High School Record,09/30/2014,,Y,,
+49908,04/12/2024,U,25-29,Female,Non-Hispanic,American Indian or Alaska Native,1,0,1,19271,N,No High School Record,04/18/2021,0.49,Y,,10.0
+43674,09/19/2024,Y,Under 18,Female,Non-Hispanic,Native Hawaiian or Other Pacific Islander,1,1,0,60204,N,GED,08/20/1993,,N,Y,
+86666,05/02/2015,Y,30-39,Female,Hispanic,American Indian or Alaska Native,0,0,1,20683,Y,TraditionalHighSchoolDiploma,06/19/2019,,Y,Y,
+36914,11/06/2001,Y,18-19,Male,Hispanic,Asian,1,1,0,30816,N,GED,,,Y,,
+93900,01/27/2016,Y,Under 18,Female,Non-Hispanic,American Indian or Alaska Native,1,0,0,26420,N,GED,,,Y,Y,
+83011,07/15/2001,Y,65+,Male,Non-Hispanic,Nonresident Alien,0,0,1,98252,N,GED,,,Y,,
+47345,11/29/2003,Y,Under 18,Female,Hispanic,Black or African American,0,0,1,26640,N,No High School Record,,2.62,Y,,
+59022,04/28/2009,N,30-39,Female,Hispanic,Native Hawaiian or Other Pacific Islander,1,0,1,82529,N,No High School Record,10/17/2001,,Y,,
+86599,12/05/2005,U,25-29,Female,Hispanic,Black or African American,1,0,1,02624,N,GED,03/30/1998,,Y,,
+28235,08/05/2004,N,18-19,Female,Non-Hispanic,Asian,1,1,1,41517,N,TraditionalHighSchoolDiploma,09/13/2009,,N,,
+72397,02/03/2016,Y,50-64,Female,Non-Hispanic,Asian,1,1,0,35127,N,GED,09/07/2000,,N,Y,
+51738,06/24/2000,N,Under 18,Male,Hispanic,Native Hawaiian or Other Pacific Islander,1,1,0,41501,N,No High School Record,,0.92,N,,
+17881,04/10/2002,N,Under 18,Male,Non-Hispanic,American Indian or Alaska Native,1,1,0,32409,N,GED,,,Y,,10.0
+75990,12/10/2013,U,40-49,Female,Hispanic,Asian,0,0,1,61757,Y,No High School Record,,,N,,10.0
+29292,12/11/2018,Y,Under 18,Female,Non-Hispanic,Asian,1,0,1,76606,N,TraditionalHighSchoolDiploma,03/09/2023,,Y,,
+95729,02/12/2003,U,20-24,Female,Hispanic,Native Hawaiian or Other Pacific Islander,0,0,0,76756,N,TraditionalHighSchoolDiploma,,,N,,5.0
+52050,08/16/2000,N,Under 18,Not Specified,Hispanic,American Indian or Alaska Native,0,0,0,53267,Y,No High School Record,,,N,,
+43482,02/06/2012,N,25-29,Not Specified,Non-Hispanic,American Indian or Alaska Native,0,0,1,00592,N,TraditionalHighSchoolDiploma,08/14/1996,,Y,,
+23233,10/15/2016,U,50-64,Not Specified,Hispanic,Two or more races,1,0,1,23650,Y,No High School Record,01/19/2019,2.37,Y,,
+14578,11/29/2019,Y,30-39,Male,Non-Hispanic,Native Hawaiian or Other Pacific Islander,0,0,0,42188,Y,GED,07/30/2018,1.74,Y,,8.0
+17179,09/09/2002,N,65+,Not Specified,Hispanic,Nonresident Alien,0,1,1,50467,N,GED,08/30/2021,,Y,Y,
+89556,05/06/2010,N,18-19,Not Specified,Non-Hispanic,Asian,0,1,0,80845,Y,GED,,3.19,Y,,
+34378,10/10/2007,U,18-19,Male,Hispanic,Unknown,1,0,1,51310,Y,TraditionalHighSchoolDiploma,02/24/2010,,Y,,1.0
+65503,09/07/2008,U,Under 18,Not Specified,Hispanic,Two or more races,0,0,1,39334,N,No High School Record,01/31/2024,,N,,
+80348,06/02/2013,U,50-64,Male,Hispanic,Black or African American,0,0,1,24980,Y,GED,03/30/2021,,Y,Y,
+93300,09/26/2021,N,18-19,Not Specified,Non-Hispanic,American Indian or Alaska Native,0,0,1,38915,N,TraditionalHighSchoolDiploma,10/25/2011,1.7,Y,,
+10546,05/17/2015,N,18-19,Not Specified,Hispanic,Native Hawaiian or Other Pacific Islander,0,0,1,96738,Y,TraditionalHighSchoolDiploma,,,N,,7.0
+97512,11/24/2001,U,40-49,Male,Hispanic,Native Hawaiian or Other Pacific Islander,0,1,1,94948,N,No High School Record,10/17/2011,,N,,8.0
+19595,07/12/2018,N,20-24,Male,Non-Hispanic,Asian,1,0,1,49841,N,No High School Record,,2.15,N,,
+50117,07/26/2003,U,65+,Female,Hispanic,Black or African American,0,1,0,39709,Y,No High School Record,02/26/1999,,N,Y,
