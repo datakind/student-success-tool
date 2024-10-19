@@ -12,7 +12,10 @@ class Provider(BaseProvider):
         return self.numerify("#####!")  # type: ignore
 
     def cohort(self, min_yr: int = 2000, max_yr: t.Optional[int] = None) -> str:
-        start_dt = self.generator.date_between(start_date=date(min_yr, 1, 1))
+        _end_date = date(max_yr, 1, 1) if max_yr is not None else "today"
+        start_dt = self.generator.date_between(
+            start_date=date(min_yr, 1, 1), end_date=_end_date
+        )
         end_dt = start_dt.replace(year=start_dt.year + 1)
         return f"{start_dt:%Y}-{end_dt:%Y}"
 
