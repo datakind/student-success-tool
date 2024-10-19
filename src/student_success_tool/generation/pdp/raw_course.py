@@ -46,6 +46,10 @@ class Provider(BaseProvider):
         )  # ensure that begin date comes before end date
         core_course = self.core_course()
         core_course_type = self.core_course_type(core_course)
+        num_credits_attempted = self.number_of_credits_attempted()
+        num_credits_earned = self.number_of_credits_earned(
+            max_value=num_credits_attempted
+        )
         record = {
             "Student GUID": student_guid,
             "Student Age": student_age,
@@ -68,8 +72,8 @@ class Provider(BaseProvider):
             "Course Begin Date": course_begin_date,
             "Course End Date": course_end_date,
             "Grade": self.grade(),
-            "Number of Credits Attempted": self.number_of_credits_attempted(),
-            "Number of Credits Earned": self.number_of_credits_earned(),
+            "Number of Credits Attempted": num_credits_attempted,
+            "Number of Credits Earned": num_credits_earned,
             "Delivery Method": self.delivery_method(),
             "Core Course": core_course,
             "Core Course Type": core_course_type,
@@ -186,16 +190,18 @@ class Provider(BaseProvider):
             ["0", "1", "2", "3", "4", "P", "F", "I", "W", "A", "M", "O"]
         )
 
-    def _number_of_credits(self, min_value: float = 0.0) -> float:
+    def _number_of_credits(
+        self, min_value: float = 0.0, max_value: float = 20.0
+    ) -> float:
         return self.generator.pyfloat(  # type: ignore
-            min_value=min_value, max_value=20.0, right_digits=1
+            min_value=min_value, max_value=max_value, right_digits=1
         )
 
     def number_of_credits_attempted(self) -> float:
         return self._number_of_credits(min_value=1.0)
 
-    def number_of_credits_earned(self) -> float:
-        return self._number_of_credits()
+    def number_of_credits_earned(self, max_value: float = 20.0) -> float:
+        return self._number_of_credits(max_value=max_value)
 
     def delivery_method(self) -> str:
         return self.random_element(["F", "O", "H"])

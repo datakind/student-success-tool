@@ -276,10 +276,10 @@ class Provider(BaseProvider):
         return self.random_element(["Y", "N", "NA"])
 
     def completed_dev_math_y_1(self) -> str:
-        return ""
+        return self.random_element(["C", "D", "NA"])
 
     def completed_dev_english_y_1(self) -> str:
-        return self.random_element(["Y", "N", "NA"])
+        return self.random_element(["C", "D", "NA"])
 
     def retention(self) -> bool:
         return self.generator.pybool()  # type: ignore
