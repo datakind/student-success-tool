@@ -3,8 +3,53 @@ from datetime import date
 
 from faker.providers import BaseProvider
 
+from ...analysis.pdp import utils
+
 
 class Provider(BaseProvider):
+    def raw_course_record(self, normalize_col_names: bool = False) -> dict[str, object]:
+        record = {
+            "Student GUID": self.student_guid(),
+            "Student Age": self.student_age(),
+            "Race": self.race(),
+            "Ethnicity": self.ethnicity(),
+            "Gender": self.gender(),
+            "Institution ID": self.institution_id(),
+            "Cohort": self.cohort(),
+            "Cohort Term": self.cohort_term(),
+            "Academic Year": self.academic_year(),
+            "Academic Term": self.academic_term(),
+            "Course Prefix": self.course_prefix(),
+            "Course Number": self.course_number(),
+            "Section ID": self.section_id(),
+            "Course Name": self.course_name(),
+            "Course CIP": self.course_cip(),
+            "Course Type": self.course_type(),
+            "Math or English Gateway": self.math_or_english_gateway(),
+            "Co-requisite Course": self.co_requisite_course(),
+            "Course Begin Date": self.course_begin_date(),
+            "Course End Date": self.course_end_date(),
+            "Grade": self.grade(),
+            "Number of Credits Attempted": self.number_of_credits_attempted(),
+            "Number of Credits Earned": self.number_of_credits_earned(),
+            "Delivery Method": self.delivery_method(),
+            "Core Course": self.core_course(),
+            "Core Course Type": self.core_course_type(),
+            "Core Competency Completed": self.core_competency_completed(),
+            "Enrolled at Other Institution(s)": self.enrolled_at_other_institution_s(),
+            "Credential Engine Identifier": self.credential_engine_identifier(),
+            "Course Instructor Employment Status": self.course_instructor_employment_status(),
+            "Course Instructor Rank": self.course_instructor_rank(),
+            "Enrollment Record at Other Institution(s) STATE(s)": self.enrollment_record_at_other_institution_s_state_s(),
+            "Enrollment Record at Other Institution(s) CARNEGIE(s)": self.enrollment_record_at_other_institution_s_carnegie_s(),
+            "Enrollment Record at Other Institution(s) LOCALE(s)": self.enrollment_record_at_other_institution_s_locale_s(),
+        }
+        if normalize_col_names:
+            record = {
+                utils.convert_to_snake_case(key): val for key, val in record.items()
+            }
+        return record
+
     def student_guid(self) -> str:
         return self.numerify("#####!")  # type: ignore
 
@@ -35,7 +80,7 @@ class Provider(BaseProvider):
     def gender(self) -> str:
         return self.random_element(["M", "F", "P", "X", "UK"])
 
-    def cohort(self, min_yr: int = 2000, max_yr: t.Optional[int] = None) -> str:
+    def cohort(self, min_yr: int = 2010, max_yr: t.Optional[int] = None) -> str:
         start_dt = self.generator.date_between(start_date=date(min_yr, 1, 1))
         end_dt = start_dt.replace(year=start_dt.year + 1)
         return f"{start_dt:%Y}-{end_dt:%Y}"
@@ -43,7 +88,7 @@ class Provider(BaseProvider):
     def cohort_term(self) -> str:
         return self.random_element(["FALL", "WINTER", "SPRING", "SUMMER"])
 
-    def academic_year(self, min_yr: int = 2000, max_yr: t.Optional[int] = None) -> str:
+    def academic_year(self, min_yr: int = 2010, max_yr: t.Optional[int] = None) -> str:
         start_dt = self.generator.date_between(start_date=date(min_yr, 1, 1))
         end_dt = start_dt.replace(year=start_dt.year + 1)
         return f"{start_dt:%Y}-{end_dt:%Y}"
@@ -80,19 +125,19 @@ class Provider(BaseProvider):
     def co_requisite_course(self) -> str:
         return self.random_element(["Y", "N"])
 
-    def _course_date(self, min_yr: int = 2000, max_yr: t.Optional[int] = None) -> date:
+    def _course_date(self, min_yr: int = 2010, max_yr: t.Optional[int] = None) -> date:
         _end_date = date(max_yr, 1, 1) if max_yr is not None else "today"
         return self.generator.date_between(  # type: ignore
             start_date=date(min_yr, 1, 1), end_date=_end_date
         )
 
     def course_begin_date(
-        self, min_yr: int = 2000, max_yr: t.Optional[int] = None
+        self, min_yr: int = 2010, max_yr: t.Optional[int] = None
     ) -> date:
         return self._course_date(min_yr, max_yr)
 
     def course_end_date(
-        self, min_yr: int = 2000, max_yr: t.Optional[int] = None
+        self, min_yr: int = 2010, max_yr: t.Optional[int] = None
     ) -> date:
         return self._course_date(min_yr, max_yr)
 

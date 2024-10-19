@@ -3,17 +3,110 @@ from datetime import date
 
 from faker.providers import BaseProvider
 
+from ...analysis.pdp import utils
+
 
 class Provider(BaseProvider):
+    def raw_cohort_record(
+        self,
+        min_cohort_yr: int = 2010,
+        max_cohort_yr: t.Optional[int] = None,
+        normalize_col_names: bool = False,
+    ) -> dict[str, object]:
+        record = {
+            "Student GUID": self.student_guid(),
+            "Institution ID": self.institution_id(),
+            "Cohort": self.cohort(min_yr=min_cohort_yr, max_yr=max_cohort_yr),
+            "Cohort Term": self.cohort_term(),
+            "Student Age": self.student_age(),
+            "Enrollment Type": self.enrollment_type(),
+            "Enrollment Intensity First Term": self.enrollment_intensity_first_term(),
+            "Math Placement": self.math_placement(),
+            "English Placement": self.english_placement(),
+            "Dual and Summer Enrollment": self.dual_and_summer_enrollment(),
+            "Race": self.race(),
+            "Ethnicity": self.ethnicity(),
+            "Gender": self.gender(),
+            "First Gen": self.first_gen(),
+            "Pell Status First Year": self.pell_status_first_year(),
+            "Attendance Status Term 1": self.attendance_status_term_1(),
+            "Credential Type Sought Year 1": self.credential_type_sought_year_1(),
+            "Program of Study Term 1": self.program_of_study_term_1(),
+            "GPA Group Term 1": self.gpa_group_term_1(),
+            "GPA Group Year 1": self.gpa_group_year_1(),
+            "Number of Credits Attempted Year 1": self.number_of_credits_attempted_year_1(),
+            "Number of Credits Earned Year 1": self.number_of_credits_earned_year_1(),
+            "Number of Credits Attempted Year 2": self.number_of_credits_attempted_year_2(),
+            "Number of Credits Earned Year 2": self.number_of_credits_earned_year_2(),
+            "Number of Credits Attempted Year 3": self.number_of_credits_attempted_year_3(),
+            "Number of Credits Earned Year 3": self.number_of_credits_earned_year_3(),
+            "Number of Credits Attempted Year 4": self.number_of_credits_attempted_year_4(),
+            "Number of Credits Earned Year 4": self.number_of_credits_earned_year_4(),
+            "Gateway Math Status": self.gateway_math_status(),
+            "Gateway English Status": self.gateway_english_status(),
+            "AttemptedGatewayMathYear1": self.attempted_gateway_math_year_1(),
+            "AttemptedGatewayEnglishYear1": self.attempted_gateway_english_year_1(),
+            "CompletedGatewayMathYear1": self.completed_gateway_math_year_1(),
+            "CompletedGatewayEnglishYear1": self.completed_gateway_english_year_1(),
+            "GatewayMathGradeY1": self.gateway_math_grade_y_1(),
+            "GatewayEnglishGradeY1": self.gateway_english_grade_y_1(),
+            "AttemptedDevMathY1": self.attempted_dev_math_y_1(),
+            "AttemptedDevEnglishY1": self.attempted_dev_english_y_1(),
+            "CompletedDevMathY1": self.completed_dev_math_y_1(),
+            "CompletedDevEnglishY1": self.completed_dev_english_y_1(),
+            "Retention": self.retention(),
+            "Persistence": self.persistence(),
+            "Years to Bachelors at cohort inst.": self.years_to_bachelors_at_cohort_inst(),
+            "Years to Associates or Certificate at cohort inst.": self.years_to_associates_or_certificate_at_cohort_inst(),
+            "Years to Bachelor at other inst.": self.years_to_bachelor_at_other_inst(),
+            "Years to Associates or Certificate at other inst.": self.years_to_associates_or_certificate_at_other_inst(),
+            "Years of Last Enrollment at cohort institution": self.years_of_last_enrollment_at_cohort_institution(),
+            "Years of Last Enrollment at other institution": self.years_of_last_enrollment_at_other_institution(),
+            "Time to Credential": self.time_to_credential(),
+            "Reading Placement": self.reading_placement(),
+            "Special Program": self.special_program(),
+            "NASPA First-Generation": self.naspa_first_generation(),
+            "Incarcerated Status": self.incarcerated_status(),
+            "Military Status": self.military_status(),
+            "Employment Status": self.employment_status(),
+            "Disability Status": self.disability_status(),
+            "Foreign Language Completion": self.foreign_language_completion(),
+            "First Year to Bachelors at cohort inst.": self.first_year_to_bachelors_at_cohort_inst(),
+            "First Year to Associates or Certificate at cohort inst.": self.first_year_to_associates_or_certificate_at_cohort_inst(),
+            "First Year to Bachelor at other inst.": self.first_year_to_bachelor_at_other_inst(),
+            "First Year to Associates or Certificate at other inst.": self.first_year_to_associates_or_certificate_at_other_inst(),
+            "Program of Study Year 1": self.program_of_study_year_1(),
+            "Most Recent Bachelors at Other Institution STATE": self.most_recent_bachelors_at_other_institution_state(),
+            "Most Recent Associates or Certificate at Other Institution STATE": self.most_recent_associates_or_certificate_at_other_institution_state(),
+            "Most Recent Last Enrollment at Other institution STATE": self.most_recent_last_enrollment_at_other_institution_state(),
+            "First Bachelors at Other Institution STATE": self.first_bachelors_at_other_institution_state(),
+            "First Associates or Certificate at Other Institution STATE": self.first_associates_or_certificate_at_other_institution_state(),
+            "Most Recent Bachelors at Other Institution CARNEGIE": self.most_recent_bachelors_at_other_institution_carnegie(),
+            "Most Recent Associates or Certificate at Other Institution CARNEGIE": self.most_recent_associates_or_certificate_at_other_institution_carnegie(),
+            "Most Recent Last Enrollment at Other institution CARNEGIE": self.most_recent_last_enrollment_at_other_institution_carnegie(),
+            "First Bachelors at Other Institution CARNEGIE": self.first_bachelors_at_other_institution_carnegie(),
+            "First Associates or Certificate at Other Institution CARNEGIE": self.first_associates_or_certificate_at_other_institution_carnegie(),
+            "Most Recent Bachelors at Other Institution LOCALE": self.most_recent_bachelors_at_other_institution_locale(),
+            "Most Recent Associates or Certificate at Other Institution LOCALE": self.most_recent_associates_or_certificate_at_other_institution_locale(),
+            "Most Recent Last Enrollment at Other institution LOCALE": self.most_recent_last_enrollment_at_other_institution_locale(),
+            "First Bachelors at Other Institution LOCALE": self.first_bachelors_at_other_institution_locale(),
+            "First Associates or Certificate at Other Institution LOCALE": self.first_associates_or_certificate_at_other_institution_locale(),
+        }
+        if normalize_col_names:
+            record = {
+                utils.convert_to_snake_case(key): val for key, val in record.items()
+            }
+        return record
+
     def student_guid(self) -> str:
-        return self.numerify("#####!")  # type: ignore
+        return self.numerify("#####!")
 
     def institution_id(self) -> str:
-        return self.numerify("#####!")  # type: ignore
+        return self.numerify("#####!")
 
-    def cohort(self, min_yr: int = 2000, max_yr: t.Optional[int] = None) -> str:
+    def cohort(self, min_yr: int = 2010, max_yr: t.Optional[int] = None) -> str:
         _end_date = date(max_yr, 1, 1) if max_yr is not None else "today"
-        start_dt = self.generator.date_between(
+        start_dt: date = self.generator.date_between(
             start_date=date(min_yr, 1, 1), end_date=_end_date
         )
         end_dt = start_dt.replace(year=start_dt.year + 1)
