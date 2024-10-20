@@ -21,7 +21,7 @@ class Provider(BaseProvider):
             institution_id = cr.get("institution_id", cr["Institution ID"])
             cohort = cr.get("cohort", cr["Cohort"])
             cohort_term = cr.get("cohort_term", cr["Cohort Term"])
-            _has_enrollment_other_inst = (
+            _has_enrollment_other_inst: bool = (
                 cr.get(
                     "most_recent_bachelors_at_other_institution_state",
                     cr["Most Recent Bachelors at Other Institution STATE"],
@@ -37,7 +37,7 @@ class Provider(BaseProvider):
             institution_id = self.institution_id()
             cohort = self.cohort()
             cohort_term = self.cohort_term()
-            _has_enrollment_other_inst: bool = self.generator.random.random() < 0.25
+            _has_enrollment_other_inst: bool = self.generator.random.random() < 0.25  # type: ignore
         # derive a few more values, for self-consistency
         _min_academic_yr = int(cohort.split("-")[0])
         academic_year = self.academic_year(min_yr=_min_academic_yr)
