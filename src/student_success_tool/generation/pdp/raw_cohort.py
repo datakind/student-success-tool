@@ -218,7 +218,11 @@ class Provider(BaseProvider):
             enrollment_type = self.enrollment_type()
         if not enrollment_intensity_first_term:
             enrollment_intensity_first_term = self.enrollment_intensity_first_term()
-        return f"{enrollment_type} {enrollment_intensity_first_term}".title()
+        return (
+            f"{enrollment_type} {enrollment_intensity_first_term}".title()
+            # PDP's string casing is frustratingly inconsistent
+            .replace("Admit", "admit")
+        )
 
     def credential_type_sought_year_1(self) -> str:
         return self.random_element(
