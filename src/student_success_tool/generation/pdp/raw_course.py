@@ -10,9 +10,9 @@ class Provider(BaseProvider):
     def raw_course_record(
         self, cohort_record: t.Optional[dict] = None, normalize_col_names: bool = False
     ) -> dict[str, object]:
+        # use existing values where records overlap
         if cohort_record is not None:
             cr = cohort_record  # for more compact lines below
-            # use existing values where records overlap
             student_guid = cr.get("student_guid", cr["Student GUID"])
             student_age = cr.get("student_age", cr["Student Age"])
             race = cr.get("race", cr["Race"])
@@ -21,6 +21,13 @@ class Provider(BaseProvider):
             institution_id = cr.get("institution_id", cr["Institution ID"])
             cohort = cr.get("cohort", cr["Cohort"])
             cohort_term = cr.get("cohort_term", cr["Cohort Term"])
+            _has_enrollment_other_inst = (
+                cr.get(
+                    "most_recent_bachelors_at_other_institution_state",
+                    cr["Most Recent Bachelors at Other Institution STATE"],
+                )
+                is not None
+            )
         else:
             student_guid = self.student_guid()
             student_age = self.student_age()
@@ -30,6 +37,7 @@ class Provider(BaseProvider):
             institution_id = self.institution_id()
             cohort = self.cohort()
             cohort_term = self.cohort_term()
+            _has_enrollment_other_inst: bool = self.generator.random.random() < 0.25
         # derive a few more values, for self-consistency
         _min_academic_yr = int(cohort.split("-")[0])
         academic_year = self.academic_year(min_yr=_min_academic_yr)
@@ -82,9 +90,15 @@ class Provider(BaseProvider):
             "Credential Engine Identifier": self.credential_engine_identifier(),
             "Course Instructor Employment Status": self.course_instructor_employment_status(),
             "Course Instructor Rank": self.course_instructor_rank(),
-            "Enrollment Record at Other Institution(s) STATE(s)": self.enrollment_record_at_other_institution_s_state_s(),
-            "Enrollment Record at Other Institution(s) CARNEGIE(s)": self.enrollment_record_at_other_institution_s_carnegie_s(),
-            "Enrollment Record at Other Institution(s) LOCALE(s)": self.enrollment_record_at_other_institution_s_locale_s(),
+            "Enrollment Record at Other Institution(s) STATE(s)": self.enrollment_record_at_other_institution_s_state_s(
+                _has_enrollment_other_inst
+            ),
+            "Enrollment Record at Other Institution(s) CARNEGIE(s)": self.enrollment_record_at_other_institution_s_carnegie_s(
+                _has_enrollment_other_inst
+            ),
+            "Enrollment Record at Other Institution(s) LOCALE(s)": self.enrollment_record_at_other_institution_s_locale_s(
+                _has_enrollment_other_inst
+            ),
         }
         if normalize_col_names:
             record = {
@@ -231,27 +245,45 @@ class Provider(BaseProvider):
     def course_instructor_rank(self) -> str:
         return self.random_element(["1", "2", "3", "4", "5", "6", "7"])
 
-    def enrollment_record_at_other_institution_s_state_s(self) -> str:
-        return self.generator.state_abbr(include_freely_associated_states=False)  # type: ignore
+    def enrollment_record_at_other_institution_s_state_s(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[str]:
+        return (
+            self.generator.state_abbr(include_freely_associated_states=False)
+            if has_enrollment
+            else None
+        )  # type: ignore
 
-    def enrollment_record_at_other_institution_s_carnegie_s(self) -> str:
-        return self.random_element(
-            [
-                "High traditional",
-                "Mixed traditional/nontraditional",
-                "High nontraditional",
-                "Associate's Dominant",
-                "Mixed Baccalaureate/Associate's Colleges",
-                "Arts & sciences focus",
-                "Diverse fields",
-                "M1: Master's Colleges and Universities - Larger programs",
-                "M2: Master's Colleges and Universities – Medium programs",
-                "M3: Master's Colleges and Universities – Small programs",
-                "R1: Doctoral universities – very high research activity",
-                "R2: Doctoral universities – high research activity",
-                "D/PU: Doctoral/professional universities",
-            ]
+    def enrollment_record_at_other_institution_s_carnegie_s(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[str]:
+        return (
+            self.random_element(
+                [
+                    "High traditional",
+                    "Mixed traditional/nontraditional",
+                    "High nontraditional",
+                    "Associate's Dominant",
+                    "Mixed Baccalaureate/Associate's Colleges",
+                    "Arts & sciences focus",
+                    "Diverse fields",
+                    "M1: Master's Colleges and Universities - Larger programs",
+                    "M2: Master's Colleges and Universities – Medium programs",
+                    "M3: Master's Colleges and Universities – Small programs",
+                    "R1: Doctoral universities – very high research activity",
+                    "R2: Doctoral universities – high research activity",
+                    "D/PU: Doctoral/professional universities",
+                ]
+            )
+            if has_enrollment
+            else None
         )
 
-    def enrollment_record_at_other_institution_s_locale_s(self) -> str:
-        return self.random_element(["URBAN", "SUBURB", "TOWN/RURAL"])
+    def enrollment_record_at_other_institution_s_locale_s(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[str]:
+        return (
+            self.random_element(["URBAN", "SUBURB", "TOWN/RURAL"])
+            if has_enrollment
+            else None
+        )
