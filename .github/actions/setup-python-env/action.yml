@@ -4,10 +4,6 @@ inputs:
   python-version:
     description: "Python version to use"
     required: true
-  uv-version:
-    description: "uv version to use"
-    required: false
-    default: "0.4.20"
 
 runs:
   using: composite
@@ -16,13 +12,12 @@ runs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.python-version }}
-
     - name: Install uv
       uses: astral-sh/setup-uv@v3
       with:
-        version: ${{ inputs.uv-version }}
+        version: "0.4.22"
         enable-cache: true
-
+        cache-dependency-glob: "uv.lock"
     - name: Install project and dependencies
       run: uv sync --frozen --dev
       shell: bash

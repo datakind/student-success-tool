@@ -1,0 +1,24 @@
+name: pre-release
+
+on:
+  # pull request targeting main branch
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-changelog:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v45
+        with:
+          files: |
+            CHANGELOG.md
+      - name: Ensure changelog updated
+        if: steps.changed-files.outputs.any_changed == 'false'
+        run: |
+          echo "CHANGELOG.md file must be updated with release notes"
+          exit 1
