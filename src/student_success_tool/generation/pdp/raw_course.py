@@ -208,7 +208,9 @@ class Provider(BaseProvider):
         self, min_value: float = 0.0, max_value: float = 20.0
     ) -> float:
         return self.generator.pyfloat(  # type: ignore
-            min_value=min_value, max_value=max_value, right_digits=1
+            min_value=min_value,
+            max_value=max(max_value, min_value + 1e-3),
+            right_digits=1,
         )
 
     def number_of_credits_attempted(self) -> float:
