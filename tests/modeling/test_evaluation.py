@@ -2,40 +2,7 @@ import mlflow.tracking
 import pandas as pd
 import pytest
 
-from student_success_tool.modeling.evaluation import (
-    check_array_of_arrays,
-    compare_trained_models,
-    get_sensitivity_of_top_q_pctl_thresh,
-)
-
-
-def test_check_array_of_arrays_true():
-    input_array = pd.Series([[1, 0, 1], [0, 1, 0]])
-    assert check_array_of_arrays(input_array)
-
-
-def test_check_array_of_arrays_false():
-    input_array = pd.Series([1, 0, 1])
-    assert not check_array_of_arrays(input_array)
-
-
-@pytest.mark.parametrize(
-    "y_true,risk_score,q,sensitivity",
-    [
-        (["Y", "Y", "Y", "N", "N"], [0.12, 0.32, 0.98, 0.48, 0.87], 0.99, 1 / 3),
-        (
-            ["N", "N", "N", "N", "Y", "N", "N", "N", "N", "Y"],
-            [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
-            0.9,
-            0.5,
-        ),
-    ],
-)
-def test_get_sensitivity_of_top_q_pctl_thresh(y_true, risk_score, q, sensitivity):
-    assert (
-        get_sensitivity_of_top_q_pctl_thresh(y_true, risk_score, q, pos_label="Y")
-        == sensitivity
-    )
+from student_success_tool.modeling import evaluation
 
 
 @pytest.fixture
@@ -49,8 +16,39 @@ def patch_mlflow(monkeypatch):
     monkeypatch.setattr(mlflow.tracking.MlflowClient, "search_runs", mock_search_runs)
 
 
+def test_check_array_of_arrays_true():
+    input_array = pd.Series([[1, 0, 1], [0, 1, 0]])
+    assert evaluation.check_array_of_arrays(input_array)
+
+
+def test_check_array_of_arrays_false():
+    input_array = pd.Series([1, 0, 1])
+    assert not evaluation.check_array_of_arrays(input_array)
+
+
 @pytest.mark.parametrize(
-    "data, metric, expected_order, expected_columns",
+    ["y_true", "risk_score", "q", "sensitivity"],
+    [
+        (["Y", "Y", "Y", "N", "N"], [0.12, 0.32, 0.98, 0.48, 0.87], 0.99, 1 / 3),
+        (
+            ["N", "N", "N", "N", "Y", "N", "N", "N", "N", "Y"],
+            [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
+            0.9,
+            0.5,
+        ),
+    ],
+)
+def test_get_sensitivity_of_top_q_pctl_thresh(y_true, risk_score, q, sensitivity):
+    assert (
+        evaluation.get_sensitivity_of_top_q_pctl_thresh(
+            y_true, risk_score, q, pos_label="Y"
+        )
+        == sensitivity
+    )
+
+
+@pytest.mark.parametrize(
+    ["data", "metric", "expected_order", "expected_columns"],
     [
         (
             {
@@ -88,7 +86,7 @@ def test_compare_trained_models(
         return pd.DataFrame(data)
 
     monkeypatch.setattr(mlflow, "search_runs", _search_runs_patch)
-    result, _ = compare_trained_models("dummy_id", metric)
+    result, _ = evaluation.compare_trained_models("dummy_id", metric)
     print(result["tags.model_type"].tolist())
     assert isinstance(result, pd.DataFrame), "The result should be a pandas DataFrame."
     assert (
