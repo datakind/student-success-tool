@@ -119,7 +119,7 @@ def select_eligible_students(
         term_col
         term_rank_col
     """
-    nunique_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
+    nuq_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
     df_students_by_criteria = shared.select_students_by_criteria(
         df, student_id_cols=student_id_cols, **student_criteria
     )
@@ -139,6 +139,10 @@ def select_eligible_students(
         sort_cols=term_rank_col,
         include_cols=[enrollment_intensity_col],
     )
+    nuq_students_checkin = len(df_ref)
+    shared._log_eligible_selection(
+        nuq_students_in, nuq_students_checkin, "check-in credits earned"
+    )
     df_students_by_time_left = shared.select_students_by_time_left(
         df_ref,
         intensity_time_lefts=intensity_time_limits,
@@ -153,11 +157,6 @@ def select_eligible_students(
         on=student_id_cols,
         how="inner",
     )
-    nunique_students_out = df_out.groupby(by=student_id_cols, sort=False).ngroups
-    LOGGER.info(
-        "%s out of %s (%s%%) students selected as eligible",
-        nunique_students_out,
-        nunique_students_in,
-        round(100 * nunique_students_out / nunique_students_in, 1),
-    )
+    nuq_students_out = df_out.groupby(by=student_id_cols, sort=False).ngroups
+    shared._log_eligible_selection(nuq_students_in, nuq_students_out, "overall")
     return df_out
