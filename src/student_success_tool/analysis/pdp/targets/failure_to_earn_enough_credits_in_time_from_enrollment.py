@@ -1,3 +1,4 @@
+import logging
 import typing as t
 from collections.abc import Collection
 
@@ -6,6 +7,8 @@ import pandas as pd
 
 from .. import dataops, features, utils
 from . import shared
+
+LOGGER = logging.getLogger(__name__)
 
 
 def compute_target_variable(
@@ -116,6 +119,7 @@ def select_eligible_students(
         term_col
         term_rank_col
     """
+    nunique_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
     df_students_by_criteria = shared.select_students_by_criteria(
         df, student_id_cols=student_id_cols, **student_criteria
     )
@@ -144,8 +148,16 @@ def select_eligible_students(
         enrollment_intensity_col=enrollment_intensity_col,
         term_rank_col=term_rank_col,
     )
-    return features.shared.merge_many_dataframes(
+    df_out = features.shared.merge_many_dataframes(
         [df_students_by_criteria, df_students_by_num_creds, df_students_by_time_left],
         on=student_id_cols,
         how="inner",
     )
+    nunique_students_out = df_out.groupby(by=student_id_cols, sort=False).ngroups
+    LOGGER.info(
+        "%s out of %s (%s%%) students selected as eligible",
+        nunique_students_out,
+        nunique_students_in,
+        round(100 * nunique_students_out / nunique_students_out, 1),
+    )
+    return df_out
