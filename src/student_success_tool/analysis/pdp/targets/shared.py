@@ -46,15 +46,30 @@ def select_students_by_criteria(
         else df[key].eq(val).fillna(value=False)  # type: ignore
         for key, val in criteria.items()
     ]
+    for (key, val), is_eligible_citerion in zip(criteria.items(), is_eligibles):
+        nunique_students_criterion = (
+            df.loc[is_eligible_citerion, student_id_cols]
+            .groupby(by=student_id_cols, sort=False)
+            .ngroups
+        )
+        LOGGER.info(
+            "%s out of %s (%s%%) students selected as eligible by %s=%s criterion ...",
+            nunique_students_criterion,
+            nunique_students_in,
+            round(100 * nunique_students_criterion / nunique_students_in, 1),
+            key,
+            val,
+        )
+
     is_eligible = np.logical_and.reduce(is_eligibles)
     df_out = (
         df.loc[is_eligible, student_id_cols]
         # df is at student-term level; get student ids from first eligible terms only
         .drop_duplicates(ignore_index=True)
     )
-    nunique_students_out = df_out.groupby(by=student_id_cols, sort=False).ngroups
+    nunique_students_out = len(df_out)
     LOGGER.info(
-        "%s out of %s (%s%%) students selected as eligible by criteria",
+        "%s out of %s (%s%%) students selected as eligible by all criteria",
         nunique_students_out,
         nunique_students_in,
         round(100 * nunique_students_out / nunique_students_in, 1),
@@ -126,7 +141,7 @@ def select_students_by_time_left(
         # df is at student-term level; get student ids from first eligible terms only
         .drop_duplicates(ignore_index=True)
     )
-    nunique_students_out = df_out.groupby(by=student_id_cols, sort=False).ngroups
+    nunique_students_out = len(df_out)
     LOGGER.info(
         "%s out of %s (%s%%) students selected as eligible by time left",
         nunique_students_out,
