@@ -162,6 +162,6 @@ def select_eligible_students(
         "%s out of %s (%s%%) students selected as eligible",
         nunique_students_out,
         nunique_students_in,
-        round(100 * nunique_students_out / nunique_students_out, 1),
+        round(100 * nunique_students_out / nunique_students_in, 1),
     )
     return df_out
