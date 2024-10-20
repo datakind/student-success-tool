@@ -13,14 +13,23 @@ class Provider(BaseProvider):
         max_cohort_yr: t.Optional[int] = None,
         normalize_col_names: bool = False,
     ) -> dict[str, object]:
+        # some fields are inputs to others; compute them first, accordingly
+        enrollment_type = self.enrollment_type()
+        enrollment_intensity_first_term = self.enrollment_intensity_first_term()
+        number_of_credits_attempted_year_1 = self.number_of_credits_attempted_year_1()
+        number_of_credits_attempted_year_2 = self.number_of_credits_attempted_year_2()
+        number_of_credits_attempted_year_3 = self.number_of_credits_attempted_year_3()
+        number_of_credits_attempted_year_4 = self.number_of_credits_attempted_year_4()
+        _has_enrollment_other_inst: bool = self.generator.random.random() < 0.25
+        # TODO: handle other cases, e.g. gateway course attempted/completed/grades
         record = {
             "Student GUID": self.student_guid(),
             "Institution ID": self.institution_id(),
             "Cohort": self.cohort(min_yr=min_cohort_yr, max_yr=max_cohort_yr),
             "Cohort Term": self.cohort_term(),
             "Student Age": self.student_age(),
-            "Enrollment Type": self.enrollment_type(),
-            "Enrollment Intensity First Term": self.enrollment_intensity_first_term(),
+            "Enrollment Type": enrollment_type,
+            "Enrollment Intensity First Term": enrollment_intensity_first_term,
             "Math Placement": self.math_placement(),
             "English Placement": self.english_placement(),
             "Dual and Summer Enrollment": self.dual_and_summer_enrollment(),
@@ -29,19 +38,30 @@ class Provider(BaseProvider):
             "Gender": self.gender(),
             "First Gen": self.first_gen(),
             "Pell Status First Year": self.pell_status_first_year(),
-            "Attendance Status Term 1": self.attendance_status_term_1(),
+            "Attendance Status Term 1": self.attendance_status_term_1(
+                enrollment_type, enrollment_intensity_first_term
+            ),
             "Credential Type Sought Year 1": self.credential_type_sought_year_1(),
             "Program of Study Term 1": self.program_of_study_term_1(),
+            "Program of Study Year 1": self.program_of_study_year_1(),
             "GPA Group Term 1": self.gpa_group_term_1(),
             "GPA Group Year 1": self.gpa_group_year_1(),
-            "Number of Credits Attempted Year 1": self.number_of_credits_attempted_year_1(),
-            "Number of Credits Earned Year 1": self.number_of_credits_earned_year_1(),
-            "Number of Credits Attempted Year 2": self.number_of_credits_attempted_year_2(),
-            "Number of Credits Earned Year 2": self.number_of_credits_earned_year_2(),
-            "Number of Credits Attempted Year 3": self.number_of_credits_attempted_year_3(),
-            "Number of Credits Earned Year 3": self.number_of_credits_earned_year_3(),
-            "Number of Credits Attempted Year 4": self.number_of_credits_attempted_year_4(),
-            "Number of Credits Earned Year 4": self.number_of_credits_earned_year_4(),
+            "Number of Credits Attempted Year 1": number_of_credits_attempted_year_1,
+            "Number of Credits Earned Year 1": self.number_of_credits_earned_year_1(
+                max_value=number_of_credits_attempted_year_1
+            ),
+            "Number of Credits Attempted Year 2": number_of_credits_attempted_year_2,
+            "Number of Credits Earned Year 2": self.number_of_credits_earned_year_2(
+                max_value=number_of_credits_attempted_year_2
+            ),
+            "Number of Credits Attempted Year 3": number_of_credits_attempted_year_3,
+            "Number of Credits Earned Year 3": self.number_of_credits_earned_year_3(
+                max_value=number_of_credits_attempted_year_3
+            ),
+            "Number of Credits Attempted Year 4": number_of_credits_attempted_year_4,
+            "Number of Credits Earned Year 4": self.number_of_credits_earned_year_4(
+                max_value=number_of_credits_attempted_year_4
+            ),
             "Gateway Math Status": self.gateway_math_status(),
             "Gateway English Status": self.gateway_english_status(),
             "AttemptedGatewayMathYear1": self.attempted_gateway_math_year_1(),
@@ -75,22 +95,51 @@ class Provider(BaseProvider):
             "First Year to Associates or Certificate at cohort inst.": self.first_year_to_associates_or_certificate_at_cohort_inst(),
             "First Year to Bachelor at other inst.": self.first_year_to_bachelor_at_other_inst(),
             "First Year to Associates or Certificate at other inst.": self.first_year_to_associates_or_certificate_at_other_inst(),
-            "Program of Study Year 1": self.program_of_study_year_1(),
-            "Most Recent Bachelors at Other Institution STATE": self.most_recent_bachelors_at_other_institution_state(),
-            "Most Recent Associates or Certificate at Other Institution STATE": self.most_recent_associates_or_certificate_at_other_institution_state(),
-            "Most Recent Last Enrollment at Other institution STATE": self.most_recent_last_enrollment_at_other_institution_state(),
-            "First Bachelors at Other Institution STATE": self.first_bachelors_at_other_institution_state(),
-            "First Associates or Certificate at Other Institution STATE": self.first_associates_or_certificate_at_other_institution_state(),
-            "Most Recent Bachelors at Other Institution CARNEGIE": self.most_recent_bachelors_at_other_institution_carnegie(),
-            "Most Recent Associates or Certificate at Other Institution CARNEGIE": self.most_recent_associates_or_certificate_at_other_institution_carnegie(),
-            "Most Recent Last Enrollment at Other institution CARNEGIE": self.most_recent_last_enrollment_at_other_institution_carnegie(),
-            "First Bachelors at Other Institution CARNEGIE": self.first_bachelors_at_other_institution_carnegie(),
-            "First Associates or Certificate at Other Institution CARNEGIE": self.first_associates_or_certificate_at_other_institution_carnegie(),
-            "Most Recent Bachelors at Other Institution LOCALE": self.most_recent_bachelors_at_other_institution_locale(),
-            "Most Recent Associates or Certificate at Other Institution LOCALE": self.most_recent_associates_or_certificate_at_other_institution_locale(),
-            "Most Recent Last Enrollment at Other institution LOCALE": self.most_recent_last_enrollment_at_other_institution_locale(),
-            "First Bachelors at Other Institution LOCALE": self.first_bachelors_at_other_institution_locale(),
-            "First Associates or Certificate at Other Institution LOCALE": self.first_associates_or_certificate_at_other_institution_locale(),
+            "Most Recent Bachelors at Other Institution STATE": self.most_recent_bachelors_at_other_institution_state(
+                _has_enrollment_other_inst
+            ),
+            "Most Recent Associates or Certificate at Other Institution STATE": self.most_recent_associates_or_certificate_at_other_institution_state(
+                _has_enrollment_other_inst
+            ),
+            "Most Recent Last Enrollment at Other institution STATE": self.most_recent_last_enrollment_at_other_institution_state(
+                _has_enrollment_other_inst
+            ),
+            "First Bachelors at Other Institution STATE": self.first_bachelors_at_other_institution_state(
+                _has_enrollment_other_inst
+            ),
+            "First Associates or Certificate at Other Institution STATE": self.first_associates_or_certificate_at_other_institution_state(
+                _has_enrollment_other_inst
+            ),
+            "Most Recent Bachelors at Other Institution CARNEGIE": self.most_recent_bachelors_at_other_institution_carnegie(
+                _has_enrollment_other_inst
+            ),
+            "Most Recent Associates or Certificate at Other Institution CARNEGIE": self.most_recent_associates_or_certificate_at_other_institution_carnegie(
+                _has_enrollment_other_inst
+            ),
+            "Most Recent Last Enrollment at Other institution CARNEGIE": self.most_recent_last_enrollment_at_other_institution_carnegie(
+                _has_enrollment_other_inst
+            ),
+            "First Bachelors at Other Institution CARNEGIE": self.first_bachelors_at_other_institution_carnegie(
+                _has_enrollment_other_inst
+            ),
+            "First Associates or Certificate at Other Institution CARNEGIE": self.first_associates_or_certificate_at_other_institution_carnegie(
+                _has_enrollment_other_inst
+            ),
+            "Most Recent Bachelors at Other Institution LOCALE": self.most_recent_bachelors_at_other_institution_locale(
+                _has_enrollment_other_inst
+            ),
+            "Most Recent Associates or Certificate at Other Institution LOCALE": self.most_recent_associates_or_certificate_at_other_institution_locale(
+                _has_enrollment_other_inst
+            ),
+            "Most Recent Last Enrollment at Other institution LOCALE": self.most_recent_last_enrollment_at_other_institution_locale(
+                _has_enrollment_other_inst
+            ),
+            "First Bachelors at Other Institution LOCALE": self.first_bachelors_at_other_institution_locale(
+                _has_enrollment_other_inst
+            ),
+            "First Associates or Certificate at Other Institution LOCALE": self.first_associates_or_certificate_at_other_institution_locale(
+                _has_enrollment_other_inst
+            ),
         }
         if normalize_col_names:
             record = {
@@ -160,20 +209,16 @@ class Provider(BaseProvider):
     def pell_status_first_year(self) -> str:
         return self.random_element(["Y", "N"])
 
-    def attendance_status_term_1(self) -> str:
-        return self.random_element(
-            [
-                "First-Time Full-Time",
-                "First-Time Part-Time",
-                "First-Time Unknown",
-                "Transfer-In Full-Time",
-                "Transfer-In Part-Time",
-                "Transfer-In Unknown",
-                "Re-admit Full-Time",
-                "Re-admit Part-Time",
-                "Re-admit Unknown",
-            ]
-        )
+    def attendance_status_term_1(
+        self,
+        enrollment_type: t.Optional[str] = None,
+        enrollment_intensity_first_term: t.Optional[str] = None,
+    ) -> str:
+        if not enrollment_type:
+            enrollment_type = self.enrollment_type()
+        if not enrollment_intensity_first_term:
+            enrollment_intensity_first_term = self.enrollment_intensity_first_term()
+        return f"{enrollment_type} {enrollment_intensity_first_term}".title()
 
     def credential_type_sought_year_1(self) -> str:
         return self.random_element(
@@ -198,6 +243,10 @@ class Provider(BaseProvider):
         # TODO: make this six-digit CIP code more realistic
         return self.numerify("##.####")
 
+    def program_of_study_year_1(self) -> str:
+        # TODO: make this six-digit CIP code more realistic
+        return self.numerify("##.####")
+
     def _gpa(self) -> float:
         return self.generator.pyfloat(  # type: ignore
             min_value=0.0, max_value=4.0, right_digits=2
@@ -209,34 +258,36 @@ class Provider(BaseProvider):
     def gpa_group_year_1(self) -> float:
         return self._gpa()
 
-    def _number_of_credits_attempted(self, min_value: float = 1.0) -> float:
+    def _number_of_credits(
+        self, min_value: float = 1.0, max_value: float = 20.0
+    ) -> float:
         return self.generator.pyfloat(  # type: ignore
-            min_value=min_value, max_value=20.0, right_digits=1
+            min_value=min_value, max_value=max_value, right_digits=1
         )
 
     def number_of_credits_attempted_year_1(self) -> float:
-        return self._number_of_credits_attempted(min_value=1.0)
+        return self._number_of_credits(min_value=1.0)
 
-    def number_of_credits_earned_year_1(self) -> float:
-        return self._number_of_credits_attempted()
+    def number_of_credits_earned_year_1(self, max_value: float = 20.0) -> float:
+        return self._number_of_credits(max_value=max_value)
 
     def number_of_credits_attempted_year_2(self) -> float:
-        return self._number_of_credits_attempted()
+        return self._number_of_credits()
 
-    def number_of_credits_earned_year_2(self) -> float:
-        return self._number_of_credits_attempted()
+    def number_of_credits_earned_year_2(self, max_value: float = 20.0) -> float:
+        return self._number_of_credits(max_value=max_value)
 
     def number_of_credits_attempted_year_3(self) -> float:
-        return self._number_of_credits_attempted()
+        return self._number_of_credits()
 
-    def number_of_credits_earned_year_3(self) -> float:
-        return self._number_of_credits_attempted()
+    def number_of_credits_earned_year_3(self, max_value: float = 20.0) -> float:
+        return self._number_of_credits(max_value=max_value)
 
     def number_of_credits_attempted_year_4(self) -> float:
-        return self._number_of_credits_attempted()
+        return self._number_of_credits()
 
-    def number_of_credits_earned_year_4(self) -> float:
-        return self._number_of_credits_attempted()
+    def number_of_credits_earned_year_4(self, max_value: float = 20.0) -> float:
+        return self._number_of_credits(max_value=max_value)
 
     def gateway_math_status(self) -> str:
         return self.random_element(["R", "N"])
@@ -296,17 +347,23 @@ class Provider(BaseProvider):
     def years_to_associates_or_certificate_at_cohort_inst(self) -> int:
         return self._years_to_of()
 
-    def years_to_bachelor_at_other_inst(self) -> int:
-        return self._years_to_of()
+    def years_to_bachelor_at_other_inst(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[int]:
+        return self._years_to_of() if has_enrollment else None
 
-    def years_to_associates_or_certificate_at_other_inst(self) -> int:
-        return self._years_to_of()
+    def years_to_associates_or_certificate_at_other_inst(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[int]:
+        return self._years_to_of() if has_enrollment else None
 
     def years_of_last_enrollment_at_cohort_institution(self) -> int:
         return self._years_to_of()
 
-    def years_of_last_enrollment_at_other_institution(self) -> int:
-        return self._years_to_of()
+    def years_of_last_enrollment_at_other_institution(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[int]:
+        return self._years_to_of() if has_enrollment else None
 
     def time_to_credential(self) -> float:
         return self.generator.pyfloat(  # type: ignore
@@ -345,33 +402,43 @@ class Provider(BaseProvider):
     def first_year_to_associates_or_certificate_at_cohort_inst(self) -> int:
         return self._years_to_of()
 
-    def first_year_to_bachelor_at_other_inst(self) -> int:
-        return self._years_to_of()
+    def first_year_to_bachelor_at_other_inst(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[int]:
+        return self._years_to_of() if has_enrollment else None
 
-    def first_year_to_associates_or_certificate_at_other_inst(self) -> int:
-        return self._years_to_of()
-
-    def program_of_study_year_1(self) -> str:
-        # TODO: make this six-digit CIP code more realistic
-        return self.numerify("##.####")
+    def first_year_to_associates_or_certificate_at_other_inst(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[int]:
+        return self._years_to_of() if has_enrollment else None
 
     def _institution_state(self) -> str:
         return self.generator.state_abbr(include_freely_associated_states=False)  # type: ignore
 
-    def most_recent_bachelors_at_other_institution_state(self) -> str:
-        return self._institution_state()
+    def most_recent_bachelors_at_other_institution_state(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[str]:
+        return self._institution_state() if has_enrollment else None
 
-    def most_recent_associates_or_certificate_at_other_institution_state(self) -> str:
-        return self._institution_state()
+    def most_recent_associates_or_certificate_at_other_institution_state(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[str]:
+        return self._institution_state() if has_enrollment else None
 
-    def most_recent_last_enrollment_at_other_institution_state(self) -> str:
-        return self._institution_state()
+    def most_recent_last_enrollment_at_other_institution_state(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[str]:
+        return self._institution_state() if has_enrollment else None
 
-    def first_bachelors_at_other_institution_state(self) -> str:
-        return self._institution_state()
+    def first_bachelors_at_other_institution_state(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[str]:
+        return self._institution_state() if has_enrollment else None
 
-    def first_associates_or_certificate_at_other_institution_state(self) -> str:
-        return self._institution_state()
+    def first_associates_or_certificate_at_other_institution_state(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[str]:
+        return self._institution_state() if has_enrollment else None
 
     def _institution_carnegie(self) -> str:
         return self.random_element(
@@ -392,37 +459,55 @@ class Provider(BaseProvider):
             ]
         )
 
-    def most_recent_bachelors_at_other_institution_carnegie(self) -> str:
-        return self._institution_carnegie()
+    def most_recent_bachelors_at_other_institution_carnegie(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[str]:
+        return self._institution_carnegie() if has_enrollment else None
 
     def most_recent_associates_or_certificate_at_other_institution_carnegie(
-        self,
-    ) -> str:
-        return self._institution_carnegie()
+        self, has_enrollment: bool = True
+    ) -> t.Optional[str]:
+        return self._institution_carnegie() if has_enrollment else None
 
-    def most_recent_last_enrollment_at_other_institution_carnegie(self) -> str:
-        return self._institution_carnegie()
+    def most_recent_last_enrollment_at_other_institution_carnegie(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[str]:
+        return self._institution_carnegie() if has_enrollment else None
 
-    def first_bachelors_at_other_institution_carnegie(self) -> str:
-        return self._institution_carnegie()
+    def first_bachelors_at_other_institution_carnegie(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[str]:
+        return self._institution_carnegie() if has_enrollment else None
 
-    def first_associates_or_certificate_at_other_institution_carnegie(self) -> str:
-        return self._institution_carnegie()
+    def first_associates_or_certificate_at_other_institution_carnegie(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[str]:
+        return self._institution_carnegie() if has_enrollment else None
 
     def _institution_locale(self) -> str:
         return self.random_element(["URBAN", "SUBURB", "TOWN/RURAL"])
 
-    def most_recent_bachelors_at_other_institution_locale(self) -> str:
-        return self._institution_locale()
+    def most_recent_bachelors_at_other_institution_locale(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[str]:
+        return self._institution_locale() if has_enrollment else None
 
-    def most_recent_associates_or_certificate_at_other_institution_locale(self) -> str:
-        return self._institution_locale()
+    def most_recent_associates_or_certificate_at_other_institution_locale(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[str]:
+        return self._institution_locale() if has_enrollment else None
 
-    def most_recent_last_enrollment_at_other_institution_locale(self) -> str:
-        return self._institution_locale()
+    def most_recent_last_enrollment_at_other_institution_locale(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[str]:
+        return self._institution_locale() if has_enrollment else None
 
-    def first_bachelors_at_other_institution_locale(self) -> str:
-        return self._institution_locale()
+    def first_bachelors_at_other_institution_locale(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[str]:
+        return self._institution_locale() if has_enrollment else None
 
-    def first_associates_or_certificate_at_other_institution_locale(self) -> str:
-        return self._institution_locale()
+    def first_associates_or_certificate_at_other_institution_locale(
+        self, has_enrollment: bool = True
+    ) -> t.Optional[str]:
+        return self._institution_locale() if has_enrollment else None
