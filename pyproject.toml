@@ -69,7 +69,7 @@ lines-after-imports = 1
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-addopts = "--verbose"
+addopts = ["--verbose", "--import-mode=importlib"]
 filterwarnings = ["ignore::DeprecationWarning"]
 testpaths = ["tests"]
 
