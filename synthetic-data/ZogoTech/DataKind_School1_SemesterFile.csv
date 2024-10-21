@@ -1,0 +1,101 @@
+Student_ID,Semester,Enrollment_Type,Degree_Type_Pursued,Intent_To_Transfer_Flag,Pell_Recipient,Major,Department,Cumulative_GPA,Semester_GPA,Number_Of_Courses_Enrolled,Number_Of_Credits_Attempted,Number_Of_Credits_Failed,Number_Of_Credits_Earned,Course_Pass_Rate,Online_Course_Rate
+33966,2019FA,PT,Associate of General Studies,Y,,Graphic Design,,2.32,3.68,9,18,10,8,0.62,0.58
+48112,2019SP,PT,Associate of Arts,Y,Y,Agriculture Associate of Arts,,1.58,0.98,0,0,0,0,1.0,0.9
+59534,2021FA,FT,Certificate,N,,Business Administration,,0.63,3.17,3,20,14,6,0.18,0.16
+20539,2019SP,FT,Certificate,Y,,Construction Technician,,0.59,2.67,9,28,22,6,0.51,0.91
+73070,2020FA,FT,Certificate,Y,,Computer Science,,0.68,0.75,5,24,2,22,0.2,0.45
+30275,2020FA,PT,Associate of Business,Y,Y,Business Administration,,2.52,3.95,0,0,0,0,0.27,0.39
+70496,2019FA,PT,Associate of Business,Y,,Nursing,,3.67,3.57,9,12,9,3,0.08,0.81
+16441,2020SP,FT,Non-Academic,Y,,Business Administration,,3.25,1.45,1,29,11,18,0.58,0.01
+12617,2020FA,FT,Associate of Arts,Y,Y,Construction Technician,,0.34,2.42,3,7,6,1,0.64,0.71
+91052,2021FA,PT,Associate of Applied Science,N,,Agriculture Associate of Arts,,3.69,3.12,3,21,20,1,0.3,0.43
+66378,2018SP,FT,Non-Academic,N,Y,Agriculture Associate of Arts,,1.91,3.36,8,22,17,5,0.87,0.18
+75575,2020SP,PT,Certificate,N,,Agriculture Associate of Arts,,3.96,2.92,4,4,0,4,0.76,0.05
+89740,2020FA,FT,Associate of Arts,Y,Y,Construction Technician,,2.75,0.63,0,0,0,0,0.47,0.17
+31878,2020SP,FT,Non-Academic,N,Y,Agriculture Associate of Arts,,3.98,3.69,5,22,1,21,0.58,0.35
+33262,2019FA,PT,Associate of General Studies,N,Y,Business Administration,,1.44,2.77,1,2,2,0,0.75,0.49
+29502,2020FA,FT,Associate of Business,N,,Agriculture Associate of Arts,,2.3,3.81,4,20,6,14,0.17,0.25
+19698,2020SP,PT,Associate of Science,N,,Graphic Design,,2.14,1.73,3,24,15,9,0.43,0.31
+55270,2020SP,PT,Associate of Applied Science,Y,Y,Agriculture Associate of Arts,,3.41,3.53,7,21,9,12,0.67,0.88
+80268,2019FA,PT,Associate of General Studies,Y,,Custodian Studies Certificate,,2.45,1.79,10,17,6,11,0.42,0.62
+43570,2019SP,FT,Associate of General Studies,Y,Y,Custodian Studies Certificate,,1.72,4.0,1,23,20,3,0.57,0.72
+60757,2020FA,FT,Associate of Science,N,,Business Administration,,1.67,2.67,9,22,0,22,0.85,0.07
+55080,2019FA,PT,Non-Academic,Y,,Business Administration,,1.58,0.74,4,30,10,20,0.83,0.64
+97148,2021SP,FT,Associate of Business,N,Y,Nursing,,0.66,0.49,8,30,21,9,0.37,0.9
+39209,2021FA,FT,Non-Academic,Y,Y,Graphic Design,,1.58,2.15,3,26,3,23,0.3,0.35
+48183,2020SP,PT,Associate of Science,Y,Y,Computer Science,,3.49,1.54,3,7,4,3,0.52,0.92
+94279,2018SP,PT,Non-Academic,N,Y,Custodian Studies Certificate,,3.26,1.16,1,8,6,2,0.22,0.5
+25378,2018SP,FT,Associate of Applied Science,Y,Y,Nursing,,0.33,0.92,4,14,10,4,0.36,0.08
+35597,2021FA,PT,Associate of Science,Y,,Nursing,,2.37,3.17,9,25,2,23,0.44,0.74
+75142,2020SP,PT,Non-Academic,Y,,Custodian Studies Certificate,,1.21,3.02,5,29,12,17,0.91,0.2
+40097,2020FA,FT,Associate of Science,N,,Construction Technician,,1.94,3.26,6,11,5,6,0.32,0.13
+56167,2020SP,PT,Associate of Business,Y,,Business Administration,,1.01,3.22,7,16,1,15,0.56,0.48
+88940,2020FA,FT,Associate of Arts,N,Y,Business Administration,,1.7,1.68,2,17,4,13,0.89,0.3
+75297,2018SP,PT,Associate of General Studies,N,,Graphic Design,,3.61,2.35,5,20,15,5,0.75,0.43
+11018,2021SP,PT,Certificate,N,,Graphic Design,,1.99,0.84,6,27,9,18,0.89,0.73
+77449,2020FA,PT,Non-Academic,N,Y,Construction Technician,,1.46,3.38,8,19,9,10,0.14,0.12
+11198,2021FA,PT,Non-Academic,N,Y,Agriculture Associate of Arts,,2.02,1.93,9,18,6,12,0.91,0.12
+92484,2018SP,PT,Associate of Arts,N,Y,Graphic Design,,3.64,1.87,4,6,2,4,0.2,0.32
+80892,2020FA,FT,Associate of General Studies,Y,Y,Graphic Design,,2.78,0.39,2,10,1,9,0.43,0.17
+59820,2021FA,FT,Associate of Arts,N,Y,Custodian Studies Certificate,,1.57,1.79,4,9,2,7,0.04,0.52
+24432,2020SP,PT,Associate of General Studies,Y,,Custodian Studies Certificate,,1.59,2.44,10,19,13,6,0.94,0.73
+11887,2018FA,FT,Associate of Applied Science,N,,Graphic Design,,0.71,3.9,10,29,0,29,0.35,0.94
+22248,2021FA,FT,Associate of Science,Y,Y,Business Administration,,2.42,1.43,2,21,18,3,0.81,0.61
+93003,2020SP,PT,Certificate,Y,Y,Agriculture Associate of Arts,,3.77,3.86,3,16,10,6,0.75,0.6
+62996,2018SP,PT,Non-Academic,Y,Y,Nursing,,3.57,0.99,1,14,7,7,0.1,0.46
+38617,2021SP,FT,Certificate,Y,Y,Business Administration,,1.18,2.65,0,0,0,0,0.79,0.24
+54097,2020FA,PT,Associate of Arts,N,Y,Custodian Studies Certificate,,3.55,1.5,2,20,8,12,0.55,0.84
+64855,2019FA,FT,Non-Academic,Y,,Computer Science,,2.0,0.26,10,19,17,2,0.24,0.1
+51032,2019FA,PT,Certificate,Y,,Business Administration,,3.11,3.27,3,17,12,5,0.01,0.08
+35146,2020SP,FT,Associate of Business,Y,,Business Administration,,1.28,1.46,7,18,10,8,0.68,0.11
+87016,2020SP,FT,Non-Academic,N,Y,Nursing,,2.94,0.42,5,27,25,2,0.3,0.57
+14565,2019FA,PT,Associate of Arts,Y,,Business Administration,,3.56,1.7,9,24,9,15,0.34,0.91
+43519,2019FA,FT,Certificate,N,,Custodian Studies Certificate,,2.29,2.19,6,26,16,10,0.07,0.89
+94751,2019FA,FT,Non-Academic,N,Y,Custodian Studies Certificate,,0.21,0.02,7,16,14,2,0.79,0.95
+43525,2019SP,FT,Certificate,Y,,Construction Technician,,3.55,1.91,3,4,4,0,0.8,0.29
+93680,2020SP,PT,Associate of Business,N,Y,Construction Technician,,1.66,2.26,0,0,0,0,0.99,0.81
+34437,2019SP,FT,Certificate,N,,Graphic Design,,3.56,2.63,5,12,6,6,0.71,0.68
+36197,2021FA,FT,Associate of Business,Y,Y,Custodian Studies Certificate,,3.17,1.73,0,0,0,0,0.19,0.85
+46975,2021FA,FT,Associate of Business,N,Y,Custodian Studies Certificate,,0.56,3.19,10,11,11,0,0.69,0.71
+83276,2020FA,FT,Associate of General Studies,Y,Y,Custodian Studies Certificate,,0.62,3.75,7,20,18,2,0.39,0.83
+48915,2019FA,FT,Non-Academic,N,Y,Construction Technician,,2.75,2.88,5,23,21,2,0.55,0.62
+28541,2019SP,PT,Certificate,Y,,Graphic Design,,1.84,2.29,3,13,5,8,0.33,0.4
+42752,2021FA,PT,Associate of Science,Y,,Nursing,,1.94,1.42,2,14,10,4,0.56,0.26
+26208,2018FA,PT,Associate of General Studies,Y,,Graphic Design,,2.47,1.23,0,0,0,0,0.51,0.1
+34863,2020SP,FT,Certificate,N,,Agriculture Associate of Arts,,3.68,0.75,8,28,13,15,0.23,0.42
+41810,2019SP,FT,Associate of Arts,Y,,Construction Technician,,0.41,1.93,4,16,8,8,0.04,0.14
+78135,2020SP,FT,Associate of General Studies,Y,,Computer Science,,0.45,2.58,1,4,3,1,0.27,0.77
+54165,2021FA,FT,Non-Academic,Y,,Business Administration,,1.09,4.0,5,9,1,8,0.41,0.34
+50188,2020FA,PT,Associate of Science,N,Y,Custodian Studies Certificate,,2.88,2.68,10,20,6,14,0.47,0.11
+24989,2018SP,PT,Associate of General Studies,N,,Business Administration,,1.98,3.12,0,0,0,0,0.25,0.75
+38982,2020FA,FT,Associate of Arts,N,Y,Nursing,,2.68,1.81,2,8,8,0,0.55,0.8
+53800,2020SP,PT,Associate of Arts,N,,Construction Technician,,3.51,0.3,7,28,24,4,0.69,0.29
+72136,2019SP,PT,Associate of Business,Y,,Graphic Design,,3.2,0.74,10,21,2,19,0.16,0.34
+67642,2018FA,PT,Certificate,Y,Y,Agriculture Associate of Arts,,2.74,3.96,9,27,5,22,0.8,0.83
+54646,2019FA,PT,Non-Academic,Y,Y,Computer Science,,0.27,2.76,5,25,3,22,0.37,0.45
+50101,2020FA,PT,Associate of Business,N,Y,Graphic Design,,2.42,3.01,2,6,6,0,0.1,0.11
+98671,2019FA,FT,Non-Academic,N,Y,Graphic Design,,0.55,1.51,8,27,12,15,0.77,0.22
+74166,2020SP,PT,Associate of Science,N,Y,Computer Science,,3.79,1.84,3,12,0,12,0.66,0.71
+93058,2018SP,PT,Associate of Business,N,Y,Agriculture Associate of Arts,,3.19,3.53,2,7,4,3,0.83,0.65
+12316,2021FA,PT,Associate of Science,N,,Graphic Design,,3.52,1.44,4,24,23,1,0.94,0.46
+48635,2018FA,FT,Non-Academic,N,,Computer Science,,2.15,1.26,2,11,3,8,0.26,0.03
+57644,2019SP,PT,Certificate,N,Y,Construction Technician,,2.47,3.64,7,19,0,19,0.97,0.85
+76395,2018FA,FT,Associate of Business,N,,Computer Science,,1.56,2.36,10,29,9,20,0.28,0.33
+25387,2018FA,PT,Associate of Arts,Y,,Custodian Studies Certificate,,1.47,2.86,5,14,1,13,0.8,0.95
+12460,2019FA,PT,Associate of Science,N,,Construction Technician,,0.75,2.34,5,17,13,4,0.75,0.1
+98244,2021FA,PT,Associate of General Studies,Y,,Agriculture Associate of Arts,,0.75,2.63,0,0,0,0,0.74,0.9
+80961,2020FA,FT,Non-Academic,Y,,Graphic Design,,0.36,3.08,0,0,0,0,0.74,0.99
+65756,2020FA,PT,Associate of Business,Y,,Nursing,,1.4,3.15,5,23,8,15,0.49,0.05
+27901,2019FA,FT,Associate of Arts,N,,Computer Science,,3.98,1.21,0,0,0,0,0.76,0.6
+89400,2019SP,FT,Certificate,N,,Construction Technician,,1.17,3.79,3,8,4,4,0.62,0.21
+81556,2018FA,FT,Associate of Arts,Y,,Graphic Design,,0.67,3.22,5,19,1,18,0.61,0.23
+38250,2020FA,PT,Associate of Applied Science,N,,Business Administration,,1.48,3.83,5,6,1,5,0.02,0.36
+11389,2021FA,FT,Associate of Business,N,,Custodian Studies Certificate,,1.77,0.91,10,16,12,4,0.86,0.51
+75009,2020SP,FT,Associate of Business,N,,Computer Science,,1.74,2.36,6,25,1,24,0.21,0.06
+59851,2021SP,PT,Associate of Business,Y,,Graphic Design,,2.9,3.43,0,0,0,0,0.6,0.64
+19207,2019FA,PT,Non-Academic,N,,Custodian Studies Certificate,,2.23,1.27,3,10,9,1,0.27,0.34
+60048,2021SP,FT,Associate of Science,Y,Y,Custodian Studies Certificate,,3.1,2.89,2,13,7,6,0.31,0.39
+18026,2020FA,FT,Associate of Science,Y,,Custodian Studies Certificate,,1.65,1.3,4,14,5,9,0.43,0.55
+24637,2020SP,PT,Associate of Business,Y,,Graphic Design,,0.77,3.63,8,9,4,5,0.91,0.62
+48009,2019SP,PT,Non-Academic,N,,Construction Technician,,0.47,0.83,2,28,6,22,0.55,0.74
+94043,2021FA,FT,Certificate,N,,Computer Science,,3.58,1.17,3,9,4,5,0.44,0.15
