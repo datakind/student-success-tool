@@ -94,10 +94,11 @@ def test_sum_dummy_cols_by_group(df, grp_cols, agg_cols, exp):
                     ],
                     "course_type": ["CU", "CD", "CU", "CU", "CC", "CU"],
                     "course_level": [1, 0, 1, 2, 0, 1],
+                    "grade": ["F", "F", "P", "W", "F", "P"],
                 }
             ),
             ["student_guid", "term_id"],
-            [("course_type", ["CC", "CD"]), ("course_level", 0)],
+            [("course_type", ["CC", "CD"]), ("course_level", 0), ("grade", ["0", "1", "F", "W"])],
             pd.DataFrame(
                 {
                     "student_guid": ["123", "123", "456", "789"],
@@ -109,6 +110,7 @@ def test_sum_dummy_cols_by_group(df, grp_cols, agg_cols, exp):
                     ],
                     "num_courses_course_type_CC|CD": [1, 0, 1, 0],
                     "num_courses_course_level_0": [1, 0, 1, 0],
+                    "num_courses_grade_0|1|F|W": [2, 0, 2, 0],
                 }
             ),
         ),
