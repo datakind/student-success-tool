@@ -15,7 +15,7 @@ def aggregate_from_course_level_features(
     *,
     student_term_id_cols: list[str],
     key_course_subject_areas: t.Optional[list[int]] = None,
-    key_course_ids: t.Optional[list[int]] = None,
+    key_course_ids: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:
     """
     Aggregate course-level features up to student-term-level features
