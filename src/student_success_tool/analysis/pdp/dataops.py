@@ -18,7 +18,7 @@ def make_student_term_dataset(
     peak_covid_terms: set[tuple[str, str]] = constants.DEFAULT_PEAK_COVID_TERMS,
     num_terms_checkin: t.Optional[int] = None,
     key_course_subject_areas: t.Optional[list[int]] = None,
-    key_course_ids: t.Optional[list[int]] = None,
+    key_course_ids: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:
     """
     Make a student-term dataset from raw cohort- and course-level datasets,
