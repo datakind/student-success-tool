@@ -39,6 +39,17 @@ Please read the [CONTRIBUTING](CONTRIBUTING.md) to learn how to contribute to th
 
 ## Setup
 
+### local machine
+
 1. Install `uv` (instructions [here](https://docs.astral.sh/uv/getting-started/installation)).
 1. Install Python (instructions [here](https://docs.astral.sh/uv/guides/install-python)). When running on Databricks, we're constrained to PY3.10: `uv python install 3.10`
 1. Install this package: `uv pip install -e .`
+
+### databricks notebook
+
+1. Connect notebook to a cluster running Databricks Runtime [14.3 LTS](https://docs.databricks.com/en/release-notes/runtime/14.3lts.html) or [15.4 LTS](https://docs.databricks.com/en/release-notes/runtime/15.4lts.html).
+1. Run the `%pip` magic command, pointing it at one of three places:
+    - a local workspace directory: `%pip install ../../../student-success-tool/`
+    - a GitHub repo (for a specific branch): `%pip install git+https://github.com/datakind/student-success-tool.git@develop`
+    - public PyPI: `%pip install student-success-tool`  (NOTE: THIS DOESN'T WORK YET)
+1. Restart Python, per usual: `dbutils.library.restartPython()`
