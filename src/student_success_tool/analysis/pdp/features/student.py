@@ -91,5 +91,7 @@ def student_program_of_study_changed_first_year(
     return df[term_col].ne(df[year_col]).astype("boolean")
 
 
-def diff_gpa_year_1_to_term_1(df: pd.DataFrame, *, term_col: str, year_col: str) -> pd.Series:
+def diff_gpa_year_1_to_term_1(
+    df: pd.DataFrame, *, term_col: str = "gpa_group_term_1", year_col: str = "gpa_group_year_1"
+) -> pd.Series:
     return df[year_col] - df[term_col]
