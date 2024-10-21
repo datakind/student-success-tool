@@ -91,12 +91,12 @@ def aggregate_from_course_level_features(
             "grade",  # TODO: only if this is actually categorical
         ],
     )
-    df_dummies[constants.NUM_COURSE_FEATURE_COL_PREFIX + '_grade_DFW'] = sum_num_dfw_courses(df_dummies)
 
     agg_col_vals: list[tuple[str, t.Any | list[t.Any]]] = [
         ("core_course", "Y"),
         ("course_type", ["CC", "CD"]),
         ("enrolled_at_other_institution_s", "Y"),
+        ("grade", ["0", "1", "F", "W"])
     ]
     if key_course_subject_areas is not None:
         agg_col_vals.extend(
@@ -361,19 +361,6 @@ def sum_dummy_cols_by_group(
         .rename(columns=_rename_sum_by_group_col)
         .reset_index(drop=False)
     )
-
-
-def sum_num_dfw_courses(df: pd.DataFrame) -> pd.Series:
-    """Add number of courses where student received a D, F, or W.
-
-    Args:
-        df (pd.DataFrame): contains constants.NUM_COURSE_FEATURE_COL_PREFIX + '_grade' columns
-
-    Returns:
-        pd.Series: number of courses student received a D, F, or W
-    """
-    dfw_grade_cols = list(filter(lambda col: constants.NUM_COURSE_FEATURE_COL_PREFIX + '_grade' in col and col.endswith(('0','1','F','W')), df.columns.values.tolist()))
-    return df[dfw_grade_cols].sum(axis = 1)
 
 
 def sum_val_equal_cols_by_group(
