@@ -12,7 +12,6 @@ def make_student_term_dataset(
     df_cohort: pd.DataFrame,
     df_course: pd.DataFrame,
     *,
-    institution_state: t.Optional[str] = None,
     min_passing_grade: str = constants.DEFAULT_MIN_PASSING_GRADE,
     course_level_pattern: str = constants.DEFAULT_COURSE_LEVEL_PATTERN,
     peak_covid_terms: set[tuple[str, str]] = constants.DEFAULT_PEAK_COVID_TERMS,
@@ -27,8 +26,6 @@ def make_student_term_dataset(
     Args:
         df_cohort: As output by :func:`dataio.read_raw_pdp_cohort_data_from_file()` .
         df_course: As output by :func:`dataio.read_raw_pdp_course_data_from_file()` .
-        institution_state: **DEPRECATED** Standard, 2-letter abbreviation for the state
-            in which the cohort institution is located.
         min_passing_grade: Minimum numeric grade considered by institution as "passing".
         course_level_pattern
         peak_covid_terms
@@ -37,7 +34,7 @@ def make_student_term_dataset(
     """
     df_students = (
         df_cohort.pipe(standardize_cohort_dataset)
-        .pipe(features.student.add_features, institution_state=institution_state)
+        .pipe(features.student.add_features)
     )  # fmt: skip
     df_courses_plus = (
         df_course.pipe(standardize_course_dataset)
