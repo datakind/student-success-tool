@@ -15,6 +15,15 @@ def extract_short_cip_code(ser: pd.Series) -> pd.Series:
     )
 
 
+def frac_credits_earned(
+    df: pd.DataFrame,
+    *,
+    earned_col: str = "num_credits_earned",
+    attempted_col: str = "num_credits_attempted",
+) -> pd.Series:
+    return df[earned_col].div(df[attempted_col])
+
+
 def compute_values_equal(ser: pd.Series, to: t.Any | list[t.Any]) -> pd.Series:
     return ser.isin(to) if isinstance(to, list) else ser.eq(to)
 

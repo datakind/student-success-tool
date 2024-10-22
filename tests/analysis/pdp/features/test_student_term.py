@@ -185,30 +185,6 @@ def test_year_of_enrollment_at_cohort_inst(df, ccol, acol, exp):
 
 
 @pytest.mark.parametrize(
-    ["df", "earned_col", "attempted_col", "exp"],
-    [
-        (
-            pd.DataFrame(
-                {
-                    "nc_earned": [5.0, 7.5, 6.0, 0.0],
-                    "nc_attempted": [10.0, 7.5, 8.0, 15.0],
-                }
-            ),
-            "nc_earned",
-            "nc_attempted",
-            pd.Series([0.5, 1.0, 0.75, 0.0]),
-        ),
-    ],
-)
-def test_frac_credits_earned(df, earned_col, attempted_col, exp):
-    obs = student_term.frac_credits_earned(
-        df, earned_col=earned_col, attempted_col=attempted_col
-    )
-    assert isinstance(obs, pd.Series) and not obs.empty
-    assert obs.equals(exp) or obs.compare(exp).empty
-
-
-@pytest.mark.parametrize(
     ["df", "numer_col", "denom_col", "exp"],
     [
         (

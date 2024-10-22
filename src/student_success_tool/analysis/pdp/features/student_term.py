@@ -135,8 +135,8 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
     feature_name_funcs = (
         {
             "year_of_enrollment_at_cohort_inst": year_of_enrollment_at_cohort_inst,
-            "frac_credits_earned": frac_credits_earned,
             "term_is_while_student_enrolled_at_other_inst": term_is_while_student_enrolled_at_other_inst,
+            "frac_credits_earned": shared.frac_credits_earned,
         }
         | {
             fc_col: ft.partial(compute_frac_courses, numer_col=nc_col)
@@ -180,15 +180,6 @@ def year_of_enrollment_at_cohort_inst(
         .astype("Int16")["cohort_yr"]
         + 1
     )
-
-
-def frac_credits_earned(
-    df: pd.DataFrame,
-    *,
-    earned_col: str = "num_credits_earned",
-    attempted_col: str = "num_credits_attempted",
-) -> pd.Series:
-    return df[earned_col].div(df[attempted_col])
 
 
 # TODO: we could probably compute this directly, w/o an intermediate feature?

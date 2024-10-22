@@ -23,3 +23,27 @@ def test_compute_values_equal(ser, to, exp):
     assert isinstance(obs, pd.Series) and not obs.empty
     assert obs.dtype == 'bool'
     assert obs.equals(exp) or obs.compare(exp).empty
+
+
+@pytest.mark.parametrize(
+    ["df", "earned_col", "attempted_col", "exp"],
+    [
+        (
+            pd.DataFrame(
+                {
+                    "nc_earned": [5.0, 7.5, 6.0, 0.0],
+                    "nc_attempted": [10.0, 7.5, 8.0, 15.0],
+                }
+            ),
+            "nc_earned",
+            "nc_attempted",
+            pd.Series([0.5, 1.0, 0.75, 0.0]),
+        ),
+    ],
+)
+def test_frac_credits_earned(df, earned_col, attempted_col, exp):
+    obs = shared.frac_credits_earned(
+        df, earned_col=earned_col, attempted_col=attempted_col
+    )
+    assert isinstance(obs, pd.Series) and not obs.empty
+    assert obs.equals(exp) or obs.compare(exp).empty
