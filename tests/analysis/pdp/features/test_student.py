@@ -15,10 +15,6 @@ from student_success_tool.analysis.pdp.features import student
                     "program_of_study_year_1": ["24.0101", "27.05"],
                     "gpa_group_term_1": [4.00, 3.00],
                     "gpa_group_year_1": [3.5, 3.5],
-                    "most_recent_last_enrollment_at_other_institution_state": [
-                        "VT",
-                        "PA",
-                    ],
                 }
             ),
             "VT",
@@ -29,15 +25,6 @@ from student_success_tool.analysis.pdp.features import student
                     "program_of_study_year_1": ["24.0101", "27.05"],
                     "gpa_group_term_1": [4.00, 3.00],
                     "gpa_group_year_1": [3.5, 3.5],
-                    "most_recent_last_enrollment_at_other_institution_state": [
-                        "VT",
-                        "PA",
-                    ],
-                    # "student_has_prior_enrollment_at_other_inst": [True, True],
-                    # "student_prior_enrollment_at_other_inst_was_in_state": [
-                    #     True,
-                    #     False,
-                    # ],
                     "student_program_of_study_area_term_1": [24, 27],
                     "student_program_of_study_area_year_1": [24, 27],
                     "student_program_of_study_changed_first_year": [False, True],
@@ -51,10 +38,6 @@ from student_success_tool.analysis.pdp.features import student
                 {
                     "student_guid": ["123", "456"],
                     "program_of_study_term_1": ["24.0101", "27.01"],
-                    "most_recent_last_enrollment_at_other_institution_state": [
-                        "VT",
-                        pd.NA,
-                    ],
                 }
             ),
             "VT",
@@ -62,15 +45,6 @@ from student_success_tool.analysis.pdp.features import student
                 {
                     "student_guid": ["123", "456"],
                     "program_of_study_term_1": ["24.0101", "27.01"],
-                    "most_recent_last_enrollment_at_other_institution_state": [
-                        "VT",
-                        pd.NA,
-                    ],
-                    # "student_has_prior_enrollment_at_other_inst": [True, False],
-                    # "student_prior_enrollment_at_other_inst_was_in_state": [
-                    #     True,
-                    #     pd.NA,
-                    # ],
                     "student_program_of_study_area_term_1": [24, 27],
                 }
             ),

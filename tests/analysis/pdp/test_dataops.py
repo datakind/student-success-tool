@@ -41,7 +41,7 @@ def test_infer_num_terms_in_year(series, exp):
 
 
 @pytest.mark.parametrize(
-    ["df", "num_terms_checkin", "exp"],
+    ["df", "exp"],
     [
         (
             pd.DataFrame(
@@ -59,35 +59,18 @@ def test_infer_num_terms_in_year(series, exp):
                     "gpa_group_year_1": [3.0, 4.0],
                 }
             ),
-            None,
             pd.DataFrame(
                 {
                     "cohort": ["2024-25", "2023-24"],
                     "cohort_term": ["FALL", "SPRING"],
                     "gpa_group_year_1": [3.0, 4.0],
-                }
-            ),
-        ),
-        (
-            pd.DataFrame(
-                {
-                    "cohort": ["2024-25", "2023-24"],
-                    "cohort_term": ["FALL", "SPRING"],
-                    "gpa_group_year_1": [3.0, 4.0],
-                }
-            ),
-            1,
-            pd.DataFrame(
-                {
-                    "cohort": ["2024-25", "2023-24"],
-                    "cohort_term": ["FALL", "SPRING"],
                 }
             ),
         ),
     ],
 )
-def test_standardize_cohort_dataset(df, num_terms_checkin, exp):
-    obs = dataops.standardize_cohort_dataset(df, num_terms_checkin=num_terms_checkin)
+def test_standardize_cohort_dataset(df, exp):
+    obs = dataops.standardize_cohort_dataset(df)
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
 
