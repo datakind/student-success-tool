@@ -5,7 +5,7 @@ from student_success_tool.analysis.pdp.features import student
 
 
 @pytest.mark.parametrize(
-    ["df", "institution_state", "exp"],
+    ["df", "exp"],
     [
         (
             pd.DataFrame(
@@ -17,7 +17,6 @@ from student_success_tool.analysis.pdp.features import student
                     "gpa_group_year_1": [3.5, 3.5],
                 }
             ),
-            "VT",
             pd.DataFrame(
                 {
                     "student_guid": ["123", "456"],
@@ -33,26 +32,10 @@ from student_success_tool.analysis.pdp.features import student
                 }
             ),
         ),
-        (
-            pd.DataFrame(
-                {
-                    "student_guid": ["123", "456"],
-                    "program_of_study_term_1": ["24.0101", "27.01"],
-                }
-            ),
-            "VT",
-            pd.DataFrame(
-                {
-                    "student_guid": ["123", "456"],
-                    "program_of_study_term_1": ["24.0101", "27.01"],
-                    "student_program_of_study_area_term_1": [24, 27],
-                }
-            ),
-        ),
     ],
 )
-def test_add_student_features(df, institution_state, exp):
-    obs = student.add_features(df, institution_state=institution_state)
+def test_add_student_features(df, exp):
+    obs = student.add_features(df)
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
 
