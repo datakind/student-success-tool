@@ -1,3 +1,4 @@
+import logging
 import typing as t
 from collections.abc import Collection
 
@@ -5,6 +6,8 @@ import numpy as np
 import pandas as pd
 
 from .. import utils
+
+LOGGER = logging.getLogger(__name__)
 
 
 def select_students_by_criteria(
@@ -36,18 +39,31 @@ def select_students_by_criteria(
         raise ValueError("one or more eligibility criteria must be specified")
 
     student_id_cols = utils.to_list(student_id_cols)
+    nuq_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
     is_eligibles = [
         df[key].isin(set(val))  # type: ignore
         if utils.is_collection_but_not_string(val)
         else df[key].eq(val).fillna(value=False)  # type: ignore
         for key, val in criteria.items()
     ]
+    for (key, val), is_eligible_citerion in zip(criteria.items(), is_eligibles):
+        nuq_students_criterion = (
+            df.loc[is_eligible_citerion, student_id_cols]
+            .groupby(by=student_id_cols, sort=False)
+            .ngroups
+        )
+        _log_eligible_selection(
+            nuq_students_in, nuq_students_criterion, f"{key}={val} criterion ..."
+        )
+
     is_eligible = np.logical_and.reduce(is_eligibles)
-    return (
+    df_out = (
         df.loc[is_eligible, student_id_cols]
         # df is at student-term level; get student ids from first eligible terms only
         .drop_duplicates(ignore_index=True)
     )
+    _log_eligible_selection(nuq_students_in, len(df_out), "all criteria")
+    return df_out
 
 
 def select_students_by_time_left(
@@ -95,6 +111,7 @@ def select_students_by_time_left(
         enough time left for their particular enrollment intensity.
     """
     student_id_cols = utils.to_list(student_id_cols)
+    nuq_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
     intensity_num_terms = _compute_intensity_num_terms(
         intensity_time_lefts, num_terms_in_year
     )
@@ -108,11 +125,13 @@ def select_students_by_time_left(
         for intensity, num_terms in intensity_num_terms
     ]
     has_enough_terms_left = np.logical_or.reduce(has_enough_terms_lefts)
-    return (
+    df_out = (
         df.loc[has_enough_terms_left, student_id_cols]
         # df is at student-term level; get student ids from first eligible terms only
         .drop_duplicates(ignore_index=True)
     )
+    _log_eligible_selection(nuq_students_in, len(df_out), "time left")
+    return df_out
 
 
 def get_first_student_terms(
@@ -192,3 +211,15 @@ def _compute_intensity_num_terms(
         (intensity, time if unit == "term" else time * num_terms_in_year)
         for intensity, time, unit in intensity_time_lefts
     ]
+
+
+def _log_eligible_selection(
+    nunique_students_in: int, nunique_students_out: int, case: str
+) -> None:
+    LOGGER.info(
+        "%s out of %s (%s%%) students selected as eligible by %s",
+        nunique_students_out,
+        nunique_students_in,
+        round(100 * nunique_students_out / nunique_students_in, 1),
+        case,
+    )
