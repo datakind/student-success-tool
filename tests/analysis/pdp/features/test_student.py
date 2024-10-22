@@ -42,7 +42,7 @@ from student_success_tool.analysis.pdp.features import student
                     "student_program_of_study_area_year_1": [24, 27],
                     "student_program_of_study_changed_first_year": [False, True],
                     "student_program_of_study_area_changed_first_year": [False, False],
-                    "diff_gpa_year_1_to_term_1": [-0.5, 0.5]
+                    "diff_gpa_term_1_to_year_1": [-0.5, 0.5],
                 }
             ),
         ),
@@ -127,13 +127,17 @@ def test_student_program_of_study_changed_first_year(df, term_col, year_col, exp
 @pytest.mark.parametrize(
     ["df", "exp"],
     [
-        (pd.DataFrame({'gpa_year_1': [1.0, 2.0, 3.5],
-                       'gpa_term_1': [2.0, 1.5, 4.0]}),
-        pd.Series([-1.0, 0.5, -0.5], dtype='float')
+        (
+            pd.DataFrame(
+                {"gpa_year_1": [1.0, 2.0, 3.5], "gpa_term_1": [2.0, 1.5, 4.0]}
+            ),
+            pd.Series([-1.0, 0.5, -0.5], dtype="float"),
         )
-    ]
+    ],
 )
-def test_diff_gpa_year_1_to_term_1(df, exp):
-    obs = student.diff_gpa_year_1_to_term_1(df, term_col = "gpa_term_1", year_col = "gpa_year_1")
+def test_diff_gpa_term_1_to_year_1(df, exp):
+    obs = student.diff_gpa_term_1_to_year_1(
+        df, term_col="gpa_term_1", year_col="gpa_year_1"
+    )
     assert isinstance(obs, pd.Series) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
