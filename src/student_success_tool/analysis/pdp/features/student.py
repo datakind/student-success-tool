@@ -8,9 +8,6 @@ from . import shared
 
 LOGGER = logging.getLogger(__name__)
 
-# TODO: rename feature?
-# student_program_of_study_changed_first_year => student_program_of_study_changed_year_1
-
 
 def add_features(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -33,13 +30,13 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
             "student_program_of_study_area_year_1": ft.partial(
                 student_program_of_study_area, col="program_of_study_year_1"
             ),
-            "student_program_of_study_changed_first_year": ft.partial(
-                student_program_of_study_changed_first_year,
+            "student_program_of_study_changed_term_1_to_year_1": ft.partial(
+                student_program_of_study_changed_term_1_to_year_1,
                 term_col="program_of_study_term_1",
                 year_col="program_of_study_year_1",
             ),
-            "student_program_of_study_area_changed_first_year": ft.partial(
-                student_program_of_study_changed_first_year,
+            "student_program_of_study_area_changed_term_1_to_year_1": ft.partial(
+                student_program_of_study_changed_term_1_to_year_1,
                 term_col="student_program_of_study_area_term_1",
                 year_col="student_program_of_study_area_year_1",
             ),
@@ -52,7 +49,7 @@ def student_program_of_study_area(df: pd.DataFrame, *, col: str) -> pd.Series:
     return shared.extract_short_cip_code(df[col])
 
 
-def student_program_of_study_changed_first_year(
+def student_program_of_study_changed_term_1_to_year_1(
     df: pd.DataFrame, *, term_col: str, year_col: str
 ) -> pd.Series:
     return df[term_col].ne(df[year_col]).astype("boolean")

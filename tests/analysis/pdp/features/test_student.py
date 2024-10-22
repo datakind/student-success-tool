@@ -26,8 +26,11 @@ from student_success_tool.analysis.pdp.features import student
                     "gpa_group_year_1": [3.5, 3.5],
                     "student_program_of_study_area_term_1": [24, 27],
                     "student_program_of_study_area_year_1": [24, 27],
-                    "student_program_of_study_changed_first_year": [False, True],
-                    "student_program_of_study_area_changed_first_year": [False, False],
+                    "student_program_of_study_changed_term_1_to_year_1": [False, True],
+                    "student_program_of_study_area_changed_term_1_to_year_1": [
+                        False,
+                        False,
+                    ],
                     "diff_gpa_term_1_to_year_1": [-0.5, 0.5],
                 }
             ),
@@ -73,8 +76,8 @@ def test_student_program_of_study_area(df, col, exp):
         ),
     ],
 )
-def test_student_program_of_study_changed_first_year(df, term_col, year_col, exp):
-    obs = student.student_program_of_study_changed_first_year(
+def test_student_program_of_study_changed_term_1_to_year_1(df, term_col, year_col, exp):
+    obs = student.student_program_of_study_changed_term_1_to_year_1(
         df, term_col=term_col, year_col=year_col
     )
     assert isinstance(obs, pd.Series) and not obs.empty
