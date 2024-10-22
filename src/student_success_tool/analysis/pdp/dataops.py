@@ -16,7 +16,6 @@ def make_student_term_dataset(
     min_passing_grade: str = constants.DEFAULT_MIN_PASSING_GRADE,
     course_level_pattern: str = constants.DEFAULT_COURSE_LEVEL_PATTERN,
     peak_covid_terms: set[tuple[str, str]] = constants.DEFAULT_PEAK_COVID_TERMS,
-    num_terms_checkin: t.Optional[int] = None,
     key_course_subject_areas: t.Optional[list[int]] = None,
     key_course_ids: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:
@@ -33,18 +32,11 @@ def make_student_term_dataset(
         min_passing_grade: Minimum numeric grade considered by institution as "passing".
         course_level_pattern
         peak_covid_terms
-        num_terms_checkin: If known and applicable, the fixed check-in term from which
-            model predictions will be made, specified as an integer, where
-            1 => check-in is after the student's first term, 2 => second term, etc.
-            If 1, all columns only known after the first year will be dropped
-            to prevent data leakage.
         key_course_subject_areas
         key_courses_ids
-
-    TODO: Get rid of num_terms_checkin plus associated logic, maybe?
     """
     df_students = (
-        df_cohort.pipe(standardize_cohort_dataset, num_terms_checkin=num_terms_checkin)
+        df_cohort.pipe(standardize_cohort_dataset)
         .pipe(features.student.add_features, institution_state=institution_state)
     )  # fmt: skip
     df_courses_plus = (
@@ -78,19 +70,12 @@ def make_student_term_dataset(
     return df_student_terms_plus
 
 
-def standardize_cohort_dataset(
-    df: pd.DataFrame, *, num_terms_checkin: t.Optional[int] = None
-) -> pd.DataFrame:
+def standardize_cohort_dataset(df: pd.DataFrame) -> pd.DataFrame:
     """
     Drop some columns from raw cohort dataset.
 
     Args:
         df: As output by :func:`dataio.read_raw_pdp_cohort_data_from_file()` .
-        num_terms_checkin: If known and applicable, the fixed check-in term from which
-            model predictions will be made, specified as an integer, where
-            1 => check-in is after the student's first term, 2 => second term, etc.
-            If 1, all columns only known after the first year will be dropped
-            to prevent data leakage.
     """
     LOGGER.info("standardizing cohort dataset ...")
     df_trf = (
@@ -133,33 +118,22 @@ def standardize_cohort_dataset(
                 # let's assume we don't need other institution "demographics"
                 "most_recent_bachelors_at_other_institution_state",
                 "most_recent_associates_or_certificate_at_other_institution_state",
-                # "most_recent_last_enrollment_at_other_institution_state",
+                "most_recent_last_enrollment_at_other_institution_state",
                 "first_bachelors_at_other_institution_state",
                 "first_associates_or_certificate_at_other_institution_state",
                 "most_recent_bachelors_at_other_institution_carnegie",
                 "most_recent_associates_or_certificate_at_other_institution_carnegie",
-                # "most_recent_last_enrollment_at_other_institution_carnegie",
+                "most_recent_last_enrollment_at_other_institution_carnegie",
                 "first_bachelors_at_other_institution_carnegie",
                 "first_associates_or_certificate_at_other_institution_carnegie",
                 "most_recent_bachelors_at_other_institution_locale",
                 "most_recent_associates_or_certificate_at_other_institution_locale",
-                # "most_recent_last_enrollment_at_other_institution_locale",
+                "most_recent_last_enrollment_at_other_institution_locale",
                 "first_bachelors_at_other_institution_locale",
                 "first_associates_or_certificate_at_other_institution_locale",
             ],
         )
     )
-    if num_terms_checkin is not None and num_terms_checkin < 2:
-        LOGGER.info("num_terms_checkin=1, so dropping additional year 1+ columns ...")
-        df_trf = df_trf.pipe(
-            drop_columns_safely,
-            cols=[
-                "gpa_group_year_1",
-                "program_of_study_year_1",
-                "retention",
-                "persistence",
-            ],
-        )
     return df_trf
 
 

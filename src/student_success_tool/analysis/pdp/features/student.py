@@ -26,16 +26,6 @@ def add_features(
     """
     LOGGER.info("adding student features ...")
     feature_name_funcs: dict[str, t.Callable[[pd.DataFrame], pd.Series]] = {
-        # NOTE: it's likely that this the "most recent" enrollments info
-        # comes from "the future" wrt predictions, so we can't include as model features
-        # holding space here in case PDP tells us otherwise!
-        # "student_has_prior_enrollment_at_other_inst": ft.partial(
-        #     student_has_prior_enrollment_at_other_inst
-        # ),
-        # "student_prior_enrollment_at_other_inst_was_in_state": ft.partial(
-        #     student_prior_enrollment_at_other_inst_was_in_state,
-        #     institution_state=institution_state,
-        # ),
         "student_program_of_study_area_term_1": ft.partial(
             student_program_of_study_area, col="program_of_study_term_1"
         ),
@@ -60,23 +50,6 @@ def add_features(
             "diff_gpa_term_1_to_year_1": ft.partial(diff_gpa_term_1_to_year_1),
         }
     return df.assign(**feature_name_funcs)
-
-
-def student_has_prior_enrollment_at_other_inst(
-    df: pd.DataFrame,
-    *,
-    col: str = "most_recent_last_enrollment_at_other_institution_state",
-) -> pd.Series:
-    return df[col].astype("string").notna()
-
-
-def student_prior_enrollment_at_other_inst_was_in_state(
-    df: pd.DataFrame,
-    *,
-    col: str = "most_recent_last_enrollment_at_other_institution_state",
-    institution_state: str,
-) -> pd.Series:
-    return df[col].astype("string").eq(institution_state).astype("boolean")
 
 
 def student_program_of_study_area(df: pd.DataFrame, *, col: str) -> pd.Series:
