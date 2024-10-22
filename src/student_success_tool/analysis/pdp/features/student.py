@@ -12,15 +12,17 @@ LOGGER = logging.getLogger(__name__)
 # student_program_of_study_changed_first_year => student_program_of_study_changed_year_1
 
 
-def add_features(df: pd.DataFrame, *, institution_state: str) -> pd.DataFrame:
+def add_features(
+    df: pd.DataFrame, *, institution_state: t.Optional[str] = None
+) -> pd.DataFrame:
     """
     Compute student-level features from a standardized cohort dataset,
     and add as columns to ``df`` .
 
     Args:
         df
-        institution_state: Standard, 2-letter abbreviation for the state in which
-            the cohort institution is located.
+        institution_state: **DEPRECATED** Standard, 2-letter abbreviation for the state
+            in which the cohort institution is located.
     """
     LOGGER.info("adding student features ...")
     feature_name_funcs: dict[str, t.Callable[[pd.DataFrame], pd.Series]] = {
