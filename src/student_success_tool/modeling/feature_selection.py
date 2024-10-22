@@ -70,7 +70,7 @@ def select_features(
     selected_feature_cols = set(df_selected.columns)
     keep_cols = set(non_feature_cols) | selected_feature_cols
     LOGGER.info(
-        "selected %s out of %s (%s%) feature columns: %s",
+        "selected %s out of %s (%s%%) feature columns: %s",
         len(selected_feature_cols),
         len(orig_feature_cols),
         round(100.0 * len(selected_feature_cols) / len(orig_feature_cols), 1),

@@ -1,3 +1,4 @@
+import logging
 import typing as t
 from collections.abc import Collection
 
@@ -6,6 +7,8 @@ import pandas as pd
 
 from .. import dataops, features, utils
 from . import shared
+
+LOGGER = logging.getLogger(__name__)
 
 
 def compute_target_variable(
@@ -116,6 +119,7 @@ def select_eligible_students(
         term_col
         term_rank_col
     """
+    nuq_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
     df_students_by_criteria = shared.select_students_by_criteria(
         df, student_id_cols=student_id_cols, **student_criteria
     )
@@ -135,6 +139,10 @@ def select_eligible_students(
         sort_cols=term_rank_col,
         include_cols=[enrollment_intensity_col],
     )
+    nuq_students_checkin = len(df_ref)
+    shared._log_eligible_selection(
+        nuq_students_in, nuq_students_checkin, "check-in credits earned"
+    )
     df_students_by_time_left = shared.select_students_by_time_left(
         df_ref,
         intensity_time_lefts=intensity_time_limits,
@@ -144,8 +152,11 @@ def select_eligible_students(
         enrollment_intensity_col=enrollment_intensity_col,
         term_rank_col=term_rank_col,
     )
-    return features.shared.merge_many_dataframes(
+    df_out = features.shared.merge_many_dataframes(
         [df_students_by_criteria, df_students_by_num_creds, df_students_by_time_left],
         on=student_id_cols,
         how="inner",
     )
+    nuq_students_out = df_out.groupby(by=student_id_cols, sort=False).ngroups
+    shared._log_eligible_selection(nuq_students_in, nuq_students_out, "overall")
+    return df_out
