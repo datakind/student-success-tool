@@ -90,15 +90,6 @@ def standardize_cohort_dataset(df: pd.DataFrame) -> pd.DataFrame:
                 "naspa_first_generation",
                 # redundant
                 "attendance_status_term_1",
-                # derived directly from course dataset
-                "number_of_credits_attempted_year_1",
-                "number_of_credits_attempted_year_2",
-                "number_of_credits_attempted_year_3",
-                "number_of_credits_attempted_year_4",
-                "number_of_credits_earned_year_1",
-                "number_of_credits_earned_year_2",
-                "number_of_credits_earned_year_3",
-                "number_of_credits_earned_year_4",
                 # covered indirectly by course dataset fields/features
                 "gateway_math_status",
                 "gateway_english_status",

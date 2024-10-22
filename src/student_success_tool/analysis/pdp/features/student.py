@@ -17,6 +17,10 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
         df
     """
     LOGGER.info("adding student features ...")
+    # in case somebody drops some/all years, check for which years are present in df
+    credits_years = [
+        yr for yr in (1, 2, 3, 4) if f"number_of_credits_earned_year_{yr}" in df.columns
+    ]
     return df.assign(
         student_program_of_study_area_term_1=ft.partial(
             student_program_of_study_area, col="program_of_study_term_1"
@@ -35,6 +39,14 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
             year_col="student_program_of_study_area_year_1",
         ),
         diff_gpa_term_1_to_year_1=ft.partial(diff_gpa_term_1_to_year_1),
+        **{
+            f"frac_credits_earned_year_{yr}": ft.partial(
+                shared.frac_credits_earned,
+                earned_col=f"number_of_credits_earned_year_{yr}",
+                attempted_col=f"number_of_credits_attempted_year_{yr}",
+            )
+            for yr in credits_years
+        },
     )
 
 

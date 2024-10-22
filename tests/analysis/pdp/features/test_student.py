@@ -15,6 +15,8 @@ from student_success_tool.analysis.pdp.features import student
                     "program_of_study_year_1": ["24.0101", "27.05"],
                     "gpa_group_term_1": [4.00, 3.00],
                     "gpa_group_year_1": [3.5, 3.5],
+                    "number_of_credits_attempted_year_1": [15.0, 12.0],
+                    "number_of_credits_earned_year_1": [12.0, 12.0],
                 }
             ),
             pd.DataFrame(
@@ -24,6 +26,8 @@ from student_success_tool.analysis.pdp.features import student
                     "program_of_study_year_1": ["24.0101", "27.05"],
                     "gpa_group_term_1": [4.00, 3.00],
                     "gpa_group_year_1": [3.5, 3.5],
+                    "number_of_credits_attempted_year_1": [15.0, 12.0],
+                    "number_of_credits_earned_year_1": [12.0, 12.0],
                     "student_program_of_study_area_term_1": [24, 27],
                     "student_program_of_study_area_year_1": [24, 27],
                     "student_program_of_study_changed_term_1_to_year_1": [False, True],
@@ -32,6 +36,7 @@ from student_success_tool.analysis.pdp.features import student
                         False,
                     ],
                     "diff_gpa_term_1_to_year_1": [-0.5, 0.5],
+                    "frac_credits_earned_year_1": [0.8, 1.0],
                 }
             ),
         ),

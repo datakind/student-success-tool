@@ -57,12 +57,15 @@ def test_infer_num_terms_in_year(series, exp):
                     "number_of_credits_earned_year_1": [10.0, 5.0],
                     "gateway_math_status": ["R", "N"],
                     "gpa_group_year_1": [3.0, 4.0],
+                    "most_recent_bachelors_at_other_institution_state": ["VT", "IL"],
                 }
             ),
             pd.DataFrame(
                 {
                     "cohort": ["2024-25", "2023-24"],
                     "cohort_term": ["FALL", "SPRING"],
+                    "number_of_credits_attempted_year_1": [10.0, 5.0],
+                    "number_of_credits_earned_year_1": [10.0, 5.0],
                     "gpa_group_year_1": [3.0, 4.0],
                 }
             ),
