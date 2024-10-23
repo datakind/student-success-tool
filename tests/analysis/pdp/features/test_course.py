@@ -34,7 +34,7 @@ from student_success_tool.analysis.pdp.features import course
                     "delivery_method": ["O", "H", "F"],
                     "grade": ["4", "1", "W"],
                     "course_id": ["MATH101", "MATH202", "PHYS303"],
-                    "course_subject_area": [40, 45, 3],
+                    "course_subject_area": ["40", "45", "03"],
                     "course_passed": [True, False, pd.NA],
                     "course_completed": [True, True, False],
                     "course_level": [1, 2, 3],

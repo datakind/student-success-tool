@@ -9,9 +9,9 @@ def extract_short_cip_code(ser: pd.Series) -> pd.Series:
     # NOTE: this simpler form works, but the values aren't nearly as clean
     # return ser.str.slice(stop=2).str.strip(".")
     return (
-        ser.str.extract(r"^(?P<study_group>\d[\d.])[\d.]+$", expand=False)
+        ser.str.extract(r"^(?P<subject_area>\d[\d.])[\d.]+$", expand=False)
         .str.strip(".")
-        .astype("Int8")
+        .astype("string")
     )
 
 

@@ -28,8 +28,8 @@ from student_success_tool.analysis.pdp.features import student
                     "gpa_group_year_1": [3.5, 3.5],
                     "number_of_credits_attempted_year_1": [15.0, 12.0],
                     "number_of_credits_earned_year_1": [12.0, 12.0],
-                    "student_program_of_study_area_term_1": [24, 27],
-                    "student_program_of_study_area_year_1": [24, 27],
+                    "student_program_of_study_area_term_1": ["24", "27"],
+                    "student_program_of_study_area_year_1": ["24", "27"],
                     "student_program_of_study_changed_term_1_to_year_1": [False, True],
                     "student_program_of_study_area_changed_term_1_to_year_1": [
                         False,
@@ -54,7 +54,7 @@ def test_add_student_features(df, exp):
         (
             pd.DataFrame({"program_cip": ["240012.0", "519999", "9.1000", "X"]}),
             "program_cip",
-            pd.Series([24, 51, 9, pd.NA], dtype="Int8"),
+            pd.Series(["24", "51", "9", pd.NA], dtype="string"),
         ),
     ],
 )
