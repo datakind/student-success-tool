@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -134,5 +135,92 @@ def test_standardize_cohort_dataset(df, exp):
 )
 def test_standardize_course_dataset(df, exp):
     obs = dataops.standardize_course_dataset(df)
+    assert isinstance(obs, pd.DataFrame) and not obs.empty
+    assert obs.equals(exp) or obs.compare(exp).empty
+
+
+@pytest.mark.parametrize(
+    ["df", "exp"],
+    [
+        (
+            pd.DataFrame(
+                {
+                    "year_of_enrollment_at_cohort_inst": [1, 2, 3, 4],
+                    "term_id": [
+                        "2020-21 FALL",
+                        "2020-21 WINTER",
+                        "2020-21 SPRING",
+                        "2020-21 SUMMER",
+                    ],
+                    "course_ids": [
+                        ["X101", "Y101"],
+                        ["X102", "Y101", "Z201"],
+                        ["X101", "Y102"],
+                        ["X101", "Y101", "X102", "Y202", "Z101"],
+                    ],
+                    "retention": [False, True, True, True],
+                    "first_year_to_associates_or_certificate_at_cohort_inst": [
+                        pd.NA,
+                        2,
+                        2,
+                        5,
+                    ],
+                    "first_year_to_bachelors_at_cohort_inst": [pd.NA, pd.NA, 4, 3],
+                    "first_year_to_associates_or_certificate_at_other_inst": [
+                        4,
+                        1,
+                        5,
+                        3,
+                    ],
+                    "first_year_to_bachelor_at_other_inst": [pd.NA, pd.NA, pd.NA, 6],
+                    "frac_credits_earned_year_1": [1.0, 0.5, 0.75, 0.9],
+                    "frac_credits_earned_year_2": [0.9, 0.75, 0.8, 0.85],
+                }
+            ).astype(
+                {
+                    "first_year_to_associates_or_certificate_at_cohort_inst": "Int8",
+                    "first_year_to_bachelors_at_cohort_inst": "Int8",
+                    "first_year_to_associates_or_certificate_at_other_inst": "Int8",
+                    "first_year_to_bachelor_at_other_inst": "Int8",
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "year_of_enrollment_at_cohort_inst": [1, 2, 3, 4],
+                    "first_year_to_associates_or_certificate_at_cohort_inst": [
+                        pd.NA,
+                        pd.NA,
+                        2,
+                        pd.NA,
+                    ],
+                    "first_year_to_bachelors_at_cohort_inst": [pd.NA, pd.NA, pd.NA, 3],
+                    "first_year_to_associates_or_certificate_at_other_inst": [
+                        pd.NA,
+                        1,
+                        pd.NA,
+                        3,
+                    ],
+                    "first_year_to_bachelor_at_other_inst": [
+                        pd.NA,
+                        pd.NA,
+                        pd.NA,
+                        pd.NA,
+                    ],
+                    "frac_credits_earned_year_1": [np.nan, 0.5, 0.75, 0.9],
+                    "frac_credits_earned_year_2": [np.nan, np.nan, 0.8, 0.85],
+                }
+            ).astype(
+                {
+                    "first_year_to_associates_or_certificate_at_cohort_inst": "Int8",
+                    "first_year_to_bachelors_at_cohort_inst": "Int8",
+                    "first_year_to_associates_or_certificate_at_other_inst": "Int8",
+                    "first_year_to_bachelor_at_other_inst": "Int8",
+                }
+            ),
+        ),
+    ],
+)
+def test_clean_up_labeled_dataset_cols_and_vals(df, exp):
+    obs = dataops.clean_up_labeled_dataset_cols_and_vals(df)
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
