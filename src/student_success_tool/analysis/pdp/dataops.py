@@ -1,3 +1,4 @@
+import functools as ft
 import logging
 import typing as t
 
@@ -158,6 +159,84 @@ def standardize_course_dataset(df: pd.DataFrame) -> pd.DataFrame:
             ],
         )
     )
+
+
+def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Drop a bunch of columns not needed or wanted for modeling, and set to null
+    any values corresponding to time after a student's current year of enrollment.
+    """
+    return (
+        df.pipe(
+            drop_columns_safely,
+            cols=[
+                # metadata
+                "institution_id",
+                "term_id",
+                "academic_year",
+                "academic_term",
+                "cohort",
+                "cohort_term",
+                "term_rank",
+                "term_rank_fall_spring",
+                "term_course_begin_date_min",
+                "term_course_end_date_max",
+                # columns used to derive other features, but not features themselves
+                "course_ids",
+                "course_subjects",
+                "course_subject_areas",
+                "min_student_term_rank",
+                "min_student_term_rank_fall_spring",
+                # likely sources of data leakage
+                "retention",
+                "persistence",
+                "years_to_bachelors_at_cohort_inst",
+                "years_to_bachelor_at_other_inst",
+                "years_to_associates_or_certificate_at_cohort_inst",
+                "years_to_associates_or_certificate_at_other_inst",
+                "years_of_last_enrollment_at_cohort_institution",
+                "years_of_last_enrollment_at_other_institution",
+            ],
+        )
+        # keep "first year to X credential at Y inst" values if they occurred
+        # in any year prior to the current year of enrollment; otherwise, set to null
+        # in this case, the values themselves represent years
+        .assign(
+            **{
+                col: ft.partial(mask_year_values_based_on_enrollment_year, col=col)
+                for col in [
+                    "first_year_to_associates_or_certificate_at_cohort_inst",
+                    "first_year_to_bachelors_at_cohort_inst",
+                    "first_year_to_associates_or_certificate_at_other_inst",
+                    "first_year_to_bachelor_at_other_inst",
+                ]
+            }
+        )
+        # keep values in "*_year_X" columns if they occurred in any year prior
+        # to the current year of enrollment; otherwise, set to null
+        # in this case, the columns themselves represent years
+        .apply(mask_year_columns_based_on_enrollment_year, axis="columns")
+    )
+
+
+def mask_year_values_based_on_enrollment_year(
+    df: pd.DataFrame,
+    *,
+    col: str,
+    enrollment_year_col: str = "year_of_enrollment_at_cohort_inst",
+) -> pd.Series:
+    return df[col].mask(df[col].ge(df[enrollment_year_col]), other=pd.NA)
+
+
+def mask_year_columns_based_on_enrollment_year(
+    row: pd.Series, enrollment_year_col: str = "year_of_enrollment_at_cohort_inst"
+) -> pd.Series:
+    enrollment_year: int = row[enrollment_year_col]
+    post_grad_years = tuple(
+        f"_year_{yr}" for yr in (1, 2, 3, 4) if yr >= enrollment_year
+    )
+    row.loc[row.index.str.endswith(post_grad_years)] = pd.NA
+    return row
 
 
 def drop_course_rows_missing_identifiers(df: pd.DataFrame) -> pd.DataFrame:
