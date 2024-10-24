@@ -26,8 +26,10 @@ def add_features(
     Args:
         df
         min_passing_grade: Minimum numeric grade considered by institution as "passing".
-            Note that this is represented as a string, since the "grade" field includes
-            both numeric and alpha-categorical values. So, for example, "1"
+            Note that this is represented as a float, while grades are strings
+            since the values include both numeric and alpha-categorical values.
+            This value is only compared against numeric grades; relevant categoricals
+            are handled appropriately, e.g. "P" => "Pass" is always considered "passing".
         course_level_pattern: Regex string that extracts a course's level from its number
             (e.g. 1 from "101"). *Must* include exactly one capture group,
             which is taken to be the course level.

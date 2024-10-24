@@ -42,8 +42,8 @@
     df_student_terms = pdp.dataops.make_student_term_dataset(
         df_cohort,
         df_course,
-        min_passing_grade="1",
-        key_course_subject_areas=[24, 51],
+        q_grade=1.0,
+        key_course_subject_areas=["24", "51"],
     )
     ```
 

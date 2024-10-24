@@ -87,11 +87,11 @@ def test_course_id(df, prefix_col, number_col, exp):
         ),
         (
             pd.DataFrame(
-                {"grade": ["4", "1", "P", "F", "0", "I", "W"]}, dtype="string"
+                {"grade": ["4.0", "1.9", "P", "F", "2.1", "I", "W"]}, dtype="string"
             ),
             "grade",
             2.0,
-            pd.Series([True, False, True, False, False, pd.NA, pd.NA], dtype="boolean"),
+            pd.Series([True, False, True, False, True, pd.NA, pd.NA], dtype="boolean"),
         ),
     ],
 )
