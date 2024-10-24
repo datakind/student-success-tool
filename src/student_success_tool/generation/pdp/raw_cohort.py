@@ -344,8 +344,8 @@ class Provider(BaseProvider):
     def persistence(self) -> bool:
         return self.generator.pybool()  # type: ignore
 
-    def _years_to_of(self) -> int:
-        return self.random_int(min=0, max=7)
+    def _years_to_of(self, min_value: int = 0, max_value: int = 7) -> int:
+        return self.random_int(min=min_value, max=max_value)
 
     def years_to_bachelors_at_cohort_inst(self) -> int:
         return self._years_to_of()

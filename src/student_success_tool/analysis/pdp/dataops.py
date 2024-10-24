@@ -1,3 +1,4 @@
+import functools as ft
 import logging
 import typing as t
 
@@ -12,12 +13,10 @@ def make_student_term_dataset(
     df_cohort: pd.DataFrame,
     df_course: pd.DataFrame,
     *,
-    institution_state: t.Optional[str] = None,
     min_passing_grade: str = constants.DEFAULT_MIN_PASSING_GRADE,
     course_level_pattern: str = constants.DEFAULT_COURSE_LEVEL_PATTERN,
     peak_covid_terms: set[tuple[str, str]] = constants.DEFAULT_PEAK_COVID_TERMS,
-    num_terms_checkin: t.Optional[int] = None,
-    key_course_subject_areas: t.Optional[list[int]] = None,
+    key_course_subject_areas: t.Optional[list[str]] = None,
     key_course_ids: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:
     """
@@ -28,24 +27,15 @@ def make_student_term_dataset(
     Args:
         df_cohort: As output by :func:`dataio.read_raw_pdp_cohort_data_from_file()` .
         df_course: As output by :func:`dataio.read_raw_pdp_course_data_from_file()` .
-        institution_state: **DEPRECATED** Standard, 2-letter abbreviation for the state
-            in which the cohort institution is located.
         min_passing_grade: Minimum numeric grade considered by institution as "passing".
         course_level_pattern
         peak_covid_terms
-        num_terms_checkin: If known and applicable, the fixed check-in term from which
-            model predictions will be made, specified as an integer, where
-            1 => check-in is after the student's first term, 2 => second term, etc.
-            If 1, all columns only known after the first year will be dropped
-            to prevent data leakage.
         key_course_subject_areas
         key_courses_ids
-
-    TODO: Get rid of num_terms_checkin plus associated logic, maybe?
     """
     df_students = (
-        df_cohort.pipe(standardize_cohort_dataset, num_terms_checkin=num_terms_checkin)
-        .pipe(features.student.add_features, institution_state=institution_state)
+        df_cohort.pipe(standardize_cohort_dataset)
+        .pipe(features.student.add_features)
     )  # fmt: skip
     df_courses_plus = (
         df_course.pipe(standardize_course_dataset)
@@ -78,19 +68,12 @@ def make_student_term_dataset(
     return df_student_terms_plus
 
 
-def standardize_cohort_dataset(
-    df: pd.DataFrame, *, num_terms_checkin: t.Optional[int] = None
-) -> pd.DataFrame:
+def standardize_cohort_dataset(df: pd.DataFrame) -> pd.DataFrame:
     """
     Drop some columns from raw cohort dataset.
 
     Args:
         df: As output by :func:`dataio.read_raw_pdp_cohort_data_from_file()` .
-        num_terms_checkin: If known and applicable, the fixed check-in term from which
-            model predictions will be made, specified as an integer, where
-            1 => check-in is after the student's first term, 2 => second term, etc.
-            If 1, all columns only known after the first year will be dropped
-            to prevent data leakage.
     """
     LOGGER.info("standardizing cohort dataset ...")
     df_trf = (
@@ -108,15 +91,6 @@ def standardize_cohort_dataset(
                 "naspa_first_generation",
                 # redundant
                 "attendance_status_term_1",
-                # derived directly from course dataset
-                "number_of_credits_attempted_year_1",
-                "number_of_credits_attempted_year_2",
-                "number_of_credits_attempted_year_3",
-                "number_of_credits_attempted_year_4",
-                "number_of_credits_earned_year_1",
-                "number_of_credits_earned_year_2",
-                "number_of_credits_earned_year_3",
-                "number_of_credits_earned_year_4",
                 # covered indirectly by course dataset fields/features
                 "gateway_math_status",
                 "gateway_english_status",
@@ -133,33 +107,22 @@ def standardize_cohort_dataset(
                 # let's assume we don't need other institution "demographics"
                 "most_recent_bachelors_at_other_institution_state",
                 "most_recent_associates_or_certificate_at_other_institution_state",
-                # "most_recent_last_enrollment_at_other_institution_state",
+                "most_recent_last_enrollment_at_other_institution_state",
                 "first_bachelors_at_other_institution_state",
                 "first_associates_or_certificate_at_other_institution_state",
                 "most_recent_bachelors_at_other_institution_carnegie",
                 "most_recent_associates_or_certificate_at_other_institution_carnegie",
-                # "most_recent_last_enrollment_at_other_institution_carnegie",
+                "most_recent_last_enrollment_at_other_institution_carnegie",
                 "first_bachelors_at_other_institution_carnegie",
                 "first_associates_or_certificate_at_other_institution_carnegie",
                 "most_recent_bachelors_at_other_institution_locale",
                 "most_recent_associates_or_certificate_at_other_institution_locale",
-                # "most_recent_last_enrollment_at_other_institution_locale",
+                "most_recent_last_enrollment_at_other_institution_locale",
                 "first_bachelors_at_other_institution_locale",
                 "first_associates_or_certificate_at_other_institution_locale",
             ],
         )
     )
-    if num_terms_checkin is not None and num_terms_checkin < 2:
-        LOGGER.info("num_terms_checkin=1, so dropping additional year 1+ columns ...")
-        df_trf = df_trf.pipe(
-            drop_columns_safely,
-            cols=[
-                "gpa_group_year_1",
-                "program_of_study_year_1",
-                "retention",
-                "persistence",
-            ],
-        )
     return df_trf
 
 
@@ -196,6 +159,84 @@ def standardize_course_dataset(df: pd.DataFrame) -> pd.DataFrame:
             ],
         )
     )
+
+
+def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Drop a bunch of columns not needed or wanted for modeling, and set to null
+    any values corresponding to time after a student's current year of enrollment.
+    """
+    return (
+        df.pipe(
+            drop_columns_safely,
+            cols=[
+                # metadata
+                "institution_id",
+                "term_id",
+                "academic_year",
+                # "academic_term",  # keeping this to see if useful
+                "cohort",
+                # "cohort_term",  # keeping this to see if useful
+                "term_rank",
+                "term_rank_fall_spring",
+                "term_course_begin_date_min",
+                "term_course_end_date_max",
+                # columns used to derive other features, but not features themselves
+                "course_ids",
+                "course_subjects",
+                "course_subject_areas",
+                "min_student_term_rank",
+                "min_student_term_rank_fall_spring",
+                # likely sources of data leakage
+                "retention",
+                "persistence",
+                "years_to_bachelors_at_cohort_inst",
+                "years_to_bachelor_at_other_inst",
+                "years_to_associates_or_certificate_at_cohort_inst",
+                "years_to_associates_or_certificate_at_other_inst",
+                "years_of_last_enrollment_at_cohort_institution",
+                "years_of_last_enrollment_at_other_institution",
+            ],
+        )
+        # keep "first year to X credential at Y inst" values if they occurred
+        # in any year prior to the current year of enrollment; otherwise, set to null
+        # in this case, the values themselves represent years
+        .assign(
+            **{
+                col: ft.partial(mask_year_values_based_on_enrollment_year, col=col)
+                for col in [
+                    "first_year_to_associates_or_certificate_at_cohort_inst",
+                    "first_year_to_bachelors_at_cohort_inst",
+                    "first_year_to_associates_or_certificate_at_other_inst",
+                    "first_year_to_bachelor_at_other_inst",
+                ]
+            }
+        )
+        # keep values in "*_year_X" columns if they occurred in any year prior
+        # to the current year of enrollment; otherwise, set to null
+        # in this case, the columns themselves represent years
+        .apply(mask_year_columns_based_on_enrollment_year, axis="columns")
+    )
+
+
+def mask_year_values_based_on_enrollment_year(
+    df: pd.DataFrame,
+    *,
+    col: str,
+    enrollment_year_col: str = "year_of_enrollment_at_cohort_inst",
+) -> pd.Series:
+    return df[col].mask(df[col].ge(df[enrollment_year_col]), other=pd.NA)
+
+
+def mask_year_columns_based_on_enrollment_year(
+    row: pd.Series, enrollment_year_col: str = "year_of_enrollment_at_cohort_inst"
+) -> pd.Series:
+    enrollment_year: int = row[enrollment_year_col]
+    post_grad_years = tuple(
+        f"_year_{yr}" for yr in (1, 2, 3, 4) if yr >= enrollment_year
+    )
+    row.loc[row.index.str.endswith(post_grad_years)] = pd.NA
+    return row
 
 
 def drop_course_rows_missing_identifiers(df: pd.DataFrame) -> pd.DataFrame:

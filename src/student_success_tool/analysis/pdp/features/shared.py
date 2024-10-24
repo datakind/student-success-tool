@@ -9,10 +9,19 @@ def extract_short_cip_code(ser: pd.Series) -> pd.Series:
     # NOTE: this simpler form works, but the values aren't nearly as clean
     # return ser.str.slice(stop=2).str.strip(".")
     return (
-        ser.str.extract(r"^(?P<study_group>\d[\d.])[\d.]+$", expand=False)
+        ser.str.extract(r"^(?P<subject_area>\d[\d.])[\d.]+$", expand=False)
         .str.strip(".")
-        .astype("Int8")
+        .astype("string")
     )
+
+
+def frac_credits_earned(
+    df: pd.DataFrame,
+    *,
+    earned_col: str = "num_credits_earned",
+    attempted_col: str = "num_credits_attempted",
+) -> pd.Series:
+    return df[earned_col].div(df[attempted_col])
 
 
 def compute_values_equal(ser: pd.Series, to: t.Any | list[t.Any]) -> pd.Series:

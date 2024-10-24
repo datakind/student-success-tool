@@ -5,7 +5,7 @@ from student_success_tool.analysis.pdp.features import student
 
 
 @pytest.mark.parametrize(
-    ["df", "institution_state", "exp"],
+    ["df", "exp"],
     [
         (
             pd.DataFrame(
@@ -15,13 +15,10 @@ from student_success_tool.analysis.pdp.features import student
                     "program_of_study_year_1": ["24.0101", "27.05"],
                     "gpa_group_term_1": [4.00, 3.00],
                     "gpa_group_year_1": [3.5, 3.5],
-                    "most_recent_last_enrollment_at_other_institution_state": [
-                        "VT",
-                        "PA",
-                    ],
+                    "number_of_credits_attempted_year_1": [15.0, 12.0],
+                    "number_of_credits_earned_year_1": [12.0, 12.0],
                 }
             ),
-            "VT",
             pd.DataFrame(
                 {
                     "student_guid": ["123", "456"],
@@ -29,56 +26,24 @@ from student_success_tool.analysis.pdp.features import student
                     "program_of_study_year_1": ["24.0101", "27.05"],
                     "gpa_group_term_1": [4.00, 3.00],
                     "gpa_group_year_1": [3.5, 3.5],
-                    "most_recent_last_enrollment_at_other_institution_state": [
-                        "VT",
-                        "PA",
+                    "number_of_credits_attempted_year_1": [15.0, 12.0],
+                    "number_of_credits_earned_year_1": [12.0, 12.0],
+                    "student_program_of_study_area_term_1": ["24", "27"],
+                    "student_program_of_study_area_year_1": ["24", "27"],
+                    "student_program_of_study_changed_term_1_to_year_1": [False, True],
+                    "student_program_of_study_area_changed_term_1_to_year_1": [
+                        False,
+                        False,
                     ],
-                    # "student_has_prior_enrollment_at_other_inst": [True, True],
-                    # "student_prior_enrollment_at_other_inst_was_in_state": [
-                    #     True,
-                    #     False,
-                    # ],
-                    "student_program_of_study_area_term_1": [24, 27],
-                    "student_program_of_study_area_year_1": [24, 27],
-                    "student_program_of_study_changed_first_year": [False, True],
-                    "student_program_of_study_area_changed_first_year": [False, False],
                     "diff_gpa_term_1_to_year_1": [-0.5, 0.5],
-                }
-            ),
-        ),
-        (
-            pd.DataFrame(
-                {
-                    "student_guid": ["123", "456"],
-                    "program_of_study_term_1": ["24.0101", "27.01"],
-                    "most_recent_last_enrollment_at_other_institution_state": [
-                        "VT",
-                        pd.NA,
-                    ],
-                }
-            ),
-            "VT",
-            pd.DataFrame(
-                {
-                    "student_guid": ["123", "456"],
-                    "program_of_study_term_1": ["24.0101", "27.01"],
-                    "most_recent_last_enrollment_at_other_institution_state": [
-                        "VT",
-                        pd.NA,
-                    ],
-                    # "student_has_prior_enrollment_at_other_inst": [True, False],
-                    # "student_prior_enrollment_at_other_inst_was_in_state": [
-                    #     True,
-                    #     pd.NA,
-                    # ],
-                    "student_program_of_study_area_term_1": [24, 27],
+                    "frac_credits_earned_year_1": [0.8, 1.0],
                 }
             ),
         ),
     ],
 )
-def test_add_student_features(df, institution_state, exp):
-    obs = student.add_features(df, institution_state=institution_state)
+def test_add_student_features(df, exp):
+    obs = student.add_features(df)
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
 
@@ -89,7 +54,7 @@ def test_add_student_features(df, institution_state, exp):
         (
             pd.DataFrame({"program_cip": ["240012.0", "519999", "9.1000", "X"]}),
             "program_cip",
-            pd.Series([24, 51, 9, pd.NA], dtype="Int8"),
+            pd.Series(["24", "51", "9", pd.NA], dtype="string"),
         ),
     ],
 )
@@ -116,8 +81,8 @@ def test_student_program_of_study_area(df, col, exp):
         ),
     ],
 )
-def test_student_program_of_study_changed_first_year(df, term_col, year_col, exp):
-    obs = student.student_program_of_study_changed_first_year(
+def test_student_program_of_study_changed_term_1_to_year_1(df, term_col, year_col, exp):
+    obs = student.student_program_of_study_changed_term_1_to_year_1(
         df, term_col=term_col, year_col=year_col
     )
     assert isinstance(obs, pd.Series) and not obs.empty

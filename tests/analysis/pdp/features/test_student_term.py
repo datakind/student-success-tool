@@ -98,7 +98,11 @@ def test_sum_dummy_cols_by_group(df, grp_cols, agg_cols, exp):
                 }
             ),
             ["student_guid", "term_id"],
-            [("course_type", ["CC", "CD"]), ("course_level", 0), ("grade", ["0", "1", "F", "W"])],
+            [
+                ("course_type", ["CC", "CD"]),
+                ("course_level", 0),
+                ("grade", ["0", "1", "F", "W"]),
+            ],
             pd.DataFrame(
                 {
                     "student_guid": ["123", "123", "456", "789"],
@@ -179,30 +183,6 @@ def test_multicol_aggs_by_group(df, grp_cols, grade_col, section_grade_col, exp)
 def test_year_of_enrollment_at_cohort_inst(df, ccol, acol, exp):
     obs = student_term.year_of_enrollment_at_cohort_inst(
         df, cohort_col=ccol, academic_col=acol
-    )
-    assert isinstance(obs, pd.Series) and not obs.empty
-    assert obs.equals(exp) or obs.compare(exp).empty
-
-
-@pytest.mark.parametrize(
-    ["df", "earned_col", "attempted_col", "exp"],
-    [
-        (
-            pd.DataFrame(
-                {
-                    "nc_earned": [5.0, 7.5, 6.0, 0.0],
-                    "nc_attempted": [10.0, 7.5, 8.0, 15.0],
-                }
-            ),
-            "nc_earned",
-            "nc_attempted",
-            pd.Series([0.5, 1.0, 0.75, 0.0]),
-        ),
-    ],
-)
-def test_frac_credits_earned(df, earned_col, attempted_col, exp):
-    obs = student_term.frac_credits_earned(
-        df, earned_col=earned_col, attempted_col=attempted_col
     )
     assert isinstance(obs, pd.Series) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
