@@ -8,18 +8,15 @@ from . import shared
 
 LOGGER = logging.getLogger(__name__)
 
-
+NON_NUMERIC_GRADES = {"A", "F", "I", "M", "O", "P", "W"}
 NON_PASS_FAIL_GRADES = {"A", "I", "M", "O", "W"}
 NON_COMPLETE_GRADES = {"I", "W"}
-
-
-# TODO: Figure out if grades are always given as categoricals, not continuous numbers
 
 
 def add_features(
     df: pd.DataFrame,
     *,
-    min_passing_grade: str = constants.DEFAULT_MIN_PASSING_GRADE,
+    min_passing_grade: float = constants.DEFAULT_MIN_PASSING_GRADE,
     course_level_pattern: str = constants.DEFAULT_COURSE_LEVEL_PATTERN,
 ) -> pd.DataFrame:
     """
@@ -29,8 +26,8 @@ def add_features(
     Args:
         df
         min_passing_grade: Minimum numeric grade considered by institution as "passing".
-            Note: This is currently a string, but may change to a float, depending on
-            how PDP schools end up specifying their grade values.
+            Note that this is represented as a string, since the "grade" field includes
+            both numeric and alpha-categorical values. So, for example, "1"
         course_level_pattern: Regex string that extracts a course's level from its number
             (e.g. 1 from "101"). *Must* include exactly one capture group,
             which is taken to be the course level.
@@ -60,7 +57,7 @@ def course_subject_area(df: pd.DataFrame, *, col: str = "course_cip") -> pd.Seri
 
 
 def course_passed(
-    df: pd.DataFrame, *, col: str = "grade", min_passing_grade: str
+    df: pd.DataFrame, *, col: str = "grade", min_passing_grade: float
 ) -> pd.Series:
     series = (
         df[col]
@@ -92,10 +89,10 @@ def course_level(
 
 
 def course_grade_numeric(df: pd.DataFrame, *, col: str = "grade") -> pd.Series:
-    return df[col].cat.set_categories(["0", "1", "2", "3", "4"]).astype("Int8")
+    return df[col].mask(df[col].isin(NON_NUMERIC_GRADES), pd.NA).astype("Float32")
 
 
-def _grade_is_passing(grade: str, min_passing_grade: str) -> bool | None:
+def _grade_is_passing(grade: str, min_passing_grade: float) -> bool | None:
     if grade in NON_PASS_FAIL_GRADES:
         return None
     elif grade == "P":
@@ -103,4 +100,4 @@ def _grade_is_passing(grade: str, min_passing_grade: str) -> bool | None:
     elif grade == "F":
         return False
     else:
-        return grade >= min_passing_grade
+        return float(grade) >= min_passing_grade
