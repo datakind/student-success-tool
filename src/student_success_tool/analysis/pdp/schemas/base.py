@@ -43,13 +43,7 @@ TermField = ft.partial(
 )
 GPAField = ft.partial(pda.Field, nullable=True, ge=0.0, le=4.0)
 NumCreditsGt0Field = ft.partial(pda.Field, nullable=True, ge=0.0)
-GradeField = ft.partial(
-    pda.Field,
-    nullable=True,
-    dtype_kwargs={
-        "categories": ["0", "1", "2", "3", "4", "P", "F", "I", "W", "A", "M", "O"]
-    },
-)
+GradeField = ft.partial(pda.Field, nullable=True)
 CompletedDevOrGatewayField = ft.partial(
     pda.Field, nullable=True, dtype_kwargs={"categories": ["C", "D", "NA"]}
 )
@@ -99,7 +93,7 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
     )
     course_begin_date: pt.Series["datetime64[ns]"]
     course_end_date: pt.Series["datetime64[ns]"]
-    grade: pt.Series[pd.CategoricalDtype] = GradeField()
+    grade: pt.Series["string"] = GradeField()
     number_of_credits_attempted: pt.Series["Float32"] = NumCreditsGt0Field(le=20)
     number_of_credits_earned: pt.Series["Float32"] = NumCreditsGt0Field(le=20)
     delivery_method: pt.Series[pd.CategoricalDtype] = pda.Field(
@@ -263,8 +257,8 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     completed_gateway_english_year_1: pt.Series[pd.CategoricalDtype] = (
         CompletedDevOrGatewayField()
     )
-    gateway_math_grade_y_1: pt.Series[pd.CategoricalDtype] = GradeField()
-    gateway_english_grade_y_1: pt.Series[pd.CategoricalDtype] = GradeField()
+    gateway_math_grade_y_1: pt.Series["string"] = GradeField()
+    gateway_english_grade_y_1: pt.Series["string"] = GradeField()
     # NOTE: categories set in a parser, which forces "UK" values to null
     attempted_dev_math_y_1: pt.Series[pd.CategoricalDtype] = pda.Field(nullable=True)
     # NOTE: categories set in a parser, which forces "UK" values to null

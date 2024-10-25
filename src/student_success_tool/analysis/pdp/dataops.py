@@ -13,7 +13,7 @@ def make_student_term_dataset(
     df_cohort: pd.DataFrame,
     df_course: pd.DataFrame,
     *,
-    min_passing_grade: str = constants.DEFAULT_MIN_PASSING_GRADE,
+    min_passing_grade: float = constants.DEFAULT_MIN_PASSING_GRADE,
     course_level_pattern: str = constants.DEFAULT_COURSE_LEVEL_PATTERN,
     peak_covid_terms: set[tuple[str, str]] = constants.DEFAULT_PEAK_COVID_TERMS,
     key_course_subject_areas: t.Optional[list[str]] = None,

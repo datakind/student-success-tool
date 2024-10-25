@@ -20,8 +20,8 @@ from student_success_tool.analysis.pdp.features import course
                     "delivery_method": ["O", "H", "F"],
                     "grade": ["4", "1", "W"],
                 }
-            ).astype({"grade": "category"}),
-            "2",
+            ).astype({"grade": "string"}),
+            2.0,
             constants.DEFAULT_COURSE_LEVEL_PATTERN,
             pd.DataFrame(
                 {
@@ -38,9 +38,9 @@ from student_success_tool.analysis.pdp.features import course
                     "course_passed": [True, False, pd.NA],
                     "course_completed": [True, True, False],
                     "course_level": [1, 2, 3],
-                    "course_grade_numeric": [4, 1, pd.NA],
+                    "course_grade_numeric": [4.0, 1.0, pd.NA],
                 }
-            ).astype({"course_passed": "boolean", "course_grade_numeric": "Int8"}),
+            ).astype({"course_passed": "boolean", "course_grade_numeric": "Float32"}),
         ),
     ],
 )
@@ -80,24 +80,18 @@ def test_course_id(df, prefix_col, number_col, exp):
     ["df", "col", "min_passing_grade", "exp"],
     [
         (
-            pd.DataFrame({"grade": ["4", "2", "P", "F", "0"]}).astype(
-                {"grade": pd.CategoricalDtype(["0", "1", "2", "3", "4", "P", "F"])}
-            ),
+            pd.DataFrame({"grade": ["4", "2", "P", "F", "0"]}, dtype="string"),
             "grade",
-            "1",
+            1.0,
             pd.Series([True, True, True, False, False], dtype="boolean"),
         ),
         (
-            pd.DataFrame({"grade": ["4", "1", "P", "F", "0", "I", "W"]}).astype(
-                {
-                    "grade": pd.CategoricalDtype(
-                        ["0", "1", "2", "3", "4", "P", "F", "W", "I"]
-                    )
-                }
+            pd.DataFrame(
+                {"grade": ["4.0", "1.9", "P", "F", "2.1", "I", "W"]}, dtype="string"
             ),
             "grade",
-            "2",
-            pd.Series([True, False, True, False, False, pd.NA, pd.NA], dtype="boolean"),
+            2.0,
+            pd.Series([True, False, True, False, True, pd.NA, pd.NA], dtype="boolean"),
         ),
     ],
 )
@@ -111,12 +105,8 @@ def test_course_passed(df, col, min_passing_grade, exp):
     ["df", "col", "exp"],
     [
         (
-            pd.DataFrame({"grade": ["4", "1", "P", "F", "0", "I", "W"]}).astype(
-                {
-                    "grade": pd.CategoricalDtype(
-                        ["0", "1", "2", "3", "4", "P", "F", "W", "I"]
-                    )
-                }
+            pd.DataFrame(
+                {"grade": ["4", "1", "P", "F", "0", "I", "W"]}, dtype="string"
             ),
             "grade",
             pd.Series([True, True, True, True, True, False, False]),
@@ -152,11 +142,14 @@ def test_course_level(df, col, pattern, exp):
     ["df", "col", "exp"],
     [
         (
-            pd.DataFrame({"grade": ["4", "2", "P", "F", "0"]}).astype(
-                {"grade": pd.CategoricalDtype(["0", "1", "2", "3", "4", "P", "F"])}
-            ),
+            pd.DataFrame({"grade": ["4", "2", "P", "F", "1"]}, dtype="string"),
             "grade",
-            pd.Series(["4", "2", pd.NA, pd.NA, "0"], dtype="Int8"),
+            pd.Series([4.0, 2.0, pd.NA, pd.NA, 1.0], dtype="Float32"),
+        ),
+        (
+            pd.DataFrame({"grade": ["4.0", "2.5", "I", "W", "1.75"]}, dtype="string"),
+            "grade",
+            pd.Series([4.0, 2.5, pd.NA, pd.NA, 1.75], dtype="Float32"),
         ),
     ],
 )
