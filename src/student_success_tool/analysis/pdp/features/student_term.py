@@ -96,7 +96,6 @@ def aggregate_from_course_level_features(
         ("core_course", "Y"),
         ("course_type", ["CC", "CD"]),
         ("enrolled_at_other_institution_s", "Y"),
-        ("grade", ["0", "1", "F", "W"]),
     ]
     if key_course_subject_areas is not None:
         agg_col_vals.extend(
@@ -107,9 +106,9 @@ def aggregate_from_course_level_features(
     df_val_equals = sum_val_equal_cols_by_group(
         df, grp_cols=student_term_id_cols, agg_col_vals=agg_col_vals
     )
-    df_applied = multicol_aggs_by_group(df, grp_cols=student_term_id_cols)
+    df_grade_aggs = multicol_grade_aggs_by_group(df, grp_cols=student_term_id_cols)
     return shared.merge_many_dataframes(
-        [df_passthrough, df_aggs, df_val_equals, df_dummies, df_applied],
+        [df_passthrough, df_aggs, df_val_equals, df_dummies, df_grade_aggs],
         on=student_term_id_cols,
     )
 
@@ -212,17 +211,6 @@ def student_rate_above_sections_avg(
     df: pd.DataFrame, *, student_col: str, sections_col: str
 ) -> pd.Series:
     return df[student_col].gt(df[sections_col])
-
-
-def num_courses_grade_above_section_avg(
-    df: pd.DataFrame,
-    *,
-    grade_col: str = "course_grade_numeric",
-    section_grade_col: str = "section_course_grade_numeric_mean",
-) -> object:
-    # NOTE: pydata has gone off the rails....sum() is return np.int64 value, not an int
-    # and mypy won't let me annotate with np.int64, so... "object" it is
-    return df[grade_col].gt(df[section_grade_col]).sum()
 
 
 def num_courses_col_agg(col: str = "course_id") -> pd.NamedAgg:
@@ -382,24 +370,62 @@ def sum_val_equal_cols_by_group(
     )
 
 
-def multicol_aggs_by_group(
+def _rename_sum_by_group_col(col: str) -> str:
+    return f"{constants.NUM_COURSE_FEATURE_COL_PREFIX}_{col}"
+
+
+def multicol_grade_aggs_by_group(
     df: pd.DataFrame,
     *,
     grp_cols: list[str],
-    grade_col: str = "course_grade_numeric",
-    section_grade_col: str = "section_course_grade_numeric_mean",
+    grade_col: str = "grade",
+    grade_numeric_col: str = "course_grade_numeric",
+    section_grade_numeric_col: str = "section_course_grade_numeric_mean",
 ) -> pd.DataFrame:
-    df_grped = df.groupby(by=grp_cols, observed=True, as_index=False)
-    df_applied = df_grped.apply(
-        num_courses_grade_above_section_avg,
-        grade_col=grade_col,
-        section_grade_col=section_grade_col,
-        include_groups=False,
+    return (
+        df.loc[:, grp_cols + [grade_col, grade_numeric_col, section_grade_numeric_col]]
+        # compute intermediate column values all at once, which is efficient
+        .assign(
+            course_grade_is_failing_or_withdrawal=ft.partial(
+                _course_grade_is_failing_or_withdrawal,
+                grade_col=grade_col,
+                grade_numeric_col=grade_numeric_col,
+            ),
+            course_grade_above_section_avg=ft.partial(
+                _course_grade_above_section_avg,
+                grade_numeric_col=grade_numeric_col,
+                section_grade_numeric_col=section_grade_numeric_col,
+            ),
+        )
+        .groupby(by=grp_cols, observed=True, as_index=False)
+        # so that we can efficiently aggregate those intermediate values per group
+        .agg(
+            num_courses_grade_is_failing_or_withdrawal=(
+                "course_grade_is_failing_or_withdrawal",
+                "sum",
+            ),
+            num_courses_grade_above_section_avg=(
+                "course_grade_above_section_avg",
+                "sum",
+            ),
+        )
     )
-    assert isinstance(df_applied, pd.DataFrame)  # type guard
-    # pandas does not give a shit about type guards, ignoring the complaint below
-    return df_applied.rename(columns={None: "num_courses_grade_above_section_avg"})  # type: ignore
 
 
-def _rename_sum_by_group_col(col: str) -> str:
-    return f"{constants.NUM_COURSE_FEATURE_COL_PREFIX}_{col}"
+def _course_grade_is_failing_or_withdrawal(
+    df: pd.DataFrame,
+    grade_col: str = "grade",
+    grade_numeric_col: str = "course_grade_numeric",
+) -> pd.Series:
+    return (
+        df[grade_col].isin({"F", "W"})
+        | df[grade_numeric_col].between(0.0, 2.0, inclusive="left")
+    )  # fmt: skip
+
+
+def _course_grade_above_section_avg(
+    df: pd.DataFrame,
+    grade_numeric_col: str = "course_grade_numeric",
+    section_grade_numeric_col: str = "section_course_grade_numeric_mean",
+) -> pd.Series:
+    return df[grade_numeric_col].gt(df[section_grade_numeric_col])
