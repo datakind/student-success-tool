@@ -4,7 +4,7 @@ import typing as t
 
 import pandas as pd
 
-from . import constants, features
+from . import constants, features, types
 
 LOGGER = logging.getLogger(__name__)
 
@@ -33,9 +33,10 @@ def make_student_term_dataset(
         key_course_subject_areas
         key_courses_ids
     """
+    first_term_of_year = infer_first_term_of_year(df_course["academic_term"])
     df_students = (
         df_cohort.pipe(standardize_cohort_dataset)
-        .pipe(features.student.add_features)
+        .pipe(features.student.add_features, first_term_of_year=first_term_of_year)
     )  # fmt: skip
     df_courses_plus = (
         df_course.pipe(standardize_course_dataset)
@@ -44,7 +45,11 @@ def make_student_term_dataset(
             min_passing_grade=min_passing_grade,
             course_level_pattern=course_level_pattern,
         )
-        .pipe(features.term.add_features, peak_covid_terms=peak_covid_terms)
+        .pipe(
+            features.term.add_features,
+            first_term_of_year=first_term_of_year,
+            peak_covid_terms=peak_covid_terms,
+        )
         .pipe(
             features.section.add_features,
             section_id_cols=["term_id", "course_id", "section_id"],
@@ -295,7 +300,7 @@ def drop_columns_safely(df: pd.DataFrame, *, cols: list[str]) -> pd.DataFrame:
     return df_trf
 
 
-def infer_first_term_of_year(s: pd.Series) -> str:
+def infer_first_term_of_year(s: pd.Series) -> types.TermType:
     """
     Infer the first term of the (academic) year by the ordering of its categorical values.
 
@@ -306,7 +311,7 @@ def infer_first_term_of_year(s: pd.Series) -> str:
         first_term_of_year = s.cat.categories[0]
         LOGGER.info("'%s' inferred as the first term of the year", first_term_of_year)
         assert isinstance(first_term_of_year, str)  # type guard
-        return first_term_of_year
+        return first_term_of_year  # type: ignore
     else:
         raise ValueError(
             f"'{s.name}' series is not an ordered categorical: {s.dtype=} ..."
