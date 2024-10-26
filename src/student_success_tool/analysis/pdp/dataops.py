@@ -216,6 +216,8 @@ def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
         # to the current year of enrollment; otherwise, set to null
         # in this case, the columns themselves represent years
         .apply(mask_year_columns_based_on_enrollment_year, axis="columns")
+        # do the same thing, only by term: "*_term_X", etc.
+        .apply(mask_term_columns_based_on_enrollment_term, axis="columns")
     )
 
 
@@ -232,10 +234,19 @@ def mask_year_columns_based_on_enrollment_year(
     row: pd.Series, enrollment_year_col: str = "year_of_enrollment_at_cohort_inst"
 ) -> pd.Series:
     enrollment_year: int = row[enrollment_year_col]
-    post_grad_years = tuple(
-        f"_year_{yr}" for yr in (1, 2, 3, 4) if yr >= enrollment_year
+    future_years = tuple(f"_year_{yr}" for yr in (1, 2, 3, 4) if yr >= enrollment_year)
+    row.loc[row.index.str.endswith(future_years)] = pd.NA
+    return row
+
+
+def mask_term_columns_based_on_enrollment_term(
+    row: pd.Series, enrollment_term_col: str = "cumnum_terms_enrolled"
+) -> pd.Series:
+    enrollment_term: int = row[enrollment_term_col]
+    future_terms = tuple(
+        f"_term_{term}" for term in range(1, 9) if term > enrollment_term
     )
-    row.loc[row.index.str.endswith(post_grad_years)] = pd.NA
+    row.loc[row.index.str.endswith(future_terms)] = pd.NA
     return row
 
 

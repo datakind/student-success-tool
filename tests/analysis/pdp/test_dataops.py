@@ -146,6 +146,7 @@ def test_standardize_course_dataset(df, exp):
             pd.DataFrame(
                 {
                     "year_of_enrollment_at_cohort_inst": [1, 2, 3, 4],
+                    "cumnum_terms_enrolled": [2, 3, 4, 5],
                     "term_id": [
                         "2020-21 FALL",
                         "2020-21 WINTER",
@@ -175,6 +176,8 @@ def test_standardize_course_dataset(df, exp):
                     "first_year_to_bachelor_at_other_inst": [pd.NA, pd.NA, pd.NA, 6],
                     "frac_credits_earned_year_1": [1.0, 0.5, 0.75, 0.9],
                     "frac_credits_earned_year_2": [0.9, 0.75, 0.8, 0.85],
+                    "num_courses_diff_term_2_to_term_3": [0.0, 1.0, -1.0, 0.0],
+                    "num_courses_diff_term_3_to_term_4": [1.0, -1.0, 0.0, 1.0],
                 }
             ).astype(
                 {
@@ -187,6 +190,7 @@ def test_standardize_course_dataset(df, exp):
             pd.DataFrame(
                 {
                     "year_of_enrollment_at_cohort_inst": [1, 2, 3, 4],
+                    "cumnum_terms_enrolled": [2, 3, 4, 5],
                     "first_year_to_associates_or_certificate_at_cohort_inst": [
                         pd.NA,
                         pd.NA,
@@ -208,6 +212,8 @@ def test_standardize_course_dataset(df, exp):
                     ],
                     "frac_credits_earned_year_1": [np.nan, 0.5, 0.75, 0.9],
                     "frac_credits_earned_year_2": [np.nan, np.nan, 0.8, 0.85],
+                    "num_courses_diff_term_2_to_term_3": [np.nan, 1.0, -1.0, 0.0],
+                    "num_courses_diff_term_3_to_term_4": [np.nan, np.nan, 0.0, 1.0],
                 }
             ).astype(
                 {
