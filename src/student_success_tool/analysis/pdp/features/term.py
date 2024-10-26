@@ -4,7 +4,7 @@ import typing as t
 
 import pandas as pd
 
-from .. import constants
+from .. import constants, types
 from . import shared
 
 LOGGER = logging.getLogger(__name__)
@@ -15,6 +15,7 @@ def add_features(
     *,
     year_col: str = "academic_year",
     term_col: str = "academic_term",
+    first_term_of_year: types.TermType = constants.DEFAULT_FIRST_TERM_OF_YEAR,  # type: ignore
     peak_covid_terms: set[tuple[str, str]] = constants.DEFAULT_PEAK_COVID_TERMS,
 ) -> pd.DataFrame:
     """
@@ -23,8 +24,6 @@ def add_features(
 
     Args:
         df
-        year_col: Name of column in ``df`` containing the records' academic year.
-        term_col: Name of column in ``df`` containing the records' academic term.
         peak_covid_terms: Set of (year, term) pairs considered by the institution as
             occurring during "peak" COVID; for example, ``("2020-21", "SPRING")`` .
     """
@@ -34,7 +33,13 @@ def add_features(
         # only need to compute features on unique terms, rather than at course-level
         # merging back into `df` afterwards ensures all rows have correct values
         .assign(
-            term_id=ft.partial(term_id, year_col=year_col, term_col=term_col),
+            term_id=ft.partial(shared.year_term, year_col=year_col, term_col=term_col),
+            term_end_dt=ft.partial(
+                shared.year_term_dt,
+                col="term_id",
+                bound="end",
+                first_term_of_year=first_term_of_year,
+            ),
             term_rank=ft.partial(term_rank, year_col=year_col, term_col=term_col),
             term_rank_fall_spring=ft.partial(
                 term_rank,
@@ -52,6 +57,7 @@ def add_features(
             term_is_fall_spring=ft.partial(term_is_fall_spring, term_col=term_col),
         )
     )
+    # TODO: shall we get rid of these agg features?
     df_term_agg = (
         df.groupby(by=[year_col, term_col], as_index=False, observed=True)
         .agg(
@@ -62,15 +68,6 @@ def add_features(
     return shared.merge_many_dataframes(
         [df, df_term, df_term_agg], on=[year_col, term_col], how="inner"
     )
-
-
-def term_id(
-    df: pd.DataFrame,
-    *,
-    year_col: str = "academic_year",
-    term_col: str = "academic_term",
-) -> pd.Series:
-    return df[year_col].str.cat(df[term_col], sep=" ")
 
 
 def term_rank(
