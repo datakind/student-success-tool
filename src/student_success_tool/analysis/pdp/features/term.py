@@ -34,10 +34,10 @@ def add_features(
         # merging back into `df` afterwards ensures all rows have correct values
         .assign(
             term_id=ft.partial(shared.year_term, year_col=year_col, term_col=term_col),
-            term_end_dt=ft.partial(
+            term_start_dt=ft.partial(
                 shared.year_term_dt,
                 col="term_id",
-                bound="end",
+                bound="start",
                 first_term_of_year=first_term_of_year,
             ),
             term_rank=ft.partial(term_rank, year_col=year_col, term_col=term_col),
