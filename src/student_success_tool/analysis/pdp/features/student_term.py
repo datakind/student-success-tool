@@ -2,6 +2,7 @@ import functools as ft
 import logging
 import typing as t
 
+import numpy as np
 import pandas as pd
 
 from .. import constants
@@ -47,6 +48,7 @@ def aggregate_from_course_level_features(
         institution_id=("institution_id", "first"),
         academic_year=("academic_year", "first"),
         academic_term=("academic_term", "first"),
+        term_start_dt=("term_start_dt", "first"),
         term_rank=("term_rank", "first"),
         term_in_peak_covid=("term_in_peak_covid", "first"),
         term_rank_fall_spring=("term_rank_fall_spring", "first"),
@@ -132,6 +134,7 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
     feature_name_funcs = (
         {
             "year_of_enrollment_at_cohort_inst": year_of_enrollment_at_cohort_inst,
+            "year_of_enrollment_at_cohort_inst_v2": year_of_enrollment_at_cohort_inst_v2,
             "term_is_while_student_enrolled_at_other_inst": term_is_while_student_enrolled_at_other_inst,
             "frac_credits_earned": shared.frac_credits_earned,
         }
@@ -177,6 +180,16 @@ def year_of_enrollment_at_cohort_inst(
         .astype("Int16")["cohort_yr"]
         + 1
     )
+
+
+def year_of_enrollment_at_cohort_inst_v2(
+    df: pd.DataFrame,
+    *,
+    cohort_start_dt_col: str = "cohort_start_dt",
+    term_start_dt_col: str = "term_start_dt",
+) -> pd.Series:
+    dts_diff = (df[term_start_dt_col].sub(df[cohort_start_dt_col])).dt.days
+    return pd.Series(np.ceil((dts_diff + 1) / 365.25))
 
 
 # TODO: we could probably compute this directly, w/o an intermediate feature?
