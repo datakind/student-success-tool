@@ -14,7 +14,7 @@ def aggregate_from_course_level_features(
     df: pd.DataFrame,
     *,
     student_term_id_cols: list[str],
-    key_course_subject_areas: t.Optional[list[int]] = None,
+    key_course_subject_areas: t.Optional[list[str]] = None,
     key_course_ids: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:
     """
@@ -96,16 +96,14 @@ def aggregate_from_course_level_features(
         ("core_course", "Y"),
         ("course_type", ["CC", "CD"]),
         ("enrolled_at_other_institution_s", "Y"),
-        ("grade", ["0", "1", "F", "W"])
+        ("grade", ["0", "1", "F", "W"]),
     ]
     if key_course_subject_areas is not None:
         agg_col_vals.extend(
             ("course_subject_area", kcsa) for kcsa in key_course_subject_areas
         )
     if key_course_ids is not None:
-        agg_col_vals.extend(
-            ("course_id", kc) for kc in key_course_ids
-        )
+        agg_col_vals.extend(("course_id", kc) for kc in key_course_ids)
     df_val_equals = sum_val_equal_cols_by_group(
         df, grp_cols=student_term_id_cols, agg_col_vals=agg_col_vals
     )
@@ -135,8 +133,8 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
     feature_name_funcs = (
         {
             "year_of_enrollment_at_cohort_inst": year_of_enrollment_at_cohort_inst,
-            "frac_credits_earned": frac_credits_earned,
             "term_is_while_student_enrolled_at_other_inst": term_is_while_student_enrolled_at_other_inst,
+            "frac_credits_earned": shared.frac_credits_earned,
         }
         | {
             fc_col: ft.partial(compute_frac_courses, numer_col=nc_col)
@@ -180,15 +178,6 @@ def year_of_enrollment_at_cohort_inst(
         .astype("Int16")["cohort_yr"]
         + 1
     )
-
-
-def frac_credits_earned(
-    df: pd.DataFrame,
-    *,
-    earned_col: str = "num_credits_earned",
-    attempted_col: str = "num_credits_attempted",
-) -> pd.Series:
-    return df[earned_col].div(df[attempted_col])
 
 
 # TODO: we could probably compute this directly, w/o an intermediate feature?

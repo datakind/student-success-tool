@@ -277,13 +277,13 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     )
     retention: pt.Series["boolean"]
     persistence: pt.Series["boolean"]
-    years_to_bachelors_at_cohort_inst: pt.Series["int32"] = YearsToOfField()
-    years_to_associates_or_certificate_at_cohort_inst: pt.Series["int32"] = (
-        YearsToOfField()
+    years_to_bachelors_at_cohort_inst: pt.Series["Int8"] = YearsToOfField(nullable=True)
+    years_to_associates_or_certificate_at_cohort_inst: pt.Series["Int8"] = (
+        YearsToOfField(nullable=True)
     )
-    years_to_bachelor_at_other_inst: pt.Series["int32"] = YearsToOfField()
-    years_to_associates_or_certificate_at_other_inst: pt.Series["int32"] = (
-        YearsToOfField()
+    years_to_bachelor_at_other_inst: pt.Series["Int8"] = YearsToOfField(nullable=True)
+    years_to_associates_or_certificate_at_other_inst: pt.Series["Int8"] = (
+        YearsToOfField(nullable=True)
     )
     years_of_last_enrollment_at_cohort_institution: pt.Series["int32"] = (
         YearsToOfField()
@@ -316,13 +316,17 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     foreign_language_completion: t.Optional[pt.Series["string"]] = pda.Field(
         nullable=True
     )
-    first_year_to_bachelors_at_cohort_inst: pt.Series["int32"] = YearsToOfField()
-    first_year_to_associates_or_certificate_at_cohort_inst: pt.Series["int32"] = (
-        YearsToOfField()
+    first_year_to_bachelors_at_cohort_inst: pt.Series["Int8"] = YearsToOfField(
+        nullable=True
     )
-    first_year_to_bachelor_at_other_inst: pt.Series["int32"] = YearsToOfField()
-    first_year_to_associates_or_certificate_at_other_inst: pt.Series["int32"] = (
-        YearsToOfField()
+    first_year_to_associates_or_certificate_at_cohort_inst: pt.Series["Int8"] = (
+        YearsToOfField(nullable=True)
+    )
+    first_year_to_bachelor_at_other_inst: pt.Series["Int8"] = YearsToOfField(
+        nullable=True
+    )
+    first_year_to_associates_or_certificate_at_other_inst: pt.Series["Int8"] = (
+        YearsToOfField(nullable=True)
     )
     program_of_study_year_1: pt.Series["string"] = pda.Field(nullable=True)
     most_recent_bachelors_at_other_institution_state: pt.Series["string"] = pda.Field(
@@ -402,6 +406,19 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     @pda.parser("disability_status")
     def set_disability_status_categories(cls, series):
         return series.cat.set_categories(["Y", "N"])
+
+    @pda.parser(
+        "years_to_associates_or_certificate_at_cohort_inst",
+        "years_to_bachelors_at_cohort_inst",
+        "years_to_associates_or_certificate_at_other_inst",
+        "years_to_bachelor_at_other_inst",
+        "first_year_to_associates_or_certificate_at_cohort_inst",
+        "first_year_to_bachelors_at_cohort_inst",
+        "first_year_to_associates_or_certificate_at_other_inst",
+        "first_year_to_bachelor_at_other_inst",
+    )
+    def set_zero_year_values_to_null(cls, series):
+        return series.mask(series.eq(0), pd.NA).astype("Int8")
 
     class Config:
         coerce = True
