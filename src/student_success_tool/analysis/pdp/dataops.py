@@ -32,6 +32,9 @@ def make_student_term_dataset(
         peak_covid_terms
         key_course_subject_areas
         key_courses_ids
+
+    References:
+        - https://bigfuture.collegeboard.org/plan-for-college/get-started/how-to-convert-gpa-4.0-scale
     """
     first_term_of_year = infer_first_term_of_year(df_course["academic_term"])
     df_students = (
@@ -59,6 +62,7 @@ def make_student_term_dataset(
         features.student_term.aggregate_from_course_level_features(
             df_courses_plus,
             student_term_id_cols=["student_guid", "term_id"],
+            min_passing_grade=min_passing_grade,
             key_course_subject_areas=key_course_subject_areas,
             key_course_ids=key_course_ids,
         )

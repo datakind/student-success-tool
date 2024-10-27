@@ -131,6 +131,7 @@ def test_sum_val_equal_cols_by_group(df, grp_cols, agg_col_vals, exp):
 @pytest.mark.parametrize(
     [
         "df",
+        "min_passing_grade",
         "grp_cols",
         "grade_col",
         "grade_numeric_col",
@@ -141,13 +142,21 @@ def test_sum_val_equal_cols_by_group(df, grp_cols, agg_col_vals, exp):
         (
             pd.DataFrame(
                 {
-                    "sid": ["123", "123", "123", "456", "456"],
-                    "tid": ["22-23 FA", "22-23 FA", "22-23 SP", "22-23 SP", "22-23 SP"],
-                    "grade": ["4", "3", "1", pd.NA, "4"],
-                    "grade_num": [4.0, 3.0, 1.0, pd.NA, 4.0],
-                    "section_grade_num_mean": [3.25, 3.0, 2.5, 3.0, 3.5],
+                    "sid": ["123", "123", "123", "123", "456", "456"],
+                    "tid": [
+                        "22-23 FA",
+                        "22-23 FA",
+                        "22-23 FA",
+                        "22-23 SP",
+                        "22-23 SP",
+                        "22-23 SP",
+                    ],
+                    "grade": ["4", "3", "F", "1", pd.NA, "4"],
+                    "grade_num": [4.0, 3.0, pd.NA, 1.0, pd.NA, 4.0],
+                    "section_grade_num_mean": [3.25, 3.0, 2.75, 2.5, 3.0, 3.5],
                 }
             ).astype({"grade": "string", "grade_num": "Float32"}),
+            1.0,
             ["sid", "tid"],
             "grade",
             "grade_num",
@@ -156,7 +165,7 @@ def test_sum_val_equal_cols_by_group(df, grp_cols, agg_col_vals, exp):
                 {
                     "sid": ["123", "123", "456"],
                     "tid": ["22-23 FA", "22-23 SP", "22-23 SP"],
-                    "num_courses_grade_is_failing_or_withdrawal": [0, 1, 0],
+                    "num_courses_grade_is_failing_or_withdrawal": [1, 0, 0],
                     "num_courses_grade_above_section_avg": [1, 0, 1],
                 }
             ),
@@ -164,10 +173,17 @@ def test_sum_val_equal_cols_by_group(df, grp_cols, agg_col_vals, exp):
     ],
 )
 def test_multicol_grade_aggs_by_group(
-    df, grp_cols, grade_col, grade_numeric_col, section_grade_numeric_col, exp
+    df,
+    min_passing_grade,
+    grp_cols,
+    grade_col,
+    grade_numeric_col,
+    section_grade_numeric_col,
+    exp,
 ):
     obs = student_term.multicol_grade_aggs_by_group(
         df,
+        min_passing_grade=min_passing_grade,
         grp_cols=grp_cols,
         grade_col=grade_col,
         grade_numeric_col=grade_numeric_col,
