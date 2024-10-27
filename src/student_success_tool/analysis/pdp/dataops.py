@@ -174,9 +174,9 @@ def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
                 "institution_id",
                 "term_id",
                 "academic_year",
-                "academic_term",
+                # "academic_term",  # keeping this to see if useful
                 "cohort",
-                "cohort_term",
+                # "cohort_term",  # keeping this to see if useful
                 "term_rank",
                 "term_rank_fall_spring",
                 "term_course_begin_date_min",
