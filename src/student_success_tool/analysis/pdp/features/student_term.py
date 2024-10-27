@@ -14,6 +14,7 @@ def aggregate_from_course_level_features(
     df: pd.DataFrame,
     *,
     student_term_id_cols: list[str],
+    min_passing_grade: float = constants.DEFAULT_MIN_PASSING_GRADE,
     key_course_subject_areas: t.Optional[list[str]] = None,
     key_course_ids: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:
@@ -26,9 +27,11 @@ def aggregate_from_course_level_features(
         df
         student_term_id_cols: Columns that uniquely identify student-terms,
             used to group rows in ``df`` and merge features back in.
+        min_passing_grade
         key_course_subject_areas: List of course subject areas that are particularly
             relevant ("key") to the institution, such that features are computed to
             measure the number of courses falling within them per student-term.
+        key_course_ids
 
     See Also:
         - https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.get_dummies.html
@@ -106,7 +109,9 @@ def aggregate_from_course_level_features(
     df_val_equals = sum_val_equal_cols_by_group(
         df, grp_cols=student_term_id_cols, agg_col_vals=agg_col_vals
     )
-    df_grade_aggs = multicol_grade_aggs_by_group(df, grp_cols=student_term_id_cols)
+    df_grade_aggs = multicol_grade_aggs_by_group(
+        df, min_passing_grade=min_passing_grade, grp_cols=student_term_id_cols
+    )
     return shared.merge_many_dataframes(
         [df_passthrough, df_aggs, df_val_equals, df_dummies, df_grade_aggs],
         on=student_term_id_cols,
@@ -377,6 +382,7 @@ def _rename_sum_by_group_col(col: str) -> str:
 def multicol_grade_aggs_by_group(
     df: pd.DataFrame,
     *,
+    min_passing_grade: float,
     grp_cols: list[str],
     grade_col: str = "grade",
     grade_numeric_col: str = "course_grade_numeric",
@@ -388,6 +394,7 @@ def multicol_grade_aggs_by_group(
         .assign(
             course_grade_is_failing_or_withdrawal=ft.partial(
                 _course_grade_is_failing_or_withdrawal,
+                min_passing_grade=min_passing_grade,
                 grade_col=grade_col,
                 grade_numeric_col=grade_numeric_col,
             ),
@@ -414,12 +421,13 @@ def multicol_grade_aggs_by_group(
 
 def _course_grade_is_failing_or_withdrawal(
     df: pd.DataFrame,
+    min_passing_grade: float,
     grade_col: str = "grade",
     grade_numeric_col: str = "course_grade_numeric",
 ) -> pd.Series:
     return (
         df[grade_col].isin({"F", "W"})
-        | df[grade_numeric_col].between(0.0, 2.0, inclusive="left")
+        | df[grade_numeric_col].between(0.0, min_passing_grade, inclusive="left")
     )  # fmt: skip
 
 
