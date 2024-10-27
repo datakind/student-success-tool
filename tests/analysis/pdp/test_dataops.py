@@ -145,7 +145,7 @@ def test_standardize_course_dataset(df, exp):
         (
             pd.DataFrame(
                 {
-                    "year_of_enrollment_at_cohort_inst": [1, 2, 3, 4],
+                    "year_of_enrollment_at_cohort_inst_v2": [1, 2, 3, 4],
                     "cumnum_terms_enrolled": [2, 3, 4, 5],
                     "term_id": [
                         "2020-21 FALL",
@@ -189,7 +189,7 @@ def test_standardize_course_dataset(df, exp):
             ),
             pd.DataFrame(
                 {
-                    "year_of_enrollment_at_cohort_inst": [1, 2, 3, 4],
+                    "year_of_enrollment_at_cohort_inst_v2": [1, 2, 3, 4],
                     "cumnum_terms_enrolled": [2, 3, 4, 5],
                     "first_year_to_associates_or_certificate_at_cohort_inst": [
                         pd.NA,
