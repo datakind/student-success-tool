@@ -192,9 +192,9 @@ def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
                 "course_subject_areas",
                 "min_student_term_rank",
                 "min_student_term_rank_fall_spring",
-                "section_num_students_enrolled",
-                "section_num_students_passed",
-                "section_num_students_completed",
+                "sections_num_students_enrolled",
+                "sections_num_students_passed",
+                "sections_num_students_completed",
                 "term_start_dt",
                 "cohort_start_dt",
                 # likely sources of data leakage
