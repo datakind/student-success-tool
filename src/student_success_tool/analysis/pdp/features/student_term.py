@@ -189,7 +189,7 @@ def year_of_enrollment_at_cohort_inst_v2(
     term_start_dt_col: str = "term_start_dt",
 ) -> pd.Series:
     dts_diff = (df[term_start_dt_col].sub(df[cohort_start_dt_col])).dt.days
-    return pd.Series(np.ceil((dts_diff + 1) / 365.25))
+    return pd.Series(np.ceil((dts_diff + 1) / 365.25), dtype="Int8")
 
 
 # TODO: we could probably compute this directly, w/o an intermediate feature?
