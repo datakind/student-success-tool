@@ -13,7 +13,7 @@ def make_student_term_dataset(
     df_cohort: pd.DataFrame,
     df_course: pd.DataFrame,
     *,
-    min_passing_grade: str = constants.DEFAULT_MIN_PASSING_GRADE,
+    min_passing_grade: float = constants.DEFAULT_MIN_PASSING_GRADE,
     course_level_pattern: str = constants.DEFAULT_COURSE_LEVEL_PATTERN,
     peak_covid_terms: set[tuple[str, str]] = constants.DEFAULT_PEAK_COVID_TERMS,
     key_course_subject_areas: t.Optional[list[str]] = None,
@@ -32,6 +32,9 @@ def make_student_term_dataset(
         peak_covid_terms
         key_course_subject_areas
         key_courses_ids
+
+    References:
+        - https://bigfuture.collegeboard.org/plan-for-college/get-started/how-to-convert-gpa-4.0-scale
     """
     df_students = (
         df_cohort.pipe(standardize_cohort_dataset)
@@ -54,6 +57,7 @@ def make_student_term_dataset(
         features.student_term.aggregate_from_course_level_features(
             df_courses_plus,
             student_term_id_cols=["student_guid", "term_id"],
+            min_passing_grade=min_passing_grade,
             key_course_subject_areas=key_course_subject_areas,
             key_course_ids=key_course_ids,
         )
