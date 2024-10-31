@@ -1,0 +1,17 @@
+{
+    "suggested_data_types": {
+        "Student_ID": "text",
+        "Semester": "category",
+        "Course_Prefix": "category",
+        "Course_Number": "category",
+        "Course_Type": "category",
+        "Pass/Fail_Flag": "boolean",
+        "Grade": "category",
+        "Prerequisite_Course_Flag": "boolean",
+        "Online_Course_Flag": "boolean",
+        "Number_Of_Credits_Attempted": "numeric",
+        "Number_Of_Credits_Earned": "numeric",
+        "Modality": "category",
+        "Weeks": "numeric"
+    }
+}

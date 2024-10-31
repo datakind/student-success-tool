@@ -1,0 +1,21 @@
+{
+    "drop": {
+        "Department": {
+            "recommendation": "Drop column",
+            "count_missing": 265,
+            "percentage_null": 100.0
+        }
+    },
+    "impute": {
+        "positive": {},
+        "negative": {
+            "Pell_Recipient": {
+                "recommendation": "Impute with \"False\"",
+                "count_missing": 132,
+                "percentage_null": 49.81132075471698,
+                "impute_type": "negative"
+            }
+        }
+    },
+    "drop_rows": {}
+}

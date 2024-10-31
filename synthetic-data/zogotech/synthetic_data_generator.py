@@ -1,6 +1,5 @@
 # Databricks notebook source
-# %pip install faker pandas
-
+# MAGIC %pip install faker pandas
 
 # COMMAND ----------
 
@@ -24,7 +23,8 @@ columns = [
     "HighSchoolGPA",
     "StudentAthlete",
     "EarnedAward",
-    "AwardsEarned",
+    "EarnedAwardDate",
+    "AwardsEarned"
 ]
 
 # Define choices for each column
@@ -70,7 +70,7 @@ from datetime import datetime
 
 import pandas as pd
 from faker import Faker
-
+from datetime import datetime, timedelta
 # Initialize Faker
 fake = Faker()
 
@@ -84,6 +84,13 @@ def random_date(start, end):
 data = []
 
 for _ in range(num_records):
+    if random.random() < 0.7:  # 70% chance for null
+        earned_award_date = None
+    else:
+        # Generate a random date within the past 5 years
+        random_days = random.randint(0, 1825)  # 5 years = 5*365
+        earned_award_date = (datetime.now() - timedelta(days=random_days)).date()
+
     stu_num = fake.unique.random_int(min=10000, max=99999)  # Unique student number
     first_enrollment_date = random_date(datetime(2000, 1, 1), datetime.now())
     first_gen_flag = random.choice(first_gen_choices)
@@ -128,7 +135,8 @@ for _ in range(num_records):
             high_school_gpa,
             student_athlete,
             earned_award,
-            awards_earned,
+            earned_award_date,
+            awards_earned
         ]
     )
 df = pd.DataFrame(data, columns=columns)
@@ -138,6 +146,10 @@ df.to_csv("DataKind_School1_StudentFile.csv", index=False)
 
 
 # COMMAND ----------
+
+from faker import Faker
+import pandas as pd
+import random
 
 fake = Faker()
 
@@ -193,22 +205,11 @@ columns = [
     "Online_Course_Rate",
 ]
 
-
 # Function to enforce GPA and credit rules
-def generate_valid_enrollment_data():
-    number_of_courses = random.randint(0, 10)
-    if number_of_courses == 0:
-        number_of_credits_attempted = 0
-        number_of_credits_failed = 0
-        number_of_credits_earned = 0
-    else:
-        number_of_credits_attempted = random.randint(
-            number_of_courses, 30
-        )  # Ensure at least as many credits as courses
-        number_of_credits_failed = random.randint(0, number_of_credits_attempted)
-        number_of_credits_earned = (
-            number_of_credits_attempted - number_of_credits_failed
-        )
+def generate_valid_enrollment_data(number_of_courses):
+    number_of_credits_attempted = random.randint(number_of_courses, 30)  # Ensure at least as many credits as courses
+    number_of_credits_failed = random.randint(0, number_of_credits_attempted)
+    number_of_credits_earned = number_of_credits_attempted - number_of_credits_failed
 
     cumulative_gpa = round(random.uniform(0, 4), 2)
     semester_gpa = round(random.uniform(0, 4), 2)
@@ -216,7 +217,6 @@ def generate_valid_enrollment_data():
     online_course_rate = round(random.uniform(0, 1), 2)
 
     return [
-        number_of_courses,
         number_of_credits_attempted,
         number_of_credits_failed,
         number_of_credits_earned,
@@ -226,53 +226,58 @@ def generate_valid_enrollment_data():
         online_course_rate,
     ]
 
+# Assuming student_ids are read from another dataset, for example:
+# student_ids = pd.read_csv('path_to_other_dataset.csv')['Student_ID'].unique()
+# Here, we'll create a mock list of student IDs
 
+student_ids = df["StuNum"].unique()
 data = []
 
-for _ in range(num_records):
-    student_id = fake.unique.random_int(min=10000, max=99999)  # Unique student ID
-    semester = random.choice(semesters)
-    enrollment_type = random.choice(enrollment_types)
-    degree_type = random.choice(degree_types)
-    intent_to_transfer_flag = random.choice(
-        ["Y", "N"]
-    )  # Not specified in requirements but added for completeness
-    pell_recipient = random.choice(pell_recipient_choices)
-    major = random.choice(majors)
-    dept = random.choice(department)  # All NULL
+# Generate data for multiple semesters for each student
+for student_id in student_ids:
+    for _ in range(random.randint(1, 4)):  # Generate data for 1 to 4 semesters per student
+        semester = random.choice(semesters)
+        enrollment_type = random.choice(enrollment_types)
+        degree_type = random.choice(degree_types)
+        intent_to_transfer_flag = random.choice(["Y", "N"])  # Not specified in requirements but added for completeness
+        pell_recipient = random.choice(pell_recipient_choices)
+        major = random.choice(majors)
+        dept = random.choice(department)  # All NULL
 
-    # Generate valid enrollment data
-    (
-        number_of_courses,
-        number_of_credits_attempted,
-        number_of_credits_failed,
-        number_of_credits_earned,
-        cumulative_gpa,
-        semester_gpa,
-        course_pass_rate,
-        online_course_rate,
-    ) = generate_valid_enrollment_data()
+        # Generate number of courses (between 1 and 5)
+        number_of_courses = random.randint(1, 5)
 
-    data.append(
-        [
-            student_id,
-            semester,
-            enrollment_type,
-            degree_type,
-            intent_to_transfer_flag,
-            pell_recipient,
-            major,
-            dept,
-            cumulative_gpa,
-            semester_gpa,
-            number_of_courses,
+        # Generate valid enrollment data
+        (
             number_of_credits_attempted,
             number_of_credits_failed,
             number_of_credits_earned,
+            cumulative_gpa,
+            semester_gpa,
             course_pass_rate,
             online_course_rate,
-        ]
-    )
+        ) = generate_valid_enrollment_data(number_of_courses)
+
+        data.append(
+            [
+                student_id,
+                semester,
+                enrollment_type,
+                degree_type,
+                intent_to_transfer_flag,
+                pell_recipient,
+                major,
+                dept,
+                cumulative_gpa,
+                semester_gpa,
+                number_of_courses,
+                number_of_credits_attempted,
+                number_of_credits_failed,
+                number_of_credits_earned,
+                course_pass_rate,
+                online_course_rate,
+            ]
+        )
 
 df = pd.DataFrame(data, columns=columns)
 
@@ -281,6 +286,10 @@ df.to_csv("DataKind_School1_SemesterFile.csv", index=False)
 
 
 # COMMAND ----------
+
+from faker import Faker
+import pandas as pd
+import random
 
 fake = Faker()
 
@@ -335,20 +344,14 @@ for student_id in student_ids:
 
         for _ in range(number_of_courses):
             course_prefix = random.choice(course_prefixes)
-            course_number = random.randint(0, 299)
+            course_number = random.randint(100, 299)  # Assuming valid course numbers are between 100 and 299
             course_type = random.choice(course_types)
             pass_fail_flag = random.choice(pass_fail_choices)
-            grade = random.choice(
-                ["A", "B", "C", "D", "F", None]
-            )  # Include None for null grades
+            grade = random.choice(["A", "B", "C", "D", "F", None])  # Include None for null grades
             prerequisite_flag = random.choice(prerequisite_flag_choices)
             online_course_flag = random.choice(online_flag_choices)
-            number_of_credits_attempted = random.randint(
-                1, 4
-            )  # Assuming credits between 1 and 4
-            number_of_credits_earned = random.choice(
-                [number_of_credits_attempted, None]
-            )  # Could be null
+            number_of_credits_attempted = random.randint(1, 4)  # Assuming credits between 1 and 4
+            number_of_credits_earned = random.choice([number_of_credits_attempted, None])  # Could be null
             modality = random.choice(modalities)
             weeks = random.randint(1, 16)  # Typical course duration in weeks
 

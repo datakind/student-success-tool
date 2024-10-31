@@ -1,460 +1,802 @@
 Student_ID,Semester,Course_Prefix,Course_Number,Course_Type,Pass/Fail_Flag,Grade,Prerequisite_Course_Flag,Online_Course_Flag,Number_Of_Credits_Attempted,Number_Of_Credits_Earned,Modality,Weeks
-33966,2019FA,PSY,214,Undergraduate,Y,A,Y,0,4,4.0,Face to Face,9
-33966,2019FA,BIO,293,Undergraduate,N,B,,1,1,1.0,Hybrid - Online/iTV,5
-33966,2019FA,PSY,84,Undergraduate,N,,,0,3,,Hybrid - F2F/Online,13
-33966,2019FA,CHE,70,Undergraduate,N,F,,1,4,,Face to Face,7
-33966,2019FA,COM,200,Undergraduate,Y,A,Y,1,3,3.0,Hybrid - Online/iTV,12
-33966,2019FA,PSY,23,Undergraduate,Y,F,Y,1,4,,Face to Face,16
-33966,2019FA,MAT,192,Undergraduate,N,F,Y,0,1,,Face to Face,2
-33966,2019FA,COM,47,Undergraduate,N,A,,1,2,2.0,Online,12
-33966,2019FA,PSY,291,Undergraduate,N,B,Y,1,4,,Online/Synch,12
-59534,2021FA,PHY,111,Undergraduate,N,D,Y,1,4,4.0,Hybrid - F2F/Online,3
-59534,2021FA,HIS,25,Undergraduate,N,C,Y,0,3,,Independent Study,9
-59534,2021FA,ENG,201,Undergraduate,Y,F,Y,0,1,,Online,10
-20539,2019SP,HIS,136,Undergraduate,N,B,Y,1,3,3.0,Face to Face,2
-20539,2019SP,PHY,16,Undergraduate,Y,F,Y,0,3,3.0,Face to Face,16
-20539,2019SP,ENG,150,Undergraduate,N,D,Y,0,2,,Hybrid - F2F/Online,10
-20539,2019SP,MUS,172,Undergraduate,N,D,,1,2,2.0,Hybrid - Online/iTV,16
-20539,2019SP,MUS,174,Undergraduate,Y,D,,0,1,1.0,Online/Synch,6
-20539,2019SP,HIS,226,Undergraduate,N,B,,0,3,3.0,Practicum,7
-20539,2019SP,COM,222,Undergraduate,Y,,Y,0,2,2.0,Online,12
-20539,2019SP,PHY,198,Undergraduate,N,D,,1,2,2.0,Independent Study,5
-20539,2019SP,ENG,165,Undergraduate,N,D,,0,4,4.0,Online/Synch,11
-73070,2020FA,COM,223,Undergraduate,N,A,,1,4,4.0,Face to Face,10
-73070,2020FA,CHE,60,Undergraduate,Y,C,,1,3,,Practicum,6
-73070,2020FA,BIO,221,Undergraduate,N,C,,1,3,3.0,Hybrid - F2F/Online,9
-73070,2020FA,MAT,58,Undergraduate,N,B,,1,2,2.0,Hybrid - Online/iTV,16
-73070,2020FA,CHE,143,Undergraduate,N,B,,0,3,3.0,Hybrid - Online/iTV,10
-70496,2019FA,ENG,249,Undergraduate,Y,D,,0,3,,Practicum,9
-70496,2019FA,HIS,248,Undergraduate,Y,B,,0,2,,Online,2
-70496,2019FA,MAT,95,Undergraduate,Y,A,,1,1,1.0,Online,7
-70496,2019FA,PSY,13,Undergraduate,Y,B,Y,0,2,2.0,Online,12
-70496,2019FA,BIO,64,Undergraduate,N,C,Y,1,4,4.0,Face to Face,10
-70496,2019FA,MAT,173,Undergraduate,Y,C,Y,0,4,,Online/Synch,5
-70496,2019FA,MAT,152,Undergraduate,N,,,0,1,,Hybrid - F2F/Online,5
-70496,2019FA,BIO,30,Undergraduate,N,,,1,1,1.0,Hybrid - F2F/Online,14
-70496,2019FA,COM,151,Undergraduate,Y,A,Y,1,2,,Hybrid - Online/iTV,6
-16441,2020SP,PHY,194,Undergraduate,N,D,,0,3,,Online,15
-12617,2020FA,COM,80,Undergraduate,N,F,,1,1,,Independent Study,7
-12617,2020FA,BIO,10,Undergraduate,Y,,,1,4,4.0,Hybrid - F2F/Online,14
-12617,2020FA,COM,292,Undergraduate,N,F,Y,0,4,,Hybrid - F2F/Online,14
-91052,2021FA,CHE,202,Undergraduate,Y,C,,1,2,,Independent Study,12
-91052,2021FA,HIS,90,Undergraduate,N,D,,1,1,,Face to Face,1
-91052,2021FA,HIS,90,Undergraduate,Y,F,,0,2,,Face to Face,7
-66378,2018SP,MUS,46,Undergraduate,N,F,Y,0,1,,Hybrid - F2F/Online,13
-66378,2018SP,ART,211,Undergraduate,Y,C,Y,1,1,,Independent Study,3
-66378,2018SP,ENG,73,Undergraduate,N,F,Y,1,2,2.0,Practicum,9
-66378,2018SP,MAT,297,Undergraduate,Y,D,Y,1,4,4.0,Independent Study,6
-66378,2018SP,MAT,147,Undergraduate,N,F,,1,4,4.0,Face to Face,5
-66378,2018SP,ENG,152,Undergraduate,N,B,Y,1,1,1.0,Practicum,6
-66378,2018SP,COM,17,Undergraduate,N,D,,0,3,3.0,Online,1
-66378,2018SP,MUS,146,Undergraduate,N,F,Y,1,4,,Online,11
-75575,2020SP,COM,48,Undergraduate,Y,C,Y,0,1,1.0,Online,16
-75575,2020SP,CHE,73,Undergraduate,N,,Y,0,2,,Online/Synch,7
-75575,2020SP,COM,126,Undergraduate,Y,,,0,2,2.0,Online/Synch,6
-75575,2020SP,ART,107,Undergraduate,Y,F,,1,3,,Independent Study,3
-31878,2020SP,BIO,288,Undergraduate,N,D,,0,3,,Online/Synch,3
-31878,2020SP,ENG,118,Undergraduate,N,A,,0,1,1.0,Hybrid - F2F/Online,4
-31878,2020SP,COM,5,Undergraduate,Y,F,Y,1,3,3.0,Hybrid - F2F/Online,3
-31878,2020SP,CHE,160,Undergraduate,Y,,Y,1,1,,Practicum,15
-31878,2020SP,MAT,131,Undergraduate,Y,,,1,3,3.0,Practicum,10
-33262,2019FA,ART,297,Undergraduate,N,A,Y,0,2,2.0,Hybrid - F2F/Online,14
-29502,2020FA,COM,221,Undergraduate,N,,Y,0,3,,Hybrid - F2F/Online,5
-29502,2020FA,HIS,219,Undergraduate,N,B,Y,1,1,1.0,Independent Study,11
-29502,2020FA,PSY,228,Undergraduate,Y,,Y,0,4,4.0,Online/Synch,11
-29502,2020FA,HIS,166,Undergraduate,N,,,0,2,,Practicum,4
-19698,2020SP,HIS,224,Undergraduate,Y,B,,1,1,,Online,1
-19698,2020SP,COM,251,Undergraduate,N,C,Y,0,3,,Hybrid - Online/iTV,16
-19698,2020SP,MAT,191,Undergraduate,N,B,,1,3,3.0,Hybrid - F2F/Online,4
-55270,2020SP,ART,44,Undergraduate,N,A,,0,3,3.0,Independent Study,2
-55270,2020SP,CHE,36,Undergraduate,N,B,Y,0,3,,Hybrid - F2F/Online,10
-55270,2020SP,COM,227,Undergraduate,Y,A,,1,3,3.0,Hybrid - F2F/Online,7
-55270,2020SP,PSY,281,Undergraduate,Y,B,Y,1,2,,Independent Study,1
-55270,2020SP,MAT,33,Undergraduate,N,C,,1,4,4.0,Online/Synch,16
-55270,2020SP,PSY,175,Undergraduate,Y,D,Y,0,2,2.0,Online/Synch,8
-55270,2020SP,HIS,49,Undergraduate,N,D,Y,1,2,2.0,Independent Study,7
-80268,2019FA,BIO,39,Undergraduate,N,A,Y,0,4,,Hybrid - Online/iTV,2
-80268,2019FA,CHE,208,Undergraduate,Y,A,,1,3,3.0,Hybrid - Online/iTV,5
-80268,2019FA,ENG,44,Undergraduate,Y,F,Y,1,2,2.0,Face to Face,6
-80268,2019FA,COM,198,Undergraduate,N,D,,1,2,,Hybrid - F2F/Online,7
-80268,2019FA,PHY,141,Undergraduate,Y,A,Y,0,2,,Online/Synch,10
-80268,2019FA,MAT,61,Undergraduate,Y,C,Y,1,2,,Online,2
-80268,2019FA,BIO,62,Undergraduate,N,A,,0,3,3.0,Online/Synch,3
-80268,2019FA,HIS,250,Undergraduate,N,D,Y,0,2,2.0,Hybrid - Online/iTV,14
-80268,2019FA,ENG,190,Undergraduate,N,C,Y,1,4,,Hybrid - Online/iTV,4
-80268,2019FA,HIS,282,Undergraduate,Y,F,Y,1,1,1.0,Online/Synch,16
-43570,2019SP,ENG,240,Undergraduate,Y,F,Y,0,1,,Hybrid - F2F/Online,4
-60757,2020FA,ART,10,Undergraduate,Y,,,0,1,1.0,Independent Study,16
-60757,2020FA,MUS,137,Undergraduate,N,F,,1,4,,Hybrid - Online/iTV,9
-60757,2020FA,PSY,284,Undergraduate,Y,C,Y,0,2,2.0,Practicum,2
-60757,2020FA,MUS,210,Undergraduate,Y,D,Y,1,1,,Hybrid - Online/iTV,6
-60757,2020FA,HIS,121,Undergraduate,N,,Y,1,2,,Practicum,13
-60757,2020FA,PSY,62,Undergraduate,Y,D,Y,1,2,2.0,Hybrid - Online/iTV,13
-60757,2020FA,MAT,128,Undergraduate,Y,,Y,1,3,3.0,Independent Study,9
-60757,2020FA,HIS,158,Undergraduate,N,,,1,3,3.0,Independent Study,4
-60757,2020FA,BIO,291,Undergraduate,N,F,,0,3,3.0,Face to Face,14
-55080,2019FA,PHY,276,Undergraduate,N,A,Y,1,2,,Hybrid - Online/iTV,11
-55080,2019FA,HIS,151,Undergraduate,Y,B,,0,1,,Independent Study,11
-55080,2019FA,PHY,156,Undergraduate,Y,,Y,0,2,2.0,Independent Study,7
-55080,2019FA,ENG,274,Undergraduate,N,F,,1,3,,Online,10
-97148,2021SP,HIS,255,Undergraduate,N,F,,1,1,1.0,Face to Face,6
-97148,2021SP,BIO,106,Undergraduate,N,B,Y,1,1,1.0,Hybrid - F2F/Online,16
-97148,2021SP,CHE,17,Undergraduate,Y,B,,0,3,3.0,Independent Study,13
-97148,2021SP,CHE,281,Undergraduate,Y,A,,1,1,,Online,14
-97148,2021SP,PHY,195,Undergraduate,Y,C,,1,2,,Face to Face,9
-97148,2021SP,BIO,187,Undergraduate,N,C,Y,1,4,4.0,Online,5
-97148,2021SP,BIO,240,Undergraduate,N,A,,0,2,,Independent Study,5
-97148,2021SP,PHY,115,Undergraduate,N,B,Y,0,4,,Online/Synch,6
-39209,2021FA,COM,223,Undergraduate,N,D,Y,1,1,1.0,Online/Synch,16
-39209,2021FA,MAT,284,Undergraduate,N,D,Y,1,4,4.0,Face to Face,12
-39209,2021FA,ART,40,Undergraduate,Y,,Y,1,4,,Face to Face,6
-48183,2020SP,PSY,183,Undergraduate,Y,F,Y,0,4,4.0,Practicum,10
-48183,2020SP,BIO,255,Undergraduate,N,,,1,2,,Hybrid - Online/iTV,14
-48183,2020SP,PHY,136,Undergraduate,Y,D,Y,0,4,4.0,Face to Face,15
-94279,2018SP,COM,283,Undergraduate,Y,B,,0,3,,Hybrid - F2F/Online,15
-25378,2018SP,PHY,274,Undergraduate,Y,,,1,2,2.0,Hybrid - F2F/Online,11
-25378,2018SP,HIS,106,Undergraduate,Y,A,,0,2,,Online,1
-25378,2018SP,BIO,289,Undergraduate,Y,D,,1,4,,Online/Synch,4
-25378,2018SP,CHE,45,Undergraduate,Y,,Y,0,1,1.0,Online,5
-35597,2021FA,MUS,76,Undergraduate,Y,B,,0,1,1.0,Hybrid - F2F/Online,3
-35597,2021FA,CHE,231,Undergraduate,Y,D,,1,2,,Independent Study,13
-35597,2021FA,PHY,276,Undergraduate,N,A,,0,2,,Hybrid - F2F/Online,13
-35597,2021FA,COM,222,Undergraduate,N,C,,0,1,,Hybrid - Online/iTV,6
-35597,2021FA,MUS,16,Undergraduate,N,B,,0,2,2.0,Hybrid - F2F/Online,15
-35597,2021FA,MAT,80,Undergraduate,N,D,,1,2,2.0,Independent Study,6
-35597,2021FA,ENG,292,Undergraduate,N,,,0,2,2.0,Online,7
-35597,2021FA,MAT,58,Undergraduate,Y,B,Y,1,3,,Practicum,1
-35597,2021FA,COM,131,Undergraduate,Y,A,,0,1,,Face to Face,4
-75142,2020SP,HIS,32,Undergraduate,Y,C,,1,1,,Practicum,13
-75142,2020SP,COM,140,Undergraduate,N,B,,1,4,,Hybrid - F2F/Online,16
-75142,2020SP,COM,5,Undergraduate,Y,,,0,1,1.0,Online,6
-75142,2020SP,PHY,117,Undergraduate,N,B,Y,0,3,,Practicum,12
-75142,2020SP,PSY,152,Undergraduate,N,,,0,1,1.0,Online,16
-40097,2020FA,MUS,285,Undergraduate,N,,,0,2,2.0,Hybrid - Online/iTV,1
-40097,2020FA,CHE,95,Undergraduate,Y,F,,1,4,4.0,Hybrid - Online/iTV,12
-40097,2020FA,ART,238,Undergraduate,Y,B,Y,0,2,,Practicum,9
-40097,2020FA,MAT,262,Undergraduate,Y,B,Y,1,4,,Face to Face,10
-40097,2020FA,BIO,239,Undergraduate,N,C,Y,1,1,1.0,Hybrid - F2F/Online,15
-40097,2020FA,CHE,30,Undergraduate,N,A,Y,1,2,,Online,13
-56167,2020SP,BIO,96,Undergraduate,Y,A,Y,1,1,1.0,Face to Face,3
-56167,2020SP,MUS,42,Undergraduate,N,F,,0,2,2.0,Independent Study,5
-56167,2020SP,COM,254,Undergraduate,Y,,Y,1,4,4.0,Independent Study,14
-56167,2020SP,HIS,22,Undergraduate,N,C,,1,4,4.0,Hybrid - F2F/Online,8
-56167,2020SP,ART,74,Undergraduate,Y,A,Y,1,2,,Face to Face,12
-56167,2020SP,ART,160,Undergraduate,Y,F,,1,4,4.0,Practicum,12
-56167,2020SP,MUS,294,Undergraduate,Y,F,Y,1,2,,Practicum,13
-88940,2020FA,CHE,63,Undergraduate,N,A,Y,1,1,,Hybrid - Online/iTV,3
-88940,2020FA,PSY,180,Undergraduate,N,,,0,2,,Face to Face,14
-75297,2018SP,MAT,26,Undergraduate,N,,Y,0,4,,Hybrid - F2F/Online,2
-75297,2018SP,COM,14,Undergraduate,N,A,Y,1,2,,Independent Study,2
-75297,2018SP,PHY,220,Undergraduate,N,,Y,1,3,3.0,Practicum,11
-75297,2018SP,PSY,259,Undergraduate,N,A,Y,0,2,2.0,Hybrid - Online/iTV,14
-75297,2018SP,MUS,288,Undergraduate,Y,B,,1,1,1.0,Online/Synch,14
-11018,2021SP,CHE,287,Undergraduate,Y,A,,1,4,4.0,Practicum,2
-11018,2021SP,ENG,284,Undergraduate,Y,F,Y,0,2,2.0,Online,10
-11018,2021SP,MAT,294,Undergraduate,N,A,Y,1,3,3.0,Hybrid - Online/iTV,15
-11018,2021SP,BIO,249,Undergraduate,N,C,Y,0,3,,Hybrid - F2F/Online,15
-11018,2021SP,COM,289,Undergraduate,Y,,Y,0,3,,Online/Synch,2
-11018,2021SP,HIS,254,Undergraduate,N,A,Y,1,1,,Online/Synch,16
-77449,2020FA,PHY,157,Undergraduate,N,,Y,0,3,3.0,Hybrid - Online/iTV,1
-77449,2020FA,CHE,216,Undergraduate,Y,C,,0,2,2.0,Practicum,6
-77449,2020FA,PHY,145,Undergraduate,N,C,Y,0,1,,Face to Face,7
-77449,2020FA,PSY,123,Undergraduate,Y,B,,0,2,2.0,Online,9
-77449,2020FA,CHE,257,Undergraduate,N,F,,1,3,3.0,Independent Study,10
-77449,2020FA,CHE,294,Undergraduate,Y,C,,1,4,4.0,Face to Face,15
-77449,2020FA,ENG,234,Undergraduate,Y,A,Y,1,2,,Face to Face,7
-77449,2020FA,CHE,137,Undergraduate,N,D,Y,0,1,,Online/Synch,5
-11198,2021FA,ENG,282,Undergraduate,N,C,,0,3,,Hybrid - Online/iTV,2
-11198,2021FA,PSY,76,Undergraduate,Y,,Y,0,1,1.0,Online/Synch,1
-11198,2021FA,ENG,233,Undergraduate,N,F,Y,1,1,1.0,Independent Study,8
-11198,2021FA,ART,140,Undergraduate,Y,B,,1,4,4.0,Face to Face,5
-11198,2021FA,COM,219,Undergraduate,Y,B,Y,0,2,2.0,Hybrid - F2F/Online,11
-11198,2021FA,COM,69,Undergraduate,N,D,,0,2,,Online,5
-11198,2021FA,CHE,69,Undergraduate,Y,C,Y,0,1,,Online/Synch,14
-11198,2021FA,MAT,58,Undergraduate,Y,,Y,1,3,3.0,Online,14
-11198,2021FA,PHY,88,Undergraduate,N,,,0,3,3.0,Independent Study,16
-92484,2018SP,CHE,239,Undergraduate,Y,,Y,0,4,4.0,Online,9
-92484,2018SP,BIO,77,Undergraduate,Y,A,,0,3,3.0,Hybrid - Online/iTV,9
-92484,2018SP,ENG,69,Undergraduate,N,B,,1,4,4.0,Online/Synch,13
-92484,2018SP,ENG,167,Undergraduate,Y,B,,1,3,3.0,Online,16
-80892,2020FA,MAT,84,Undergraduate,N,B,,0,4,,Practicum,13
-80892,2020FA,BIO,151,Undergraduate,N,,,0,3,3.0,Independent Study,6
-59820,2021FA,MUS,47,Undergraduate,N,C,Y,1,3,3.0,Online/Synch,7
-59820,2021FA,PHY,138,Undergraduate,N,D,,0,1,1.0,Hybrid - Online/iTV,1
-59820,2021FA,CHE,189,Undergraduate,Y,F,Y,0,3,,Independent Study,14
-59820,2021FA,ART,249,Undergraduate,N,,Y,1,3,,Hybrid - F2F/Online,6
-24432,2020SP,ENG,56,Undergraduate,N,C,Y,0,3,,Independent Study,16
-24432,2020SP,CHE,169,Undergraduate,Y,D,Y,0,3,3.0,Hybrid - F2F/Online,12
-24432,2020SP,PSY,131,Undergraduate,Y,B,Y,0,3,3.0,Practicum,3
-24432,2020SP,PSY,194,Undergraduate,Y,B,,1,3,3.0,Hybrid - F2F/Online,2
-24432,2020SP,COM,12,Undergraduate,N,,Y,0,1,1.0,Online,13
-24432,2020SP,PSY,137,Undergraduate,Y,C,,0,2,2.0,Online,1
-24432,2020SP,BIO,48,Undergraduate,Y,F,,1,4,,Online/Synch,3
-24432,2020SP,BIO,131,Undergraduate,N,C,,1,4,4.0,Independent Study,8
-24432,2020SP,HIS,214,Undergraduate,N,D,Y,0,1,1.0,Online/Synch,1
-24432,2020SP,MUS,275,Undergraduate,Y,F,,1,2,,Online,15
-11887,2018FA,ENG,45,Undergraduate,N,,Y,1,3,3.0,Online,5
-11887,2018FA,PSY,213,Undergraduate,N,F,Y,0,2,,Practicum,6
-11887,2018FA,MUS,128,Undergraduate,Y,D,Y,1,4,4.0,Online,12
-11887,2018FA,ART,160,Undergraduate,N,F,Y,0,2,2.0,Online/Synch,4
-11887,2018FA,MAT,278,Undergraduate,Y,F,,1,1,,Independent Study,12
-11887,2018FA,PHY,19,Undergraduate,Y,B,,1,1,1.0,Independent Study,7
-11887,2018FA,MUS,111,Undergraduate,Y,,Y,0,1,,Practicum,13
-11887,2018FA,PSY,292,Undergraduate,N,A,,1,4,4.0,Practicum,7
-11887,2018FA,BIO,0,Undergraduate,N,C,,1,3,,Online,7
-11887,2018FA,MAT,95,Undergraduate,Y,,Y,0,1,,Online,15
-22248,2021FA,CHE,225,Undergraduate,N,,,1,3,3.0,Independent Study,6
-22248,2021FA,CHE,162,Undergraduate,Y,F,Y,1,4,4.0,Online,13
-93003,2020SP,HIS,84,Undergraduate,N,A,,1,4,,Online/Synch,11
-93003,2020SP,PHY,127,Undergraduate,Y,,Y,0,3,,Practicum,8
-93003,2020SP,ART,271,Undergraduate,Y,A,,0,1,,Online/Synch,7
-62996,2018SP,ENG,173,Undergraduate,N,B,Y,0,1,1.0,Face to Face,7
-54097,2020FA,HIS,116,Undergraduate,Y,F,,1,3,,Practicum,1
-54097,2020FA,MAT,2,Undergraduate,Y,B,Y,0,4,4.0,Face to Face,15
-64855,2019FA,ENG,244,Undergraduate,Y,C,,0,4,4.0,Independent Study,1
-64855,2019FA,MUS,100,Undergraduate,Y,F,Y,0,2,,Practicum,8
-64855,2019FA,CHE,213,Undergraduate,Y,,Y,0,2,,Practicum,14
-64855,2019FA,MAT,8,Undergraduate,N,A,Y,1,2,2.0,Online/Synch,4
-64855,2019FA,MUS,54,Undergraduate,Y,F,Y,0,3,,Independent Study,11
-64855,2019FA,COM,119,Undergraduate,Y,,Y,0,1,1.0,Face to Face,5
-64855,2019FA,COM,4,Undergraduate,Y,B,,0,1,1.0,Hybrid - F2F/Online,4
-64855,2019FA,MUS,121,Undergraduate,Y,D,,0,2,,Hybrid - F2F/Online,11
-64855,2019FA,PSY,223,Undergraduate,Y,,Y,0,2,2.0,Online,9
-64855,2019FA,PHY,185,Undergraduate,N,,Y,0,2,2.0,Independent Study,15
-51032,2019FA,MUS,199,Undergraduate,Y,D,Y,1,1,,Independent Study,2
-51032,2019FA,MUS,28,Undergraduate,Y,F,,1,2,,Online/Synch,5
-51032,2019FA,PSY,182,Undergraduate,N,C,,1,4,4.0,Hybrid - Online/iTV,11
-35146,2020SP,ART,51,Undergraduate,N,A,Y,0,1,,Practicum,8
-35146,2020SP,ART,141,Undergraduate,Y,A,,1,4,4.0,Practicum,14
-35146,2020SP,PSY,45,Undergraduate,Y,C,Y,0,4,4.0,Hybrid - F2F/Online,5
-35146,2020SP,COM,204,Undergraduate,N,D,,0,3,3.0,Hybrid - Online/iTV,8
-35146,2020SP,COM,23,Undergraduate,N,A,Y,0,1,,Practicum,9
-35146,2020SP,HIS,254,Undergraduate,N,C,,0,1,1.0,Face to Face,2
-35146,2020SP,COM,143,Undergraduate,Y,C,Y,0,3,3.0,Independent Study,11
-87016,2020SP,PSY,51,Undergraduate,N,,,0,3,3.0,Online,16
-87016,2020SP,ART,35,Undergraduate,Y,F,,0,3,,Independent Study,8
-87016,2020SP,ENG,13,Undergraduate,Y,B,Y,1,3,,Independent Study,6
-87016,2020SP,PSY,203,Undergraduate,N,A,Y,1,2,2.0,Hybrid - F2F/Online,2
-87016,2020SP,ENG,288,Undergraduate,Y,B,,1,3,,Face to Face,10
-14565,2019FA,BIO,33,Undergraduate,Y,C,Y,0,4,,Face to Face,9
-14565,2019FA,MAT,256,Undergraduate,Y,B,,1,1,1.0,Online/Synch,1
-14565,2019FA,HIS,218,Undergraduate,N,F,,1,1,,Face to Face,2
-14565,2019FA,PHY,90,Undergraduate,N,F,Y,0,2,,Practicum,2
-14565,2019FA,MAT,272,Undergraduate,Y,C,Y,0,4,4.0,Hybrid - Online/iTV,6
-14565,2019FA,MAT,93,Undergraduate,N,,Y,0,3,,Hybrid - Online/iTV,15
-14565,2019FA,ART,206,Undergraduate,N,,Y,1,3,3.0,Practicum,13
-14565,2019FA,PSY,212,Undergraduate,Y,B,Y,0,4,,Independent Study,5
-14565,2019FA,ART,170,Undergraduate,Y,D,Y,1,3,3.0,Online/Synch,6
-43519,2019FA,PHY,147,Undergraduate,N,,,1,2,2.0,Online/Synch,9
-43519,2019FA,PHY,117,Undergraduate,Y,,Y,1,1,1.0,Online/Synch,13
-43519,2019FA,CHE,119,Undergraduate,N,C,,1,1,,Independent Study,15
-43519,2019FA,ART,31,Undergraduate,N,A,,0,4,4.0,Online/Synch,4
-43519,2019FA,BIO,188,Undergraduate,N,F,Y,0,4,4.0,Face to Face,4
-43519,2019FA,COM,298,Undergraduate,Y,B,Y,0,1,1.0,Face to Face,1
-94751,2019FA,HIS,267,Undergraduate,Y,F,,1,2,,Practicum,10
-94751,2019FA,BIO,77,Undergraduate,N,D,Y,0,1,1.0,Face to Face,14
-94751,2019FA,MAT,244,Undergraduate,Y,C,Y,1,3,3.0,Hybrid - F2F/Online,10
-94751,2019FA,MUS,290,Undergraduate,N,,Y,0,3,,Independent Study,2
-94751,2019FA,PHY,95,Undergraduate,Y,,,1,4,,Online,14
-94751,2019FA,PHY,243,Undergraduate,Y,C,Y,0,1,1.0,Face to Face,13
-94751,2019FA,MUS,149,Undergraduate,N,,Y,0,1,,Hybrid - Online/iTV,8
-43525,2019SP,CHE,91,Undergraduate,Y,F,,1,1,1.0,Independent Study,8
-43525,2019SP,CHE,188,Undergraduate,N,F,,1,2,2.0,Face to Face,15
-43525,2019SP,PHY,241,Undergraduate,N,B,,1,1,,Online,3
-34437,2019SP,PSY,234,Undergraduate,Y,B,Y,1,1,,Online,14
-34437,2019SP,BIO,81,Undergraduate,Y,F,,0,2,2.0,Online,13
-34437,2019SP,ART,59,Undergraduate,N,A,Y,0,1,,Practicum,16
-34437,2019SP,ENG,25,Undergraduate,Y,A,Y,1,2,,Hybrid - F2F/Online,10
-34437,2019SP,MAT,98,Undergraduate,Y,A,Y,1,3,3.0,Online/Synch,8
-46975,2021FA,ENG,14,Undergraduate,Y,F,Y,1,2,,Hybrid - F2F/Online,11
-46975,2021FA,ENG,281,Undergraduate,N,D,,0,2,2.0,Practicum,14
-46975,2021FA,PSY,75,Undergraduate,Y,D,,1,1,,Hybrid - F2F/Online,9
-46975,2021FA,MAT,76,Undergraduate,Y,B,Y,1,3,3.0,Online,8
-46975,2021FA,HIS,144,Undergraduate,N,D,Y,0,4,4.0,Online,8
-46975,2021FA,CHE,273,Undergraduate,Y,F,,1,4,4.0,Independent Study,2
-46975,2021FA,MUS,89,Undergraduate,Y,D,Y,1,4,4.0,Hybrid - Online/iTV,3
-46975,2021FA,ENG,192,Undergraduate,Y,,Y,1,3,3.0,Online,12
-46975,2021FA,PHY,18,Undergraduate,Y,B,Y,1,3,3.0,Face to Face,10
-46975,2021FA,MAT,116,Undergraduate,N,D,,0,3,,Face to Face,15
-83276,2020FA,BIO,144,Undergraduate,Y,D,Y,1,2,,Independent Study,3
-83276,2020FA,MAT,114,Undergraduate,Y,A,,1,2,2.0,Hybrid - F2F/Online,3
-83276,2020FA,COM,140,Undergraduate,N,,Y,0,1,,Online,11
-83276,2020FA,PSY,282,Undergraduate,N,D,Y,0,4,,Online,7
-83276,2020FA,ART,131,Undergraduate,Y,F,,0,1,1.0,Independent Study,2
-83276,2020FA,ART,190,Undergraduate,Y,,,1,2,2.0,Practicum,14
-83276,2020FA,COM,2,Undergraduate,Y,C,Y,0,3,,Practicum,8
-48915,2019FA,PHY,122,Undergraduate,Y,B,,1,1,1.0,Hybrid - F2F/Online,8
-48915,2019FA,MUS,136,Undergraduate,N,B,,1,1,1.0,Online/Synch,11
-48915,2019FA,PSY,73,Undergraduate,N,C,Y,1,1,1.0,Hybrid - Online/iTV,16
-48915,2019FA,BIO,127,Undergraduate,N,D,Y,0,3,3.0,Hybrid - F2F/Online,13
-48915,2019FA,COM,42,Undergraduate,Y,D,Y,0,1,,Online/Synch,2
-28541,2019SP,ART,148,Undergraduate,Y,A,,0,2,2.0,Online,12
-28541,2019SP,PSY,129,Undergraduate,N,F,,0,1,1.0,Hybrid - F2F/Online,7
-28541,2019SP,BIO,70,Undergraduate,Y,,Y,1,1,,Hybrid - Online/iTV,16
-42752,2021FA,MAT,28,Undergraduate,N,D,Y,1,3,3.0,Online,1
-42752,2021FA,CHE,132,Undergraduate,N,D,Y,1,3,,Online/Synch,3
-34863,2020SP,BIO,184,Undergraduate,N,A,,1,3,3.0,Online,7
-34863,2020SP,PSY,231,Undergraduate,Y,,,1,4,,Online/Synch,14
-34863,2020SP,CHE,28,Undergraduate,Y,,Y,1,2,2.0,Online/Synch,6
-34863,2020SP,BIO,6,Undergraduate,N,,Y,0,2,2.0,Face to Face,9
-34863,2020SP,MUS,100,Undergraduate,Y,F,,0,2,,Hybrid - F2F/Online,7
-34863,2020SP,PHY,162,Undergraduate,Y,,Y,1,2,,Practicum,11
-34863,2020SP,ART,133,Undergraduate,N,A,,0,1,1.0,Hybrid - F2F/Online,12
-34863,2020SP,PSY,185,Undergraduate,N,F,,0,3,,Hybrid - F2F/Online,7
-41810,2019SP,PSY,93,Undergraduate,Y,A,Y,0,1,1.0,Hybrid - F2F/Online,16
-41810,2019SP,ART,234,Undergraduate,N,D,Y,1,1,,Online/Synch,11
-41810,2019SP,CHE,180,Undergraduate,N,B,Y,0,3,3.0,Online,1
-41810,2019SP,MAT,246,Undergraduate,Y,F,,1,2,2.0,Hybrid - F2F/Online,13
-78135,2020SP,MAT,206,Undergraduate,Y,D,Y,1,2,,Online,5
-54165,2021FA,CHE,74,Undergraduate,Y,B,Y,1,1,,Practicum,15
-54165,2021FA,HIS,194,Undergraduate,N,B,,1,1,,Independent Study,7
-54165,2021FA,ENG,118,Undergraduate,Y,,Y,0,1,1.0,Hybrid - Online/iTV,5
-54165,2021FA,ENG,112,Undergraduate,N,A,Y,0,4,4.0,Face to Face,3
-54165,2021FA,HIS,69,Undergraduate,Y,A,Y,1,1,1.0,Online/Synch,14
-50188,2020FA,PSY,261,Undergraduate,N,B,Y,0,1,,Independent Study,15
-50188,2020FA,MUS,131,Undergraduate,Y,B,Y,1,1,1.0,Face to Face,3
-50188,2020FA,PHY,255,Undergraduate,N,C,Y,1,2,,Hybrid - F2F/Online,10
-50188,2020FA,PSY,162,Undergraduate,Y,B,Y,1,3,,Hybrid - F2F/Online,2
-50188,2020FA,CHE,104,Undergraduate,N,A,Y,1,3,3.0,Hybrid - F2F/Online,12
-50188,2020FA,MAT,132,Undergraduate,Y,B,Y,1,4,,Hybrid - F2F/Online,1
-50188,2020FA,PHY,110,Undergraduate,Y,C,Y,0,1,,Online,6
-50188,2020FA,CHE,19,Undergraduate,Y,F,Y,1,2,2.0,Online/Synch,1
-50188,2020FA,PSY,80,Undergraduate,N,,Y,1,1,1.0,Online,13
-50188,2020FA,MUS,34,Undergraduate,N,B,,1,4,4.0,Face to Face,16
-38982,2020FA,BIO,73,Undergraduate,Y,,,0,3,3.0,Independent Study,3
-38982,2020FA,ENG,242,Undergraduate,Y,,,1,1,1.0,Independent Study,15
-53800,2020SP,PHY,227,Undergraduate,Y,B,Y,0,1,,Online,4
-53800,2020SP,ART,8,Undergraduate,Y,,Y,0,3,3.0,Face to Face,14
-53800,2020SP,PHY,57,Undergraduate,N,D,,0,4,,Independent Study,6
-53800,2020SP,CHE,275,Undergraduate,N,,Y,0,1,1.0,Online,10
-53800,2020SP,CHE,36,Undergraduate,N,C,,0,1,,Hybrid - F2F/Online,2
-53800,2020SP,PSY,87,Undergraduate,N,F,,1,2,2.0,Online/Synch,5
-53800,2020SP,ART,126,Undergraduate,Y,A,Y,1,1,,Online/Synch,12
-72136,2019SP,HIS,212,Undergraduate,Y,F,Y,1,2,2.0,Online/Synch,14
-72136,2019SP,ENG,117,Undergraduate,Y,D,,1,1,1.0,Practicum,3
-72136,2019SP,CHE,124,Undergraduate,N,D,Y,0,4,4.0,Online,1
-72136,2019SP,PHY,151,Undergraduate,N,,Y,0,3,3.0,Hybrid - F2F/Online,10
-72136,2019SP,PHY,102,Undergraduate,N,D,,1,3,,Online,9
-72136,2019SP,ENG,231,Undergraduate,N,F,Y,1,1,,Hybrid - Online/iTV,12
-72136,2019SP,PHY,294,Undergraduate,Y,,Y,0,4,4.0,Independent Study,5
-72136,2019SP,COM,183,Undergraduate,Y,A,,1,1,1.0,Hybrid - F2F/Online,10
-72136,2019SP,BIO,190,Undergraduate,Y,F,Y,0,2,,Independent Study,16
-72136,2019SP,PHY,288,Undergraduate,N,C,Y,1,3,,Hybrid - Online/iTV,16
-67642,2018FA,PSY,27,Undergraduate,Y,B,,0,4,,Hybrid - F2F/Online,5
-67642,2018FA,ART,85,Undergraduate,N,D,,0,2,2.0,Face to Face,8
-67642,2018FA,CHE,112,Undergraduate,Y,,Y,0,3,,Face to Face,10
-67642,2018FA,PSY,159,Undergraduate,Y,C,Y,0,3,3.0,Online/Synch,10
-67642,2018FA,PHY,281,Undergraduate,N,B,,0,3,3.0,Practicum,9
-67642,2018FA,ENG,114,Undergraduate,N,A,,1,4,4.0,Online/Synch,12
-67642,2018FA,CHE,40,Undergraduate,Y,,,0,1,,Online,1
-67642,2018FA,ART,169,Undergraduate,N,D,,0,2,2.0,Hybrid - Online/iTV,3
-67642,2018FA,MUS,95,Undergraduate,Y,B,Y,1,3,3.0,Hybrid - Online/iTV,8
-54646,2019FA,CHE,196,Undergraduate,N,A,,1,1,1.0,Online/Synch,4
-54646,2019FA,HIS,290,Undergraduate,N,A,,0,3,,Online/Synch,8
-54646,2019FA,BIO,57,Undergraduate,N,A,Y,0,3,,Practicum,7
-54646,2019FA,CHE,149,Undergraduate,N,F,,1,2,2.0,Online,12
-54646,2019FA,ART,246,Undergraduate,Y,D,Y,0,1,,Hybrid - Online/iTV,13
-50101,2020FA,ART,173,Undergraduate,N,F,,1,4,4.0,Independent Study,2
-50101,2020FA,MAT,48,Undergraduate,Y,A,Y,0,1,1.0,Online/Synch,12
-98671,2019FA,MUS,270,Undergraduate,N,B,Y,1,3,3.0,Face to Face,8
-98671,2019FA,HIS,61,Undergraduate,Y,,,0,4,4.0,Hybrid - Online/iTV,2
-98671,2019FA,COM,129,Undergraduate,N,F,,0,3,3.0,Hybrid - F2F/Online,14
-98671,2019FA,CHE,17,Undergraduate,N,B,Y,1,1,1.0,Online,14
-98671,2019FA,ART,49,Undergraduate,N,B,,1,3,,Hybrid - Online/iTV,5
-98671,2019FA,PHY,286,Undergraduate,N,C,,0,3,3.0,Hybrid - F2F/Online,8
-98671,2019FA,ENG,42,Undergraduate,N,,Y,1,1,1.0,Face to Face,12
-98671,2019FA,ART,100,Undergraduate,Y,C,Y,0,3,3.0,Face to Face,12
-74166,2020SP,PSY,32,Undergraduate,Y,F,Y,0,1,,Online,8
-74166,2020SP,BIO,268,Undergraduate,Y,A,,1,2,2.0,Independent Study,8
-74166,2020SP,ENG,48,Undergraduate,N,C,,0,1,,Online/Synch,14
-93058,2018SP,MAT,87,Undergraduate,N,F,Y,0,2,2.0,Independent Study,12
-93058,2018SP,MUS,261,Undergraduate,N,F,Y,0,4,,Hybrid - F2F/Online,12
-12316,2021FA,CHE,246,Undergraduate,N,,Y,1,2,,Online,16
-12316,2021FA,ENG,281,Undergraduate,Y,A,Y,1,2,2.0,Practicum,2
-12316,2021FA,PSY,264,Undergraduate,Y,A,,0,1,1.0,Face to Face,12
-12316,2021FA,ART,234,Undergraduate,Y,A,,1,4,4.0,Hybrid - F2F/Online,16
-48635,2018FA,CHE,34,Undergraduate,N,B,,0,3,,Practicum,4
-48635,2018FA,ART,248,Undergraduate,Y,,,0,1,1.0,Hybrid - Online/iTV,12
-57644,2019SP,PHY,45,Undergraduate,Y,F,Y,0,1,,Practicum,5
-57644,2019SP,MAT,143,Undergraduate,Y,D,,0,1,1.0,Online,16
-57644,2019SP,PHY,106,Undergraduate,N,D,,1,4,,Face to Face,6
-57644,2019SP,MAT,44,Undergraduate,N,A,,1,3,3.0,Hybrid - F2F/Online,14
-57644,2019SP,ENG,266,Undergraduate,Y,F,Y,1,3,3.0,Face to Face,2
-57644,2019SP,ART,90,Undergraduate,N,A,Y,0,4,,Hybrid - F2F/Online,2
-57644,2019SP,BIO,57,Undergraduate,Y,C,,1,2,2.0,Online/Synch,5
-76395,2018FA,CHE,200,Undergraduate,Y,F,,1,4,4.0,Online/Synch,15
-76395,2018FA,MAT,294,Undergraduate,N,A,Y,0,3,3.0,Practicum,3
-76395,2018FA,ART,289,Undergraduate,Y,B,Y,1,3,,Online/Synch,3
-76395,2018FA,ART,192,Undergraduate,N,F,Y,0,4,4.0,Face to Face,2
-76395,2018FA,BIO,243,Undergraduate,Y,A,,1,4,4.0,Hybrid - Online/iTV,14
-76395,2018FA,PHY,260,Undergraduate,N,,Y,1,4,,Online/Synch,12
-76395,2018FA,MAT,175,Undergraduate,Y,,,1,1,,Practicum,3
-76395,2018FA,PHY,27,Undergraduate,Y,A,Y,0,3,,Face to Face,5
-76395,2018FA,BIO,138,Undergraduate,Y,,,0,1,,Online,12
-76395,2018FA,ENG,140,Undergraduate,N,,Y,1,1,,Face to Face,2
-25387,2018FA,HIS,53,Undergraduate,N,C,Y,1,2,2.0,Independent Study,10
-25387,2018FA,HIS,96,Undergraduate,Y,,,1,3,,Practicum,2
-25387,2018FA,MAT,157,Undergraduate,Y,D,Y,0,1,,Online/Synch,13
-25387,2018FA,PHY,93,Undergraduate,Y,F,Y,1,3,,Online/Synch,5
-25387,2018FA,MAT,205,Undergraduate,N,D,,1,1,,Online/Synch,12
-12460,2019FA,MAT,26,Undergraduate,N,,,1,3,3.0,Face to Face,3
-12460,2019FA,MAT,234,Undergraduate,Y,B,,1,4,4.0,Online/Synch,13
-12460,2019FA,PHY,291,Undergraduate,Y,F,Y,1,1,,Hybrid - Online/iTV,15
-12460,2019FA,PSY,162,Undergraduate,Y,B,Y,0,2,,Hybrid - Online/iTV,10
-12460,2019FA,BIO,31,Undergraduate,N,B,,1,1,1.0,Face to Face,2
-65756,2020FA,COM,161,Undergraduate,Y,F,Y,0,2,,Face to Face,11
-65756,2020FA,COM,115,Undergraduate,Y,C,Y,1,3,,Online/Synch,6
-65756,2020FA,ENG,4,Undergraduate,Y,A,Y,1,2,,Face to Face,1
-65756,2020FA,HIS,260,Undergraduate,Y,B,Y,1,2,,Online/Synch,1
-65756,2020FA,PSY,230,Undergraduate,N,B,,0,3,,Online,11
-89400,2019SP,CHE,42,Undergraduate,Y,D,Y,0,3,,Practicum,1
-89400,2019SP,ART,157,Undergraduate,N,A,,0,3,,Online,8
-89400,2019SP,HIS,280,Undergraduate,N,B,Y,0,3,,Hybrid - F2F/Online,8
-81556,2018FA,BIO,226,Undergraduate,Y,F,Y,0,4,4.0,Online/Synch,15
-81556,2018FA,ART,3,Undergraduate,N,F,,1,1,1.0,Online/Synch,11
-81556,2018FA,ENG,182,Undergraduate,Y,B,Y,1,3,3.0,Hybrid - F2F/Online,3
-81556,2018FA,BIO,68,Undergraduate,N,,,1,3,,Hybrid - Online/iTV,6
-81556,2018FA,PSY,96,Undergraduate,N,B,Y,1,4,4.0,Hybrid - F2F/Online,3
-38250,2020FA,PHY,100,Undergraduate,Y,C,Y,1,3,3.0,Online/Synch,14
-38250,2020FA,ENG,115,Undergraduate,N,D,,0,3,3.0,Online,4
-38250,2020FA,ART,116,Undergraduate,N,C,,0,2,2.0,Online,13
-38250,2020FA,ENG,229,Undergraduate,Y,B,,1,3,,Practicum,2
-38250,2020FA,HIS,17,Undergraduate,N,F,,0,1,,Independent Study,16
-11389,2021FA,ENG,185,Undergraduate,Y,,Y,1,2,,Hybrid - Online/iTV,12
-11389,2021FA,CHE,241,Undergraduate,Y,F,,0,2,,Online/Synch,11
-11389,2021FA,MAT,185,Undergraduate,Y,A,,1,3,3.0,Practicum,12
-11389,2021FA,PSY,95,Undergraduate,Y,F,,1,3,,Face to Face,3
-11389,2021FA,MUS,220,Undergraduate,N,F,Y,1,2,2.0,Independent Study,10
-11389,2021FA,BIO,220,Undergraduate,Y,A,Y,0,4,,Independent Study,3
-11389,2021FA,PHY,187,Undergraduate,N,D,,1,4,4.0,Hybrid - Online/iTV,4
-11389,2021FA,CHE,248,Undergraduate,Y,D,Y,0,4,4.0,Face to Face,6
-11389,2021FA,MAT,130,Undergraduate,Y,F,Y,0,3,,Face to Face,11
-11389,2021FA,CHE,140,Undergraduate,Y,D,Y,1,1,,Practicum,3
-75009,2020SP,BIO,258,Undergraduate,Y,B,Y,0,4,,Online,1
-75009,2020SP,CHE,248,Undergraduate,Y,A,Y,0,4,,Hybrid - Online/iTV,4
-75009,2020SP,CHE,124,Undergraduate,N,F,,1,1,1.0,Hybrid - F2F/Online,5
-75009,2020SP,ART,4,Undergraduate,N,C,,0,1,1.0,Independent Study,14
-75009,2020SP,BIO,167,Undergraduate,Y,,Y,1,1,,Hybrid - Online/iTV,10
-75009,2020SP,BIO,30,Undergraduate,Y,F,,0,1,,Face to Face,6
-19207,2019FA,ENG,189,Undergraduate,N,B,Y,0,1,1.0,Practicum,2
-19207,2019FA,ART,80,Undergraduate,N,D,,1,4,,Practicum,8
-19207,2019FA,MAT,155,Undergraduate,Y,A,,1,3,,Independent Study,16
-60048,2021SP,ENG,185,Undergraduate,Y,C,,0,4,,Hybrid - Online/iTV,6
-60048,2021SP,CHE,238,Undergraduate,N,A,,0,2,,Practicum,10
-18026,2020FA,ENG,136,Undergraduate,Y,D,,1,2,2.0,Independent Study,11
-18026,2020FA,BIO,203,Undergraduate,Y,B,Y,1,3,3.0,Online/Synch,13
-18026,2020FA,BIO,137,Undergraduate,N,C,,0,1,1.0,Hybrid - Online/iTV,5
-18026,2020FA,COM,162,Undergraduate,Y,,,1,2,,Online/Synch,8
-24637,2020SP,HIS,45,Undergraduate,N,D,,0,4,4.0,Independent Study,11
-24637,2020SP,CHE,236,Undergraduate,Y,B,,0,2,,Online/Synch,12
-24637,2020SP,MUS,207,Undergraduate,N,C,Y,1,2,,Hybrid - Online/iTV,3
-24637,2020SP,COM,143,Undergraduate,N,B,Y,1,3,,Hybrid - F2F/Online,13
-24637,2020SP,CHE,100,Undergraduate,N,F,Y,1,4,4.0,Online/Synch,16
-24637,2020SP,MUS,145,Undergraduate,N,,Y,1,4,4.0,Hybrid - Online/iTV,11
-24637,2020SP,PSY,136,Undergraduate,Y,,Y,1,4,4.0,Hybrid - F2F/Online,13
-24637,2020SP,PSY,247,Undergraduate,N,A,Y,0,1,1.0,Face to Face,11
-48009,2019SP,COM,158,Undergraduate,Y,B,Y,1,4,,Online,6
-48009,2019SP,CHE,82,Undergraduate,N,C,,1,4,,Hybrid - Online/iTV,1
-94043,2021FA,BIO,120,Undergraduate,N,C,,0,1,,Independent Study,13
-94043,2021FA,MUS,164,Undergraduate,Y,F,Y,0,4,4.0,Hybrid - F2F/Online,9
-94043,2021FA,ART,90,Undergraduate,Y,C,Y,1,1,,Hybrid - Online/iTV,14
+71959,2021SP,PSY,260,Undergraduate,Y,,,1,4,4.0,Face to Face,3
+71959,2021SP,BIO,114,Undergraduate,Y,B,,0,2,2.0,Practicum,5
+71959,2021SP,ENG,286,Undergraduate,Y,A,Y,1,4,4.0,Hybrid - F2F/Online,12
+13534,2018FA,MAT,254,Undergraduate,N,,,0,3,3.0,Online,10
+13534,2018FA,COM,264,Undergraduate,N,A,Y,0,1,,Online,11
+13534,2018FA,COM,165,Undergraduate,N,C,Y,0,4,4.0,Online,13
+13534,2018FA,CHE,175,Undergraduate,N,B,,1,2,2.0,Hybrid - F2F/Online,13
+13534,2018FA,PSY,162,Undergraduate,Y,B,Y,1,1,,Independent Study,12
+13534,2018FA,HIS,225,Undergraduate,Y,A,Y,0,3,3.0,Face to Face,12
+13534,2018FA,MAT,153,Undergraduate,Y,B,,0,1,,Independent Study,1
+13534,2018SP,CHE,236,Undergraduate,N,D,Y,0,1,,Practicum,14
+13534,2018SP,MAT,165,Undergraduate,Y,F,,0,2,2.0,Practicum,2
+13534,2018SP,COM,207,Undergraduate,N,D,Y,0,4,4.0,Independent Study,2
+13534,2019FA,ENG,104,Undergraduate,N,D,,1,3,,Practicum,8
+56628,2019FA,ENG,251,Undergraduate,Y,F,Y,1,1,,Independent Study,6
+56628,2019FA,ENG,114,Undergraduate,Y,F,Y,1,3,3.0,Independent Study,1
+56628,2019FA,CHE,261,Undergraduate,N,D,Y,1,4,,Online/Synch,11
+56628,2019FA,PHY,163,Undergraduate,Y,F,Y,0,4,4.0,Practicum,10
+56628,2019FA,COM,210,Undergraduate,Y,D,Y,1,2,,Practicum,8
+56628,2019SP,ART,213,Undergraduate,N,F,Y,1,1,1.0,Independent Study,8
+56628,2019SP,COM,204,Undergraduate,Y,A,Y,1,1,,Practicum,2
+56628,2019SP,MAT,201,Undergraduate,N,B,,1,4,,Practicum,15
+56628,2020FA,HIS,153,Undergraduate,N,B,,1,3,3.0,Practicum,7
+56628,2020FA,COM,159,Undergraduate,Y,F,Y,0,3,,Independent Study,13
+56628,2020FA,MAT,151,Undergraduate,N,B,Y,1,3,,Online/Synch,11
+56628,2020SP,ENG,203,Undergraduate,Y,B,,1,4,,Practicum,9
+56628,2020SP,HIS,229,Undergraduate,Y,A,Y,1,1,1.0,Face to Face,4
+56628,2020SP,MUS,101,Undergraduate,Y,,Y,1,4,,Online,2
+56628,2020SP,PHY,229,Undergraduate,N,A,Y,0,2,,Practicum,9
+56628,2020SP,ART,175,Undergraduate,Y,B,Y,1,4,4.0,Online,8
+72737,2020FA,PSY,143,Undergraduate,N,,Y,1,3,,Practicum,8
+72737,2020FA,MAT,257,Undergraduate,N,,,0,4,,Hybrid - Online/iTV,11
+72737,2020FA,COM,108,Undergraduate,Y,B,,0,3,3.0,Hybrid - Online/iTV,4
+72737,2020FA,ENG,221,Undergraduate,N,,Y,1,3,3.0,Hybrid - Online/iTV,10
+72737,2020FA,MUS,232,Undergraduate,Y,B,Y,1,1,,Practicum,14
+72737,2019FA,COM,142,Undergraduate,Y,B,,1,2,2.0,Hybrid - Online/iTV,12
+72737,2018FA,MAT,197,Undergraduate,N,B,,0,2,2.0,Hybrid - F2F/Online,14
+72737,2018FA,ENG,214,Undergraduate,Y,C,,1,2,2.0,Independent Study,14
+72737,2018FA,MUS,285,Undergraduate,Y,B,,0,2,2.0,Online/Synch,16
+72737,2018FA,BIO,168,Undergraduate,Y,,Y,1,2,2.0,Independent Study,4
+33073,2020FA,PHY,228,Undergraduate,Y,,Y,1,2,,Practicum,5
+33073,2020FA,COM,282,Undergraduate,N,B,,1,3,,Hybrid - F2F/Online,3
+33073,2018FA,BIO,151,Undergraduate,Y,A,Y,0,2,2.0,Hybrid - Online/iTV,4
+33073,2018FA,HIS,222,Undergraduate,Y,A,Y,0,2,2.0,Practicum,7
+33073,2018FA,ART,196,Undergraduate,Y,,,1,4,4.0,Online/Synch,12
+33073,2018FA,PSY,291,Undergraduate,Y,A,,0,4,,Online,4
+33073,2018FA,BIO,238,Undergraduate,N,B,,0,2,2.0,Independent Study,8
+33073,2018SP,PSY,112,Undergraduate,N,A,Y,0,4,4.0,Face to Face,6
+33073,2018SP,BIO,187,Undergraduate,N,D,,0,2,2.0,Independent Study,10
+33073,2018SP,MAT,173,Undergraduate,N,F,,1,2,2.0,Face to Face,4
+33073,2018SP,ENG,216,Undergraduate,Y,,,0,2,2.0,Face to Face,10
+33073,2021SP,ENG,135,Undergraduate,Y,F,Y,0,3,,Practicum,14
+48733,2021SP,HIS,162,Undergraduate,Y,A,,0,2,2.0,Practicum,8
+48733,2021FA,MUS,149,Undergraduate,N,,,1,4,4.0,Independent Study,7
+48733,2021FA,BIO,267,Undergraduate,Y,,Y,1,4,,Practicum,8
+48733,2021FA,MUS,247,Undergraduate,Y,B,Y,1,1,,Independent Study,13
+48733,2021FA,CHE,267,Undergraduate,N,D,,1,4,,Online/Synch,10
+48733,2021FA,BIO,150,Undergraduate,N,B,Y,1,2,2.0,Hybrid - Online/iTV,4
+48733,2020SP,BIO,133,Undergraduate,Y,F,,1,2,,Face to Face,7
+48733,2020SP,ENG,290,Undergraduate,N,A,,1,2,2.0,Independent Study,1
+48733,2020SP,COM,211,Undergraduate,Y,C,,0,2,2.0,Online,8
+48733,2019FA,COM,293,Undergraduate,N,C,Y,0,4,4.0,Independent Study,4
+48733,2019FA,HIS,249,Undergraduate,Y,,Y,0,2,,Hybrid - F2F/Online,16
+48733,2019FA,BIO,162,Undergraduate,N,A,,0,2,,Hybrid - Online/iTV,10
+88003,2019SP,ART,197,Undergraduate,Y,,Y,0,3,,Hybrid - Online/iTV,10
+88003,2019SP,PHY,152,Undergraduate,N,D,Y,0,3,,Hybrid - Online/iTV,11
+88003,2019SP,HIS,105,Undergraduate,N,F,,1,3,,Hybrid - Online/iTV,14
+88003,2019SP,BIO,227,Undergraduate,N,F,Y,0,3,,Online/Synch,9
+88003,2019SP,ART,198,Undergraduate,N,A,,0,1,,Online,6
+80308,2019SP,MAT,280,Undergraduate,N,F,Y,0,2,2.0,Hybrid - Online/iTV,13
+80308,2019FA,MAT,201,Undergraduate,N,F,Y,0,1,1.0,Practicum,10
+80308,2019SP,COM,274,Undergraduate,N,F,,0,1,,Hybrid - Online/iTV,12
+80308,2019SP,ART,286,Undergraduate,N,C,Y,1,3,,Hybrid - Online/iTV,8
+80308,2019SP,PSY,280,Undergraduate,N,D,Y,1,3,3.0,Face to Face,3
+80308,2019SP,COM,282,Undergraduate,N,B,Y,1,3,3.0,Hybrid - Online/iTV,15
+80308,2019SP,MAT,160,Undergraduate,N,A,,0,3,,Online/Synch,5
+80308,2021SP,COM,109,Undergraduate,N,F,,0,1,1.0,Practicum,5
+36011,2021SP,MAT,261,Undergraduate,N,B,Y,0,4,4.0,Online/Synch,8
+36011,2021SP,PSY,148,Undergraduate,N,A,Y,1,2,2.0,Hybrid - F2F/Online,10
+36011,2019SP,PSY,246,Undergraduate,Y,F,,1,1,1.0,Hybrid - F2F/Online,5
+36011,2019SP,ENG,136,Undergraduate,Y,A,,1,1,1.0,Independent Study,14
+36011,2019SP,ENG,154,Undergraduate,Y,F,Y,1,4,,Online,13
+36011,2020SP,MUS,271,Undergraduate,Y,D,Y,1,1,1.0,Hybrid - Online/iTV,12
+36011,2020SP,BIO,221,Undergraduate,N,D,Y,0,1,,Hybrid - Online/iTV,14
+36011,2020SP,PHY,167,Undergraduate,Y,C,Y,0,4,4.0,Online,3
+36011,2020SP,MAT,169,Undergraduate,N,F,Y,1,3,,Face to Face,14
+36011,2020SP,MAT,131,Undergraduate,N,F,,0,4,4.0,Face to Face,10
+97556,2020SP,BIO,209,Undergraduate,N,,,0,2,2.0,Practicum,16
+97556,2020SP,HIS,112,Undergraduate,Y,A,,1,4,,Hybrid - Online/iTV,5
+97556,2020SP,HIS,276,Undergraduate,N,C,Y,1,1,,Hybrid - F2F/Online,9
+97556,2020SP,MUS,142,Undergraduate,Y,D,Y,0,4,,Online,14
+97556,2020SP,HIS,144,Undergraduate,Y,D,,1,3,,Hybrid - F2F/Online,7
+97556,2018FA,COM,264,Undergraduate,N,D,,1,4,,Online,11
+97556,2020SP,ART,199,Undergraduate,N,,,0,1,,Hybrid - F2F/Online,7
+97556,2021FA,BIO,124,Undergraduate,N,A,Y,1,1,,Hybrid - F2F/Online,9
+97556,2021FA,PSY,152,Undergraduate,N,F,Y,0,2,,Hybrid - F2F/Online,8
+97556,2021FA,BIO,112,Undergraduate,N,F,Y,0,1,1.0,Independent Study,12
+97556,2021FA,PHY,194,Undergraduate,Y,C,Y,1,2,2.0,Face to Face,2
+66483,2018FA,BIO,186,Undergraduate,N,F,Y,1,1,1.0,Face to Face,16
+66483,2018FA,COM,232,Undergraduate,N,,Y,0,4,4.0,Online/Synch,15
+66483,2018FA,BIO,266,Undergraduate,N,A,Y,0,1,1.0,Independent Study,12
+66483,2018FA,PSY,281,Undergraduate,N,A,,0,4,4.0,Hybrid - Online/iTV,13
+66483,2018SP,CHE,178,Undergraduate,N,D,Y,0,3,3.0,Hybrid - Online/iTV,8
+66483,2018SP,ENG,186,Undergraduate,N,,,1,2,2.0,Independent Study,11
+66483,2018SP,PHY,113,Undergraduate,Y,F,Y,1,2,2.0,Hybrid - Online/iTV,10
+66483,2018SP,MUS,163,Undergraduate,Y,C,,1,1,1.0,Online/Synch,6
+66483,2020SP,COM,265,Undergraduate,N,F,Y,0,2,,Hybrid - F2F/Online,5
+66483,2020SP,HIS,183,Undergraduate,Y,,Y,1,1,1.0,Face to Face,11
+66483,2020SP,MUS,165,Undergraduate,Y,F,Y,1,4,,Independent Study,15
+17927,2018SP,BIO,273,Undergraduate,N,C,Y,0,3,,Online,7
+17927,2018SP,PSY,190,Undergraduate,N,B,Y,0,2,,Practicum,3
+17927,2018SP,COM,255,Undergraduate,N,B,,1,4,4.0,Practicum,2
+94610,2019SP,MAT,282,Undergraduate,Y,F,Y,1,3,,Face to Face,5
+68935,2021FA,PSY,140,Undergraduate,Y,,Y,0,4,,Independent Study,4
+68935,2021FA,COM,277,Undergraduate,Y,B,Y,1,2,,Online,14
+68935,2021FA,MUS,186,Undergraduate,N,B,Y,0,3,,Independent Study,2
+68935,2018FA,CHE,152,Undergraduate,Y,F,,1,1,,Hybrid - F2F/Online,1
+68935,2018FA,MUS,249,Undergraduate,Y,B,Y,1,3,,Practicum,16
+68935,2018FA,CHE,122,Undergraduate,N,A,,1,2,,Independent Study,8
+68935,2018FA,MUS,297,Undergraduate,Y,D,Y,1,3,3.0,Hybrid - F2F/Online,2
+68935,2021SP,ART,241,Undergraduate,N,A,,0,2,,Online/Synch,6
+68935,2021SP,BIO,122,Undergraduate,Y,,,1,4,,Online,5
+68935,2021SP,MUS,224,Undergraduate,Y,A,Y,0,4,,Online,9
+68935,2018SP,ART,274,Undergraduate,Y,D,Y,0,2,,Face to Face,6
+68935,2018SP,ART,229,Undergraduate,N,B,Y,1,3,,Online/Synch,14
+68935,2018SP,HIS,266,Undergraduate,N,,,0,3,3.0,Online,7
+60315,2021FA,MUS,101,Undergraduate,Y,A,Y,0,3,3.0,Practicum,3
+60315,2021FA,COM,194,Undergraduate,N,B,Y,0,4,4.0,Online,8
+60315,2021SP,ENG,261,Undergraduate,N,A,Y,1,4,,Independent Study,16
+60315,2021SP,HIS,199,Undergraduate,N,B,,1,1,,Hybrid - Online/iTV,13
+60315,2021SP,CHE,182,Undergraduate,N,B,Y,1,2,,Practicum,2
+60315,2021SP,COM,115,Undergraduate,N,,Y,1,1,1.0,Practicum,7
+60315,2021SP,COM,121,Undergraduate,N,B,Y,1,4,,Face to Face,16
+60315,2021SP,MAT,126,Undergraduate,N,D,Y,1,2,,Hybrid - F2F/Online,7
+65958,2020FA,MAT,211,Undergraduate,Y,F,,1,4,,Independent Study,13
+65958,2020FA,MAT,148,Undergraduate,Y,B,Y,1,2,,Online/Synch,1
+22740,2021SP,CHE,175,Undergraduate,N,B,,0,2,,Online,10
+86991,2019SP,CHE,281,Undergraduate,Y,F,,1,3,,Face to Face,2
+86991,2019SP,MAT,155,Undergraduate,N,,Y,0,2,,Practicum,10
+86991,2019SP,HIS,240,Undergraduate,Y,,,0,2,2.0,Hybrid - F2F/Online,9
+86991,2019SP,MAT,138,Undergraduate,Y,F,,0,3,,Independent Study,14
+86991,2019SP,PHY,139,Undergraduate,N,D,,0,3,3.0,Practicum,6
+86991,2020SP,BIO,155,Undergraduate,N,C,,0,2,2.0,Face to Face,11
+86991,2020SP,MUS,124,Undergraduate,N,,Y,1,1,1.0,Independent Study,9
+86991,2020SP,BIO,141,Undergraduate,Y,,Y,1,3,,Hybrid - Online/iTV,10
+72886,2019SP,MUS,167,Undergraduate,N,D,Y,0,1,1.0,Face to Face,13
+72886,2019SP,HIS,284,Undergraduate,N,A,,0,1,1.0,Independent Study,8
+72886,2019SP,HIS,182,Undergraduate,Y,D,Y,1,1,1.0,Independent Study,3
+72886,2019SP,MUS,188,Undergraduate,Y,C,,1,3,,Online,1
+41425,2018FA,MAT,179,Undergraduate,Y,D,Y,1,3,3.0,Online/Synch,11
+41425,2018FA,MAT,128,Undergraduate,Y,F,,0,4,,Independent Study,1
+41425,2018FA,PSY,212,Undergraduate,N,B,,0,1,1.0,Online,16
+41425,2018FA,BIO,249,Undergraduate,N,D,,1,4,4.0,Online/Synch,9
+41425,2018FA,ENG,165,Undergraduate,N,B,,1,4,,Practicum,11
+41425,2018SP,COM,127,Undergraduate,N,B,Y,0,2,2.0,Practicum,2
+41425,2018SP,PSY,236,Undergraduate,N,A,Y,1,2,,Online,2
+41425,2018SP,COM,226,Undergraduate,Y,A,Y,0,2,2.0,Face to Face,14
+41425,2018SP,PSY,194,Undergraduate,Y,A,Y,1,3,3.0,Hybrid - F2F/Online,4
+41425,2018SP,COM,195,Undergraduate,N,F,,1,2,2.0,Practicum,16
+41425,2021SP,MUS,234,Undergraduate,N,F,Y,1,2,,Practicum,8
+14804,2018FA,MAT,245,Undergraduate,N,B,,1,2,2.0,Independent Study,9
+14804,2018FA,MUS,263,Undergraduate,Y,D,Y,1,2,,Practicum,13
+14804,2018FA,BIO,116,Undergraduate,N,C,,0,4,,Online/Synch,7
+14804,2018FA,PSY,233,Undergraduate,Y,C,,0,2,2.0,Face to Face,1
+14804,2018FA,PSY,204,Undergraduate,Y,C,,1,4,4.0,Hybrid - F2F/Online,13
+14804,2019FA,MUS,146,Undergraduate,N,A,,0,4,4.0,Independent Study,2
+14804,2019FA,MUS,278,Undergraduate,Y,,Y,0,1,,Hybrid - F2F/Online,15
+14804,2019FA,ENG,199,Undergraduate,Y,A,Y,0,4,4.0,Independent Study,2
+14804,2019FA,ART,124,Undergraduate,Y,,,1,1,,Hybrid - F2F/Online,11
+14804,2019FA,BIO,289,Undergraduate,N,F,,0,3,,Face to Face,13
+14804,2020SP,BIO,102,Undergraduate,N,C,Y,0,1,,Online,11
+14804,2020SP,BIO,177,Undergraduate,N,C,Y,1,3,,Face to Face,15
+14804,2020SP,BIO,222,Undergraduate,Y,,,0,1,,Face to Face,4
+14804,2020SP,HIS,282,Undergraduate,N,C,Y,0,1,1.0,Online/Synch,5
+14804,2020SP,CHE,193,Undergraduate,N,,Y,1,1,,Hybrid - Online/iTV,6
+14804,2020SP,ENG,213,Undergraduate,N,B,,1,3,,Online/Synch,8
+14804,2020SP,ENG,218,Undergraduate,Y,C,,0,3,3.0,Online/Synch,9
+14804,2020SP,MAT,197,Undergraduate,N,B,,1,1,,Face to Face,3
+14804,2020SP,ART,166,Undergraduate,Y,C,,0,2,2.0,Practicum,3
+93386,2018FA,HIS,292,Undergraduate,N,C,Y,1,2,,Independent Study,4
+93386,2018FA,ART,286,Undergraduate,N,,,1,3,3.0,Hybrid - Online/iTV,16
+83339,2020SP,MAT,224,Undergraduate,N,B,,0,4,4.0,Hybrid - Online/iTV,15
+83339,2018FA,ENG,146,Undergraduate,N,A,Y,1,2,,Hybrid - F2F/Online,10
+83339,2018FA,MUS,248,Undergraduate,Y,C,,1,4,,Hybrid - Online/iTV,9
+83339,2018FA,MUS,217,Undergraduate,Y,F,,1,4,,Online/Synch,3
+83339,2018FA,ART,277,Undergraduate,N,C,,0,3,3.0,Online,6
+83339,2018FA,MUS,268,Undergraduate,N,F,Y,1,4,4.0,Face to Face,11
+11563,2020SP,ENG,296,Undergraduate,N,B,Y,0,2,,Online,2
+11563,2020SP,ART,181,Undergraduate,Y,D,,1,3,,Hybrid - Online/iTV,11
+11563,2020SP,MAT,231,Undergraduate,Y,,,0,3,,Online/Synch,6
+11563,2020SP,ART,161,Undergraduate,Y,D,,0,4,4.0,Online/Synch,12
+11563,2020SP,BIO,118,Undergraduate,Y,F,Y,0,4,4.0,Hybrid - F2F/Online,10
+11563,2021SP,PSY,268,Undergraduate,N,D,Y,1,3,,Hybrid - Online/iTV,9
+11563,2021SP,PSY,299,Undergraduate,N,B,Y,0,3,3.0,Online,11
+11563,2021SP,BIO,228,Undergraduate,N,,Y,0,1,1.0,Hybrid - F2F/Online,8
+11563,2021SP,CHE,261,Undergraduate,Y,F,Y,1,3,,Online/Synch,2
+11563,2021SP,ART,276,Undergraduate,Y,A,,0,3,,Online/Synch,4
+11563,2019FA,MAT,112,Undergraduate,Y,C,,1,3,3.0,Hybrid - F2F/Online,5
+11563,2019FA,PHY,254,Undergraduate,Y,B,Y,0,1,,Online,12
+67857,2019SP,COM,282,Undergraduate,Y,C,Y,1,4,,Independent Study,11
+67857,2018SP,MAT,291,Undergraduate,Y,,,0,2,2.0,Hybrid - Online/iTV,15
+67857,2018SP,MAT,154,Undergraduate,N,D,Y,0,1,1.0,Practicum,16
+67857,2018SP,ENG,269,Undergraduate,N,F,Y,0,3,3.0,Practicum,2
+67857,2019SP,MUS,181,Undergraduate,N,D,Y,1,3,3.0,Independent Study,9
+67857,2019SP,PHY,197,Undergraduate,Y,,,1,4,,Independent Study,10
+67857,2021FA,BIO,224,Undergraduate,Y,F,,0,3,3.0,Online,12
+67857,2021FA,MAT,244,Undergraduate,N,A,Y,1,3,3.0,Online/Synch,2
+33404,2019FA,PSY,264,Undergraduate,Y,F,Y,0,2,2.0,Face to Face,15
+33404,2019FA,PSY,249,Undergraduate,N,C,Y,1,3,,Practicum,10
+33404,2019FA,CHE,275,Undergraduate,N,,,1,1,1.0,Face to Face,9
+33404,2021SP,PSY,206,Undergraduate,Y,F,,0,2,2.0,Hybrid - Online/iTV,9
+33404,2021SP,PSY,181,Undergraduate,N,A,,1,2,2.0,Online/Synch,8
+33404,2021SP,PHY,268,Undergraduate,Y,,,0,3,,Hybrid - F2F/Online,3
+33404,2021SP,PHY,196,Undergraduate,N,A,Y,1,3,,Independent Study,15
+33404,2021SP,ENG,180,Undergraduate,N,A,Y,1,2,2.0,Practicum,8
+33404,2020FA,ENG,142,Undergraduate,Y,D,Y,1,3,,Hybrid - Online/iTV,2
+34377,2020FA,MUS,230,Undergraduate,N,F,Y,1,1,1.0,Hybrid - F2F/Online,1
+34377,2020FA,PHY,258,Undergraduate,N,C,,0,2,2.0,Independent Study,11
+34377,2020FA,PSY,111,Undergraduate,N,,,0,3,3.0,Practicum,6
+34377,2020FA,BIO,265,Undergraduate,N,B,,1,1,,Hybrid - F2F/Online,1
+34377,2020FA,COM,230,Undergraduate,N,C,Y,1,1,,Practicum,13
+54127,2019FA,PHY,258,Undergraduate,Y,,,0,4,4.0,Practicum,8
+54127,2019FA,HIS,260,Undergraduate,N,B,,1,3,,Independent Study,3
+54127,2019FA,PHY,200,Undergraduate,Y,A,Y,1,3,3.0,Online/Synch,3
+54127,2019FA,BIO,186,Undergraduate,N,C,,0,3,3.0,Hybrid - Online/iTV,6
+16899,2019SP,PHY,267,Undergraduate,Y,B,,0,3,,Online,7
+16899,2019SP,ENG,134,Undergraduate,N,A,Y,1,4,,Independent Study,16
+16899,2019SP,CHE,162,Undergraduate,N,F,,0,3,,Hybrid - Online/iTV,8
+16899,2021SP,PHY,242,Undergraduate,N,A,,1,3,3.0,Hybrid - Online/iTV,10
+16899,2021SP,BIO,291,Undergraduate,Y,A,Y,1,3,3.0,Hybrid - F2F/Online,5
+16899,2021SP,ART,112,Undergraduate,Y,,,1,4,4.0,Hybrid - F2F/Online,6
+16899,2021SP,BIO,241,Undergraduate,Y,A,Y,0,2,,Hybrid - Online/iTV,1
+16899,2021SP,MAT,275,Undergraduate,N,D,,0,2,,Practicum,16
+44611,2019FA,PSY,210,Undergraduate,Y,C,Y,0,4,,Online/Synch,8
+44611,2021SP,COM,141,Undergraduate,N,B,Y,0,1,,Online,12
+44611,2021SP,PHY,209,Undergraduate,Y,A,,1,1,1.0,Hybrid - F2F/Online,4
+44611,2021SP,CHE,221,Undergraduate,Y,C,Y,1,4,,Online/Synch,11
+44611,2021SP,BIO,242,Undergraduate,N,B,Y,0,2,,Hybrid - Online/iTV,3
+44611,2019SP,PSY,119,Undergraduate,N,F,Y,1,2,2.0,Online,9
+44611,2019SP,HIS,297,Undergraduate,N,B,Y,1,2,2.0,Online,10
+44611,2019SP,CHE,191,Undergraduate,N,F,,1,4,,Hybrid - Online/iTV,7
+44611,2019SP,ART,210,Undergraduate,N,D,Y,1,2,,Hybrid - F2F/Online,11
+34970,2019SP,CHE,241,Undergraduate,Y,,,0,2,,Practicum,4
+34970,2019SP,PHY,123,Undergraduate,N,F,,0,1,,Independent Study,9
+34970,2020FA,HIS,229,Undergraduate,Y,F,Y,0,4,,Online,3
+34970,2020FA,MAT,131,Undergraduate,Y,,Y,1,3,3.0,Hybrid - Online/iTV,14
+34970,2020FA,CHE,195,Undergraduate,Y,B,Y,1,3,3.0,Independent Study,11
+34970,2021SP,ENG,142,Undergraduate,N,F,,0,4,,Independent Study,5
+34970,2021SP,CHE,176,Undergraduate,Y,,,1,3,,Face to Face,4
+34970,2021SP,ART,188,Undergraduate,Y,B,,0,3,,Online,3
+67774,2020FA,BIO,181,Undergraduate,Y,F,,1,1,1.0,Hybrid - F2F/Online,4
+67774,2020FA,CHE,286,Undergraduate,N,C,Y,1,3,3.0,Practicum,2
+67774,2020FA,COM,265,Undergraduate,N,F,,1,4,,Hybrid - F2F/Online,6
+67774,2020FA,HIS,277,Undergraduate,N,B,Y,1,2,,Hybrid - F2F/Online,2
+51228,2018FA,MUS,188,Undergraduate,N,C,Y,0,3,3.0,Online,3
+51228,2018FA,ART,206,Undergraduate,N,,Y,0,2,,Hybrid - F2F/Online,9
+51228,2019FA,MAT,299,Undergraduate,N,F,,1,3,3.0,Face to Face,3
+51228,2019FA,PHY,130,Undergraduate,Y,C,,1,3,3.0,Online,14
+51228,2018FA,HIS,178,Undergraduate,N,F,,1,4,,Practicum,1
+51228,2018FA,COM,164,Undergraduate,Y,A,Y,0,1,1.0,Hybrid - F2F/Online,16
+51228,2018FA,CHE,132,Undergraduate,N,,Y,1,1,,Online/Synch,11
+42392,2021FA,CHE,124,Undergraduate,Y,C,Y,1,1,,Hybrid - Online/iTV,1
+42392,2021FA,CHE,225,Undergraduate,Y,A,,1,1,,Online/Synch,16
+42392,2020FA,COM,294,Undergraduate,N,F,,1,1,1.0,Hybrid - F2F/Online,12
+42392,2020FA,ENG,167,Undergraduate,N,,Y,1,1,1.0,Independent Study,8
+42392,2020FA,ENG,171,Undergraduate,N,F,Y,0,2,2.0,Independent Study,7
+42392,2020FA,PHY,252,Undergraduate,Y,B,,1,4,4.0,Hybrid - F2F/Online,1
+42392,2018SP,PSY,264,Undergraduate,N,,,1,1,,Online,4
+42392,2018SP,ENG,239,Undergraduate,Y,C,,1,2,,Hybrid - Online/iTV,15
+33660,2021SP,CHE,165,Undergraduate,Y,D,,0,3,,Face to Face,16
+33660,2021SP,PSY,206,Undergraduate,N,D,,0,3,,Hybrid - F2F/Online,16
+33660,2021SP,MUS,157,Undergraduate,Y,A,Y,1,2,,Practicum,1
+33660,2021SP,ART,161,Undergraduate,Y,B,Y,1,3,3.0,Face to Face,7
+33660,2020FA,PHY,234,Undergraduate,Y,D,Y,0,3,,Face to Face,1
+33660,2020FA,PSY,220,Undergraduate,N,,Y,0,2,,Hybrid - Online/iTV,10
+33660,2020FA,PHY,282,Undergraduate,Y,F,Y,0,3,3.0,Face to Face,4
+33660,2020FA,COM,289,Undergraduate,Y,F,Y,0,2,,Practicum,15
+33660,2020FA,MAT,289,Undergraduate,N,B,Y,1,1,1.0,Practicum,3
+33660,2020FA,PHY,285,Undergraduate,N,F,,1,1,,Practicum,3
+33660,2021SP,PSY,293,Undergraduate,N,B,,1,3,3.0,Hybrid - F2F/Online,9
+33660,2021SP,HIS,292,Undergraduate,N,D,,1,3,3.0,Practicum,3
+33660,2021SP,ART,144,Undergraduate,Y,A,,1,1,1.0,Hybrid - Online/iTV,14
+29054,2019FA,BIO,280,Undergraduate,N,C,Y,1,4,4.0,Online/Synch,4
+29054,2021SP,CHE,256,Undergraduate,Y,D,Y,1,1,1.0,Online,8
+29054,2021SP,PSY,296,Undergraduate,N,A,,0,4,,Face to Face,13
+29054,2021SP,MAT,287,Undergraduate,N,,,1,1,,Hybrid - F2F/Online,10
+29054,2021SP,BIO,188,Undergraduate,N,A,Y,1,4,,Online,1
+29054,2021SP,MUS,128,Undergraduate,Y,B,,1,1,1.0,Online/Synch,7
+29054,2021FA,PHY,149,Undergraduate,Y,B,,1,3,3.0,Hybrid - Online/iTV,2
+29054,2020SP,CHE,275,Undergraduate,N,B,Y,1,4,,Online,11
+29054,2020SP,CHE,141,Undergraduate,Y,,Y,0,1,1.0,Online/Synch,11
+29054,2020SP,PHY,107,Undergraduate,Y,A,Y,1,4,4.0,Independent Study,7
+29054,2020SP,PSY,263,Undergraduate,N,B,,1,2,2.0,Independent Study,3
+29054,2020SP,MUS,187,Undergraduate,N,F,,0,1,,Practicum,7
+44046,2019FA,MAT,183,Undergraduate,Y,C,,0,2,2.0,Hybrid - Online/iTV,4
+44046,2019FA,PHY,208,Undergraduate,Y,B,Y,0,2,,Face to Face,16
+44046,2019FA,HIS,222,Undergraduate,Y,D,,0,1,1.0,Practicum,12
+44046,2018FA,PHY,256,Undergraduate,Y,A,,1,4,4.0,Face to Face,16
+44046,2018FA,ART,174,Undergraduate,Y,D,Y,0,3,3.0,Practicum,10
+44046,2018FA,CHE,172,Undergraduate,Y,D,Y,0,2,2.0,Online,14
+44046,2018FA,HIS,157,Undergraduate,Y,B,Y,0,4,,Face to Face,8
+44046,2018FA,MUS,296,Undergraduate,Y,C,Y,0,3,,Online,7
+44046,2019SP,COM,152,Undergraduate,Y,C,,0,1,,Face to Face,2
+44046,2019SP,COM,175,Undergraduate,Y,D,,1,3,3.0,Hybrid - Online/iTV,15
+44046,2019SP,PSY,158,Undergraduate,N,C,,1,3,3.0,Practicum,8
+44046,2019SP,HIS,139,Undergraduate,N,C,,0,4,,Online/Synch,12
+44046,2019SP,CHE,240,Undergraduate,Y,D,Y,1,4,,Hybrid - F2F/Online,7
+44046,2019SP,ART,228,Undergraduate,N,B,Y,1,4,4.0,Practicum,5
+44046,2019SP,ENG,229,Undergraduate,N,A,Y,0,2,,Face to Face,4
+60050,2018FA,CHE,253,Undergraduate,Y,B,,1,4,4.0,Face to Face,5
+60050,2018FA,PHY,272,Undergraduate,Y,D,Y,0,4,,Face to Face,10
+60050,2018FA,ART,293,Undergraduate,N,F,,1,2,,Online,9
+60050,2021SP,ENG,145,Undergraduate,Y,,Y,1,2,2.0,Hybrid - Online/iTV,1
+60050,2021SP,COM,166,Undergraduate,Y,,,0,4,4.0,Independent Study,2
+60050,2021SP,MAT,140,Undergraduate,N,B,,1,3,3.0,Hybrid - Online/iTV,8
+60050,2021SP,ART,195,Undergraduate,N,F,Y,1,1,,Online,15
+60050,2021SP,HIS,165,Undergraduate,Y,F,,1,2,,Online,3
+60050,2018SP,CHE,285,Undergraduate,N,F,Y,1,2,2.0,Independent Study,10
+60050,2018SP,MUS,156,Undergraduate,Y,A,Y,0,3,3.0,Online,13
+60050,2018SP,PHY,292,Undergraduate,Y,C,,0,3,3.0,Hybrid - F2F/Online,10
+60050,2018SP,ART,113,Undergraduate,Y,,,1,2,2.0,Independent Study,15
+60050,2018SP,HIS,287,Undergraduate,Y,F,,0,2,2.0,Online,14
+20327,2018SP,ART,108,Undergraduate,Y,F,,1,3,,Practicum,11
+20327,2018SP,CHE,279,Undergraduate,N,D,Y,1,1,1.0,Online/Synch,14
+20327,2018FA,PSY,131,Undergraduate,Y,D,,1,3,3.0,Face to Face,2
+20327,2018FA,CHE,211,Undergraduate,Y,D,,0,2,2.0,Online/Synch,11
+20327,2018FA,ART,297,Undergraduate,Y,D,Y,0,4,4.0,Hybrid - F2F/Online,9
+20327,2019FA,BIO,113,Undergraduate,Y,C,Y,1,1,1.0,Hybrid - F2F/Online,12
+20327,2019FA,ENG,218,Undergraduate,N,B,,1,1,1.0,Practicum,10
+20327,2019FA,HIS,249,Undergraduate,Y,C,Y,1,4,,Independent Study,13
+20327,2019FA,HIS,137,Undergraduate,N,F,Y,1,4,,Independent Study,13
+20327,2019FA,MAT,156,Undergraduate,N,D,,1,4,4.0,Practicum,5
+60826,2018SP,ART,154,Undergraduate,Y,,Y,1,1,,Hybrid - Online/iTV,2
+60826,2018SP,ART,280,Undergraduate,Y,D,,0,1,,Online,5
+60826,2018SP,BIO,272,Undergraduate,Y,,,0,3,3.0,Face to Face,13
+60826,2020SP,ENG,234,Undergraduate,N,C,Y,1,4,4.0,Online/Synch,7
+60826,2020SP,COM,139,Undergraduate,N,B,,1,2,,Independent Study,10
+60826,2020SP,MAT,228,Undergraduate,N,A,,1,4,4.0,Independent Study,8
+60826,2020SP,PSY,244,Undergraduate,Y,,,0,4,4.0,Hybrid - F2F/Online,14
+60826,2020SP,ART,155,Undergraduate,Y,B,Y,0,2,2.0,Practicum,13
+60826,2021FA,COM,209,Undergraduate,Y,D,,0,1,1.0,Face to Face,16
+60826,2021FA,HIS,174,Undergraduate,Y,F,Y,1,3,,Practicum,9
+60826,2021FA,COM,245,Undergraduate,N,A,,1,2,2.0,Hybrid - Online/iTV,14
+60826,2021FA,CHE,281,Undergraduate,Y,,,1,4,,Hybrid - Online/iTV,1
+60826,2020FA,ENG,255,Undergraduate,N,A,Y,1,4,4.0,Independent Study,7
+27301,2019SP,ART,148,Undergraduate,Y,F,,1,2,2.0,Hybrid - Online/iTV,5
+27301,2019SP,CHE,289,Undergraduate,Y,D,,1,1,,Online,10
+27301,2019SP,CHE,249,Undergraduate,Y,D,Y,1,1,1.0,Practicum,5
+27301,2021FA,MAT,229,Undergraduate,N,,Y,1,4,4.0,Hybrid - F2F/Online,12
+27301,2021FA,MUS,236,Undergraduate,N,F,Y,1,1,,Hybrid - F2F/Online,4
+50720,2021FA,PSY,195,Undergraduate,Y,C,,1,3,3.0,Independent Study,4
+50720,2021SP,COM,241,Undergraduate,N,C,Y,0,4,4.0,Practicum,9
+50720,2021SP,ART,153,Undergraduate,Y,F,Y,0,1,1.0,Online/Synch,2
+50720,2019FA,ENG,226,Undergraduate,Y,B,Y,0,3,3.0,Hybrid - Online/iTV,14
+50720,2019FA,CHE,203,Undergraduate,Y,C,Y,1,1,1.0,Online,7
+50720,2019FA,ART,228,Undergraduate,Y,,Y,1,2,2.0,Independent Study,12
+50720,2019FA,PHY,178,Undergraduate,Y,A,Y,1,1,1.0,Hybrid - F2F/Online,2
+50720,2019FA,HIS,164,Undergraduate,N,B,,1,1,,Online/Synch,11
+50720,2018FA,PSY,144,Undergraduate,N,,Y,1,1,,Practicum,16
+13414,2018SP,CHE,175,Undergraduate,N,,,0,2,2.0,Hybrid - F2F/Online,6
+13414,2018SP,CHE,149,Undergraduate,N,A,Y,1,2,2.0,Hybrid - F2F/Online,15
+13414,2018SP,HIS,126,Undergraduate,Y,C,Y,0,4,,Online/Synch,3
+13414,2018SP,ART,114,Undergraduate,N,C,Y,1,2,,Independent Study,16
+13414,2018SP,COM,221,Undergraduate,Y,D,,1,4,,Independent Study,6
+94619,2019SP,MAT,184,Undergraduate,N,,Y,0,2,,Online,9
+94619,2019FA,PHY,121,Undergraduate,N,A,,0,4,4.0,Face to Face,10
+94619,2019FA,CHE,119,Undergraduate,Y,B,Y,1,1,,Hybrid - Online/iTV,2
+94619,2020SP,HIS,245,Undergraduate,N,C,,1,1,1.0,Independent Study,12
+94619,2019FA,MUS,174,Undergraduate,Y,F,Y,1,1,,Online,16
+94619,2019FA,ENG,223,Undergraduate,Y,F,Y,1,3,,Hybrid - F2F/Online,11
+76795,2021SP,MAT,143,Undergraduate,Y,A,Y,0,4,4.0,Hybrid - F2F/Online,6
+76795,2021SP,BIO,266,Undergraduate,N,,Y,0,1,1.0,Online/Synch,14
+76795,2021SP,ART,102,Undergraduate,N,B,,0,3,,Online,15
+76795,2021SP,MUS,214,Undergraduate,Y,D,,0,4,4.0,Face to Face,3
+76795,2021SP,PSY,156,Undergraduate,N,B,,0,4,,Online/Synch,12
+52840,2018SP,PHY,198,Undergraduate,N,B,Y,0,4,4.0,Hybrid - F2F/Online,14
+52840,2018SP,BIO,237,Undergraduate,Y,C,,1,3,,Face to Face,3
+52840,2018SP,MAT,122,Undergraduate,Y,,Y,0,2,,Face to Face,7
+52840,2018FA,ENG,122,Undergraduate,N,A,,0,2,2.0,Online/Synch,10
+52840,2018FA,BIO,285,Undergraduate,N,F,,0,2,,Hybrid - Online/iTV,7
+52840,2018FA,COM,198,Undergraduate,Y,B,Y,0,1,1.0,Practicum,1
+54375,2018SP,ENG,181,Undergraduate,N,D,Y,1,1,1.0,Face to Face,4
+54375,2018SP,MAT,147,Undergraduate,Y,B,,0,4,4.0,Independent Study,5
+54375,2019SP,COM,235,Undergraduate,Y,C,Y,0,4,4.0,Online/Synch,8
+54375,2019SP,CHE,290,Undergraduate,Y,A,Y,0,1,,Face to Face,15
+41792,2020FA,PHY,156,Undergraduate,N,,,0,3,3.0,Independent Study,6
+41792,2020FA,MAT,263,Undergraduate,N,,Y,1,2,2.0,Independent Study,10
+73114,2021SP,BIO,235,Undergraduate,N,F,,1,3,,Hybrid - F2F/Online,8
+73114,2021SP,PSY,129,Undergraduate,Y,D,Y,0,1,1.0,Independent Study,11
+73114,2021SP,COM,169,Undergraduate,N,A,Y,0,2,2.0,Practicum,2
+73114,2021SP,HIS,177,Undergraduate,N,,,0,1,1.0,Online,15
+73114,2019FA,ART,106,Undergraduate,Y,,Y,1,3,3.0,Hybrid - Online/iTV,15
+73114,2019FA,BIO,289,Undergraduate,N,D,,0,1,,Online,12
+34763,2018SP,MAT,203,Undergraduate,Y,A,Y,1,1,1.0,Practicum,10
+34763,2018FA,PSY,175,Undergraduate,N,A,Y,1,4,,Practicum,5
+34763,2018FA,ENG,195,Undergraduate,N,D,Y,1,2,,Online,10
+34763,2018FA,PSY,200,Undergraduate,N,F,Y,1,2,,Hybrid - Online/iTV,16
+34763,2018FA,CHE,260,Undergraduate,Y,F,Y,1,1,1.0,Hybrid - F2F/Online,6
+56146,2018FA,HIS,211,Undergraduate,N,B,Y,0,2,2.0,Online/Synch,4
+56146,2018FA,HIS,129,Undergraduate,N,,,0,3,,Face to Face,4
+56146,2018FA,HIS,255,Undergraduate,Y,B,Y,1,2,,Hybrid - F2F/Online,4
+56146,2018FA,ART,120,Undergraduate,Y,,Y,1,4,4.0,Hybrid - Online/iTV,8
+70053,2020SP,COM,275,Undergraduate,Y,F,Y,0,2,2.0,Practicum,7
+70053,2019SP,HIS,209,Undergraduate,Y,C,Y,0,3,3.0,Independent Study,15
+70053,2019SP,ART,150,Undergraduate,Y,C,Y,1,3,,Online,4
+70053,2019SP,PSY,185,Undergraduate,Y,F,Y,0,4,,Hybrid - Online/iTV,7
+70053,2019SP,CHE,247,Undergraduate,N,D,,0,2,2.0,Independent Study,9
+70053,2019SP,ART,235,Undergraduate,Y,F,Y,1,3,3.0,Hybrid - Online/iTV,14
+70053,2019SP,ENG,280,Undergraduate,N,D,Y,0,3,,Online/Synch,8
+70053,2019FA,ENG,108,Undergraduate,N,F,,0,3,3.0,Online,12
+13768,2021FA,HIS,182,Undergraduate,N,C,Y,0,3,3.0,Independent Study,6
+13768,2020SP,MUS,227,Undergraduate,Y,A,,0,1,,Practicum,12
+13768,2020SP,CHE,255,Undergraduate,Y,C,,1,1,,Online,4
+13768,2020SP,PHY,148,Undergraduate,N,B,Y,1,4,,Hybrid - F2F/Online,13
+13768,2020SP,ENG,197,Undergraduate,N,,,0,4,,Independent Study,14
+73023,2019SP,ART,102,Undergraduate,N,A,,1,1,1.0,Hybrid - Online/iTV,14
+73023,2019SP,PHY,131,Undergraduate,Y,C,Y,0,2,,Online,1
+73023,2019SP,BIO,207,Undergraduate,Y,,Y,0,3,3.0,Online/Synch,16
+73023,2019SP,ENG,129,Undergraduate,N,A,,0,1,,Online/Synch,3
+73023,2019SP,PHY,190,Undergraduate,Y,B,,0,1,,Online,5
+73023,2020FA,PHY,214,Undergraduate,Y,B,,1,2,,Online/Synch,15
+73023,2020FA,PSY,171,Undergraduate,Y,A,,1,2,,Practicum,2
+73023,2020FA,ENG,151,Undergraduate,N,A,Y,0,2,2.0,Hybrid - Online/iTV,13
+73023,2020FA,HIS,154,Undergraduate,Y,A,Y,0,4,,Online,7
+73023,2020FA,MAT,221,Undergraduate,N,D,,1,1,1.0,Independent Study,2
+73023,2018SP,BIO,295,Undergraduate,Y,D,Y,1,3,3.0,Online,13
+73023,2018SP,PHY,285,Undergraduate,N,,,0,1,1.0,Independent Study,5
+73023,2021SP,COM,163,Undergraduate,Y,B,,0,4,4.0,Hybrid - F2F/Online,2
+73023,2021SP,HIS,114,Undergraduate,N,C,Y,1,1,,Online,14
+43925,2021FA,MUS,147,Undergraduate,Y,F,Y,1,3,,Online/Synch,12
+43925,2021FA,ART,194,Undergraduate,Y,B,,0,1,,Practicum,4
+43925,2021FA,PHY,146,Undergraduate,Y,F,,0,4,,Online,1
+43925,2018SP,ENG,238,Undergraduate,Y,C,,0,2,2.0,Online/Synch,13
+43925,2018SP,ENG,279,Undergraduate,Y,F,Y,1,2,2.0,Hybrid - Online/iTV,5
+43925,2019SP,MAT,236,Undergraduate,Y,,Y,0,4,4.0,Hybrid - F2F/Online,5
+43925,2019SP,ENG,162,Undergraduate,N,C,,1,1,1.0,Online,15
+43925,2019SP,PHY,259,Undergraduate,Y,D,,0,1,,Face to Face,3
+43925,2019SP,HIS,264,Undergraduate,N,F,Y,0,4,,Online,10
+43925,2019SP,PSY,165,Undergraduate,N,F,,1,1,,Hybrid - Online/iTV,9
+43925,2020SP,ART,143,Undergraduate,N,C,,0,4,,Independent Study,16
+43925,2020SP,ENG,219,Undergraduate,N,F,,1,3,,Hybrid - Online/iTV,5
+43925,2020SP,ART,184,Undergraduate,N,F,Y,0,1,1.0,Independent Study,13
+43925,2020SP,HIS,188,Undergraduate,Y,A,,0,2,2.0,Hybrid - F2F/Online,8
+83192,2018FA,PSY,280,Undergraduate,N,,,1,4,,Online/Synch,4
+83192,2018FA,MAT,163,Undergraduate,Y,F,,0,1,,Practicum,8
+83192,2018FA,BIO,163,Undergraduate,Y,F,,1,2,,Practicum,6
+83192,2018FA,MAT,105,Undergraduate,N,D,,0,1,,Hybrid - F2F/Online,9
+83192,2018FA,ART,293,Undergraduate,Y,,,1,1,1.0,Hybrid - Online/iTV,7
+83192,2019SP,ART,272,Undergraduate,Y,C,,0,4,,Hybrid - F2F/Online,7
+83192,2019SP,PSY,222,Undergraduate,N,A,,0,4,4.0,Online,6
+83192,2020FA,MUS,128,Undergraduate,N,,Y,1,4,,Hybrid - Online/iTV,9
+45377,2018SP,HIS,129,Undergraduate,N,C,,1,2,2.0,Online/Synch,5
+53328,2021FA,BIO,151,Undergraduate,N,,Y,0,2,2.0,Face to Face,9
+53328,2021FA,CHE,185,Undergraduate,Y,C,Y,1,4,4.0,Face to Face,16
+53328,2021FA,PSY,143,Undergraduate,Y,D,,1,3,,Hybrid - F2F/Online,10
+90532,2021FA,ART,110,Undergraduate,Y,A,,0,3,3.0,Online/Synch,15
+90532,2021FA,PSY,185,Undergraduate,Y,C,Y,1,4,,Face to Face,10
+90532,2021FA,COM,144,Undergraduate,Y,,,0,1,,Hybrid - Online/iTV,15
+90532,2021FA,CHE,104,Undergraduate,Y,C,Y,0,4,4.0,Hybrid - Online/iTV,7
+83638,2021FA,ART,293,Undergraduate,N,C,,0,2,,Online/Synch,10
+83638,2021FA,HIS,171,Undergraduate,N,C,Y,0,2,2.0,Hybrid - F2F/Online,15
+83638,2021FA,COM,200,Undergraduate,N,A,Y,1,3,,Hybrid - Online/iTV,9
+83638,2021FA,MAT,181,Undergraduate,Y,C,Y,0,4,,Practicum,8
+83638,2021FA,MUS,129,Undergraduate,N,F,Y,0,2,2.0,Hybrid - F2F/Online,15
+12084,2019FA,CHE,169,Undergraduate,Y,,,0,3,3.0,Online/Synch,15
+12084,2019FA,ENG,174,Undergraduate,Y,F,,1,4,,Hybrid - Online/iTV,15
+12084,2021SP,COM,170,Undergraduate,Y,F,,0,4,4.0,Face to Face,2
+12084,2021SP,MUS,264,Undergraduate,Y,A,Y,0,1,,Independent Study,10
+12084,2021SP,ENG,219,Undergraduate,N,C,Y,1,4,4.0,Independent Study,6
+12084,2021SP,CHE,155,Undergraduate,N,C,Y,0,3,,Practicum,10
+12084,2021SP,ENG,295,Undergraduate,Y,A,,1,1,,Hybrid - Online/iTV,3
+12084,2019SP,PHY,231,Undergraduate,Y,F,,1,4,4.0,Practicum,8
+12084,2019SP,BIO,236,Undergraduate,N,D,,1,3,,Online,6
+12084,2019SP,MAT,271,Undergraduate,Y,B,Y,0,4,4.0,Independent Study,14
+12084,2018FA,MUS,292,Undergraduate,N,B,Y,0,3,,Face to Face,7
+12084,2018FA,BIO,109,Undergraduate,N,C,Y,1,4,4.0,Face to Face,3
+12084,2018FA,COM,126,Undergraduate,N,B,,1,2,2.0,Hybrid - Online/iTV,4
+12084,2018FA,ART,149,Undergraduate,N,D,,0,3,,Online/Synch,3
+12084,2018FA,HIS,186,Undergraduate,Y,,,1,2,,Hybrid - F2F/Online,5
+46644,2020SP,BIO,149,Undergraduate,N,,Y,0,2,2.0,Face to Face,5
+46644,2020SP,MUS,112,Undergraduate,N,C,Y,0,3,3.0,Independent Study,3
+46644,2020SP,BIO,262,Undergraduate,N,C,,0,3,,Practicum,13
+46644,2020SP,PHY,256,Undergraduate,N,D,Y,1,3,,Hybrid - F2F/Online,11
+46644,2020SP,CHE,189,Undergraduate,N,C,,1,1,1.0,Independent Study,4
+51661,2020FA,MAT,105,Undergraduate,N,B,Y,0,3,3.0,Online/Synch,16
+51661,2020FA,ENG,110,Undergraduate,N,B,,1,2,2.0,Practicum,7
+51661,2020FA,PHY,220,Undergraduate,Y,B,,1,4,4.0,Online/Synch,16
+51661,2020FA,ART,233,Undergraduate,N,C,,0,1,,Hybrid - F2F/Online,16
+51661,2020FA,MAT,165,Undergraduate,N,C,,1,3,,Independent Study,13
+51661,2020FA,COM,273,Undergraduate,Y,D,,0,4,4.0,Independent Study,4
+69107,2021SP,ART,282,Undergraduate,N,D,Y,0,2,2.0,Hybrid - Online/iTV,2
+69107,2021SP,BIO,253,Undergraduate,Y,D,,0,1,,Independent Study,2
+69107,2019FA,CHE,215,Undergraduate,N,A,Y,1,3,3.0,Online/Synch,4
+69107,2020SP,PSY,135,Undergraduate,Y,B,,1,2,,Independent Study,16
+69107,2020SP,PHY,158,Undergraduate,Y,F,Y,0,2,2.0,Independent Study,12
+69107,2020SP,MAT,149,Undergraduate,N,B,,1,4,,Online,3
+69107,2020SP,HIS,221,Undergraduate,Y,F,Y,0,3,3.0,Online/Synch,10
+69107,2020SP,COM,163,Undergraduate,Y,F,Y,1,1,1.0,Face to Face,13
+69107,2021FA,MUS,257,Undergraduate,Y,C,Y,1,1,,Online/Synch,1
+69107,2021FA,ART,219,Undergraduate,Y,C,,0,4,,Independent Study,13
+35611,2019FA,COM,149,Undergraduate,Y,A,,1,3,3.0,Practicum,3
+35611,2019SP,ENG,140,Undergraduate,N,F,Y,1,3,,Hybrid - F2F/Online,8
+35611,2019SP,COM,152,Undergraduate,Y,B,,0,4,4.0,Independent Study,3
+35611,2019SP,ART,157,Undergraduate,N,F,Y,1,4,,Online/Synch,2
+35611,2019SP,PHY,160,Undergraduate,N,D,Y,1,3,,Face to Face,14
+35611,2019SP,HIS,262,Undergraduate,Y,A,Y,0,2,,Online/Synch,1
+35611,2020FA,COM,160,Undergraduate,N,,,1,1,,Hybrid - F2F/Online,15
+35611,2020FA,COM,239,Undergraduate,Y,C,Y,1,4,4.0,Independent Study,16
+35611,2020FA,CHE,221,Undergraduate,N,A,,1,1,1.0,Independent Study,5
+35611,2020FA,HIS,154,Undergraduate,Y,,,0,2,,Hybrid - F2F/Online,5
+35611,2020FA,PHY,219,Undergraduate,Y,C,,0,1,,Hybrid - F2F/Online,4
+39993,2019SP,MAT,227,Undergraduate,Y,,,1,2,,Online,4
+39993,2019SP,PHY,227,Undergraduate,N,,,1,2,,Online/Synch,4
+39993,2019SP,PHY,270,Undergraduate,Y,B,Y,1,1,1.0,Online/Synch,2
+39993,2018SP,ART,118,Undergraduate,N,A,Y,0,4,,Online/Synch,4
+39993,2018SP,PHY,124,Undergraduate,Y,D,Y,1,3,,Independent Study,13
+39993,2018SP,CHE,199,Undergraduate,N,A,Y,1,4,4.0,Hybrid - Online/iTV,8
+39993,2018SP,PHY,199,Undergraduate,N,,Y,0,4,4.0,Online,5
+39993,2020SP,MUS,216,Undergraduate,Y,C,,0,3,3.0,Hybrid - F2F/Online,9
+39993,2020SP,BIO,112,Undergraduate,N,,,0,3,,Hybrid - Online/iTV,1
+53497,2021SP,MUS,294,Undergraduate,Y,,,0,3,3.0,Independent Study,14
+53497,2021SP,MAT,149,Undergraduate,N,C,,1,3,3.0,Practicum,9
+53497,2021SP,PHY,160,Undergraduate,N,A,Y,1,4,,Independent Study,9
+53497,2021SP,MUS,163,Undergraduate,N,A,Y,1,3,,Online/Synch,4
+53497,2021SP,MAT,152,Undergraduate,N,B,Y,1,2,2.0,Online/Synch,13
+53497,2019FA,HIS,264,Undergraduate,Y,F,,1,4,4.0,Hybrid - Online/iTV,5
+53497,2019FA,CHE,223,Undergraduate,Y,F,,1,4,,Online,1
+53497,2019FA,ENG,271,Undergraduate,N,,Y,0,1,,Hybrid - F2F/Online,5
+53497,2019FA,PHY,109,Undergraduate,Y,,Y,1,3,3.0,Independent Study,5
+53497,2018FA,ART,250,Undergraduate,Y,C,Y,1,3,3.0,Face to Face,7
+53497,2018FA,BIO,284,Undergraduate,N,C,Y,0,2,,Face to Face,11
+53497,2018FA,BIO,257,Undergraduate,N,D,,1,3,,Independent Study,16
+53497,2018FA,ART,171,Undergraduate,Y,,,1,4,4.0,Online/Synch,10
+27194,2018SP,BIO,155,Undergraduate,N,A,,0,1,,Practicum,12
+27194,2018SP,CHE,199,Undergraduate,N,B,Y,0,3,3.0,Hybrid - F2F/Online,3
+27194,2018SP,CHE,160,Undergraduate,N,D,,1,3,,Hybrid - Online/iTV,5
+27194,2018SP,PHY,258,Undergraduate,Y,C,,1,2,2.0,Online,5
+25962,2020SP,PSY,282,Undergraduate,N,C,Y,1,1,,Independent Study,4
+25962,2018FA,ENG,198,Undergraduate,Y,D,Y,0,2,,Hybrid - F2F/Online,9
+25962,2018FA,COM,132,Undergraduate,Y,B,Y,1,4,,Face to Face,16
+25962,2021SP,PHY,200,Undergraduate,Y,A,,1,2,,Hybrid - Online/iTV,12
+99116,2019SP,CHE,131,Undergraduate,N,F,,0,4,,Hybrid - F2F/Online,12
+99116,2020FA,MAT,151,Undergraduate,Y,,Y,1,4,,Hybrid - F2F/Online,1
+99116,2020FA,MUS,167,Undergraduate,Y,A,Y,0,1,,Practicum,5
+99116,2020FA,PHY,216,Undergraduate,Y,C,Y,1,4,4.0,Independent Study,11
+99116,2018SP,MAT,205,Undergraduate,N,D,,0,2,,Hybrid - F2F/Online,14
+99116,2018SP,COM,172,Undergraduate,Y,C,Y,0,1,,Hybrid - Online/iTV,6
+99116,2018SP,MAT,119,Undergraduate,Y,D,Y,1,3,3.0,Hybrid - Online/iTV,11
+99116,2018SP,COM,138,Undergraduate,Y,D,,0,1,1.0,Face to Face,3
+99116,2018SP,HIS,171,Undergraduate,Y,D,Y,1,1,,Online,8
+99116,2018SP,HIS,119,Undergraduate,Y,A,Y,1,2,,Online/Synch,2
+14246,2018SP,MAT,176,Undergraduate,Y,B,,0,1,1.0,Hybrid - Online/iTV,6
+14246,2018SP,MUS,165,Undergraduate,Y,D,Y,0,1,,Online,1
+14246,2018SP,COM,283,Undergraduate,Y,F,,1,3,3.0,Practicum,5
+14246,2018SP,MUS,170,Undergraduate,N,D,Y,0,4,4.0,Independent Study,14
+14246,2018SP,BIO,122,Undergraduate,N,,,1,4,4.0,Online,1
+14246,2020FA,PHY,248,Undergraduate,N,,Y,0,1,1.0,Independent Study,10
+14246,2020FA,BIO,235,Undergraduate,Y,C,,0,4,,Independent Study,14
+14246,2020FA,PHY,217,Undergraduate,N,D,,1,2,2.0,Hybrid - F2F/Online,1
+14246,2020FA,CHE,119,Undergraduate,N,,Y,1,3,3.0,Hybrid - Online/iTV,13
+14246,2020FA,CHE,243,Undergraduate,N,A,Y,1,2,2.0,Hybrid - Online/iTV,12
+14246,2018SP,PSY,116,Undergraduate,N,C,Y,0,4,,Hybrid - Online/iTV,15
+14246,2018SP,MUS,125,Undergraduate,Y,C,,1,1,,Face to Face,13
+14246,2018SP,BIO,270,Undergraduate,N,,Y,1,2,2.0,Online,14
+14246,2018SP,ART,149,Undergraduate,N,B,Y,0,2,,Online,6
+26288,2019SP,MUS,204,Undergraduate,N,B,Y,0,1,1.0,Hybrid - F2F/Online,14
+26288,2019SP,HIS,156,Undergraduate,Y,A,Y,1,3,,Online,1
+26288,2019SP,CHE,239,Undergraduate,Y,,Y,1,4,,Hybrid - Online/iTV,6
+26288,2019SP,MUS,167,Undergraduate,N,D,,1,1,1.0,Hybrid - Online/iTV,3
+26288,2020SP,BIO,183,Undergraduate,Y,A,,1,2,2.0,Hybrid - Online/iTV,8
+26288,2020SP,BIO,127,Undergraduate,N,B,,1,4,4.0,Face to Face,13
+26288,2020SP,ART,152,Undergraduate,Y,D,Y,1,2,2.0,Independent Study,14
+26288,2020SP,PHY,188,Undergraduate,Y,F,Y,0,4,4.0,Online,8
+41268,2021SP,HIS,170,Undergraduate,Y,D,Y,0,3,,Face to Face,7
+41268,2021SP,PSY,117,Undergraduate,N,A,Y,0,2,2.0,Independent Study,9
+41268,2021SP,MUS,108,Undergraduate,Y,B,Y,0,4,4.0,Online/Synch,8
+41268,2020FA,COM,127,Undergraduate,Y,B,,1,1,,Hybrid - Online/iTV,12
+41268,2020FA,BIO,145,Undergraduate,N,C,,1,4,,Hybrid - Online/iTV,9
+41268,2020FA,CHE,255,Undergraduate,N,,Y,0,4,4.0,Online/Synch,16
+41268,2020FA,PSY,156,Undergraduate,N,B,,1,2,2.0,Online,6
+41268,2020FA,PHY,228,Undergraduate,Y,A,,1,3,,Hybrid - F2F/Online,7
+92377,2021SP,HIS,288,Undergraduate,Y,D,,1,1,,Independent Study,16
+92377,2021SP,ART,285,Undergraduate,Y,,,1,1,1.0,Online,1
+92377,2021SP,ENG,116,Undergraduate,Y,B,,1,1,1.0,Online,15
+92377,2021SP,CHE,191,Undergraduate,Y,D,Y,1,1,,Hybrid - F2F/Online,5
+92377,2021SP,COM,105,Undergraduate,N,B,,1,3,3.0,Hybrid - F2F/Online,12
+92377,2018FA,COM,120,Undergraduate,Y,A,Y,0,4,,Online,13
+92377,2020FA,MAT,136,Undergraduate,N,A,Y,1,1,,Independent Study,5
+92377,2021SP,BIO,125,Undergraduate,N,F,Y,0,2,2.0,Independent Study,12
+92377,2021SP,BIO,258,Undergraduate,N,A,,0,2,,Hybrid - Online/iTV,1
+92377,2021SP,MAT,193,Undergraduate,N,D,,0,3,3.0,Independent Study,5
+66468,2021SP,ENG,243,Undergraduate,Y,D,,1,2,2.0,Hybrid - Online/iTV,12
+66468,2021SP,MAT,176,Undergraduate,N,F,,0,4,,Face to Face,4
+66468,2021SP,ART,244,Undergraduate,Y,C,Y,1,3,3.0,Hybrid - Online/iTV,3
+66468,2021SP,ART,254,Undergraduate,Y,,,1,4,,Hybrid - F2F/Online,3
+66468,2019FA,MAT,106,Undergraduate,N,C,Y,1,2,2.0,Face to Face,13
+66468,2019FA,HIS,210,Undergraduate,N,,Y,0,2,,Practicum,9
+66468,2019FA,COM,138,Undergraduate,N,F,,1,1,1.0,Face to Face,7
+66468,2019FA,PHY,173,Undergraduate,N,,,0,1,1.0,Online/Synch,8
+66468,2018FA,PSY,219,Undergraduate,Y,D,Y,0,1,1.0,Independent Study,14
+66468,2018FA,MAT,294,Undergraduate,Y,F,,1,4,,Hybrid - F2F/Online,16
+66468,2018FA,COM,162,Undergraduate,N,F,Y,0,3,3.0,Online,2
+66468,2018FA,PSY,124,Undergraduate,N,A,Y,0,3,,Face to Face,16
+92925,2020SP,PSY,182,Undergraduate,N,C,,0,3,3.0,Face to Face,11
+92925,2020SP,CHE,114,Undergraduate,Y,B,Y,1,3,,Hybrid - F2F/Online,16
+48768,2019SP,MUS,113,Undergraduate,Y,B,Y,1,1,1.0,Hybrid - F2F/Online,5
+48768,2019SP,BIO,299,Undergraduate,N,D,Y,1,1,,Independent Study,5
+48768,2019SP,MUS,151,Undergraduate,Y,C,Y,0,4,,Hybrid - F2F/Online,14
+48768,2019SP,ENG,169,Undergraduate,Y,F,,0,4,,Practicum,16
+48768,2019SP,MUS,278,Undergraduate,Y,C,Y,1,3,,Face to Face,5
+48768,2019FA,PHY,192,Undergraduate,N,F,Y,1,1,1.0,Online,8
+48768,2019FA,BIO,254,Undergraduate,N,C,,1,2,2.0,Practicum,15
+75868,2019FA,HIS,236,Undergraduate,N,D,,0,3,,Independent Study,16
+75868,2021SP,MUS,224,Undergraduate,Y,B,Y,1,1,,Hybrid - Online/iTV,5
+75868,2021SP,MUS,219,Undergraduate,Y,F,Y,0,3,,Practicum,5
+75868,2021SP,CHE,293,Undergraduate,N,D,Y,1,1,1.0,Practicum,1
+75868,2019SP,HIS,208,Undergraduate,N,F,,0,3,3.0,Face to Face,15
+75868,2019SP,ART,240,Undergraduate,N,,,1,4,4.0,Online,15
+75868,2019SP,PHY,264,Undergraduate,N,F,Y,1,4,4.0,Face to Face,11
+75868,2019SP,CHE,215,Undergraduate,N,B,,0,2,,Online,1
+75868,2019SP,PHY,157,Undergraduate,N,F,,0,3,3.0,Online,16
+75868,2018FA,PHY,196,Undergraduate,N,B,Y,1,3,3.0,Face to Face,11
+75868,2018FA,MUS,261,Undergraduate,N,A,Y,0,4,,Hybrid - F2F/Online,1
+75868,2018FA,BIO,235,Undergraduate,N,D,Y,1,3,3.0,Face to Face,4
+31550,2021FA,MAT,221,Undergraduate,N,,Y,1,1,1.0,Hybrid - F2F/Online,13
+31550,2021FA,MUS,205,Undergraduate,N,F,,0,3,,Practicum,3
+31550,2021FA,PHY,274,Undergraduate,N,D,Y,0,4,,Face to Face,1
+31550,2021FA,MAT,168,Undergraduate,Y,C,Y,0,3,3.0,Face to Face,14
+31550,2021FA,BIO,261,Undergraduate,Y,B,,0,3,3.0,Online,16
+31550,2019SP,CHE,164,Undergraduate,N,A,,1,4,,Practicum,14
+31550,2019SP,ART,230,Undergraduate,Y,,,1,2,2.0,Online,1
+31550,2019SP,ART,118,Undergraduate,N,F,Y,0,3,,Hybrid - Online/iTV,5
+31550,2019SP,MUS,176,Undergraduate,N,F,,1,2,,Independent Study,7
+31550,2018SP,PHY,210,Undergraduate,Y,C,Y,0,2,,Hybrid - F2F/Online,1
+49747,2019SP,PSY,189,Undergraduate,Y,,Y,0,2,,Independent Study,12
+49747,2019SP,CHE,195,Undergraduate,N,F,Y,1,3,3.0,Practicum,10
+49747,2019SP,PSY,213,Undergraduate,N,F,Y,1,1,1.0,Hybrid - Online/iTV,10
+49747,2019SP,CHE,120,Undergraduate,N,C,,0,2,,Online/Synch,1
+49747,2019SP,PHY,140,Undergraduate,Y,B,Y,1,4,4.0,Online/Synch,14
+77950,2020FA,HIS,299,Undergraduate,N,D,Y,0,1,1.0,Hybrid - F2F/Online,9
+77950,2020FA,BIO,131,Undergraduate,N,F,Y,1,4,,Hybrid - Online/iTV,2
+77950,2020FA,ART,196,Undergraduate,Y,A,Y,1,4,,Independent Study,1
+55940,2019FA,HIS,236,Undergraduate,N,B,Y,1,2,,Hybrid - F2F/Online,7
+55940,2019FA,ART,289,Undergraduate,N,F,Y,1,2,2.0,Online,11
+55940,2019FA,BIO,106,Undergraduate,N,A,,1,4,4.0,Independent Study,9
+55940,2018FA,ENG,155,Undergraduate,N,,Y,0,4,4.0,Practicum,16
+55940,2018FA,MAT,125,Undergraduate,Y,A,Y,0,4,,Face to Face,9
+55940,2018FA,COM,205,Undergraduate,N,A,Y,0,4,4.0,Practicum,11
+55940,2018FA,CHE,132,Undergraduate,Y,F,Y,0,4,,Online/Synch,13
+93596,2019FA,MAT,233,Undergraduate,N,D,Y,0,4,4.0,Independent Study,4
+93596,2019SP,ENG,121,Undergraduate,Y,D,,0,3,3.0,Independent Study,8
+93596,2019SP,COM,145,Undergraduate,Y,D,,0,2,2.0,Independent Study,9
+93596,2019SP,ENG,201,Undergraduate,N,B,,1,1,,Independent Study,5
+93596,2019SP,COM,288,Undergraduate,N,F,Y,1,4,4.0,Online,2
+93596,2019SP,ART,143,Undergraduate,Y,C,,0,2,2.0,Practicum,12
+93596,2019FA,PSY,119,Undergraduate,N,B,,1,4,4.0,Hybrid - F2F/Online,16
+93596,2019FA,PHY,240,Undergraduate,N,C,,1,2,,Online,15
+54863,2019SP,MAT,135,Undergraduate,Y,A,,1,2,,Independent Study,15
+54863,2019SP,MAT,146,Undergraduate,N,C,,1,1,,Hybrid - Online/iTV,1
+54863,2019SP,MAT,184,Undergraduate,N,,Y,0,4,,Face to Face,6
+54863,2019SP,BIO,236,Undergraduate,Y,F,Y,1,1,,Hybrid - Online/iTV,10
+54863,2019SP,BIO,231,Undergraduate,Y,C,Y,0,4,,Hybrid - Online/iTV,16
+39529,2020FA,ART,148,Undergraduate,Y,B,,1,1,1.0,Online,7
+39529,2020FA,HIS,129,Undergraduate,Y,D,,0,1,,Independent Study,4
+39529,2020FA,PHY,112,Undergraduate,Y,B,,0,2,2.0,Online,10
+39529,2021FA,PSY,226,Undergraduate,N,A,Y,1,1,,Hybrid - Online/iTV,3
+39529,2021FA,BIO,136,Undergraduate,N,A,,0,2,,Practicum,15
+39529,2021FA,HIS,294,Undergraduate,Y,,,0,2,,Online,9
+39529,2021FA,MAT,158,Undergraduate,Y,D,Y,0,2,,Hybrid - Online/iTV,9
+39529,2021SP,MAT,191,Undergraduate,N,D,,0,3,3.0,Online,3
+39529,2021SP,BIO,261,Undergraduate,N,A,,0,2,2.0,Independent Study,15
+39529,2021SP,PSY,200,Undergraduate,N,F,,0,3,,Independent Study,8
+39529,2021SP,ENG,174,Undergraduate,N,A,Y,0,4,,Online/Synch,7
+39529,2021SP,CHE,134,Undergraduate,N,F,,1,2,,Hybrid - Online/iTV,10
+30136,2021FA,MAT,186,Undergraduate,N,A,,0,2,2.0,Face to Face,8
+30136,2021FA,ENG,226,Undergraduate,Y,,,0,3,3.0,Hybrid - Online/iTV,6
+30136,2021FA,COM,110,Undergraduate,Y,C,Y,0,4,,Hybrid - F2F/Online,13
+30136,2021FA,ENG,255,Undergraduate,Y,D,,1,3,3.0,Online,12
+30136,2020FA,ART,168,Undergraduate,N,,Y,1,3,,Independent Study,16
+30136,2020FA,ENG,263,Undergraduate,N,D,,1,4,4.0,Online/Synch,10
+30136,2020FA,ART,109,Undergraduate,N,B,Y,1,2,2.0,Online/Synch,11
+30136,2021FA,ART,243,Undergraduate,Y,B,Y,1,4,4.0,Face to Face,1
+30136,2021FA,MUS,112,Undergraduate,Y,F,Y,1,4,4.0,Online,5
+99993,2018SP,PHY,232,Undergraduate,N,A,Y,0,4,,Hybrid - F2F/Online,7
+99993,2018SP,MAT,206,Undergraduate,Y,C,,1,1,1.0,Independent Study,13
+99993,2018SP,ENG,296,Undergraduate,Y,,,1,1,,Practicum,1
+99993,2020SP,HIS,109,Undergraduate,Y,D,Y,1,2,2.0,Online,1
+99993,2019SP,PSY,223,Undergraduate,Y,C,Y,1,3,3.0,Online/Synch,1
+99993,2019SP,MUS,194,Undergraduate,Y,C,Y,1,3,,Independent Study,6
+99993,2019SP,CHE,175,Undergraduate,N,D,,0,4,,Practicum,15
+99993,2019SP,PHY,296,Undergraduate,Y,C,Y,1,3,3.0,Online,15
+99993,2019SP,ART,210,Undergraduate,Y,A,,1,1,1.0,Practicum,1
+99993,2020FA,CHE,272,Undergraduate,N,F,,0,2,2.0,Independent Study,6
+96935,2018FA,COM,292,Undergraduate,N,B,,1,1,,Hybrid - F2F/Online,2
+96935,2018FA,ENG,163,Undergraduate,Y,,Y,1,4,,Online,1
+96935,2019FA,MAT,204,Undergraduate,Y,C,,0,4,,Online/Synch,6
+96935,2019FA,CHE,158,Undergraduate,Y,B,,0,3,,Face to Face,16
+96935,2019FA,PHY,227,Undergraduate,N,,Y,0,4,4.0,Hybrid - Online/iTV,13
+96935,2019FA,COM,289,Undergraduate,N,F,Y,1,2,2.0,Online,14
+54689,2020SP,ART,164,Undergraduate,N,C,Y,0,4,4.0,Online,14
+54689,2020SP,PHY,156,Undergraduate,Y,C,Y,1,1,,Hybrid - Online/iTV,13
+99958,2019FA,BIO,156,Undergraduate,Y,D,Y,0,1,1.0,Online,2
+99958,2019FA,PHY,121,Undergraduate,Y,,,1,4,4.0,Face to Face,6
+99958,2020FA,PSY,161,Undergraduate,N,F,,1,1,,Hybrid - F2F/Online,14
+99958,2020FA,CHE,126,Undergraduate,N,,,1,2,2.0,Online,5
+99958,2020FA,PSY,132,Undergraduate,N,B,Y,0,3,,Online,10
+99958,2020FA,PHY,222,Undergraduate,N,A,,1,2,,Online,8
+99958,2021FA,MUS,250,Undergraduate,N,,Y,1,4,4.0,Hybrid - Online/iTV,11
+99958,2021FA,COM,245,Undergraduate,N,B,,0,1,,Practicum,2
+14097,2019SP,MAT,214,Undergraduate,N,A,Y,1,3,3.0,Practicum,11
+14097,2019SP,PSY,116,Undergraduate,N,,,1,2,,Practicum,11
+14097,2019SP,CHE,103,Undergraduate,Y,F,,0,3,3.0,Independent Study,2
+14097,2019SP,COM,266,Undergraduate,Y,,,1,3,3.0,Online,11
+46165,2018FA,CHE,274,Undergraduate,N,A,Y,1,1,1.0,Independent Study,10
+46165,2018FA,HIS,226,Undergraduate,Y,F,Y,1,3,,Practicum,12
+46165,2018FA,MAT,239,Undergraduate,Y,A,,0,3,,Hybrid - F2F/Online,8
+46165,2018FA,ENG,197,Undergraduate,Y,B,,1,3,3.0,Online,8
+46165,2020FA,HIS,215,Undergraduate,N,A,,1,4,4.0,Online,7
+46165,2020FA,HIS,182,Undergraduate,Y,B,,1,3,3.0,Hybrid - F2F/Online,3
+46165,2021FA,CHE,128,Undergraduate,N,F,Y,0,2,2.0,Hybrid - F2F/Online,2
+46165,2021FA,ART,158,Undergraduate,Y,F,Y,0,3,3.0,Hybrid - F2F/Online,7
+64530,2019SP,PSY,135,Undergraduate,Y,C,Y,1,4,4.0,Online/Synch,10
+64530,2019SP,HIS,258,Undergraduate,N,C,Y,1,1,1.0,Independent Study,9
+94635,2018FA,CHE,262,Undergraduate,N,D,,1,1,,Hybrid - F2F/Online,6
+94635,2018FA,PSY,230,Undergraduate,N,F,,0,1,1.0,Online/Synch,16
+94635,2018FA,CHE,295,Undergraduate,Y,F,,1,3,3.0,Independent Study,14
+94635,2018SP,COM,182,Undergraduate,Y,C,,1,4,4.0,Practicum,9
+94635,2018SP,ART,230,Undergraduate,N,B,,1,2,,Practicum,12
+94635,2018SP,COM,267,Undergraduate,N,,Y,0,4,4.0,Hybrid - F2F/Online,12
+94635,2019FA,PSY,202,Undergraduate,Y,,Y,1,2,2.0,Face to Face,3
+94635,2019FA,MAT,192,Undergraduate,Y,A,Y,0,2,,Online,13
+94635,2019FA,ENG,122,Undergraduate,N,F,,1,3,3.0,Online,12
+97452,2019SP,MUS,241,Undergraduate,Y,A,Y,0,4,4.0,Face to Face,11
+97452,2019SP,BIO,235,Undergraduate,N,B,,0,3,3.0,Hybrid - Online/iTV,15
+97452,2019SP,ART,223,Undergraduate,Y,B,Y,1,1,,Face to Face,6
+97452,2019SP,BIO,180,Undergraduate,Y,D,Y,1,1,1.0,Online,7
+97452,2019SP,COM,153,Undergraduate,N,F,,1,1,,Hybrid - Online/iTV,13
+97452,2019SP,PHY,138,Undergraduate,Y,B,,1,1,,Online/Synch,4
+97452,2020FA,HIS,215,Undergraduate,N,,,1,2,2.0,Face to Face,3
+97452,2020FA,COM,270,Undergraduate,N,F,,0,2,,Face to Face,5
+97452,2020FA,MUS,108,Undergraduate,N,C,Y,1,3,,Hybrid - F2F/Online,9
+97452,2020FA,HIS,122,Undergraduate,Y,,Y,0,3,,Face to Face,5
+97452,2020FA,PHY,129,Undergraduate,N,C,Y,0,4,,Hybrid - F2F/Online,14
+97452,2020FA,MUS,190,Undergraduate,N,A,Y,1,3,,Practicum,7
+97452,2020FA,ART,269,Undergraduate,Y,C,,0,1,,Independent Study,11
+97452,2020FA,MUS,152,Undergraduate,N,A,,1,3,3.0,Independent Study,7
+78523,2018FA,MUS,207,Undergraduate,Y,D,,1,1,,Face to Face,3
+78523,2018FA,BIO,120,Undergraduate,N,,,0,2,,Hybrid - Online/iTV,13
+78523,2018FA,ART,119,Undergraduate,Y,,,0,4,4.0,Independent Study,15
+78523,2018FA,PHY,118,Undergraduate,N,B,Y,1,3,3.0,Practicum,14
+78523,2018FA,PHY,293,Undergraduate,Y,,Y,1,2,,Face to Face,2
+78523,2018SP,MAT,110,Undergraduate,N,,,1,2,,Face to Face,1
+78523,2018SP,BIO,168,Undergraduate,N,D,,1,2,,Face to Face,13
+78523,2018SP,PSY,268,Undergraduate,N,F,,1,3,3.0,Hybrid - Online/iTV,5
+31834,2021FA,CHE,208,Undergraduate,N,D,Y,0,3,,Online,9
+31834,2021FA,ART,290,Undergraduate,N,D,,1,1,1.0,Face to Face,15
+31834,2021FA,MUS,298,Undergraduate,N,D,,1,4,,Face to Face,3
+31834,2021FA,PSY,139,Undergraduate,N,B,,1,1,,Hybrid - F2F/Online,6
+31834,2021FA,PHY,139,Undergraduate,Y,C,,0,4,4.0,Hybrid - F2F/Online,6
+31834,2018SP,ENG,111,Undergraduate,Y,A,Y,0,2,,Face to Face,7
+31834,2018SP,ENG,148,Undergraduate,N,F,Y,0,4,,Online/Synch,9
+31834,2018SP,ENG,255,Undergraduate,N,A,Y,0,3,,Practicum,5
+31834,2021FA,PSY,206,Undergraduate,Y,,Y,0,4,4.0,Hybrid - Online/iTV,6
+31834,2021FA,CHE,146,Undergraduate,Y,C,Y,0,2,2.0,Practicum,4
+31834,2021FA,PSY,216,Undergraduate,Y,C,,0,3,3.0,Hybrid - F2F/Online,13
+31834,2021FA,PHY,265,Undergraduate,N,A,,0,2,,Hybrid - Online/iTV,6
+31834,2021FA,BIO,186,Undergraduate,Y,,Y,1,1,1.0,Online,4
+27288,2020SP,COM,166,Undergraduate,N,A,,0,1,1.0,Hybrid - Online/iTV,3
+27288,2020SP,MAT,139,Undergraduate,Y,F,Y,0,4,,Face to Face,12
+27288,2020SP,HIS,127,Undergraduate,Y,D,Y,1,3,,Online,13
+27288,2020SP,COM,111,Undergraduate,Y,D,Y,0,2,,Face to Face,11
+27288,2020SP,MUS,105,Undergraduate,N,B,,1,2,,Independent Study,5
+27288,2020SP,ENG,148,Undergraduate,Y,,,1,4,4.0,Online/Synch,16
+27288,2020SP,PHY,270,Undergraduate,N,D,Y,0,3,,Hybrid - Online/iTV,3
+27288,2020SP,PHY,282,Undergraduate,Y,,Y,0,3,3.0,Face to Face,12
+27288,2020SP,PSY,239,Undergraduate,N,B,Y,1,3,,Hybrid - Online/iTV,8
+27288,2018FA,ART,298,Undergraduate,Y,B,,0,4,4.0,Independent Study,9
+27288,2018FA,COM,205,Undergraduate,Y,B,,1,1,,Hybrid - F2F/Online,3
+27288,2018FA,BIO,139,Undergraduate,N,A,Y,0,2,2.0,Practicum,8
+27288,2018FA,HIS,231,Undergraduate,Y,B,,0,3,,Independent Study,2
+27288,2018FA,ART,201,Undergraduate,Y,A,,0,3,3.0,Online/Synch,2
+27288,2020SP,BIO,175,Undergraduate,N,F,Y,0,2,2.0,Face to Face,1
+27288,2020SP,PHY,174,Undergraduate,Y,C,,1,2,2.0,Face to Face,14
+27288,2020SP,ART,229,Undergraduate,Y,C,Y,0,1,,Practicum,10
+27288,2020SP,PSY,154,Undergraduate,N,,,1,3,3.0,Hybrid - F2F/Online,13
+41710,2021FA,PHY,259,Undergraduate,Y,,Y,1,4,4.0,Hybrid - F2F/Online,3
+41710,2021FA,PSY,123,Undergraduate,Y,B,,0,2,,Hybrid - Online/iTV,10
+41710,2021FA,CHE,216,Undergraduate,N,D,Y,0,4,,Online,11
+41710,2021FA,MAT,271,Undergraduate,N,F,Y,1,4,4.0,Hybrid - F2F/Online,15
+41710,2019FA,MUS,195,Undergraduate,Y,C,Y,1,2,,Online/Synch,15
+41710,2019FA,PHY,189,Undergraduate,Y,D,,0,2,,Online/Synch,11
+41710,2019FA,BIO,265,Undergraduate,N,D,Y,0,4,4.0,Online,1
+41710,2019FA,HIS,264,Undergraduate,N,,Y,1,4,,Online,1
+41710,2019FA,MUS,160,Undergraduate,Y,,Y,1,4,4.0,Online/Synch,12
+41710,2019SP,MUS,285,Undergraduate,Y,B,,0,4,4.0,Online,9
+89707,2019FA,MAT,227,Undergraduate,Y,,Y,1,1,,Hybrid - F2F/Online,2
+89707,2020SP,HIS,177,Undergraduate,N,A,,1,2,,Independent Study,12
+89707,2020SP,PSY,110,Undergraduate,N,A,Y,0,2,2.0,Online/Synch,7
+89707,2020SP,HIS,258,Undergraduate,N,D,,1,2,,Online/Synch,1
+89707,2021SP,ENG,159,Undergraduate,Y,A,Y,1,3,,Hybrid - Online/iTV,6
+89707,2021SP,COM,233,Undergraduate,Y,D,Y,0,3,3.0,Practicum,10

@@ -1,0 +1,22 @@
+{
+    "suggested_data_types": {
+        "StuNum": "text",
+        "First_Enrollment_Date": "text",
+        "FirstGenFlag": "boolean",
+        "AgeGroup": "category",
+        "Gender": "category",
+        "Race": "category",
+        "Ethnicity": "category",
+        "IncarceratedFlag": "boolean",
+        "DualEnrollFlag": "boolean",
+        "ABEFlag": "boolean",
+        "Zip": "text",
+        "DisabilityFlag": "boolean",
+        "HighSchoolStatus": "category",
+        "HighSchoolGradDate": "text",
+        "HighSchoolGPA": "numeric",
+        "StudentAthlete": "boolean",
+        "EarnedAward": "boolean",
+        "AwardsEarned": "numeric"
+    }
+}

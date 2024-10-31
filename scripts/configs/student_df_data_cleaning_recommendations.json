@@ -1,0 +1,31 @@
+{
+    "drop": {
+        "FirstGenFlag": {
+            "recommendation": "Drop column",
+            "count_missing": 0,
+            "percentage_null": 100.0
+        },
+        "HighSchoolGPA": {
+            "recommendation": "Drop column",
+            "count_missing": 84,
+            "percentage_null": 84.0
+        },
+        "AwardsEarned": {
+            "recommendation": "Drop column",
+            "count_missing": 80,
+            "percentage_null": 80.0
+        }
+    },
+    "impute": {
+        "positive": {},
+        "negative": {
+            "EarnedAward": {
+                "recommendation": "Impute with \"False\"",
+                "count_missing": 77,
+                "percentage_null": 77.0,
+                "impute_type": "negative"
+            }
+        }
+    },
+    "drop_rows": {}
+}

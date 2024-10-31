@@ -1,0 +1,20 @@
+{
+    "suggested_data_types": {
+        "Student_ID": "text",
+        "Semester": "category",
+        "Enrollment_Type": "category",
+        "Degree_Type_Pursued": "category",
+        "Intent_To_Transfer_Flag": "boolean",
+        "Pell_Recipient": "boolean",
+        "Major": "category",
+        "Department": "category",
+        "Cumulative_GPA": "numeric",
+        "Semester_GPA": "numeric",
+        "Number_Of_Courses_Enrolled": "numeric",
+        "Number_Of_Credits_Attempted": "numeric",
+        "Number_Of_Credits_Failed": "numeric",
+        "Number_Of_Credits_Earned": "numeric",
+        "Course_Pass_Rate": "numeric",
+        "Online_Course_Rate": "numeric"
+    }
+}

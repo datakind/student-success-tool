@@ -1,0 +1,21 @@
+{
+    "drop": {
+        "Course_Type": {
+            "recommendation": "Drop column",
+            "count_missing": 0,
+            "percentage_null": 100.0
+        }
+    },
+    "impute": {
+        "positive": {},
+        "negative": {
+            "Prerequisite_Course_Flag": {
+                "recommendation": "Impute with \"False\"",
+                "count_missing": 381,
+                "percentage_null": 47.565543071161045,
+                "impute_type": "negative"
+            }
+        }
+    },
+    "drop_rows": {}
+}
