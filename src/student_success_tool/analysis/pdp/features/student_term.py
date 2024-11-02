@@ -28,7 +28,8 @@ def aggregate_from_course_level_features(
         df
         student_term_id_cols: Columns that uniquely identify student-terms,
             used to group rows in ``df`` and merge features back in.
-        min_passing_grade
+        min_passing_grade: Minimum numeric grade considered by institution as "passing".
+            Default value is 1.0, i.e. a "D" grade or better.
         key_course_subject_areas: List of course subject areas that are particularly
             relevant ("key") to the institution, such that features are computed to
             measure the number of courses falling within them per student-term.
