@@ -6,7 +6,7 @@ from collections.abc import Iterable
 import pandas as pd
 from pandas.core.groupby import DataFrameGroupBy
 
-from .. import constants
+from .. import constants, utils
 
 LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +62,12 @@ def add_features(
         pd.concat([df, df_cumnum_ur, df_expanding_agg], axis="columns")
         # add a last couple features, which don't fit nicely into above logic
         .pipe(add_cumfrac_terms_unenrolled_features, student_id_cols=student_id_cols)
+        .pipe(
+            add_term_diff_features,
+            cols=["num_courses", "num_credits_earned", "course_grade_numeric_mean"],
+            max_term_num=4,
+            student_id_cols=student_id_cols,
+        )
     )
 
 
@@ -184,6 +190,51 @@ def add_cumfrac_terms_unenrolled_features(
             cumnum_terms_enrolled_col="cumnum_fall_spring_terms_enrolled",
         ),
     )
+
+
+def add_term_diff_features(
+    df: pd.DataFrame,
+    *,
+    cols: list[str],
+    max_term_num: int = 4,
+    student_id_cols: str | list[str] = "student_guid",
+    term_num_col: str = "cumnum_terms_enrolled",
+) -> pd.DataFrame:
+    """
+    Compute term-over-term differences per student for a set of columns, up to a specified
+    maximum term number, where term numbers are _relative_, per student.
+
+    Args:
+        df
+        cols
+        max_term_num
+        student_id_cols
+        term_num_col
+    """
+    LOGGER.info("computing term diff features ...")
+    student_id_cols = utils.to_list(student_id_cols)
+    df_grped = (
+        df.loc[:, student_id_cols + [term_num_col] + cols]
+        .groupby(by=student_id_cols)
+    )  # fmt: skip
+    df_diffs = df.assign(
+        **{f"{col}_diff": df_grped[col].transform("diff") for col in cols}
+    )
+    df_pivots = []
+    for col in cols:
+        df_pivot_ = df_diffs.pivot(
+            index=student_id_cols, columns=term_num_col, values=f"{col}_diff"
+        )
+        # col 1 is always null (since no preceding periods to diff against)
+        cols_to_drop = [1] + [
+            col for col in df_pivot_.columns if int(col) > max_term_num
+        ]
+        df_pivots.append(
+            df_pivot_.drop(columns=cols_to_drop)
+            .rename(columns=lambda term_num: f"{col}_diff_term_{term_num - 1}_to_term_{term_num}")
+        )  # fmt: skip
+    df_pivot = pd.concat(df_pivots, axis="columns")
+    return pd.merge(df, df_pivot, left_on=student_id_cols, right_index=True, how="left")
 
 
 def _compute_cumfrac_terms_unenrolled(

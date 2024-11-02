@@ -4,7 +4,7 @@ import typing as t
 
 import pandas as pd
 
-from . import constants, features
+from . import constants, features, types
 
 LOGGER = logging.getLogger(__name__)
 
@@ -36,9 +36,10 @@ def make_student_term_dataset(
     References:
         - https://bigfuture.collegeboard.org/plan-for-college/get-started/how-to-convert-gpa-4.0-scale
     """
+    first_term_of_year = infer_first_term_of_year(df_course["academic_term"])
     df_students = (
         df_cohort.pipe(standardize_cohort_dataset)
-        .pipe(features.student.add_features)
+        .pipe(features.student.add_features, first_term_of_year=first_term_of_year)
     )  # fmt: skip
     df_courses_plus = (
         df_course.pipe(standardize_course_dataset)
@@ -47,7 +48,11 @@ def make_student_term_dataset(
             min_passing_grade=min_passing_grade,
             course_level_pattern=course_level_pattern,
         )
-        .pipe(features.term.add_features, peak_covid_terms=peak_covid_terms)
+        .pipe(
+            features.term.add_features,
+            first_term_of_year=first_term_of_year,
+            peak_covid_terms=peak_covid_terms,
+        )
         .pipe(
             features.section.add_features,
             section_id_cols=["term_id", "course_id", "section_id"],
@@ -181,8 +186,10 @@ def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
                 # "academic_term",  # keeping this to see if useful
                 "cohort",
                 # "cohort_term",  # keeping this to see if useful
+                "cohort_id",
                 "term_rank",
                 "term_rank_fall_spring",
+                "term_is_fall_spring",
                 "term_course_begin_date_min",
                 "term_course_end_date_max",
                 # columns used to derive other features, but not features themselves
@@ -191,6 +198,11 @@ def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
                 "course_subject_areas",
                 "min_student_term_rank",
                 "min_student_term_rank_fall_spring",
+                "sections_num_students_enrolled",
+                "sections_num_students_passed",
+                "sections_num_students_completed",
+                "term_start_dt",
+                "cohort_start_dt",
                 # likely sources of data leakage
                 "retention",
                 "persistence",
@@ -220,6 +232,8 @@ def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
         # to the current year of enrollment; otherwise, set to null
         # in this case, the columns themselves represent years
         .apply(mask_year_columns_based_on_enrollment_year, axis="columns")
+        # do the same thing, only by term: "*_term_X", etc.
+        .apply(mask_term_columns_based_on_enrollment_term, axis="columns")
     )
 
 
@@ -227,19 +241,28 @@ def mask_year_values_based_on_enrollment_year(
     df: pd.DataFrame,
     *,
     col: str,
-    enrollment_year_col: str = "year_of_enrollment_at_cohort_inst",
+    enrollment_year_col: str = "year_of_enrollment_at_cohort_inst_v2",
 ) -> pd.Series:
     return df[col].mask(df[col].ge(df[enrollment_year_col]), other=pd.NA)
 
 
 def mask_year_columns_based_on_enrollment_year(
-    row: pd.Series, enrollment_year_col: str = "year_of_enrollment_at_cohort_inst"
+    row: pd.Series, enrollment_year_col: str = "year_of_enrollment_at_cohort_inst_v2"
 ) -> pd.Series:
     enrollment_year: int = row[enrollment_year_col]
-    post_grad_years = tuple(
-        f"_year_{yr}" for yr in (1, 2, 3, 4) if yr >= enrollment_year
+    future_years = tuple(f"_year_{yr}" for yr in (1, 2, 3, 4) if yr >= enrollment_year)
+    row.loc[row.index.str.endswith(future_years)] = pd.NA
+    return row
+
+
+def mask_term_columns_based_on_enrollment_term(
+    row: pd.Series, enrollment_term_col: str = "cumnum_terms_enrolled"
+) -> pd.Series:
+    enrollment_term: int = row[enrollment_term_col]
+    future_terms = tuple(
+        f"_term_{term}" for term in range(1, 9) if term > enrollment_term
     )
-    row.loc[row.index.str.endswith(post_grad_years)] = pd.NA
+    row.loc[row.index.str.endswith(future_terms)] = pd.NA
     return row
 
 
@@ -288,7 +311,7 @@ def drop_columns_safely(df: pd.DataFrame, *, cols: list[str]) -> pd.DataFrame:
     return df_trf
 
 
-def infer_first_term_of_year(s: pd.Series) -> str:
+def infer_first_term_of_year(s: pd.Series) -> types.TermType:
     """
     Infer the first term of the (academic) year by the ordering of its categorical values.
 
@@ -299,7 +322,7 @@ def infer_first_term_of_year(s: pd.Series) -> str:
         first_term_of_year = s.cat.categories[0]
         LOGGER.info("'%s' inferred as the first term of the year", first_term_of_year)
         assert isinstance(first_term_of_year, str)  # type guard
-        return first_term_of_year
+        return first_term_of_year  # type: ignore
     else:
         raise ValueError(
             f"'{s.name}' series is not an ordered categorical: {s.dtype=} ..."

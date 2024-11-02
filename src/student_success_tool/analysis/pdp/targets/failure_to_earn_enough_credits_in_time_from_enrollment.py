@@ -133,15 +133,15 @@ def select_eligible_students(
         num_credits_col=num_credits_col,
         include_cols=[],
     ).loc[:, utils.to_list(student_id_cols)]
+    nuq_students_checkin = len(df_students_by_num_creds)
+    shared._log_eligible_selection(
+        nuq_students_in, nuq_students_checkin, "check-in credits earned"
+    )
     df_ref = shared.get_first_student_terms(
         df,
         student_id_cols=student_id_cols,
         sort_cols=term_rank_col,
         include_cols=[enrollment_intensity_col],
-    )
-    nuq_students_checkin = len(df_ref)
-    shared._log_eligible_selection(
-        nuq_students_in, nuq_students_checkin, "check-in credits earned"
     )
     df_students_by_time_left = shared.select_students_by_time_left(
         df_ref,

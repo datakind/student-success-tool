@@ -218,6 +218,31 @@ def test_year_of_enrollment_at_cohort_inst(df, ccol, acol, exp):
 
 
 @pytest.mark.parametrize(
+    ["df", "ccol", "tcol", "exp"],
+    [
+        (
+            pd.DataFrame(
+                {
+                    "cohort_start_dt": ["2019-09-01", "2019-09-01", "2021-02-01"],
+                    "term_start_dt": ["2020-02-01", "2020-09-01", "2023-09-01"],
+                },
+                dtype="datetime64[s]",
+            ),
+            "cohort_start_dt",
+            "term_start_dt",
+            pd.Series([1, 2, 3], dtype="Int8"),
+        ),
+    ],
+)
+def test_year_of_enrollment_at_cohort_inst_v2(df, ccol, tcol, exp):
+    obs = student_term.year_of_enrollment_at_cohort_inst_v2(
+        df, cohort_start_dt_col=ccol, term_start_dt_col=tcol
+    )
+    assert isinstance(obs, pd.Series) and not obs.empty
+    assert obs.equals(exp) or obs.compare(exp).empty
+
+
+@pytest.mark.parametrize(
     ["df", "numer_col", "denom_col", "exp"],
     [
         (
