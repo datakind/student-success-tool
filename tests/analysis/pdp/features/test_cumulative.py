@@ -15,15 +15,15 @@ def df():
                 "2020-21",
                 "2020-21",
                 "2021-22",
-                "2021-22",
+                "2022-23",
             ],
-            "academic_term": ["FALL", "SPRING", "SUMMER", "FALL", "SPRING"],
+            "academic_term": ["FALL", "SPRING", "SUMMER", "FALL", "FALL"],
             "term_id": [
                 "2020-21 FALL",
                 "2020-21 SPRING",
                 "2020-21 SUMMER",
                 "2021-22 FALL",
-                "2021-22 SPRING",
+                "2022-23 FALL",
             ],
             "course_grade_num_mean": [4.0, 2.5, 1.75, 3.25, 3.5],
             "num_courses": [3, 2, 2, 2, 1],
@@ -43,8 +43,10 @@ def df():
                 ["05", "06"],
                 ["02"],
             ],
+            "term_rank": [1, 3, 4, 5, 9],
+            "term_rank_fall_spring": [1, 2, pd.NA, 3, 5],
         }
-    )
+    ).astype({"term_rank": "Int8", "term_rank_fall_spring": "Int8"})
 
 
 @pytest.fixture(scope="module")
@@ -127,3 +129,42 @@ def test_cumnum_unique_and_repeated_features(df_grped, cols, exp):
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     # raises error if not equal
     assert pd.testing.assert_frame_equal(obs, exp, rtol=0.001) is None
+
+
+@pytest.mark.parametrize(
+    "exp_new",
+    [
+        pd.DataFrame(
+            {
+                "min_student_term_rank": [1, 1, 1, 1, 1],
+                "min_student_term_rank_fall_spring": [1, 1, 1, 1, 1],
+                "cumfrac_terms_unenrolled": [0.0, 0.333, 0.25, 0.2, 0.444],
+                "cumfrac_fall_spring_terms_unenrolled": [0.0, 0.0, pd.NA, 0.0, 0.2],
+            }
+        ).astype(
+            {
+                "min_student_term_rank": "Int8",
+                "min_student_term_rank_fall_spring": "Int8",
+                "cumfrac_terms_unenrolled": "Float32",
+                "cumfrac_fall_spring_terms_unenrolled": "Float32",
+            }
+        ),
+    ],
+)
+def test_add_cumfrac_terms_unenrolled_features(df, exp_new):
+    # HACK: let's add the couple cumulative feature pre-requisites here
+    df = df.assign(
+        cumnum_terms_enrolled=pd.Series([1.0, 2.0, 3.0, 4.0, 5.0]),
+        cumnum_fall_spring_terms_enrolled=pd.Series([1.0, 2.0, 2.0, 3.0, 4.0]),
+    )
+    obs = cumulative.add_cumfrac_terms_unenrolled_features(
+        df, student_id_cols=["student_id"]
+    )
+    assert isinstance(obs, pd.DataFrame) and not obs.empty
+    # all *existing* columns are unchanged
+    assert obs.loc[:, df.columns].equals(df)
+    # all *new* columns are as expected
+    assert (
+        pd.testing.assert_frame_equal(obs.drop(columns=df.columns), exp_new, rtol=0.01)
+        is None
+    )

@@ -246,7 +246,7 @@ def _compute_cumfrac_terms_unenrolled(
 ) -> pd.Series:
     cumnum_terms_total = (df[term_rank_col] - df[min_student_term_rank_col]) + 1
     cumfrac_terms_enrolled = df[cumnum_terms_enrolled_col] / cumnum_terms_total
-    return 1.0 - cumfrac_terms_enrolled
+    return (1.0 - cumfrac_terms_enrolled).astype("Float32")
 
 
 #######################
