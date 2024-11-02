@@ -6,49 +6,53 @@ from student_success_tool.analysis.pdp.features import cumulative
 
 
 @pytest.fixture(scope="module")
-def df_grped():
-    return (
-        pd.DataFrame(
-            {
-                "student_id": ["01", "01", "01", "01", "01"],
-                "academic_year": [
-                    "2020-21",
-                    "2020-21",
-                    "2020-21",
-                    "2021-22",
-                    "2021-22",
-                ],
-                "academic_term": ["FALL", "SPRING", "SUMMER", "FALL", "SPRING"],
-                "term_id": [
-                    "2020-21 FALL",
-                    "2020-21 SPRING",
-                    "2020-21 SUMMER",
-                    "2021-22 FALL",
-                    "2021-22 SPRING",
-                ],
-                "course_grade_num_mean": [4.0, 2.5, 1.75, 3.25, 3.5],
-                "num_courses": [3, 2, 2, 2, 1],
-                "num_courses_course_level_0": [2, 1, 0, 0, 0],
-                "num_courses_course_level_1": [1, 1, 2, 2, 1],
-                "course_ids": [
-                    ["A101", "B101", "C201"],
-                    ["A101", "D201"],
-                    ["E201", "F201"],
-                    ["G201", "H201"],
-                    ["H201"],
-                ],
-                "course_subject_areas": [
-                    ["01", "02", "03"],
-                    ["01", "04"],
-                    ["03", "04"],
-                    ["05", "06"],
-                    ["02"],
-                ],
-            }
-        )
-        .sort_values(by=["student_id", "academic_year", "academic_term"])
-        .groupby(by="student_id", as_index=True, observed=True, sort=False)
+def df():
+    return pd.DataFrame(
+        {
+            "student_id": ["01", "01", "01", "01", "01"],
+            "academic_year": [
+                "2020-21",
+                "2020-21",
+                "2020-21",
+                "2021-22",
+                "2021-22",
+            ],
+            "academic_term": ["FALL", "SPRING", "SUMMER", "FALL", "SPRING"],
+            "term_id": [
+                "2020-21 FALL",
+                "2020-21 SPRING",
+                "2020-21 SUMMER",
+                "2021-22 FALL",
+                "2021-22 SPRING",
+            ],
+            "course_grade_num_mean": [4.0, 2.5, 1.75, 3.25, 3.5],
+            "num_courses": [3, 2, 2, 2, 1],
+            "num_courses_course_level_0": [2, 1, 0, 0, 0],
+            "num_courses_course_level_1": [1, 1, 2, 2, 1],
+            "course_ids": [
+                ["A101", "B101", "C201"],
+                ["A101", "D201"],
+                ["E201", "F201"],
+                ["G201", "H201"],
+                ["H201"],
+            ],
+            "course_subject_areas": [
+                ["01", "02", "03"],
+                ["01", "04"],
+                ["03", "04"],
+                ["05", "06"],
+                ["02"],
+            ],
+        }
     )
+
+
+@pytest.fixture(scope="module")
+def df_grped(df):
+    return (
+        df.sort_values(by=["student_id", "academic_year", "academic_term"])
+        .groupby(by="student_id", as_index=True, observed=True, sort=False)
+    )  # fmt: skip
 
 
 @pytest.mark.parametrize(
