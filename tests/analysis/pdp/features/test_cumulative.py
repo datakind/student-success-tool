@@ -168,3 +168,62 @@ def test_add_cumfrac_terms_unenrolled_features(df, exp_new):
         pd.testing.assert_frame_equal(obs.drop(columns=df.columns), exp_new, rtol=0.01)
         is None
     )
+
+
+@pytest.mark.parametrize(
+    ["cols", "max_term_num", "exp_new"],
+    [
+        (
+            ["num_courses", "course_grade_num_mean"],
+            3,
+            pd.DataFrame(
+                {
+                    "num_courses_diff_term_1_to_term_2": [-1.0, -1.0, -1.0, -1.0, -1.0],
+                    "num_courses_diff_term_2_to_term_3": [0.0, 0.0, 0.0, 0.0, 0.0],
+                    "course_grade_num_mean_diff_term_1_to_term_2": [
+                        -1.5,
+                        -1.5,
+                        -1.5,
+                        -1.5,
+                        -1.5,
+                    ],
+                    "course_grade_num_mean_diff_term_2_to_term_3": [
+                        -0.75,
+                        -0.75,
+                        -0.75,
+                        -0.75,
+                        -0.75,
+                    ],
+                }
+            ),
+        ),
+        (
+            ["num_courses"],
+            2,
+            pd.DataFrame(
+                {"num_courses_diff_term_1_to_term_2": [-1.0, -1.0, -1.0, -1.0, -1.0]}
+            ),
+        ),
+    ],
+)
+def test_add_term_diff_features(df, cols, max_term_num, exp_new):
+    # HACK: let's add the couple cumulative feature pre-requisites here
+    df = df.assign(
+        cumnum_terms_enrolled=pd.Series([1.0, 2.0, 3.0, 4.0, 5.0]),
+        cumnum_fall_spring_terms_enrolled=pd.Series([1.0, 2.0, 2.0, 3.0, 4.0]),
+    )
+    obs = cumulative.add_term_diff_features(
+        df,
+        cols=cols,
+        max_term_num=max_term_num,
+        student_id_cols=["student_id"],
+        term_num_col="cumnum_terms_enrolled",
+    )
+    assert isinstance(obs, pd.DataFrame) and not obs.empty
+    # all *existing* columns are unchanged
+    assert obs.loc[:, df.columns].equals(df)
+    # all *new* columns are as expected
+    assert (
+        pd.testing.assert_frame_equal(obs.drop(columns=df.columns), exp_new, rtol=0.01)
+        is None
+    )
