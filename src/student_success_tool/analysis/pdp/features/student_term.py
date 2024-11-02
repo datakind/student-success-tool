@@ -57,8 +57,6 @@ def aggregate_from_course_level_features(
         term_in_peak_covid=("term_in_peak_covid", "first"),
         term_rank_fall_spring=("term_rank_fall_spring", "first"),
         term_is_fall_spring=("term_is_fall_spring", "first"),
-        term_course_begin_date_min=("term_course_begin_date_min", "first"),
-        term_course_end_date_max=("term_course_end_date_max", "first"),
     )
     # various aggregations, with an eye toward cumulative features downstream
     df_aggs = df_grped.agg(
