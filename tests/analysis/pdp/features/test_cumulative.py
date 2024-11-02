@@ -30,6 +30,20 @@ def df_grped():
                 "num_courses": [3, 2, 2, 2, 1],
                 "num_courses_course_level_0": [2, 1, 0, 0, 0],
                 "num_courses_course_level_1": [1, 1, 2, 2, 1],
+                "course_ids": [
+                    ["A101", "B101", "C201"],
+                    ["A101", "D201"],
+                    ["E201", "F201"],
+                    ["G201", "H201"],
+                    ["H201"],
+                ],
+                "course_subject_areas": [
+                    ["01", "02", "03"],
+                    ["01", "04"],
+                    ["03", "04"],
+                    ["05", "06"],
+                    ["02"],
+                ],
             }
         )
         .sort_values(by=["student_id", "academic_year", "academic_term"])
@@ -82,6 +96,30 @@ def test_expanding_agg_features(df_grped, num_course_cols, col_aggs, exp):
     obs = cumulative.expanding_agg_features(
         df_grped, num_course_cols=num_course_cols, col_aggs=col_aggs
     )
+    assert isinstance(obs, pd.DataFrame) and not obs.empty
+    # raises error if not equal
+    assert pd.testing.assert_frame_equal(obs, exp, rtol=0.001) is None
+
+
+@pytest.mark.parametrize(
+    ["cols", "exp"],
+    [
+        (
+            ["course_ids", "course_subject_areas"],
+            pd.DataFrame(
+                {
+                    "cumnum_unique_course_ids": [3, 4, 6, 8, 8],
+                    "cumnum_unique_course_subject_areas": [3, 4, 4, 6, 6],
+                    "cumnum_repeated_course_ids": [0, 1, 1, 1, 2],
+                    "cumnum_repeated_course_subject_areas": [0, 1, 3, 3, 4],
+                },
+                dtype="Int16",
+            ),
+        ),
+    ],
+)
+def test_cumnum_unique_and_repeated_features(df_grped, cols, exp):
+    obs = cumulative.cumnum_unique_and_repeated_features(df_grped, cols=cols)
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     # raises error if not equal
     assert pd.testing.assert_frame_equal(obs, exp, rtol=0.001) is None
