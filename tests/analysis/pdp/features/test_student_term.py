@@ -288,3 +288,26 @@ def test_student_rate_above_sections_avg(df, student_col, sections_col, exp):
     )
     assert isinstance(obs, pd.Series) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
+
+
+@pytest.mark.parametrize(
+    ["df", "min_num_credits_full_time", "num_credits_col", "exp"],
+    [
+        (
+            pd.DataFrame({"num_credits_attempted": [15.0, 12.0, 8.0, 0.0]}),
+            12.0,
+            "num_credits_attempted",
+            pd.Series(["FULL-TIME", "FULL-TIME", "PART-TIME", "PART-TIME"]),
+        ),
+    ],
+)
+def test_student_term_enrollment_intensity(
+    df, min_num_credits_full_time, num_credits_col, exp
+):
+    obs = student_term.student_term_enrollment_intensity(
+        df,
+        min_num_credits_full_time=min_num_credits_full_time,
+        num_credits_col=num_credits_col,
+    )
+    assert isinstance(obs, pd.Series) and not obs.empty
+    assert obs.equals(exp) or obs.compare(exp).empty
