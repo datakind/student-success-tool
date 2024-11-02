@@ -250,13 +250,13 @@ def mask_year_values_based_on_enrollment_year(
     df: pd.DataFrame,
     *,
     col: str,
-    enrollment_year_col: str = "year_of_enrollment_at_cohort_inst_v2",
+    enrollment_year_col: str = "year_of_enrollment_at_cohort_inst",
 ) -> pd.Series:
     return df[col].mask(df[col].ge(df[enrollment_year_col]), other=pd.NA)
 
 
 def mask_year_columns_based_on_enrollment_year(
-    row: pd.Series, enrollment_year_col: str = "year_of_enrollment_at_cohort_inst_v2"
+    row: pd.Series, enrollment_year_col: str = "year_of_enrollment_at_cohort_inst"
 ) -> pd.Series:
     enrollment_year: int = row[enrollment_year_col]
     future_years = tuple(f"_year_{yr}" for yr in (1, 2, 3, 4) if yr >= enrollment_year)

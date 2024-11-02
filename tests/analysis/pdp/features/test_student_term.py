@@ -194,30 +194,6 @@ def test_multicol_grade_aggs_by_group(
 
 
 @pytest.mark.parametrize(
-    ["df", "ccol", "acol", "exp"],
-    [
-        (
-            pd.DataFrame(
-                {
-                    "cohort": ["2021-22", "2021-22", "2022-23"],
-                    "academic_year": ["2021-22", "2022-23", "2024-25"],
-                }
-            ),
-            "cohort",
-            "academic_year",
-            pd.Series([1, 2, 3], dtype="Int16"),
-        ),
-    ],
-)
-def test_year_of_enrollment_at_cohort_inst(df, ccol, acol, exp):
-    obs = student_term.year_of_enrollment_at_cohort_inst(
-        df, cohort_col=ccol, academic_col=acol
-    )
-    assert isinstance(obs, pd.Series) and not obs.empty
-    assert obs.equals(exp) or obs.compare(exp).empty
-
-
-@pytest.mark.parametrize(
     ["df", "ccol", "tcol", "exp"],
     [
         (
@@ -234,8 +210,8 @@ def test_year_of_enrollment_at_cohort_inst(df, ccol, acol, exp):
         ),
     ],
 )
-def test_year_of_enrollment_at_cohort_inst_v2(df, ccol, tcol, exp):
-    obs = student_term.year_of_enrollment_at_cohort_inst_v2(
+def test_year_of_enrollment_at_cohort_inst(df, ccol, tcol, exp):
+    obs = student_term.year_of_enrollment_at_cohort_inst(
         df, cohort_start_dt_col=ccol, term_start_dt_col=tcol
     )
     assert isinstance(obs, pd.Series) and not obs.empty

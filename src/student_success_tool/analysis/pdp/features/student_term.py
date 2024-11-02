@@ -150,7 +150,6 @@ def add_features(
     feature_name_funcs = (
         {
             "year_of_enrollment_at_cohort_inst": year_of_enrollment_at_cohort_inst,
-            "year_of_enrollment_at_cohort_inst_v2": year_of_enrollment_at_cohort_inst_v2,
             "term_is_while_student_enrolled_at_other_inst": term_is_while_student_enrolled_at_other_inst,
             "frac_credits_earned": shared.frac_credits_earned,
             "student_term_enrollment_intensity": ft.partial(
@@ -189,20 +188,6 @@ def add_features(
 
 
 def year_of_enrollment_at_cohort_inst(
-    df: pd.DataFrame, *, cohort_col: str = "cohort", academic_col: str = "academic_year"
-) -> pd.Series:
-    return (
-        df[academic_col]
-        .str.extract(r"(?P<academic_yr>\d{4})-\d{2}")
-        .astype("Int16")["academic_yr"]
-        - df[cohort_col]
-        .str.extract(r"(?P<cohort_yr>\d{4})-\d{2}")
-        .astype("Int16")["cohort_yr"]
-        + 1
-    )
-
-
-def year_of_enrollment_at_cohort_inst_v2(
     df: pd.DataFrame,
     *,
     cohort_start_dt_col: str = "cohort_start_dt",
