@@ -5,8 +5,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated, Union
 from enum import Enum
 
-import jwt
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
 
 # TODO: Store in a python package to be usable by the frontend.
