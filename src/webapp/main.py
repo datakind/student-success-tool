@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 from fastapi import FastAPI, HTTPException, status
 
-from .utilities import has_access_to_inst_or_err, is_datakinder
+from .utilities import has_access_to_inst_or_err, is_datakinder, BaseUser
 from .routers import models, users, data
 
 app = FastAPI(
@@ -25,7 +25,7 @@ app.include_router(data.router)
 
 @app.get("/institutions")
 def read_all_inst(
-    current_user: Annotated[BaseUser],
+    current_user: BaseUser,
 ):
     """Returns overview data on all institutions.
     
@@ -43,7 +43,7 @@ def read_all_inst(
 
 @app.get("/institutions/{inst_id}")
 def read_inst(
-    current_user: Annotated[BaseUser],
+    current_user: BaseUser,
 ):
     """Returns overview data on a specific institution.
     

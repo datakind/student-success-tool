@@ -15,7 +15,7 @@ router = APIRouter(
     
 @router.get("/{inst_id}/users")
 def read_inst_users(
-    current_user: Annotated[BaseUser],
+    current_user: BaseUser,
 ):
     """Returns all users attributed to a given institution and account type.
     
@@ -30,7 +30,7 @@ def read_inst_users(
 
 @router.get("/{inst_id}/users/{user_id}")
 def read_inst_user(
-    current_user: Annotated[BaseUser],
+    current_user: BaseUser,
 ):
     """Returns info on a specific user.
     

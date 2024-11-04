@@ -3,7 +3,7 @@
 
 from typing import Annotated
 from fastapi import HTTPException, status, APIRouter
-from ..utilities import has_access_to_inst_or_err, has_full_data_access_or_err
+from ..utilities import has_access_to_inst_or_err, has_full_data_access_or_err, BaseUser
 
 router = APIRouter(
     prefix="/institutions",
@@ -14,7 +14,7 @@ router = APIRouter(
 
 @router.get("/{inst_id}/models")
 def read_inst_models(
-    current_user: Annotated[BaseUser],
+    current_user: BaseUser,
 ):
     """Returns top-level view of all models attributed to a given institution.
     
@@ -29,7 +29,7 @@ def read_inst_models(
 
 @router.get("/{inst_id}/models/{model_id}")
 def read_inst_model(
-    current_user: Annotated[BaseUser],
+    current_user: BaseUser,
 ):
     """Returns a specific model's details e.g. model card.
     
@@ -44,7 +44,7 @@ def read_inst_model(
 
 @router.get("/{inst_id}/models/{model_id}/vers")
 def read_inst_model_versions(
-    current_user: Annotated[BaseUser],
+    current_user: BaseUser,
 ):
     """Returns all versions of a given model.
     
@@ -60,7 +60,7 @@ def read_inst_model_versions(
 
 @router.get("/{inst_id}/models/{model_id}/vers/{vers_id}")
 def read_inst_model_version(
-    current_user: Annotated[BaseUser],
+    current_user: BaseUser,
 ):
     """Returns details around a version of a given model.
     
@@ -75,7 +75,7 @@ def read_inst_model_version(
 
 @router.get("/{inst_id}/models/{model_id}/output")
 def read_inst_model_outputs(
-    current_user: Annotated[BaseUser],
+    current_user: BaseUser,
 ):
     """Returns top-level info around all executions of a given model.
     
@@ -89,7 +89,7 @@ def read_inst_model_outputs(
 
 @router.get("/{inst_id}/models/{model_id}/output/{output_id}")
 def read_inst_model_output(
-    current_user: Annotated[BaseUser],
+    current_user: BaseUser,
 ):
     """Returns a given executions of a given model.
     
