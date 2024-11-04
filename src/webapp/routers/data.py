@@ -1,9 +1,13 @@
 """API functions related to data.
 """
 
+from typing import Annotated
+from fastapi import HTTPException, status, APIRouter
+
+router = APIRouter()
 # Data related operations.
 
-@app.get("/institutions/{inst_id}/input_train")
+@router.get("/institutions/{inst_id}/input_train", tags=["data"])
 def read_inst_training_inputs(
     current_user: Annotated[BaseUser],
 ):
@@ -18,7 +22,7 @@ def read_inst_training_inputs(
     has_full_data_access_or_err(current_user, "input data")
     return ""
     
-@app.get("/institutions/{inst_id}/input_train/{batch_id}")
+@router.get("/institutions/{inst_id}/input_train/{batch_id}", tags=["data"])
 def read_inst_training_input(
     current_user: Annotated[BaseUser],
 ):
@@ -33,7 +37,7 @@ def read_inst_training_input(
     has_full_data_access_or_err(current_user, "input data")
     return ""
 
-@app.get("/institutions/{inst_id}/input_exec")
+@router.get("/institutions/{inst_id}/input_exec", tags=["data"])
 def read_inst_exec_inputs(
     current_user: Annotated[BaseUser],
 ):
@@ -48,7 +52,7 @@ def read_inst_exec_inputs(
     has_full_data_access_or_err(current_user, "input data")
     return ""
 
-@app.get("/institutions/{inst_id}/input_exec/{batch_id}")
+@router.get("/institutions/{inst_id}/input_exec/{batch_id}", tags=["data"])
 def read_inst_exec_input(
     current_user: Annotated[BaseUser],
 ):
