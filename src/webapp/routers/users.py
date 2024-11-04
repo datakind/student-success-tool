@@ -1,14 +1,19 @@
 """API functions related to users.
 """
 
+
 from typing import Annotated
 from fastapi import HTTPException, status, APIRouter
+from ..utilities import has_access_to_inst_or_err, has_full_data_access_or_err, BaseUser
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/institutions",
+    tags=["users"],
+)
 
 # User account related operations.
     
-@router.get("/institutions/{inst_id}/users", tags=["users"])
+@router.get("/{inst_id}/users")
 def read_inst_users(
     current_user: Annotated[BaseUser],
 ):
@@ -23,7 +28,7 @@ def read_inst_users(
     has_full_data_access_or_err(current_user, "users")
     return ""
 
-@router.get("/institutions/{inst_id}/users/{user_id}", tags=["users"])
+@router.get("/{inst_id}/users/{user_id}")
 def read_inst_user(
     current_user: Annotated[BaseUser],
 ):
