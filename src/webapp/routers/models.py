@@ -1,9 +1,14 @@
 """API functions related to models.
 """
 
+from typing import Annotated
+from fastapi import HTTPException, status, APIRouter
+
+router = APIRouter()
+
 # Model related operations. Or model specific data.
 
-@app.get("/institutions/{inst_id}/models")
+@router.get("/institutions/{inst_id}/models", tags=["models"])
 def read_inst_models(
     current_user: Annotated[BaseUser],
 ):
@@ -18,7 +23,7 @@ def read_inst_models(
     has_full_data_access_or_err(current_user, "models")
     return ""
 
-@app.get("/institutions/{inst_id}/models/{model_id}")
+@router.get("/institutions/{inst_id}/models/{model_id}", tags=["models"])
 def read_inst_model(
     current_user: Annotated[BaseUser],
 ):
@@ -33,7 +38,7 @@ def read_inst_model(
     has_full_data_access_or_err(current_user, "this model")
     return ""
 
-@app.get("/institutions/{inst_id}/models/{model_id}/vers")
+@router.get("/institutions/{inst_id}/models/{model_id}/vers", tags=["models"])
 def read_inst_model_versions(
     current_user: Annotated[BaseUser],
 ):
@@ -49,7 +54,7 @@ def read_inst_model_versions(
     
     return ""
 
-@app.get("/institutions/{inst_id}/models/{model_id}/vers/{vers_id}")
+@router.get("/institutions/{inst_id}/models/{model_id}/vers/{vers_id}", tags=["models"])
 def read_inst_model_version(
     current_user: Annotated[BaseUser],
 ):
@@ -64,7 +69,7 @@ def read_inst_model_version(
     has_full_data_access_or_err(current_user, "this model")
     return ""
 
-@app.get("/institutions/{inst_id}/models/{model_id}/output")
+@router.get("/institutions/{inst_id}/models/{model_id}/output", tags=["models"])
 def read_inst_model_outputs(
     current_user: Annotated[BaseUser],
 ):
@@ -78,7 +83,7 @@ def read_inst_model_outputs(
     has_access_to_inst_or_err(inst_id, current_user)
     return ""
 
-@app.get("/institutions/{inst_id}/models/{model_id}/output/{output_id}")
+@router.get("/institutions/{inst_id}/models/{model_id}/output/{output_id}", tags=["models"])
 def read_inst_model_output(
     current_user: Annotated[BaseUser],
 ):
