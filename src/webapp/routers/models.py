@@ -3,12 +3,16 @@
 
 from typing import Annotated
 from fastapi import HTTPException, status, APIRouter
+from ..utilities import has_access_to_inst_or_err, has_full_data_access_or_err
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/institutions",
+    tags=["models"],
+)
 
 # Model related operations. Or model specific data.
 
-@router.get("/institutions/{inst_id}/models", tags=["models"])
+@router.get("/{inst_id}/models")
 def read_inst_models(
     current_user: Annotated[BaseUser],
 ):
@@ -23,7 +27,7 @@ def read_inst_models(
     has_full_data_access_or_err(current_user, "models")
     return ""
 
-@router.get("/institutions/{inst_id}/models/{model_id}", tags=["models"])
+@router.get("/{inst_id}/models/{model_id}")
 def read_inst_model(
     current_user: Annotated[BaseUser],
 ):
@@ -38,7 +42,7 @@ def read_inst_model(
     has_full_data_access_or_err(current_user, "this model")
     return ""
 
-@router.get("/institutions/{inst_id}/models/{model_id}/vers", tags=["models"])
+@router.get("/{inst_id}/models/{model_id}/vers")
 def read_inst_model_versions(
     current_user: Annotated[BaseUser],
 ):
@@ -54,7 +58,7 @@ def read_inst_model_versions(
     
     return ""
 
-@router.get("/institutions/{inst_id}/models/{model_id}/vers/{vers_id}", tags=["models"])
+@router.get("/{inst_id}/models/{model_id}/vers/{vers_id}")
 def read_inst_model_version(
     current_user: Annotated[BaseUser],
 ):
@@ -69,7 +73,7 @@ def read_inst_model_version(
     has_full_data_access_or_err(current_user, "this model")
     return ""
 
-@router.get("/institutions/{inst_id}/models/{model_id}/output", tags=["models"])
+@router.get("/{inst_id}/models/{model_id}/output")
 def read_inst_model_outputs(
     current_user: Annotated[BaseUser],
 ):
@@ -83,7 +87,7 @@ def read_inst_model_outputs(
     has_access_to_inst_or_err(inst_id, current_user)
     return ""
 
-@router.get("/institutions/{inst_id}/models/{model_id}/output/{output_id}", tags=["models"])
+@router.get("/{inst_id}/models/{model_id}/output/{output_id}")
 def read_inst_model_output(
     current_user: Annotated[BaseUser],
 ):
