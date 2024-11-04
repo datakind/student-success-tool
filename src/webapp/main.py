@@ -3,8 +3,10 @@
 
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
-
 from fastapi import FastAPI, HTTPException, status
+
+from .utilities import has_access_to_inst_or_err, is_datakinder
+from .routers import models, users, data
 
 app = FastAPI(
     servers=[
@@ -15,8 +17,9 @@ app = FastAPI(
     root_path="/api/v1",
 )
 
-
-# Public API below.
+app.include_router(models.router)
+app.include_router(users.router)
+app.include_router(data.router)
 
 # Institution related operations.
 
