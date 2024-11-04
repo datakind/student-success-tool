@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 from fastapi import FastAPI, HTTPException, status
 
-from .utilities import has_access_to_inst_or_err, is_datakinder, BaseUser
+from .utilities import has_access_to_inst_or_err, BaseUser
 from .routers import models, users, data
 
 app = FastAPI(
@@ -34,12 +34,12 @@ def read_all_inst(
     Args:
         current_user: the user making the request.
     """
-    if not is_datakinder(current_user):
+    if not current_user.is_datakinder:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authorized to read this resource. Select a specific institution.",
         )
-    return ""
+    return {"message": "All instutions"}
 
 @app.get("/institutions/{inst_id}")
 def read_inst(
@@ -53,4 +53,4 @@ def read_inst(
         current_user: the user making the request.
     """
     has_access_to_inst_or_err(inst_id, current_user)
-    return ""
+    return {"message": "instution "+str(inst_id)}
