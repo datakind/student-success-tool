@@ -1,14 +1,14 @@
 """Helper functions that may be used across multiple API router subpackages.
 """
 from typing import Annotated, Union
-from enum import Enum
+from enum import IntEnum
 
 from fastapi import HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 # TODO: Store in a python package to be usable by the frontend.
 # Accesstypes in order of decreasing access.
-class AccessType(Enum):
+class AccessType(IntEnum):
     DATAKINDER = 1
     MODEL_OWNER = 2
     DATA_OWNER = 3
@@ -16,6 +16,7 @@ class AccessType(Enum):
 
 # BaseUser represents an access type. The frontend will include more detailed User info.
 class BaseUser(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
     # user_id is permanent and each frontend orginated account will map to a unique user_id.
     # Bare API callers will likely not include a user_id.
     user_id: Union[int, None] = None
@@ -37,6 +38,16 @@ class BaseUser(BaseModel):
     # Datakinders, model_owners, data_owners, all have full data access.
     def has_full_data_access(self) -> bool:
         return self.access_type == AccessType.DATAKINDER or self.access_type == AccessType.MODEL_OWNER or self.access_type == AccessType.DATA_OWNER
+
+    # Construct query paramstring from BaseUser. Mostly used for testing.
+    def construct_query_param_string(self) -> str:
+        ret = "?"
+        if self.user_id is not None:
+            ret += "usr=" + str(self.user_id) + "&"
+        ret += "inst=" + str(self.institution) + "&"
+        ret += "access=" + str(self.access_type)
+        return ret
+
 
 # Raise error if a given user does not have access to a given institution.
 def has_access_to_inst_or_err(inst: int, user: BaseUser):

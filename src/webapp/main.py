@@ -2,10 +2,12 @@
 """
 
 from datetime import datetime, timedelta, timezone
-from typing import Annotated
-from fastapi import FastAPI, HTTPException, status
+from typing import Annotated, Union, Any
+from fastapi import FastAPI, HTTPException, status, Depends
+from pydantic import BaseModel
+#import logging
 
-from .utilities import has_access_to_inst_or_err, BaseUser
+from .utilities import has_access_to_inst_or_err, BaseUser, AccessType
 from .routers import models, users, data
 
 app = FastAPI(
@@ -23,10 +25,16 @@ app.include_router(data.router)
 
 # Institution related operations.
 
-@app.get("/institutions")
-def read_all_inst(
-    current_user: BaseUser,
-):
+# The institution object that's returned.
+class Institution(BaseModel):
+    inst_id: int
+    name: str
+    description: Union[str, None] = None
+    # The following are characteristics of an institution set at institution creation time.
+    retention: int
+
+@app.get("/institutions", response_model=list[Institution])
+def read_all_inst(current_user: Annotated[BaseUser, Depends()]) -> Any:
     """Returns overview data on all institutions.
     
     Only visible to Datakinders.
@@ -39,12 +47,10 @@ def read_all_inst(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authorized to read this resource. Select a specific institution.",
         )
-    return {"message": "All instutions"}
+    return []
 
-@app.get("/institutions/{inst_id}")
-def read_inst(
-    current_user: BaseUser,
-):
+@app.get("/institutions/{inst_id}", response_model=Institution)
+def read_inst(inst_id: int, current_user: Annotated[BaseUser, Depends()]) -> Any:
     """Returns overview data on a specific institution.
     
     The root-level API view. Only visible to users of that institution or Datakinder access types.
@@ -53,4 +59,4 @@ def read_inst(
         current_user: the user making the request.
     """
     has_access_to_inst_or_err(inst_id, current_user)
-    return {"message": "instution "+str(inst_id)}
+    return {"inst_id": inst_id, "name": "foo", "description" : "", "retention": 0}
