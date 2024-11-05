@@ -32,4 +32,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 ENTRYPOINT []
 
 # Run the application.
-CMD ["fastapi", "run", "./", "--port", "8080", "--host", "0.0.0.0"]
+CMD ["fastapi", "run", "src/webapp", "--port", "8080", "--host", "0.0.0.0"]
