@@ -18,8 +18,9 @@ RUN uv sync --frozen --no-install-project
 ADD . /app
 
 # Sync the project
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen
+RUN uv sync --frozen
+
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Run the application.
 CMD ["fastapi", "run", "src/webapp", "--port", "8080", "--host", "0.0.0.0"]
