@@ -1,0 +1,17 @@
+{
+    "name": "python 3.10 & uv",
+    "dockerComposeFile": "compose.yaml",
+    "service": "app",
+    "workspaceFolder": "/workspace",
+    "remoteUser": "vscode",
+    "runArgs": [
+        "--userns=keep-id"
+    ],
+    "containerEnv": {
+        "HOME": "/home/vscode"
+    },
+    "postCreateCommand": ".devcontainer/post-create.sh",
+    "forwardPorts": [
+        8080
+    ]
+}

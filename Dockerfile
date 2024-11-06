@@ -1,5 +1,6 @@
 # This Dockerfile is is not suitable for production use, but is useful for
-# development and testing.
+# development and testing. A production Dockerfile would likely use a
+# multi-stage build to separate the build environment from the runtime.
 
 # Use a Python image with uv pre-installed
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim

@@ -1,0 +1,11 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/dockerfile
+    volumes:
+      - ..:/workspace
+    command: sleep infinity
+    user: vscode
+
+  
