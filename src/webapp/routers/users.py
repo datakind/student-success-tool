@@ -13,8 +13,8 @@ router = APIRouter(
     tags=["users"],
 )
 
-# The user account object that's returned.
 class UserAccount(BaseModel):
+    """The user account object that's returned."""
     user_id: int
     name: str
     inst_id: int
@@ -26,7 +26,7 @@ class UserAccount(BaseModel):
     deletion_request: Union[str, None] = None
 
 # User account related operations.
-    
+
 @router.get("/{inst_id}/users", response_model=list[UserAccount])
 def read_inst_users(inst_id: int, current_user: Annotated[BaseUser, Depends()]) -> Any:
     """Returns all users attributed to a given institution and account type.

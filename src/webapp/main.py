@@ -1,13 +1,12 @@
 """Main file for the SST API.
 """
 
-from datetime import datetime, timedelta, timezone
 from typing import Annotated, Union, Any
 from fastapi import FastAPI, HTTPException, status, Depends
 from pydantic import BaseModel
 #import logging
 
-from .utilities import has_access_to_inst_or_err, BaseUser, AccessType
+from .utilities import has_access_to_inst_or_err, BaseUser
 from .routers import models, users, data
 
 app = FastAPI(
@@ -27,6 +26,7 @@ app.include_router(data.router)
 
 # The institution object that's returned.
 class Institution(BaseModel):
+    """Institution data object."""
     inst_id: int
     name: str
     description: Union[str, None] = None

@@ -1,21 +1,21 @@
 """Helper functions that may be used across multiple API router subpackages.
 """
-from typing import Annotated, Union
+from typing import Union
 from enum import IntEnum
 
 from fastapi import HTTPException, status
 from pydantic import BaseModel, ConfigDict
 
 # TODO: Store in a python package to be usable by the frontend.
-# Accesstypes in order of decreasing access.
 class AccessType(IntEnum):
+    """Access types available."""
     DATAKINDER = 1
     MODEL_OWNER = 2
     DATA_OWNER = 3
     VIEWER = 4
 
-# BaseUser represents an access type. The frontend will include more detailed User info.
 class BaseUser(BaseModel):
+    """BaseUser represents an access type. The frontend will include more detailed User info."""
     model_config = ConfigDict(use_enum_values=True)
     # user_id is permanent and each frontend orginated account will map to a unique user_id.
     # Bare API callers will likely not include a user_id.
@@ -27,20 +27,33 @@ class BaseUser(BaseModel):
     def __init__(self, usr: Union[int, None], inst: int, access: AccessType) -> None:
         super().__init__(user_id=usr, institution=inst, access_type=access)
 
-    # Whether a given user is a Datakinder.
     def is_datakinder(self) -> bool:
+        """ Whether a given user is a Datakinder."""
         return self.access_type == AccessType.DATAKINDER
 
-    # Whether a given user has access to a given institution.
+    def is_model_owner(self) -> bool:
+        """Whether a given user is a model owner."""
+        return self.access_type == AccessType.MODEL_OWNER
+
+    def is_data_owner(self) -> bool:
+        """Whether a given user is a data owner."""
+        return self.access_type == AccessType.DATA_OWNER
+
+    def is_viewer(self) -> bool:
+        """Whether a given user is a viewer."""
+        return self.access_type == AccessType.VIEWER
+
     def has_access_to_inst(self, inst: int) -> bool:
+        """Whether a given user has access to a given institution."""
         return self.institution == inst or self.access_type == AccessType.DATAKINDER
 
-    # Datakinders, model_owners, data_owners, all have full data access.
     def has_full_data_access(self) -> bool:
-        return self.access_type == AccessType.DATAKINDER or self.access_type == AccessType.MODEL_OWNER or self.access_type == AccessType.DATA_OWNER
+        """Datakinders, model_owners, data_owners, all have full data access."""
+        return self.access_type in (AccessType.DATAKINDER, AccessType.MODEL_OWNER,
+            AccessType.DATA_OWNER)
 
-    # Construct query paramstring from BaseUser. Mostly used for testing.
     def construct_query_param_string(self) -> str:
+        """Construct query paramstring from BaseUser. Mostly used for testing."""
         ret = "?"
         if self.user_id is not None:
             ret += "usr=" + str(self.user_id) + "&"
@@ -49,20 +62,18 @@ class BaseUser(BaseModel):
         return ret
 
 
-# Raise error if a given user does not have access to a given institution.
 def has_access_to_inst_or_err(inst: int, user: BaseUser):
+    """Raise error if a given user does not have access to a given institution."""
     if not user.has_access_to_inst(inst):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authorized to read this institution's resources.",
         )
-    return
 
-# Raise error if a given user does not have data access to a given institution.
 def has_full_data_access_or_err(user: BaseUser, resource_type: str):
+    """Raise error if a given user does not have data access to a given institution."""
     if not user.has_full_data_access():
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authorized to view " + resource_type + " for this institution.",
         )
-    return

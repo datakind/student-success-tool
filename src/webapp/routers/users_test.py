@@ -5,27 +5,22 @@ from fastapi.testclient import TestClient
 from fastapi import HTTPException
 import pytest
 
-from ..utilities import AccessType, BaseUser
+from ..test_helper import USR_STR, VIEWER_STR
 from .users import router
 
 client = TestClient(router, root_path="/api/v1")
 
-usr = BaseUser(12, 345, AccessType.MODEL_OWNER)
-usr_str = usr.construct_query_param_string()
 
-viewer = BaseUser(12, 345, AccessType.VIEWER)
-viewer_str = viewer.construct_query_param_string()
-
-# Test GET /institutions/345/users.
 def test_read_inst_users():
-    response = client.get("/institutions/345/users"+usr_str)
+    """Test GET /institutions/345/users."""
+    response = client.get("/institutions/345/users"+USR_STR)
     assert response.status_code == 200
     assert response.json() == []
 
-# Test GET /institutions/345/users/10. For various user access types.
 def test_read_inst_user():
+    """Test GET /institutions/345/users/10. For various user access types."""
     # Authorized.
-    response = client.get("/institutions/345/users/12"+usr_str)
+    response = client.get("/institutions/345/users/12"+USR_STR)
     assert response.status_code == 200
     assert response.json() ==  {
         "user_id": 12, 
@@ -39,11 +34,11 @@ def test_read_inst_user():
     }
     # Unauthorized cases.
     with pytest.raises(HTTPException) as err:
-        client.get("/institutions/345/users/34"+viewer_str)
+        client.get("/institutions/345/users/34"+VIEWER_STR)
     assert err.value.status_code == 401
     assert err.value.detail == "Not authorized to view this user."
 
     with pytest.raises(HTTPException) as err:
-        client.get("/institutions/123/users/34"+usr_str)
+        client.get("/institutions/123/users/34"+USR_STR)
     assert err.value.status_code == 401
     assert err.value.detail == "Not authorized to read this institution's resources."

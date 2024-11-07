@@ -2,7 +2,7 @@
 """
 
 from typing import Annotated, Any, Union
-from fastapi import HTTPException, status, APIRouter, Depends
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from ..utilities import has_access_to_inst_or_err, has_full_data_access_or_err, BaseUser
@@ -12,8 +12,8 @@ router = APIRouter(
     tags=["data"],
 )
 
-# The Data object that's returned.
 class DataInfo(BaseModel):
+    """The Data object that's returned."""
     batch_id: int
     name: str
     record_count: int = 0
@@ -43,9 +43,13 @@ def read_inst_training_inputs(inst_id: int, current_user: Annotated[BaseUser, De
     has_access_to_inst_or_err(inst_id, current_user)
     has_full_data_access_or_err(current_user, "input data")
     return []
-    
+
 @router.get("/{inst_id}/input_train/{batch_id}", response_model=DataInfo)
-def read_inst_training_input(inst_id: int, batch_id: int, current_user: Annotated[BaseUser, Depends()]) -> Any:
+def read_inst_training_input(
+    inst_id: int,
+    batch_id: int,
+    current_user: Annotated[BaseUser, Depends()]
+) -> Any:
     """Returns training input data batch information/details (record count, date uploaded etc.)
     
     Only visible to users of that institution or Datakinder access types.
@@ -81,7 +85,11 @@ def read_inst_exec_inputs(inst_id: int, current_user: Annotated[BaseUser, Depend
     return []
 
 @router.get("/{inst_id}/input_exec/{batch_id}", response_model=DataInfo)
-def read_inst_exec_input(inst_id: int, batch_id: int, current_user: Annotated[BaseUser, Depends()]) -> Any:
+def read_inst_exec_input(
+    inst_id: int,
+    batch_id: int,
+    current_user: Annotated[BaseUser, Depends()]
+) -> Any:
     """Returns a specific batch of execution input data details (record count, date uploaded etc.)
     
     Only visible to users of that institution or Datakinder access types.
