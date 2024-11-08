@@ -23,6 +23,8 @@ dependencies = [
     "textwrap3~=0.9",
     "shap~=0.45.0",
     "fastapi[standard]>=0.115.4",
+    "google-cloud>=0.34.0",
+    "google-cloud-storage>=2.18.2",
 ]
 
 [project.urls]
