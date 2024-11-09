@@ -327,10 +327,14 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     def set_zero_year_values_to_null(cls, series):
         return series.mask(series.eq(0), pd.NA).astype("Int8")
 
+    @pda.check("institution_id", name="check_num_institutions")
+    def check_num_institutions(cls, series) -> bool:
+        return series.nunique() == 1
+
     class Config:
         coerce = True
         strict = True
         unique_column_names = True
         add_missing_columns = False
         drop_invalid_rows = False
-        unique = ["institution_id", "student_guid"]
+        unique = ["student_guid"]
