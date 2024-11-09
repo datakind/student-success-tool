@@ -2,7 +2,7 @@ import faker
 import pandas as pd
 import pytest
 
-from student_success_tool.analysis.pdp.schemas.base import RawPDPCohortDataSchema
+from student_success_tool.analysis.pdp.schemas import RawPDPCohortDataSchema
 from student_success_tool.generation.pdp import raw_cohort
 
 FAKER = faker.Faker()
