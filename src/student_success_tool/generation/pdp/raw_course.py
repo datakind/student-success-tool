@@ -145,7 +145,10 @@ class Provider(BaseProvider):
         return self.random_element(["FALL", "WINTER", "SPRING", "SUMMER"])
 
     def academic_year(self, min_yr: int = 2010, max_yr: t.Optional[int] = None) -> str:
-        start_dt = self.generator.date_between(start_date=date(min_yr, 1, 1))
+        start_dt = self.generator.date_between(
+            start_date=date(min_yr, 1, 1),
+            end_date=(date(max_yr, 1, 1) if max_yr else "today"),
+        ).replace(day=1)
         end_dt = start_dt.replace(year=start_dt.year + 1)
         return f"{start_dt:%Y}-{end_dt:%Y}"
 
