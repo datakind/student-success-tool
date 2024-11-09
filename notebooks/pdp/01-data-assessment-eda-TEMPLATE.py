@@ -24,7 +24,7 @@
 # COMMAND ----------
 
 # install dependencies, most of which should come through our 1st-party SST package
-%pip install git+https://github.com/datakind/student-success-tool.git@develop
+# %pip install git+https://github.com/datakind/student-success-tool.git@develop
 
 # COMMAND ----------
 
@@ -37,7 +37,6 @@ import os
 import sys
 
 import missingno as msno
-import numpy as np
 import pandas as pd
 import seaborn as sb
 from databricks.connect import DatabricksSession
@@ -129,12 +128,6 @@ df_course
 
 # COMMAND ----------
 
-import functools as ft
-
-import pandas as pd
-import pandera as pda
-import pandera.typing as pt
-
 
 class RawSCHOOLCourseDataSchema(base_course_schema):
     # column-specific overrides, as needed, for example:
@@ -148,6 +141,7 @@ class RawSCHOOLCourseDataSchema(base_course_schema):
     # )
     ...
 
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -155,10 +149,12 @@ class RawSCHOOLCourseDataSchema(base_course_schema):
 
 # COMMAND ----------
 
+
 def course_data_preprocess_func(df: pd.DataFrame, **kwargs) -> pd.DataFrame:
     # make data PDP-compliant, for example:
     # df = df.drop_duplicates(subset=unique_columns)
     ...
+
 
 # COMMAND ----------
 
@@ -167,7 +163,7 @@ df_course = pdp.dataio.read_raw_pdp_course_data_from_file(
     fpath_course,
     dttm_format="%Y%m%d.0",
     schema=RawSCHOOLCourseDataSchema,
-    preprocess_func=course_data_preprocess_func, 
+    preprocess_func=course_data_preprocess_func,
 )
 df_course
 
@@ -209,9 +205,9 @@ df_cohort
 
 # # if needed
 # df_cohort = pdp.dataio.read_raw_pdp_cohort_data_from_file(
-#     fpath_cohort,    
+#     fpath_cohort,
 #     schema=RawSCHOOLCohortDataSchema,
-#     preprocess_func=cohort_data_preprocess_func, 
+#     preprocess_func=cohort_data_preprocess_func,
 # )
 # df_cohort
 
@@ -289,7 +285,9 @@ df_course.isna().mean(axis="index").sort_values(ascending=False)
 
 # confirm that *any* null course identifier means *all* null course identifiers
 _ = msno.matrix(
-    df_course.loc[df_course["course_prefix"].isna(), :].sort_values(by=["academic_year", "student_guid"], ignore_index=True),
+    df_course.loc[df_course["course_prefix"].isna(), :].sort_values(
+        by=["academic_year", "student_guid"], ignore_index=True
+    ),
     sparkline=False,
     labels=True,
 )
@@ -297,14 +295,17 @@ _ = msno.matrix(
 # COMMAND ----------
 
 # check if null course identifiers are (almost) entirely for enrollments at other insts
-df_course.loc[df_course["course_prefix"].isna(), "enrolled_at_other_institution_s"].value_counts()
+df_course.loc[
+    df_course["course_prefix"].isna(), "enrolled_at_other_institution_s"
+].value_counts()
 
 # COMMAND ----------
 
 _ = msno.matrix(
     (
-        df_course[df_course["enrolled_at_other_institution_s"].eq("N")]
-        .sort_values(by=["academic_year", "student_guid"])
+        df_course[df_course["enrolled_at_other_institution_s"].eq("N")].sort_values(
+            by=["academic_year", "student_guid"]
+        )
     )
 )
 
@@ -451,7 +452,9 @@ df_course_SCHOOL = df_course.loc[df_course["course_number"].notna(), :]
 
 # COMMAND ----------
 
-num_distinct_courses = df_course_SCHOOL["course_prefix"].str.cat(df_course["course_number"]).nunique()
+num_distinct_courses = (
+    df_course_SCHOOL["course_prefix"].str.cat(df_course["course_number"]).nunique()
+)
 print(f"number of distinct courses: {num_distinct_courses}")
 
 # COMMAND ----------
@@ -547,5 +550,3 @@ df_cohort.corr(method="spearman", numeric_only=True)
 # MAGIC - TODO ...
 
 # COMMAND ----------
-
-
