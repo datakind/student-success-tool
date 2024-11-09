@@ -235,7 +235,7 @@ df_cohort
 # COMMAND ----------
 
 # decent, general-purpose summarization of a data frame
-dbutils.data.summarize(df_course, precise=False)
+dbutils.data.summarize(df_course, precise=False)  # noqa: F821
 
 # COMMAND ----------
 
@@ -245,7 +245,7 @@ dbutils.data.summarize(df_course, precise=False)
 
 # COMMAND ----------
 
-dbutils.data.summarize(df_cohort, precise=True)
+dbutils.data.summarize(df_cohort, precise=True)  # noqa: F821
 
 # COMMAND ----------
 
