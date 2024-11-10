@@ -39,6 +39,7 @@ from student_success_tool.analysis.pdp.features import course
                     "course_completed": [True, True, False],
                     "course_level": [1, 2, 3],
                     "course_grade_numeric": [4.0, 1.0, pd.NA],
+                    "course_grade": ["A", "D", "W"],
                 }
             ).astype({"course_passed": "boolean", "course_grade_numeric": "Float32"}),
         ),
@@ -155,5 +156,38 @@ def test_course_level(df, col, pattern, exp):
 )
 def test_course_grade_numeric(df, col, exp):
     obs = course.course_grade_numeric(df, col=col)
+    assert isinstance(obs, pd.Series) and not obs.empty
+    assert obs.equals(exp) or obs.compare(exp).empty
+
+
+@pytest.mark.parametrize(
+    ["df", "grade_col", "grade_num_col", "exp"],
+    [
+        (
+            pd.DataFrame(
+                {
+                    "grade": ["4", "2", "P", "F", "1"],
+                    "grade_num": [4.0, 2.0, pd.NA, pd.NA, 1.0],
+                },
+            ).astype({"grade": "string", "grade_num": "Float32"}),
+            "grade",
+            "grade_num",
+            pd.Series(["A", "C", "P", "F", "D"], dtype="string"),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "grade": ["4.0", "3.3", "I", "W", "2.7", "0.7", "0.0", "A"],
+                    "grade_num": [4.0, 3.3, pd.NA, pd.NA, 2.7, 0.7, 0.0, pd.NA],
+                }
+            ).astype({"grade": "string", "grade_num": "Float32"}),
+            "grade",
+            "grade_num",
+            pd.Series(["A", "B", "I", "W", "B", "D", "F", "AUDIT"], dtype="string"),
+        ),
+    ],
+)
+def test_course_grade(df, grade_col, grade_num_col, exp):
+    obs = course.course_grade(df, grade_col=grade_col, grade_num_col=grade_num_col)
     assert isinstance(obs, pd.Series) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
