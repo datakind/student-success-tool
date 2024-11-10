@@ -106,9 +106,11 @@ def course_grade(
         .mask(~df[grade_col].isin(NON_NUMERIC_GRADES), pd.NA)
         # frustratingly, pdp uses "A" grade to indicate "Audit", which is just begging
         # for confusion with the usual meaning of an "A" grade :/
-        # let's replace it with "AUD" for clarity, and so we can safely combine
+        # let's replace it with "AUDIT" for clarity, and so we can safely combine
         # non-numeric grades with derived letter grades below
-        .replace("A", value="AUD")
+        .replace("A", value="AUDIT")
+        # similarly, "O" looks like "0", so let's replace with "OTHER" for clarity
+        .replace("O", value="OTHER")
         .astype("string")
     )
     letter_grades = pd.cut(

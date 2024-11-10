@@ -183,7 +183,7 @@ def test_course_grade_numeric(df, col, exp):
             ).astype({"grade": "string", "grade_num": "Float32"}),
             "grade",
             "grade_num",
-            pd.Series(["A", "B", "I", "W", "B", "D", "F", "AUD"], dtype="string"),
+            pd.Series(["A", "B", "I", "W", "B", "D", "F", "AUDIT"], dtype="string"),
         ),
     ],
 )
