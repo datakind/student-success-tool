@@ -93,7 +93,7 @@ def aggregate_from_course_level_features(
             "course_instructor_employment_status",
             "course_instructor_rank",
             "course_level",
-            "grade",  # TODO: only if this is actually categorical
+            "course_grade",
         ],
     )
 

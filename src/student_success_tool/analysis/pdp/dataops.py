@@ -193,6 +193,7 @@ def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
                 "term_course_begin_date_min",
                 "term_course_end_date_max",
                 # columns used to derive other features, but not features themselves
+                "grade",
                 "course_ids",
                 "course_subjects",
                 "course_subject_areas",
