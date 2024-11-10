@@ -27,18 +27,21 @@ dependencies = [
 [project.urls]
 Repository = "https://github.com/datakind/student-success-tool"
 
+[dependency-groups]
+dev = [
+    "ipykernel~=6.29",
+    "jupyterlab~=4.2",
+    "mypy~=1.11",
+    "pytest~=8.3",
+    "ruff~=0.7",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.uv]
-dev-dependencies = [
-    "ipykernel~=6.29",
-    "jupyterlab~=4.2",
-    "mypy~=1.11",
-    "pytest~=8.3",
-    "ruff~=0.6",
-]
+default-groups = ["dev"]
 
 [tool.ruff]
 line-length = 88
