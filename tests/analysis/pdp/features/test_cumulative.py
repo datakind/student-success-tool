@@ -178,6 +178,14 @@ def test_add_cumfrac_terms_unenrolled_features(df, exp_new):
             3,
             pd.DataFrame(
                 {
+                    "num_courses_diff_prev_term": [np.nan, -1.0, 0.0, 0.0, -1.0],
+                    "course_grade_num_mean_diff_prev_term": [
+                        np.nan,
+                        -1.5,
+                        -0.75,
+                        1.5,
+                        0.25,
+                    ],
                     "num_courses_diff_term_1_to_term_2": [-1.0, -1.0, -1.0, -1.0, -1.0],
                     "num_courses_diff_term_2_to_term_3": [0.0, 0.0, 0.0, 0.0, 0.0],
                     "course_grade_num_mean_diff_term_1_to_term_2": [
@@ -201,7 +209,10 @@ def test_add_cumfrac_terms_unenrolled_features(df, exp_new):
             ["num_courses"],
             2,
             pd.DataFrame(
-                {"num_courses_diff_term_1_to_term_2": [-1.0, -1.0, -1.0, -1.0, -1.0]}
+                {
+                    "num_courses_diff_prev_term": [np.nan, -1.0, 0.0, 0.0, -1.0],
+                    "num_courses_diff_term_1_to_term_2": [-1.0, -1.0, -1.0, -1.0, -1.0],
+                }
             ),
         ),
     ],
