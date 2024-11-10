@@ -231,7 +231,7 @@ def add_term_diff_features(
         ]
         df_pivots.append(
             df_pivot_.drop(columns=cols_to_drop)
-            .rename(columns=lambda term_num: f"{col}_diff_term_{term_num - 1}_to_term_{term_num}")
+            .rename(columns=lambda term_num: f"{col}_diff_term_{term_num - 1:.0f}_to_term_{term_num:.0f}")
         )  # fmt: skip
     df_pivot = pd.concat(df_pivots, axis="columns")
     return pd.merge(df, df_pivot, left_on=student_id_cols, right_index=True, how="left")
@@ -246,7 +246,7 @@ def _compute_cumfrac_terms_unenrolled(
 ) -> pd.Series:
     cumnum_terms_total = (df[term_rank_col] - df[min_student_term_rank_col]) + 1
     cumfrac_terms_enrolled = df[cumnum_terms_enrolled_col] / cumnum_terms_total
-    return 1.0 - cumfrac_terms_enrolled
+    return (1.0 - cumfrac_terms_enrolled).astype("Float32")
 
 
 #######################
