@@ -57,17 +57,7 @@ def add_features(
             term_is_fall_spring=ft.partial(term_is_fall_spring, term_col=term_col),
         )
     )
-    # TODO: shall we get rid of these agg features?
-    df_term_agg = (
-        df.groupby(by=[year_col, term_col], as_index=False, observed=True)
-        .agg(
-            term_course_begin_date_min=term_course_begin_date_min_col_agg(),
-            term_course_end_date_max=term_course_end_date_max_col_agg(),
-        )
-    )  # fmt: skip
-    return shared.merge_many_dataframes(
-        [df, df_term, df_term_agg], on=[year_col, term_col], how="inner"
-    )
+    return pd.merge(df, df_term, on=[year_col, term_col], how="inner")
 
 
 def term_rank(
@@ -115,14 +105,6 @@ def term_is_fall_spring(
     df: pd.DataFrame, *, term_col: str = "academic_term"
 ) -> pd.Series:
     return df[term_col].isin(["FALL", "SPRING"])
-
-
-def term_course_begin_date_min_col_agg(col: str = "course_begin_date") -> pd.NamedAgg:
-    return pd.NamedAgg(col, "min")
-
-
-def term_course_end_date_max_col_agg(col: str = "course_end_date") -> pd.NamedAgg:
-    return pd.NamedAgg(col, "max")
 
 
 def _get_unique_sorted_terms_df(
