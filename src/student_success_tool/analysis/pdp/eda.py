@@ -1,6 +1,9 @@
+import itertools
 import typing as t
 
+import numpy as np
 import pandas as pd
+import scipy.stats as ss
 
 from . import utils
 
@@ -133,3 +136,119 @@ def compute_crosstabs(
     if normalize is not False:
         ct = ct.round(decimals=3)
     return ct
+
+
+def compute_associations(
+    df: pd.DataFrame, *, skip_cols: t.Optional[list[str]] = None
+) -> pd.DataFrame:
+    # cast datetime columns to numeric
+    df = df.assign(
+        **{
+            col: pd.to_numeric(df[col])
+            for col in df.select_dtypes(include="datetime").columns
+        }
+    )
+    if skip_cols:
+        df = df.drop(columns=skip_cols)
+    # identify columns by type
+    cols = df.columns
+    nominal_cols = set(
+        df.select_dtypes(include=["category", "string"]).columns.tolist()
+    )
+    numeric_cols = set(df.select_dtypes(include="number").columns.tolist())
+    single_value_cols = set(col for col in cols if df[col].nunique() == 1)
+    # store col-col association values
+    df_assoc = pd.DataFrame(index=cols, columns=cols, dtype="Float32")
+    # set self-associations to 1
+    for col in cols:
+        df_assoc.loc[col, col] = 1.0
+    for col1, col2 in itertools.permutations(cols, 2):
+        if not pd.isna(df_assoc.at[col1, col2]):
+            continue
+
+        is_symmetric = False
+        if col1 in single_value_cols or col2 in single_value_cols:  # n/a
+            assoc = None
+        elif col1 in nominal_cols and col2 in nominal_cols:  # nom-nom
+            assoc = cramers_v(df[col1], df[col2])
+            is_symmetric = True
+        elif (col1 in nominal_cols and col2 in numeric_cols) or (
+            col1 in numeric_cols and col2 in nominal_cols
+        ):  # nom-num
+            assoc = correlation_ratio(df[col1], df[col2])
+        else:  # num-num
+            assoc = df[col1].corr(df[col2], method="spearman")
+            is_symmetric = True
+
+        df_assoc.loc[col1, col2] = assoc
+        if is_symmetric:
+            df_assoc.loc[col2, col1] = assoc
+    return df_assoc
+
+
+def cramers_v(s1: pd.Series, s2: pd.Series) -> float | None:
+    """
+    Compute Cramer's V statistic for categorical-categorical association,
+    which is symmetric -- i.e. V(x, y) == V(y, x).
+
+    See Also:
+        - :func:`scipy.stats.contingency.association()`
+    """
+    if not pd.api.types.is_string_dtype(s1) or not pd.api.types.is_string_dtype(s2):
+        raise ValueError()
+
+    s1, s2 = _drop_incomplete_pairs(s1, s2)
+    confusion_matrix = pd.crosstab(s1, s2)
+    correction = False if confusion_matrix.shape[0] == 2 else True
+    try:
+        result = ss.contingency.association(
+            confusion_matrix, method="cramer", correction=correction
+        )
+        assert isinstance(result, float)
+        return result
+    except ValueError:
+        return None
+
+
+def correlation_ratio(s1: pd.Series, s2: pd.Series) -> float:
+    """
+    Compute the Correlation Ratio for categorical-numeric association.
+
+    Note:
+        ``s1`` and ``s2`` are automatically detected as being categorical or numeric,
+        and handled correspondingly in the calculations.
+    """
+    if pd.api.types.is_string_dtype(s1) and pd.api.types.is_numeric_dtype(s2):
+        categories = s1
+        measurements = s2
+    elif pd.api.types.is_numeric_dtype(s1) and pd.api.types.is_string_dtype(s2):
+        categories = s2
+        measurements = s1
+    else:
+        raise ValueError()
+
+    categories, measurements = _drop_incomplete_pairs(categories, measurements)
+    fcat, _ = pd.factorize(categories)
+    cat_num = np.max(fcat) + 1
+    y_avg_array = np.zeros(cat_num)
+    n_array = np.zeros(cat_num)
+    for i in range(0, cat_num):
+        cat_measures = measurements[np.argwhere(fcat == i).flatten()]
+        n_array[i] = len(cat_measures)
+        y_avg_array[i] = np.average(cat_measures)
+    y_total_avg = np.sum(np.multiply(y_avg_array, n_array)) / np.sum(n_array)
+    numerator = np.sum(
+        np.multiply(n_array, np.power(np.subtract(y_avg_array, y_total_avg), 2))
+    )
+    denominator = np.sum(np.power(np.subtract(measurements, y_total_avg), 2))
+    if numerator == 0:
+        eta = 0.0
+    else:
+        eta = np.sqrt(numerator / denominator)
+    return eta
+
+
+def _drop_incomplete_pairs(s1: pd.Series, s2: pd.Series) -> tuple[pd.Series, pd.Series]:
+    df = pd.DataFrame({"s1": s1, "s2": s2})
+    df = df.dropna(axis="index", how="any", ignore_index=True)  # type: ignore
+    return (df["s1"], df["s2"])
