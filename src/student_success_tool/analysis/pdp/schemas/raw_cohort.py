@@ -47,7 +47,7 @@ GradeField = ft.partial(pda.Field, nullable=True)
 CompletedDevOrGatewayField = ft.partial(
     pda.Field, nullable=True, dtype_kwargs={"categories": ["C", "D", "NA"]}
 )
-YearsToOfField = ft.partial(pda.Field, ge=0, le=7)
+YearsToOfField = ft.partial(pda.Field, ge=0, le=8)
 LocaleField = ft.partial(
     pda.Field,
     nullable=True,
@@ -73,9 +73,8 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     enrollment_type: pt.Series[pd.CategoricalDtype] = pda.Field(
         dtype_kwargs={"categories": ["FIRST-TIME", "RE-ADMIT", "TRANSFER-IN"]},
     )
-    enrollment_intensity_first_term: pt.Series[pd.CategoricalDtype] = pda.Field(
-        dtype_kwargs={"categories": ["FULL-TIME", "PART-TIME"]},
-    )
+    # NOTE: categories set in a parser, which forces "UK" / "UNKNOWN" values to null
+    enrollment_intensity_first_term: pt.Series[pd.CategoricalDtype] = pda.Field()
     # NOTE: categories set in a parser, which forces "UK" values to null
     math_placement: pt.Series[pd.CategoricalDtype] = pda.Field(nullable=True)
     # NOTE: categories set in a parser, which forces "UK" values to null
@@ -129,9 +128,8 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     program_of_study_term_1: pt.Series["string"] = pda.Field(nullable=True)
     gpa_group_term_1: pt.Series["Float32"] = GPAField()
     gpa_group_year_1: pt.Series["Float32"] = GPAField()
-    # this is the only credits field required to be >= 1
     number_of_credits_attempted_year_1: pt.Series["Float32"] = pda.Field(
-        nullable=True, ge=1.0
+        nullable=True, ge=1.0, raise_warning=True
     )
     number_of_credits_earned_year_1: pt.Series["Float32"] = NumCreditsGt0Field()
     number_of_credits_attempted_year_2: pt.Series["Float32"] = NumCreditsGt0Field()
@@ -198,8 +196,9 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     incarcerated_status: t.Optional[pt.Series[pd.CategoricalDtype]] = pda.Field(
         nullable=True
     )
+    # NOTE: categories set in a parser, which forces "-1" / "-1.0" values to null
     military_status: t.Optional[pt.Series[pd.CategoricalDtype]] = pda.Field(
-        nullable=True, dtype_kwargs={"categories": ["-1", "0", "1", "2"]}
+        nullable=True
     )
     employment_status: t.Optional[pt.Series[pd.CategoricalDtype]] = pda.Field(
         nullable=True, dtype_kwargs={"categories": ["-1", "0", "1", "2", "3", "4"]}
@@ -270,6 +269,10 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
         pd.CategoricalDtype
     ] = LocaleField()
 
+    @pda.parser("enrollment_intensity_first_term")
+    def set_enrollment_intensity_first_term_categories(cls, series):
+        return series.cat.set_categories(["FULL-TIME", "PART-TIME"])
+
     @pda.parser("math_placement", "english_placement", "reading_placement")
     def set_subj_placement_categories(cls, series):
         return series.cat.set_categories(["C", "N"])
@@ -302,6 +305,15 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     def set_disability_status_categories(cls, series):
         return series.cat.set_categories(["Y", "N"])
 
+    @pda.parser("military_status")
+    def set_military_status_categories(cls, series):
+        return (
+            series.astype("Float32")
+            .astype("Int8")
+            .astype("category")
+            .cat.set_categories(["0", "1", "2"])
+        )
+
     @pda.parser(
         "years_to_associates_or_certificate_at_cohort_inst",
         "years_to_bachelors_at_cohort_inst",
@@ -315,10 +327,14 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     def set_zero_year_values_to_null(cls, series):
         return series.mask(series.eq(0), pd.NA).astype("Int8")
 
+    @pda.check("institution_id", name="check_num_institutions")
+    def check_num_institutions(cls, series) -> bool:
+        return series.nunique() == 1
+
     class Config:
         coerce = True
         strict = True
         unique_column_names = True
         add_missing_columns = False
         drop_invalid_rows = False
-        unique = ["institution_id", "student_guid"]
+        unique = ["student_guid"]

@@ -62,14 +62,15 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
     gender: pt.Series[pd.CategoricalDtype] = GenderField()
     cohort: pt.Series["string"]
     cohort_term: pt.Series[pd.CategoricalDtype] = TermField()
-    academic_year: pt.Series["string"]
-    academic_term: pt.Series[pd.CategoricalDtype] = TermField()
-    course_prefix: pt.Series["string"]
-    course_number: pt.Series["string"]
-    section_id: pt.Series["string"]
-    course_name: pt.Series["string"]
-    course_cip: pt.Series["string"]
+    academic_year: pt.Series["string"] = pda.Field(nullable=True)
+    academic_term: pt.Series[pd.CategoricalDtype] = TermField(nullable=True)
+    course_prefix: pt.Series["string"] = pda.Field(nullable=True)
+    course_number: pt.Series["string"] = pda.Field(nullable=True)
+    section_id: pt.Series["string"] = pda.Field(nullable=True)
+    course_name: pt.Series["string"] = pda.Field(nullable=True)
+    course_cip: pt.Series["string"] = pda.Field(nullable=True)
     course_type: pt.Series[pd.CategoricalDtype] = pda.Field(
+        nullable=True,
         dtype_kwargs={
             "categories": ["CU", "CG", "CC", "CD", "EL", "AB", "GE", "NC", "O"]
         },
@@ -78,10 +79,10 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
         nullable=True, dtype_kwargs={"categories": ["M", "E", "NA"]}
     )
     co_requisite_course: pt.Series[pd.CategoricalDtype] = pda.Field(
-        dtype_kwargs={"categories": ["Y", "N"]}
+        nullable=True, dtype_kwargs={"categories": ["Y", "N"]}
     )
-    course_begin_date: pt.Series["datetime64[ns]"]
-    course_end_date: pt.Series["datetime64[ns]"]
+    course_begin_date: pt.Series["datetime64[ns]"] = pda.Field(nullable=True)
+    course_end_date: pt.Series["datetime64[ns]"] = pda.Field(nullable=True)
     grade: pt.Series["string"] = pda.Field(nullable=True)
     number_of_credits_attempted: pt.Series["Float32"] = NumCreditsGt0Field(le=20)
     number_of_credits_earned: pt.Series["Float32"] = NumCreditsGt0Field(le=20)
@@ -104,8 +105,9 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
     course_instructor_employment_status: t.Optional[pt.Series[pd.CategoricalDtype]] = (
         pda.Field(nullable=True, dtype_kwargs={"categories": ["PT", "FT"]})
     )
+    # NOTE: categories set in a parser, which forces "-1" / "-1.0" values to null
     course_instructor_rank: t.Optional[pt.Series[pd.CategoricalDtype]] = pda.Field(
-        nullable=True, dtype_kwargs={"categories": ["1", "2", "3", "4", "5", "6", "7"]}
+        nullable=True
     )
     enrollment_record_at_other_institution_s_state_s: pt.Series["string"] = pda.Field(
         nullable=True,
@@ -116,6 +118,10 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
     enrollment_record_at_other_institution_s_locale_s: pt.Series["string"] = pda.Field(
         nullable=True
     )
+
+    @pda.parser("course_instructor_rank")
+    def set_course_instructor_rank_categories(cls, series):
+        return series.cat.set_categories(["1", "2", "3", "4", "5", "6", "7"])
 
     @pda.dataframe_check
     def num_credits_attempted_ge_earned(cls, df: pd.DataFrame) -> pd.Series:
