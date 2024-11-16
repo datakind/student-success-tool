@@ -1,4 +1,5 @@
 import itertools
+import logging
 import typing as t
 
 import numpy as np
@@ -6,6 +7,8 @@ import pandas as pd
 import scipy.stats as ss
 
 from . import utils
+
+LOGGER = logging.getLogger(__name__)
 
 
 def assess_unique_values(data: pd.DataFrame, cols: str | list[str]) -> dict[str, int]:
@@ -141,11 +144,15 @@ def compute_crosstabs(
 def compute_associations(
     df: pd.DataFrame, *, skip_cols: t.Optional[list[str]] = None
 ) -> pd.DataFrame:
-    # cast datetime columns to numeric
+    # cast datetime columns to numeric, boolean to string
     df = df.assign(
         **{
             col: pd.to_numeric(df[col])
             for col in df.select_dtypes(include="datetime").columns
+        }
+        | {
+            col: df[col].astype("string")
+            for col in df.select_dtypes(include="boolean").columns
         }
     )
     if skip_cols:
@@ -153,7 +160,7 @@ def compute_associations(
     # identify columns by type
     cols = df.columns
     nominal_cols = set(
-        df.select_dtypes(include=["category", "string"]).columns.tolist()
+        df.select_dtypes(include=["category", "string", "boolean"]).columns.tolist()
     )
     numeric_cols = set(df.select_dtypes(include="number").columns.tolist())
     single_value_cols = set(col for col in cols if df[col].nunique() == 1)
@@ -183,6 +190,8 @@ def compute_associations(
         df_assoc.loc[col1, col2] = assoc
         if is_symmetric:
             df_assoc.loc[col2, col1] = assoc
+        if assoc is not None:
+            LOGGER.debug("%s – %s association = %s", col1, col2, assoc)
     return df_assoc
 
 
