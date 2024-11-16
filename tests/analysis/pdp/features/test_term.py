@@ -28,26 +28,6 @@ from student_success_tool.analysis.pdp.features import term
                         "FALL",
                         "SUMMER",
                     ],
-                    "course_begin_date": pd.to_datetime(
-                        [
-                            "2020-09-15",
-                            "2020-09-01",
-                            "2021-01-01",
-                            "2021-02-01",
-                            "2019-09-01",
-                            "2023-06-01",
-                        ],
-                    ),
-                    "course_end_date": pd.to_datetime(
-                        [
-                            "2020-12-15",
-                            "2020-12-01",
-                            "2021-02-01",
-                            "2021-05-15",
-                            "2019-12-01",
-                            "2023-08-15",
-                        ],
-                    ),
                 }
             ).astype(
                 {
@@ -78,26 +58,6 @@ from student_success_tool.analysis.pdp.features import term
                         "FALL",
                         "SUMMER",
                     ],
-                    "course_begin_date": pd.to_datetime(
-                        [
-                            "2020-09-15",
-                            "2020-09-01",
-                            "2021-01-01",
-                            "2021-02-01",
-                            "2019-09-01",
-                            "2023-06-01",
-                        ],
-                    ),
-                    "course_end_date": pd.to_datetime(
-                        [
-                            "2020-12-15",
-                            "2020-12-01",
-                            "2021-02-01",
-                            "2021-05-15",
-                            "2019-12-01",
-                            "2023-08-15",
-                        ],
-                    ),
                     "term_id": [
                         "2020-21 FALL",
                         "2020-21 FALL",
@@ -118,26 +78,6 @@ from student_success_tool.analysis.pdp.features import term
                     "term_rank_fall_spring": [1, 1, pd.NA, 2, 0, pd.NA],
                     "term_in_peak_covid": [False, False, False, True, False, False],
                     "term_is_fall_spring": [True, True, False, True, True, False],
-                    "term_course_begin_date_min": pd.to_datetime(
-                        [
-                            "2020-09-01",
-                            "2020-09-01",
-                            "2021-01-01",
-                            "2021-02-01",
-                            "2019-09-01",
-                            "2023-06-01",
-                        ],
-                    ),
-                    "term_course_end_date_max": pd.to_datetime(
-                        [
-                            "2020-12-15",
-                            "2020-12-15",
-                            "2021-02-01",
-                            "2021-05-15",
-                            "2019-12-01",
-                            "2023-08-15",
-                        ],
-                    ),
                 }
             ).astype({"term_rank_fall_spring": "Int8"}),
         ),

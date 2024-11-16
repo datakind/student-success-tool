@@ -14,6 +14,7 @@ def make_student_term_dataset(
     df_course: pd.DataFrame,
     *,
     min_passing_grade: float = constants.DEFAULT_MIN_PASSING_GRADE,
+    min_num_credits_full_time: float = constants.DEFAULT_MIN_NUM_CREDITS_FULL_TIME,
     course_level_pattern: str = constants.DEFAULT_COURSE_LEVEL_PATTERN,
     peak_covid_terms: set[tuple[str, str]] = constants.DEFAULT_PEAK_COVID_TERMS,
     key_course_subject_areas: t.Optional[list[str]] = None,
@@ -28,6 +29,10 @@ def make_student_term_dataset(
         df_cohort: As output by :func:`dataio.read_raw_pdp_cohort_data_from_file()` .
         df_course: As output by :func:`dataio.read_raw_pdp_course_data_from_file()` .
         min_passing_grade: Minimum numeric grade considered by institution as "passing".
+            Default value is 1.0, i.e. a "D" grade or better.
+        min_num_credits_full_time: Minimum number of credits *attempted* per term
+            for a student's enrollment intensity to be considered "full-time".
+            Default value is 12.0.
         course_level_pattern
         peak_covid_terms
         key_course_subject_areas
@@ -67,7 +72,10 @@ def make_student_term_dataset(
             key_course_ids=key_course_ids,
         )
         .merge(df_students, how="inner", on=["institution_id", "student_guid"])
-        .pipe(features.student_term.add_features)
+        .pipe(
+            features.student_term.add_features,
+            min_num_credits_full_time=min_num_credits_full_time,
+        )
     )
     df_student_terms_plus = features.cumulative.add_features(
         df_student_terms,
@@ -190,8 +198,6 @@ def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
                 "term_rank",
                 "term_rank_fall_spring",
                 "term_is_fall_spring",
-                "term_course_begin_date_min",
-                "term_course_end_date_max",
                 # columns used to derive other features, but not features themselves
                 "grade",
                 "course_ids",
@@ -242,13 +248,13 @@ def mask_year_values_based_on_enrollment_year(
     df: pd.DataFrame,
     *,
     col: str,
-    enrollment_year_col: str = "year_of_enrollment_at_cohort_inst_v2",
+    enrollment_year_col: str = "year_of_enrollment_at_cohort_inst",
 ) -> pd.Series:
     return df[col].mask(df[col].ge(df[enrollment_year_col]), other=pd.NA)
 
 
 def mask_year_columns_based_on_enrollment_year(
-    row: pd.Series, enrollment_year_col: str = "year_of_enrollment_at_cohort_inst_v2"
+    row: pd.Series, enrollment_year_col: str = "year_of_enrollment_at_cohort_inst"
 ) -> pd.Series:
     enrollment_year: int = row[enrollment_year_col]
     future_years = tuple(f"_year_{yr}" for yr in (1, 2, 3, 4) if yr >= enrollment_year)

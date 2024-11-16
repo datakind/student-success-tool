@@ -28,7 +28,8 @@ def aggregate_from_course_level_features(
         df
         student_term_id_cols: Columns that uniquely identify student-terms,
             used to group rows in ``df`` and merge features back in.
-        min_passing_grade
+        min_passing_grade: Minimum numeric grade considered by institution as "passing".
+            Default value is 1.0, i.e. a "D" grade or better.
         key_course_subject_areas: List of course subject areas that are particularly
             relevant ("key") to the institution, such that features are computed to
             measure the number of courses falling within them per student-term.
@@ -56,8 +57,6 @@ def aggregate_from_course_level_features(
         term_in_peak_covid=("term_in_peak_covid", "first"),
         term_rank_fall_spring=("term_rank_fall_spring", "first"),
         term_is_fall_spring=("term_is_fall_spring", "first"),
-        term_course_begin_date_min=("term_course_begin_date_min", "first"),
-        term_course_end_date_max=("term_course_end_date_max", "first"),
     )
     # various aggregations, with an eye toward cumulative features downstream
     df_aggs = df_grped.agg(
@@ -120,10 +119,20 @@ def aggregate_from_course_level_features(
     )
 
 
-def add_features(df: pd.DataFrame) -> pd.DataFrame:
+def add_features(
+    df: pd.DataFrame,
+    *,
+    min_num_credits_full_time: float = constants.DEFAULT_MIN_NUM_CREDITS_FULL_TIME,
+) -> pd.DataFrame:
     """
     Compute various student-term-level features from aggregated course-level features
     joined to student-level features.
+
+    Args:
+        df
+        min_num_credits_full_time: Minimum number of credits *attempted* per term
+            for a student's enrollment intensity to be considered "full-time".
+            Default value is 12.0.
 
     See Also:
         - :func:`aggregate_from_course_level_features()`
@@ -139,9 +148,12 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
     feature_name_funcs = (
         {
             "year_of_enrollment_at_cohort_inst": year_of_enrollment_at_cohort_inst,
-            "year_of_enrollment_at_cohort_inst_v2": year_of_enrollment_at_cohort_inst_v2,
             "term_is_while_student_enrolled_at_other_inst": term_is_while_student_enrolled_at_other_inst,
             "frac_credits_earned": shared.frac_credits_earned,
+            "student_term_enrollment_intensity": ft.partial(
+                student_term_enrollment_intensity,
+                min_num_credits_full_time=min_num_credits_full_time,
+            ),
         }
         | {
             fc_col: ft.partial(compute_frac_courses, numer_col=nc_col)
@@ -174,20 +186,6 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def year_of_enrollment_at_cohort_inst(
-    df: pd.DataFrame, *, cohort_col: str = "cohort", academic_col: str = "academic_year"
-) -> pd.Series:
-    return (
-        df[academic_col]
-        .str.extract(r"(?P<academic_yr>\d{4})-\d{2}")
-        .astype("Int16")["academic_yr"]
-        - df[cohort_col]
-        .str.extract(r"(?P<cohort_yr>\d{4})-\d{2}")
-        .astype("Int16")["cohort_yr"]
-        + 1
-    )
-
-
-def year_of_enrollment_at_cohort_inst_v2(
     df: pd.DataFrame,
     *,
     cohort_start_dt_col: str = "cohort_start_dt",
@@ -229,6 +227,28 @@ def student_rate_above_sections_avg(
     df: pd.DataFrame, *, student_col: str, sections_col: str
 ) -> pd.Series:
     return df[student_col].gt(df[sections_col])
+
+
+def student_term_enrollment_intensity(
+    df: pd.DataFrame,
+    *,
+    min_num_credits_full_time: float,
+    num_credits_col: str = "num_credits_attempted",
+) -> pd.Series:
+    if df[num_credits_col].isna().any():
+        LOGGER.warning(
+            "%s null values found for '%s'; "
+            "calculation of student_term_enrollment_intensity doesn't correctly handle nulls",
+            df[num_credits_col].isna().sum(),
+            num_credits_col,
+        )
+    return pd.Series(
+        data=np.where(
+            df[num_credits_col].ge(min_num_credits_full_time), "FULL-TIME", "PART-TIME"
+        ),
+        index=df.index,
+        dtype="string",
+    )
 
 
 def num_courses_col_agg(col: str = "course_id") -> pd.NamedAgg:
