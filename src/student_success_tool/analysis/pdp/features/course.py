@@ -42,6 +42,7 @@ def add_features(
         course_completed=course_completed,
         course_level=ft.partial(course_level, pattern=course_level_pattern),
         course_grade_numeric=course_grade_numeric,
+        course_grade=course_grade,
     )
 
 
@@ -92,6 +93,38 @@ def course_level(
 
 def course_grade_numeric(df: pd.DataFrame, *, col: str = "grade") -> pd.Series:
     return df[col].mask(df[col].isin(NON_NUMERIC_GRADES), pd.NA).astype("Float32")
+
+
+def course_grade(
+    df: pd.DataFrame,
+    *,
+    grade_col: str = "grade",
+    grade_num_col: str = "course_grade_numeric",
+) -> pd.Series:
+    non_numeric_grades = (
+        df[grade_col]
+        .mask(~df[grade_col].isin(NON_NUMERIC_GRADES), pd.NA)
+        # frustratingly, pdp uses "A" grade to indicate "Audit", which is just begging
+        # for confusion with the usual meaning of an "A" grade :/
+        # let's replace it with "AUDIT" for clarity, and so we can safely combine
+        # non-numeric grades with derived letter grades below
+        .replace("A", value="AUDIT")
+        # similarly, "O" looks like "0", so let's replace with "OTHER" for clarity
+        .replace("O", value="OTHER")
+        .astype("string")
+    )
+    letter_grades = pd.cut(
+        df[grade_num_col],
+        # pandas' binning args here are bad if you want (standard!) left-inclusive bins
+        # and *labels* for those bins; despite appearances, binning is like so:
+        # [0, 0.7) => F, [0.7, 1.7) => D, [1.7, 2.7) => C, [2.7, 3.7) => B, [3.7, 4.0] => A
+        bins=[0.0, 0.69, 1.69, 2.69, 3.69, 4.01],
+        labels=["F", "D", "C", "B", "A"],
+        right=True,
+        include_lowest=True,
+    ).astype("string")
+    # NOTE: this assumes that "F" ("Fail") grades are equivalent to "F" letter grades
+    return non_numeric_grades.combine_first(letter_grades)
 
 
 def _grade_is_passing(grade: str, min_passing_grade: float) -> bool | None:

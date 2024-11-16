@@ -218,12 +218,12 @@ def add_term_diff_features(
         .groupby(by=student_id_cols)
     )  # fmt: skip
     df_diffs = df.assign(
-        **{f"{col}_diff": df_grped[col].transform("diff") for col in cols}
+        **{f"{col}_diff_prev_term": df_grped[col].transform("diff") for col in cols}
     )
     df_pivots = []
     for col in cols:
         df_pivot_ = df_diffs.pivot(
-            index=student_id_cols, columns=term_num_col, values=f"{col}_diff"
+            index=student_id_cols, columns=term_num_col, values=f"{col}_diff_prev_term"
         )
         # col 1 is always null (since no preceding periods to diff against)
         cols_to_drop = [1] + [
@@ -231,10 +231,12 @@ def add_term_diff_features(
         ]
         df_pivots.append(
             df_pivot_.drop(columns=cols_to_drop)
-            .rename(columns=lambda term_num: f"{col}_diff_term_{term_num - 1}_to_term_{term_num}")
+            .rename(columns=lambda term_num: f"{col}_diff_term_{term_num - 1:.0f}_to_term_{term_num:.0f}")
         )  # fmt: skip
     df_pivot = pd.concat(df_pivots, axis="columns")
-    return pd.merge(df, df_pivot, left_on=student_id_cols, right_index=True, how="left")
+    return pd.merge(
+        df_diffs, df_pivot, left_on=student_id_cols, right_index=True, how="left"
+    )
 
 
 def _compute_cumfrac_terms_unenrolled(
@@ -246,7 +248,7 @@ def _compute_cumfrac_terms_unenrolled(
 ) -> pd.Series:
     cumnum_terms_total = (df[term_rank_col] - df[min_student_term_rank_col]) + 1
     cumfrac_terms_enrolled = df[cumnum_terms_enrolled_col] / cumnum_terms_total
-    return 1.0 - cumfrac_terms_enrolled
+    return (1.0 - cumfrac_terms_enrolled).astype("Float32")
 
 
 #######################

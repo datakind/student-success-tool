@@ -194,30 +194,6 @@ def test_multicol_grade_aggs_by_group(
 
 
 @pytest.mark.parametrize(
-    ["df", "ccol", "acol", "exp"],
-    [
-        (
-            pd.DataFrame(
-                {
-                    "cohort": ["2021-22", "2021-22", "2022-23"],
-                    "academic_year": ["2021-22", "2022-23", "2024-25"],
-                }
-            ),
-            "cohort",
-            "academic_year",
-            pd.Series([1, 2, 3], dtype="Int16"),
-        ),
-    ],
-)
-def test_year_of_enrollment_at_cohort_inst(df, ccol, acol, exp):
-    obs = student_term.year_of_enrollment_at_cohort_inst(
-        df, cohort_col=ccol, academic_col=acol
-    )
-    assert isinstance(obs, pd.Series) and not obs.empty
-    assert obs.equals(exp) or obs.compare(exp).empty
-
-
-@pytest.mark.parametrize(
     ["df", "ccol", "tcol", "exp"],
     [
         (
@@ -234,8 +210,8 @@ def test_year_of_enrollment_at_cohort_inst(df, ccol, acol, exp):
         ),
     ],
 )
-def test_year_of_enrollment_at_cohort_inst_v2(df, ccol, tcol, exp):
-    obs = student_term.year_of_enrollment_at_cohort_inst_v2(
+def test_year_of_enrollment_at_cohort_inst(df, ccol, tcol, exp):
+    obs = student_term.year_of_enrollment_at_cohort_inst(
         df, cohort_start_dt_col=ccol, term_start_dt_col=tcol
     )
     assert isinstance(obs, pd.Series) and not obs.empty
@@ -285,6 +261,29 @@ def test_compute_frac_courses(df, numer_col, denom_col, exp):
 def test_student_rate_above_sections_avg(df, student_col, sections_col, exp):
     obs = student_term.student_rate_above_sections_avg(
         df, student_col=student_col, sections_col=sections_col
+    )
+    assert isinstance(obs, pd.Series) and not obs.empty
+    assert obs.equals(exp) or obs.compare(exp).empty
+
+
+@pytest.mark.parametrize(
+    ["df", "min_num_credits_full_time", "num_credits_col", "exp"],
+    [
+        (
+            pd.DataFrame({"num_credits_attempted": [15.0, 12.0, 8.0, 0.0]}),
+            12.0,
+            "num_credits_attempted",
+            pd.Series(["FULL-TIME", "FULL-TIME", "PART-TIME", "PART-TIME"]),
+        ),
+    ],
+)
+def test_student_term_enrollment_intensity(
+    df, min_num_credits_full_time, num_credits_col, exp
+):
+    obs = student_term.student_term_enrollment_intensity(
+        df,
+        min_num_credits_full_time=min_num_credits_full_time,
+        num_credits_col=num_credits_col,
     )
     assert isinstance(obs, pd.Series) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty

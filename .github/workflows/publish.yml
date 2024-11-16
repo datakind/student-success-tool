@@ -17,17 +17,18 @@ jobs:
       - name: Build package
         run: |
           uv build --python "3.10"
-      # TODO: set up publishing secrets or trusted publisher
-      # - name: Publish package to TestPyPI
-      #   uses: pypa/gh-action-pypi-publish@release/v1
-      #   with:
-      #     user: __token__
-      #     password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-      #     repository_url: https://test.pypi.org/legacy/
-      # - name: Publish package to PyPI
-      #   uses: pypa/gh-action-pypi-publish@release/v1
-      #   with:
-      #     user: __token__
-      #     password: ${{ secrets.PYPI_API_TOKEN }}
-      #     verify_metadata: true
-      #     verbose: true
+      - name: Publish package to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          verify-metadata: true
+          verbose: true
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          verify-metadata: true
+          verbose: true
