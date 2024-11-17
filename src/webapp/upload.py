@@ -1,3 +1,6 @@
+"""Cloud storage upload related helper functions.
+"""
+
 import datetime
 
 from google.cloud import storage

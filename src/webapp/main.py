@@ -3,6 +3,7 @@
 
 from typing import Annotated, Union, Any
 from fastapi import FastAPI, HTTPException, status, Depends
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 # import logging
@@ -10,7 +11,6 @@ from pydantic import BaseModel
 from .utilities import has_access_to_inst_or_err, BaseUser
 from .routers import models, users, data
 from .upload import generate_upload_signed_url
-from fastapi.responses import FileResponse
 
 app = FastAPI(
     servers=[
@@ -78,9 +78,7 @@ def get_upload_url(inst_id: str) -> Any:
         current_user: the user making the request.
     """
     # has_access_to_inst_or_err(inst_id, current_user)
-    return generate_upload_signed_url(
-        "local-upload-test", "{0}/test.csv".format(inst_id)
-    )
+    return generate_upload_signed_url("local-upload-test", f"{inst_id}/test.csv")
 
 
 @app.get("/")
