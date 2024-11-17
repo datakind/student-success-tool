@@ -1,21 +1,26 @@
 """Helper functions that may be used across multiple API router subpackages.
 """
+
 from typing import Union
 from enum import IntEnum
 
 from fastapi import HTTPException, status
 from pydantic import BaseModel, ConfigDict
 
+
 # TODO: Store in a python package to be usable by the frontend.
 class AccessType(IntEnum):
     """Access types available."""
+
     DATAKINDER = 1
     MODEL_OWNER = 2
     DATA_OWNER = 3
     VIEWER = 4
 
+
 class BaseUser(BaseModel):
     """BaseUser represents an access type. The frontend will include more detailed User info."""
+
     model_config = ConfigDict(use_enum_values=True)
     # user_id is permanent and each frontend orginated account will map to a unique user_id.
     # Bare API callers will likely not include a user_id.
@@ -28,7 +33,7 @@ class BaseUser(BaseModel):
         super().__init__(user_id=usr, institution=inst, access_type=access)
 
     def is_datakinder(self) -> bool:
-        """ Whether a given user is a Datakinder."""
+        """Whether a given user is a Datakinder."""
         return self.access_type == AccessType.DATAKINDER
 
     def is_model_owner(self) -> bool:
@@ -49,8 +54,11 @@ class BaseUser(BaseModel):
 
     def has_full_data_access(self) -> bool:
         """Datakinders, model_owners, data_owners, all have full data access."""
-        return self.access_type in (AccessType.DATAKINDER, AccessType.MODEL_OWNER,
-            AccessType.DATA_OWNER)
+        return self.access_type in (
+            AccessType.DATAKINDER,
+            AccessType.MODEL_OWNER,
+            AccessType.DATA_OWNER,
+        )
 
     def construct_query_param_string(self) -> str:
         """Construct query paramstring from BaseUser. Mostly used for testing."""
@@ -69,6 +77,7 @@ def has_access_to_inst_or_err(inst: int, user: BaseUser):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authorized to read this institution's resources.",
         )
+
 
 def has_full_data_access_or_err(user: BaseUser, resource_type: str):
     """Raise error if a given user does not have data access to a given institution."""

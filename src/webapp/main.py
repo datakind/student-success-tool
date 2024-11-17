@@ -32,6 +32,7 @@ app.include_router(data.router)
 
 class Institution(BaseModel):
     """Institution data object."""
+
     inst_id: int
     name: str
     description: Union[str, None] = None
@@ -77,7 +78,9 @@ def get_upload_url(inst_id: str) -> Any:
         current_user: the user making the request.
     """
     # has_access_to_inst_or_err(inst_id, current_user)
-    return generate_upload_signed_url("local-upload-test", "{0}/test.csv".format(inst_id))
+    return generate_upload_signed_url(
+        "local-upload-test", "{0}/test.csv".format(inst_id)
+    )
 
 
 @app.get("/")
