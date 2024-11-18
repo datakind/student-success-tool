@@ -27,4 +27,4 @@ app.include_router(data.router)
 @app.get("/")
 def read_root() -> Any:
     """Returns the index.html file."""
-    return FileResponse("index.html")
+    return FileResponse("src/webapp/index.html")
