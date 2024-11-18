@@ -25,6 +25,7 @@ class BaseUser(BaseModel):
     # user_id is permanent and each frontend orginated account will map to a unique user_id.
     # Bare API callers will likely not include a user_id.
     user_id: Union[int, None] = None
+    # For Datakinders, institution = 0 (reserved value) which means "no inst specified".
     institution: int
     access_type: AccessType
 
@@ -69,6 +70,22 @@ class BaseUser(BaseModel):
         ret += "access=" + str(self.access_type)
         return ret
 
+    def has_stronger_permissions_than(self, other_access_type: AccessType) -> bool:
+        """Check that self has stronger permissions than other."""
+        if self.access_type == AccessType.DATAKINDER:
+            return True
+        if self.access_type == AccessType.MODEL_OWNER:
+            return other_access_type in (
+                AccessType.MODEL_OWNER,
+                AccessType.DATA_OWNER,
+                AccessType.VIEWER,
+            )
+        if self.access_type == AccessType.DATA_OWNER:
+            return other_access_type in (AccessType.DATA_OWNER, AccessType.VIEWER)
+        if self.access_type == AccessType.VIEWER:
+            return other_access_type == AccessType.VIEWER
+        return False
+
 
 def has_access_to_inst_or_err(inst: int, user: BaseUser):
     """Raise error if a given user does not have access to a given institution."""
@@ -85,4 +102,13 @@ def has_full_data_access_or_err(user: BaseUser, resource_type: str):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authorized to view " + resource_type + " for this institution.",
+        )
+
+
+def model_owner_and_higher_or_err(user: BaseUser, resource_type: str):
+    """Raise error if a given user does not have model ownership or higher."""
+    if not user.access_type in (AccessType.MODEL_OWNER, AccessType.DATAKINDER):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No permissions for " + resource_type + " for this institution.",
         )
