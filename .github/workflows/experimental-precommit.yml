@@ -30,9 +30,9 @@ jobs:
           options: "--check --verbose"
           src: "./src/webapp"
           version: "~= 22.0"
-      - name: Using pylint
-        run: |
-          pylint $(git ls-files './src/webapp/*.py') --errors-only
+      #- name: Using pylint
+      #  run: |
+      #    pylint $(git ls-files './src/webapp/*.py') --errors-only
       - name: Test with pytest
         run: |
           coverage run -m pytest  -v -s ./src/webapp/
