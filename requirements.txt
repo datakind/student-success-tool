@@ -8,7 +8,7 @@ google-crc32c==1.6.0
 google-resumable-media==2.7.2
 googleapis-common-protos==1.66.0
 pydantic>=2.7.0,<3.0.0
-pylint=3.3.1
+pylint==3.3.1
 pytest==8.3.3
 pytest-cov==4.0.0
 python-dotenv==1.0.1
