@@ -1,0 +1,15 @@
+$ python3 -m venv .venv
+[hi on] crystalren@crystalren1:~/datakind/student-success-tool/src/webapp$ source .venv/bin/activate
+(.venv) [hi on] crystalren@crystalren1:~/datakind/student-success-tool/src/webapp$ which python
+/usr/local/google/home/crystalren/datakind/student-success-tool/src/webapp/.venv/bin/python
+(.venv) [hi on] crystalren@crystalren1:~/datakind/student-success-tool/src/webapp$ python --version
+Python 3.11.9
+(.venv) [hi on] crystalren@crystalren1:~/datakind/student-success-tool/src/webapp$ python -m pip install --upgrade pip
+
+(.venv) [hi on] crystalren@crystalren1:~/datakind/student-success-tool/src/webapp$ echo "*" > .venv/.gitignore
+(.venv) [hi on] crystalren@crystalren1:~/datakind/student-success-tool/src/webapp$ pip install -r ../../requirements.txt
+
+(.venv) [hi on] crystalren@crystalren1:~/datakind/student-success-tool/src/webapp$ cd ../..
+(.venv) [hi on] crystalren@crystalren1:~/datakind/student-success-tool$ pylint $(git ls-files './src/webapp/*.py') --errors-only
+
+(.venv) [hi on] crystalren@crystalren1:~/datakind/student-success-tool$ coverage run -m pytest  -v -s ./src/webapp/
