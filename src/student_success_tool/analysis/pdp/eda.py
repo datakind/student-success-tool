@@ -147,6 +147,24 @@ def compute_pairwise_associations(
     ref_col: t.Optional[str] = None,
     exclude_cols: t.Optional[str | list[str]] = None,
 ) -> pd.DataFrame:
+    """
+    Compute pairwise associations between all columns and each other or, instead,
+    all columns and a specified reference column.
+
+    Per-pair association metrics depend on the data types of each:
+
+        - nominal-nominal => Cramer's V
+        - numeric-numeric => Spearman rank correlation
+        - nominal-numeric => Correlation ratio
+
+    Args:
+        df
+        ref_col: Reference column against which associations are to be computed.
+            If None, all pairwise associations are computed.
+        exclude_cols: One or multiple columns to exclude from computing associations;
+            for example, if values are unique identifiers or all a single value,
+            making their associations irrelevant.
+    """
     # cast datetime columns to numeric, boolean to string
     df = df.assign(
         **{
@@ -202,8 +220,11 @@ def compute_pairwise_associations(
 
 def cramers_v(s1: pd.Series, s2: pd.Series) -> float | None:
     """
-    Compute Cramer's V statistic for categorical-categorical association,
+    Compute Cramer's V statistic for nominal-nominal association,
     which is symmetric -- i.e. V(x, y) == V(y, x).
+
+    References:
+        - https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V
 
     See Also:
         - :func:`scipy.stats.contingency.association()`
@@ -226,7 +247,10 @@ def cramers_v(s1: pd.Series, s2: pd.Series) -> float | None:
 
 def correlation_ratio(s1: pd.Series, s2: pd.Series) -> float:
     """
-    Compute the Correlation Ratio for categorical-numeric association.
+    Compute the Correlation Ratio for nominal-numeric association.
+
+    References:
+        - https://en.wikipedia.org/wiki/Correlation_ratio
 
     Note:
         ``s1`` and ``s2`` are automatically detected as being categorical or numeric,
