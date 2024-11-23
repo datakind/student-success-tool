@@ -38,6 +38,7 @@ import sys
 
 import matplotlib.pyplot as plt
 import missingno as msno
+import numpy as np
 import pandas as pd
 import seaborn as sb
 from databricks.connect import DatabricksSession
@@ -71,7 +72,8 @@ except Exception:
 if "../" not in sys.path:
     sys.path.insert(1, "../")
 
-from analysis import *  # TODO: specify school's subpackage
+# TODO: specify school's subpackage
+from analysis import *  # noqa: F403
 
 # COMMAND ----------
 
@@ -299,7 +301,7 @@ df_cohort.shape
 # COMMAND ----------
 
 # decent, general-purpose summarization of a data frame
-dbutils.data.summarize(df_course, precise=False)  # noqa: F821
+dbutils.data.summarize(df_course, precise=False)  # noqa: F405
 
 # COMMAND ----------
 
@@ -309,7 +311,7 @@ dbutils.data.summarize(df_course, precise=False)  # noqa: F821
 
 # COMMAND ----------
 
-dbutils.data.summarize(df_cohort, precise=True)  # noqa: F821
+dbutils.data.summarize(df_cohort, precise=True)  # noqa: F405
 
 # COMMAND ----------
 
@@ -724,7 +726,7 @@ _ = ax.set_xticklabels(
 # COMMAND ----------
 
 df_assoc_cohort = pdp.eda.compute_pairwise_associations(
-    df_cohort_valid,
+    df_cohort,
     exclude_cols=[
         "student_guid",
         "institution_id",
