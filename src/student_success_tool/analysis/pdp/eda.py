@@ -141,8 +141,11 @@ def compute_crosstabs(
     return ct
 
 
-def compute_associations(
-    df: pd.DataFrame, *, skip_cols: t.Optional[list[str]] = None
+def compute_pairwise_associations(
+    df: pd.DataFrame,
+    *,
+    ref_col: t.Optional[str] = None,
+    exclude_cols: t.Optional[str | list[str]] = None,
 ) -> pd.DataFrame:
     # cast datetime columns to numeric, boolean to string
     df = df.assign(
@@ -155,26 +158,28 @@ def compute_associations(
             for col in df.select_dtypes(include="boolean").columns
         }
     )
-    if skip_cols:
-        df = df.drop(columns=skip_cols)
-    # identify columns by type
-    cols = df.columns
+    # identify and organize columns in df
+    if exclude_cols:
+        df = df.drop(columns=exclude_cols)
+    cols = df.columns.tolist()
     nominal_cols = set(
-        df.select_dtypes(include=["category", "string", "boolean"]).columns.tolist()
+        df.select_dtypes(
+            include=["category", "string", "boolean", "object"]
+        ).columns.tolist()
     )
     numeric_cols = set(df.select_dtypes(include="number").columns.tolist())
     single_value_cols = set(col for col in cols if df[col].nunique() == 1)
     # store col-col association values
-    df_assoc = pd.DataFrame(index=cols, columns=cols, dtype="Float32")
-    # set self-associations to 1
-    for col in cols:
-        df_assoc.loc[col, col] = 1.0
-    for col1, col2 in itertools.permutations(cols, 2):
+    ref_cols = cols if ref_col is None else [ref_col]
+    df_assoc = pd.DataFrame(index=cols, columns=ref_cols, dtype="Float32")
+    for col1, col2 in itertools.product(cols, ref_cols):
         if not pd.isna(df_assoc.at[col1, col2]):
             continue
 
         is_symmetric = False
-        if col1 in single_value_cols or col2 in single_value_cols:  # n/a
+        if col1 == col2:  # self-association
+            assoc = 1.0
+        elif col1 in single_value_cols or col2 in single_value_cols:  # n/a
             assoc = None
         elif col1 in nominal_cols and col2 in nominal_cols:  # nom-nom
             assoc = cramers_v(df[col1], df[col2])
@@ -188,7 +193,7 @@ def compute_associations(
             is_symmetric = True
 
         df_assoc.loc[col1, col2] = assoc
-        if is_symmetric:
+        if is_symmetric and len(ref_cols) > 1:
             df_assoc.loc[col2, col1] = assoc
         if assoc is not None:
             LOGGER.debug("%s – %s association = %s", col1, col2, assoc)
