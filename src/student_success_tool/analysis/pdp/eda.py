@@ -164,6 +164,10 @@ def compute_pairwise_associations(
         exclude_cols: One or multiple columns to exclude from computing associations;
             for example, if values are unique identifiers or all a single value,
             making their associations irrelevant.
+
+    References:
+        - https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V
+        - https://en.wikipedia.org/wiki/Correlation_ratio
     """
     # cast datetime columns to numeric, boolean to string
     df = df.assign(
@@ -200,12 +204,12 @@ def compute_pairwise_associations(
         elif col1 in single_value_cols or col2 in single_value_cols:  # n/a
             assoc = None
         elif col1 in nominal_cols and col2 in nominal_cols:  # nom-nom
-            assoc = cramers_v(df[col1], df[col2])
+            assoc = _cramers_v(df[col1], df[col2])
             is_symmetric = True
         elif (col1 in nominal_cols and col2 in numeric_cols) or (
             col1 in numeric_cols and col2 in nominal_cols
         ):  # nom-num
-            assoc = correlation_ratio(df[col1], df[col2])
+            assoc = _correlation_ratio(df[col1], df[col2])
         else:  # num-num
             assoc = df[col1].corr(df[col2], method="spearman")
             is_symmetric = True
@@ -218,7 +222,7 @@ def compute_pairwise_associations(
     return df_assoc
 
 
-def cramers_v(s1: pd.Series, s2: pd.Series) -> float | None:
+def _cramers_v(s1: pd.Series, s2: pd.Series) -> float | None:
     """
     Compute Cramer's V statistic for nominal-nominal association,
     which is symmetric -- i.e. V(x, y) == V(y, x).
@@ -245,7 +249,7 @@ def cramers_v(s1: pd.Series, s2: pd.Series) -> float | None:
         return None
 
 
-def correlation_ratio(s1: pd.Series, s2: pd.Series) -> float:
+def _correlation_ratio(s1: pd.Series, s2: pd.Series) -> float:
     """
     Compute the Correlation Ratio for nominal-numeric association.
 
