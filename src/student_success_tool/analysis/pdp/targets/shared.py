@@ -236,6 +236,54 @@ def get_first_student_terms_at_num_credits_earned(
     )
 
 
+def get_first_student_terms_within_cohort(
+    df: pd.DataFrame,
+    *,
+    student_id_cols: str | list[str] = "student_guid",
+    cohort_id_col: str = "cohort_id",
+    term_id_col: str = "term_id",
+    term_rank_col: str = "term_rank",
+    sort_cols: str | list[str] = "term_rank",
+    include_cols: t.Optional[list[str]] = None,
+) -> pd.DataFrame:
+    """
+    For each student, get the first row in ``df`` (in ascending order of ``sort_cols`` )
+    for which the term occurred *within* the student's cohort, i.e. not prior to
+    their official start of enrollment.
+
+    Args:
+        df
+        student_id_cols
+        cohort_id_col
+        term_id_col
+        term_rank_col
+        sort_cols
+        include_cols
+    """
+    student_id_cols = utils.to_list(student_id_cols)
+    # TODO: handle students w/o any courses in their cohort term?
+    student_cohort_term_ranks = (
+        df.loc[df[cohort_id_col].eq(df[term_id_col]), student_id_cols + [term_rank_col]]
+        .rename(columns={term_rank_col: "student_cohort_term_rank"})
+    )  # fmt: off
+    df_within_cohort = (
+        pd.merge(df, student_cohort_term_ranks, on=student_id_cols)
+        .assign(
+            is_within_cohort=lambda df: df[term_rank_col].ge(
+                df["student_cohort_term_rank"]
+            )
+        )
+        .loc[lambda df: df["is_within_cohort"].eq(True), :]
+        .drop(columns="student_cohort_term_rank")
+    )
+    return get_first_student_terms(
+        df_within_cohort,
+        student_id_cols=student_id_cols,
+        sort_cols=sort_cols,
+        include_cols=include_cols,
+    )
+
+
 def _compute_intensity_num_terms(
     intensity_time_lefts: list[tuple[str, float, t.Literal["year", "term"]]],
     num_terms_in_year: int,
