@@ -164,15 +164,44 @@ df_student_terms.columns.tolist()
 
 # COMMAND ----------
 
-# school-specific parameters that configure target variable code
-student_criteria = {
-  "enrollment_type": "FIRST-TIME",
-  "credential_type_sought_year_1": "Bachelor's Degree",
-}
+# MAGIC %md
+# MAGIC A single function call can be used to make a labeled dataset for modeling, which includes selecting eligible students, subsetting to just the terms from which predictions are made, and computing target variables. _Which_ function depends primarily on the target to be computed: a failure to earn enough credits within a timeframe since initial enrollment, or a particular mid-way checkpoint (other targets pending). Input parameters will vary depending on the school and the target.
+# MAGIC
+# MAGIC For example, here's how one could make a labeled dataset with the following setup: Filters for first-time students, enrolled either full- or part-time, seeking an Associate's degree; that earn at least 60 credits within 3 years of enrollment if full-time or 6 years of enrollment if part-time; making predictions from the first term for which they've earned 30 credits.
+# MAGIC
+# MAGIC ```python
+# MAGIC # school-specific parameters that configure target variable code
+# MAGIC min_num_credits_checkin = 30.0
+# MAGIC min_num_credits_target = 60.0
+# MAGIC student_criteria = {
+# MAGIC     "enrollment_type": "FIRST-TIME",
+# MAGIC     "enrollment_intensity_first_term": ["FULL-TIME", "PART-TIME"],
+# MAGIC     "credential_type_sought_year_1": "Associate's Degree",
+# MAGIC }
+# MAGIC intensity_time_limits = [
+# MAGIC     ("FULL-TIME", 3.0, "year"),
+# MAGIC     ("PART-TIME", 6.0, "year"),
+# MAGIC ]
+# MAGIC
+# MAGIC df_labeled = pdp.targets.failure_to_earn_enough_credits_in_time_from_enrollment.make_labeled_dataset(
+# MAGIC     df_student_terms,
+# MAGIC     min_num_credits_checkin=min_num_credits_checkin,
+# MAGIC     min_num_credits_target=min_num_credits_target,
+# MAGIC     student_criteria=student_criteria,
+# MAGIC     intensity_time_limits=intensity_time_limits,
+# MAGIC )
+# MAGIC ```
+# MAGIC
+# MAGIC Check out the `pdp.targets` module for options and more info.
 
 # COMMAND ----------
 
-# TODO ...
+# TODO: school-specific parameters that configure target variable code
+
+# COMMAND ----------
+
+# TODO: suitable function call for school's use case
+# df_labeled = pdp.targets.*.make_labeled_dataset(...)
 
 # COMMAND ----------
 
