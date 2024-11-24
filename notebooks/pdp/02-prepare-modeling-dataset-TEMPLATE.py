@@ -23,7 +23,7 @@
 # COMMAND ----------
 
 # install dependencies, most of which should come through our 1st-party SST package
-%pip install git+https://github.com/datakind/student-success-tool.git@develop
+# %pip install git+https://github.com/datakind/student-success-tool.git@develop
 
 # COMMAND ----------
 
@@ -32,12 +32,9 @@
 # COMMAND ----------
 
 import logging
-import os
 import sys
 
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import seaborn as sb
 from databricks.connect import DatabricksSession
 
@@ -277,7 +274,7 @@ df_labeled_selected
 np.random.seed(1)
 df_labeled_selected = df_labeled_selected.assign(
     split=lambda df: np.random.choice(
-        ["train", "test", "validate"],  
+        ["train", "test", "validate"],
         size=df.shape[0],
         p=[0.6, 0.2, 0.2],
     )
@@ -310,5 +307,3 @@ target_assocs
 # MAGIC TODO
 
 # COMMAND ----------
-
-
