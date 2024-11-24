@@ -134,6 +134,43 @@ def select_students_by_time_left(
     return df_out
 
 
+def select_students_by_next_year_course_data(
+    df: pd.DataFrame,
+    *,
+    student_id_cols: str | list[str] = "student_guid",
+    cohort_id_col: str = "cohort_id",
+    term_id_col: str = "term_id",
+) -> pd.DataFrame:
+    """
+    Select distinct students in ``df`` for which ``df`` includes any records
+    for the *next* academic year after the students' cohort year; effectively,
+    this drops all students in the cohort from the most recent course year.
+
+    Args:
+        df: Student-term dataset.
+        student_id_cols
+        cohort_id_col
+        term_id_col
+    """
+    student_id_cols = utils.to_list(student_id_cols)
+    nuq_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
+    max_term_year = (
+        df[term_id_col].str.extract(r"^(\d{4})").astype("Int32").max().iat[0]
+    )
+    df_out = (
+        df.groupby(by=student_id_cols, as_index=False)
+        .agg(student_cohort_id=(cohort_id_col, "min"))
+        .assign(
+            student_cohort_year=lambda df: df["student_cohort_id"]
+            .str.extract(r"^(\d{4})")
+            .astype("Int32")
+        )
+        .loc[lambda df: df["student_cohort_year"] < max_term_year, student_id_cols]
+    )
+    _log_eligible_selection(nuq_students_in, len(df_out), "next year course data")
+    return df_out
+
+
 def get_first_student_terms(
     df: pd.DataFrame,
     *,
