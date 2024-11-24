@@ -227,6 +227,12 @@ _ = ax.set(xlabel="Number of Students")
 
 # COMMAND ----------
 
+# drop unwanted columns and mask values by time
+df_labeled = pdp.dataops.clean_up_labeled_dataset_cols_and_vals(df_labeled)
+df_labeled.shape
+
+# COMMAND ----------
+
 # save labeled dataset in unity catalog, as needed
 # write_table_path = f"{catalog}.{schema}.labeled_dataset"
 # pdp.dataio.write_data_to_delta_table(df_labeled, write_table_path, spark_session=spark_session)
