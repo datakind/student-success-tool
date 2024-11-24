@@ -35,6 +35,7 @@ import logging
 import sys
 
 import numpy as np
+import pandas as pd
 import seaborn as sb
 from databricks.connect import DatabricksSession
 
@@ -199,6 +200,7 @@ df_student_terms.columns.tolist()
 
 # TODO: suitable function call for school's use case
 # df_labeled = pdp.targets.*.make_labeled_dataset(...)
+df_labeled = pd.DataFrame()
 
 # COMMAND ----------
 
