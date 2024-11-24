@@ -73,8 +73,10 @@ def compute_target_variable(
     return (
         df[student_id_cols + [retention_col]]
         .drop_duplicates(subset=student_id_cols, ignore_index=True)
-        .rename(columns={retention_col: "target"})
-        .fillna(False)
+        # recall that we are prediction *non* retention
+        .assign(target=lambda df: ~df[retention_col])
+        .drop(columns=retention_col)
+        .fillna({"target": False})
         .astype({"target": "bool"})
         # TODO: do we want a series with student ids as index and target as values, or nah?
         .set_index(student_id_cols)
