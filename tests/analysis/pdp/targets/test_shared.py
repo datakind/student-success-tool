@@ -166,6 +166,20 @@ def test_select_students_by_time_left(
 
 
 @pytest.mark.parametrize(
+    "exp",
+    [
+        pd.DataFrame({"student_id": ["01", "02", "03", "04"]}),
+    ],
+)
+def test_select_students_by_next_year_course_data(test_df, exp):
+    obs = shared.select_students_by_next_year_course_data(
+        test_df, student_id_cols="student_id"
+    )
+    assert isinstance(obs, pd.DataFrame)
+    assert obs.equals(exp) or obs.compare(exp).empty
+
+
+@pytest.mark.parametrize(
     ["include_cols", "exp"],
     [
         (
