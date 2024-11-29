@@ -268,12 +268,7 @@ def get_first_student_terms_within_cohort(
     )  # fmt: off
     df_within_cohort = (
         pd.merge(df, student_cohort_term_ranks, on=student_id_cols)
-        .assign(
-            is_within_cohort=lambda df: df[term_rank_col].ge(
-                df["student_cohort_term_rank"]
-            )
-        )
-        .loc[lambda df: df["is_within_cohort"].eq(True), :]
+        .loc[lambda df: df[term_rank_col].ge(df["student_cohort_term_rank"]), :]
         .drop(columns="student_cohort_term_rank")
     )
     return get_first_student_terms(
