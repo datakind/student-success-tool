@@ -185,12 +185,10 @@ def compute_pairwise_associations(
         df = df.drop(columns=exclude_cols)
     cols = df.columns.tolist()
     nominal_cols = set(
-        df.select_dtypes(
-            include=["category", "string", "boolean", "object"]
-        ).columns.tolist()
+        df.select_dtypes(include=["category", "string", "boolean"]).columns.tolist()
     )
     numeric_cols = set(df.select_dtypes(include="number").columns.tolist())
-    single_value_cols = set(col for col in cols if df[col].nunique() == 1)
+    single_value_cols = _get_single_value_columns(df)
     # store col-col association values
     ref_cols = cols if ref_col is None else [ref_col]
     df_assoc = pd.DataFrame(index=cols, columns=ref_cols, dtype="Float32")
@@ -210,9 +208,19 @@ def compute_pairwise_associations(
             col1 in numeric_cols and col2 in nominal_cols
         ):  # nom-num
             assoc = _correlation_ratio(df[col1], df[col2])
-        else:  # num-num
+        elif col1 in numeric_cols and col2 in numeric_cols:  # num-num
             assoc = df[col1].corr(df[col2], method="spearman")
             is_symmetric = True
+        else:
+            LOGGER.warning(
+                "'%s' and/or '%s' columns' dtypes (%s and/or %s) aren't supported "
+                "for association computation; skipping ...",
+                col1,
+                col2,
+                df[col1].dtype,
+                df[col2].dtype,
+            )
+            assoc = None
 
         df_assoc.loc[col1, col2] = assoc
         if is_symmetric and len(ref_cols) > 1:
@@ -220,6 +228,18 @@ def compute_pairwise_associations(
         if assoc is not None:
             LOGGER.debug("%s – %s association = %s", col1, col2, assoc)
     return df_assoc
+
+
+def _get_single_value_columns(df: pd.DataFrame) -> set[str]:
+    sv_cols = []
+    for col in df.columns:
+        try:
+            nunique = df[col].nunique()
+        except TypeError:  # womp
+            continue
+        if nunique == 1:
+            sv_cols.append(col)
+    return set(sv_cols)
 
 
 def _cramers_v(s1: pd.Series, s2: pd.Series) -> float | None:
@@ -237,6 +257,9 @@ def _cramers_v(s1: pd.Series, s2: pd.Series) -> float | None:
         raise ValueError()
 
     s1, s2 = _drop_incomplete_pairs(s1, s2)
+    if s1.empty or s2.empty:
+        return None
+
     confusion_matrix = pd.crosstab(s1, s2)
     correction = False if confusion_matrix.shape[0] == 2 else True
     try:

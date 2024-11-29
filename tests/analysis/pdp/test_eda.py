@@ -28,7 +28,7 @@ from student_success_tool.analysis.pdp import eda
                     "col3": ["A", "A", "B"],
                     "col4": ["X", "Y", "X"],
                 }
-            ),
+            ).astype({"col3": "string", "col4": "category"}),
             None,
             None,
             pd.DataFrame(
