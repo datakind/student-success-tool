@@ -249,7 +249,7 @@ def _cramers_v(s1: pd.Series, s2: pd.Series) -> float | None:
         return None
 
 
-def _correlation_ratio(s1: pd.Series, s2: pd.Series) -> float:
+def _correlation_ratio(s1: pd.Series, s2: pd.Series) -> float | None:
     """
     Compute the Correlation Ratio for nominal-numeric association.
 
@@ -270,6 +270,9 @@ def _correlation_ratio(s1: pd.Series, s2: pd.Series) -> float:
         raise ValueError()
 
     categories, measurements = _drop_incomplete_pairs(categories, measurements)
+    if categories.empty or measurements.empty:
+        return None
+
     fcat, _ = pd.factorize(categories)
     cat_num = np.max(fcat) + 1
     y_avg_array = np.zeros(cat_num)
