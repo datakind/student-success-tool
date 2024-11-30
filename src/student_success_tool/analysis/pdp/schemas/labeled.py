@@ -1,6 +1,8 @@
 # ruff: noqa: F821
 # mypy: ignore-errors
+import typing as t
 
+import pandas as pd
 import pandera as pda
 import pandera.typing as pt
 
@@ -14,6 +16,9 @@ class PDPLabeledDataSchema(pda.DataFrameModel):
 
     student_guid: pt.Series["string"]
     target: pt.Series["boolean"]
+    split: t.Optional[pt.Series[pd.CategoricalDtype]] = pda.Field(
+        dtype_kwargs={"categories": ["train", "test", "validate"]}
+    )
 
     class Config:
         coerce = True
