@@ -210,8 +210,8 @@ def test_standardize_course_dataset(df, exp):
                         pd.NA,
                         pd.NA,
                     ],
-                    "frac_credits_earned_year_1": [np.nan, 0.5, 0.75, 0.9],
-                    "frac_credits_earned_year_2": [np.nan, np.nan, 0.8, 0.85],
+                    "frac_credits_earned_year_1": [1.0, 0.5, 0.75, 0.9],
+                    "frac_credits_earned_year_2": [np.nan, 0.75, 0.8, 0.85],
                     "num_courses_diff_term_2_to_term_3": [np.nan, 1.0, -1.0, 0.0],
                     "num_courses_diff_term_3_to_term_4": [np.nan, np.nan, 0.0, 1.0],
                 }
