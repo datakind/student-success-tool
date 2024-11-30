@@ -1585,7 +1585,7 @@ wheels = [
 
 [[package]]
 name = "pandera"
-version = "0.20.4"
+version = "0.21.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "multimethod" },
@@ -1597,9 +1597,9 @@ dependencies = [
     { name = "typing-inspect" },
     { name = "wrapt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9d/ea/6ec88e6efa7570d9cb8ede5e6c99b7c6372e60f2793129d6fc084874782f/pandera-0.20.4.tar.gz", hash = "sha256:ccf6178293ef9d4393dc4776e47477e3d2dd51c800ecdfedec67fff50f4ad3c2", size = 201605 }
+sdist = { url = "https://files.pythonhosted.org/packages/df/c8/79d0d6e84e9ec24b55c1b2cd82e3d116f17b9f4c47e0aca47c45b9083003/pandera-0.21.0.tar.gz", hash = "sha256:12a1e67478dc72459eff8329036e1d3502fcc4332c9c70bdbd88a78b7597aa8a", size = 202728 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0b/fe/055638517abe4b3a2e0e582d1246688ecb642e6e2edbe4031a8864b44568/pandera-0.20.4-py3-none-any.whl", hash = "sha256:40368d9162938f304ce4ce6ad41ce4b57991b88f7de1bb4574aeb5a1ecf2dc8c", size = 259604 },
+    { url = "https://files.pythonhosted.org/packages/bb/46/036f7ce9ea162af98b65df15fa16a22fdb9813e326ef856eb82794e70871/pandera-0.21.0-py3-none-any.whl", hash = "sha256:ee694182ff9f15c165d14a99a9b90bcdf95bce07c1935f73c69718db15c85809", size = 261011 },
 ]
 
 [[package]]
@@ -2450,7 +2450,7 @@ requires-dist = [
     { name = "mlflow", specifier = "~=2.13" },
     { name = "numpy", specifier = "~=1.23" },
     { name = "pandas", specifier = "~=2.1" },
-    { name = "pandera", specifier = "~=0.20" },
+    { name = "pandera", specifier = "~=0.21" },
     { name = "pillow", specifier = "~=9.3" },
     { name = "pyarrow", specifier = "~=14.0" },
     { name = "pyyaml", specifier = "~=6.0" },
