@@ -157,11 +157,11 @@ def add_features(
             ),
             "num_courses_in_program_of_study_area_term_1": ft.partial(
                 num_courses_in_study_area,
-                study_area_col="program_of_study_area_term_1",
+                study_area_col="student_program_of_study_area_term_1",
             ),
             "num_courses_in_program_of_study_area_year_1": ft.partial(
                 num_courses_in_study_area,
-                study_area_col="program_of_study_area_year_1",
+                study_area_col="student_program_of_study_area_year_1",
             ),
         }
         | {
