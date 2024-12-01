@@ -240,9 +240,7 @@ def get_first_student_terms_within_cohort(
     df: pd.DataFrame,
     *,
     student_id_cols: str | list[str] = "student_guid",
-    cohort_id_col: str = "cohort_id",
-    term_id_col: str = "term_id",
-    term_rank_col: str = "term_rank",
+    term_is_pre_cohort_col: str = "term_is_pre_cohort",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:
@@ -260,19 +258,9 @@ def get_first_student_terms_within_cohort(
         sort_cols
         include_cols
     """
-    student_id_cols = utils.to_list(student_id_cols)
-    # TODO: handle students w/o any courses in their cohort term?
-    student_cohort_term_ranks = (
-        df.loc[df[cohort_id_col].eq(df[term_id_col]), student_id_cols + [term_rank_col]]
-        .rename(columns={term_rank_col: "student_cohort_term_rank"})
-    )  # fmt: off
-    df_within_cohort = (
-        pd.merge(df, student_cohort_term_ranks, on=student_id_cols)
-        .loc[lambda df: df[term_rank_col].ge(df["student_cohort_term_rank"]), :]
-        .drop(columns="student_cohort_term_rank")
-    )
     return get_first_student_terms(
-        df_within_cohort,
+        # exclude rows that are "pre-cohort", so "first" meets our criteria here
+        df.loc[df[term_is_pre_cohort_col].eq(False), :],
         student_id_cols=student_id_cols,
         sort_cols=sort_cols,
         include_cols=include_cols,

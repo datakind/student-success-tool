@@ -61,6 +61,16 @@ def test_df():
             ],
             "num_credits_earned": [25.0, 30.0, 35.0, 25.0, 35.0, 20.0, 45.0, 10.0],
             "term_rank": [3, 4, 5, 5, 6, 2, 4, 8],
+            "term_is_pre_cohort": [
+                True,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+            ],
         },
     ).astype(
         {
@@ -253,6 +263,7 @@ def test_select_students_by_next_year_course_data(test_df, exp):
                     ],
                     "num_credits_earned": [20.0, 25.0, 45.0, 25.0, 10.0],
                     "term_rank": [2, 3, 4, 5, 8],
+                    "term_is_pre_cohort": [False, True, False, False, False],
                 }
             ).astype(
                 {
@@ -328,8 +339,8 @@ def test_get_first_student_terms_at_num_credits_earned(
             [],
             pd.DataFrame(
                 {
-                    "student_id": ["01", "04", "02", "05"],
-                    "term_rank": [4, 4, 5, 8],
+                    "student_id": ["03", "01", "04", "02", "05"],
+                    "term_rank": [2, 4, 4, 5, 8],
                 }
             ),
         ),
@@ -337,15 +348,17 @@ def test_get_first_student_terms_at_num_credits_earned(
             ["cohort_id", "term_id"],
             pd.DataFrame(
                 {
-                    "student_id": ["01", "04", "02", "05"],
-                    "term_rank": [4, 4, 5, 8],
+                    "student_id": ["03", "01", "04", "02", "05"],
+                    "term_rank": [2, 4, 4, 5, 8],
                     "cohort_id": [
+                        "2019-20 FALL",
                         "2020-21 SPRING",
                         "2020-21 SPRING",
                         "2021-22 FALL",
                         "2022-23 FALL",
                     ],
                     "term_id": [
+                        "2019-20 SPRING",
                         "2020-21 SPRING",
                         "2020-21 SPRING",
                         "2021-22 FALL",
