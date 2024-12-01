@@ -13,9 +13,11 @@ def make_labeled_dataset(
     df: pd.DataFrame,
     *,
     student_criteria: dict[str, object | Collection[object]],
+    exclude_pre_cohort_terms: bool = True,
     student_id_cols: str | list[str] = "student_guid",
     cohort_id_col: str = "cohort_id",
     term_id_col: str = "term_id",
+    term_is_pre_cohort_col: str = "term_is_pre_cohort",
     term_rank_col: str = "term_rank",
     retention_col: str = "retention",
 ) -> pd.DataFrame:
@@ -39,15 +41,21 @@ def make_labeled_dataset(
     df_eligible_student_terms = pd.merge(
         df, df_eligible_students, on=student_id_cols, how="inner"
     )
-    df_features = shared.get_first_student_terms_within_cohort(
-        df_eligible_student_terms,
-        student_id_cols=student_id_cols,
-        cohort_id_col=cohort_id_col,
-        term_id_col=term_id_col,
-        term_rank_col=term_rank_col,
-        sort_cols=term_rank_col,
-        include_cols=None,
-    )
+    if exclude_pre_cohort_terms is True:
+        df_features = shared.get_first_student_terms_within_cohort(
+            df_eligible_student_terms,
+            student_id_cols=student_id_cols,
+            term_is_pre_cohort_col=term_is_pre_cohort_col,
+            sort_cols=term_rank_col,
+            include_cols=None,
+        )
+    else:
+        df_features = shared.get_first_student_terms(
+            df_eligible_student_terms,
+            student_id_cols=student_id_cols,
+            sort_cols=term_rank_col,
+            include_cols=None,
+        )
     df_targets = compute_target_variable(
         df_eligible_student_terms,
         student_id_cols=student_id_cols,
