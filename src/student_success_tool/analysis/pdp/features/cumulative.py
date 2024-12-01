@@ -33,6 +33,7 @@ def add_features(
                 ("term_in_peak_covid", "sum"),
                 ("term_is_fall_spring", "sum"),
                 ("term_is_while_student_enrolled_at_other_inst", "sum"),
+                ("term_is_pre_cohort", "sum"),
                 ("course_level_mean", ["mean", "min", "std"]),
                 ("course_grade_numeric_mean", ["mean", "min", "std"]),
                 ("num_courses", ["sum", "mean", "min"]),
