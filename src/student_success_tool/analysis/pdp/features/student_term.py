@@ -155,6 +155,14 @@ def add_features(
                 student_term_enrollment_intensity,
                 min_num_credits_full_time=min_num_credits_full_time,
             ),
+            "num_courses_in_program_of_study_area_term_1": ft.partial(
+                num_courses_in_study_area,
+                study_area_col="program_of_study_area_term_1",
+            ),
+            "num_courses_in_program_of_study_area_year_1": ft.partial(
+                num_courses_in_study_area,
+                study_area_col="program_of_study_area_year_1",
+            ),
         }
         | {
             fc_col: ft.partial(compute_frac_courses, numer_col=nc_col)
@@ -210,6 +218,21 @@ def term_is_while_student_enrolled_at_other_inst(
     df: pd.DataFrame, *, col: str = "num_courses_enrolled_at_other_institution_s_Y"
 ) -> pd.Series:
     return df[col].gt(0)
+
+
+def num_courses_in_study_area(
+    df: pd.DataFrame,
+    *,
+    study_area_col: str,
+    course_subject_areas_col: str = "course_subject_areas",
+    fill_value: str = "-1",
+) -> pd.Series:
+    return (
+        pd.DataFrame(df[course_subject_areas_col].tolist(), dtype="string")
+        .eq(df[study_area_col].fillna(fill_value), axis="index")
+        .sum(axis="columns")
+        .astype("Int8")
+    )
 
 
 def compute_frac_courses(
