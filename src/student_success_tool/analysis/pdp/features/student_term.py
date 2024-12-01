@@ -148,6 +148,7 @@ def add_features(
     feature_name_funcs = (
         {
             "year_of_enrollment_at_cohort_inst": year_of_enrollment_at_cohort_inst,
+            "term_is_pre_cohort": term_is_pre_cohort,
             "term_is_while_student_enrolled_at_other_inst": term_is_while_student_enrolled_at_other_inst,
             "frac_credits_earned": shared.frac_credits_earned,
             "student_term_enrollment_intensity": ft.partial(
@@ -193,6 +194,15 @@ def year_of_enrollment_at_cohort_inst(
 ) -> pd.Series:
     dts_diff = (df[term_start_dt_col].sub(df[cohort_start_dt_col])).dt.days
     return pd.Series(np.ceil((dts_diff + 1) / 365.25), dtype="Int8")
+
+
+def term_is_pre_cohort(
+    df: pd.DataFrame,
+    *,
+    cohort_start_dt_col: str = "cohort_start_dt",
+    term_start_dt_col: str = "term_start_dt",
+) -> pd.Series:
+    return df[term_start_dt_col].lt(df[cohort_start_dt_col]).astype("boolean")
 
 
 # TODO: we could probably compute this directly, w/o an intermediate feature?
