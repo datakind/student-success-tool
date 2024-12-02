@@ -1,0 +1,6 @@
+Student ID,Institution ID,Academic Year,Dependency Status,Housing Status,Cost of Attendance,EFC,Total Institutional Grants,Total State Grants,Total Federal Grants,Unmet Need,Net Price,Applied Aid
+999999,99999999,2019-20,Unknown,Off-campus,3505,0,0,0,774,2731,2731,N
+999998,99999999,2019-20,Independent,Off-campus,4210,0,0,0,3097,1113,1113,Y
+999997,99999999,2019-20,Dependent,On-campus housing,19938,1768,0,2566,4445,11159,12927,Y
+999996,99999999,2019-20,Independent,Off-campus,2344,0,300,0,5872,-3828,-3828,Y
+999995,99999999,2017-18,Dependent,On-campus housing,19176,383,0,0,2785,16008,16391,Y

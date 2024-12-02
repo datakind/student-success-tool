@@ -63,7 +63,8 @@ def create_institution(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authorized to create an institution.",
         )
-    # TODO: check if the institution exists in the institution table, otherwise, create it and create a storage bucket for it.
+    # TODO: check if the institution exists in the institution table, otherwise,
+    # create it and create a storage bucket for it.
     return institution
 
 
