@@ -13,7 +13,7 @@ client = TestClient(router, root_path="")
 
 def test_read_inst_models():
     """Test GET /institutions/345/models."""
-    response = client.get("/api/v1/institutions/345/models" + USR_STR)
+    response = client.get("/institutions/345/models" + USR_STR)
     assert response.status_code == 200
     assert response.json() == []
 
@@ -21,12 +21,12 @@ def test_read_inst_models():
 def test_read_inst_model():
     """Test GET /institutions/345/models/10. For various user access types."""
     # Authorized.
-    response = client.get("/api/v1/institutions/345/models/10" + USR_STR)
+    response = client.get("/institutions/345/models/10" + USR_STR)
     assert response.status_code == 200
     assert response.json() == MODEL_OBJ
     # Unauthorized cases.
     with pytest.raises(HTTPException) as err:
-        client.get("/api/v1/institutions/345/models/10" + VIEWER_STR)
+        client.get("/institutions/345/models/10" + VIEWER_STR)
     assert err.value.status_code == 401
     assert err.value.detail == "Not authorized to view this model for this institution."
 
@@ -34,7 +34,7 @@ def test_read_inst_model():
 def test_read_inst_model_versions():
     """Test GET /institutions/345/models/10/vers."""
     # Authorized.
-    response = client.get("/api/v1/institutions/345/models/10/vers" + USR_STR)
+    response = client.get("/institutions/345/models/10/vers" + USR_STR)
     assert response.status_code == 200
     assert response.json() == []
 
@@ -42,7 +42,7 @@ def test_read_inst_model_versions():
 def test_read_inst_model_version():
     """Test GET /institutions/345/models/10/vers/0."""
     # Authorized.
-    response = client.get("/api/v1/institutions/345/models/10/vers/0" + USR_STR)
+    response = client.get("/institutions/345/models/10/vers/0" + USR_STR)
     assert response.status_code == 200
     assert response.json() == MODEL_OBJ
 
@@ -50,7 +50,7 @@ def test_read_inst_model_version():
 def test_read_inst_model_outputs():
     """Test GET /institutions/345/models/10/vers/0/output."""
     # Authorized.
-    response = client.get("/api/v1/institutions/345/models/10/vers/0/output" + USR_STR)
+    response = client.get("/institutions/345/models/10/vers/0/output" + USR_STR)
     assert response.status_code == 200
     assert response.json() == []
 
@@ -59,7 +59,7 @@ def test_read_inst_model_output():
     """Test GET /institutions/345/models/10/vers/0/output/1."""
     # Authorized.
     response = client.get(
-        "/api/v1/institutions/345/models/10/vers/0/output/1" + USR_STR
+        "/institutions/345/models/10/vers/0/output/1" + USR_STR
     )
     assert response.status_code == 200
     assert response.json() == {
@@ -76,7 +76,7 @@ def test_read_inst_model_output():
 def test_train_new_model():
     """Depending on timeline, fellows may not get to this."""
 
-    response = client.post("/api/v1/institutions/345/models/" + DATAKINDER_STR)
+    response = client.post("/institutions/345/models/" + DATAKINDER_STR)
     assert response.status_code == 200
 
 
@@ -84,5 +84,5 @@ def test_train_new_model():
 def test_retrain_model():
     """Depending on timeline, fellows may not get to this."""
 
-    response = client.post("/api/v1/institutions/345/models/123/vers/" + DATAKINDER_STR)
+    response = client.post("/institutions/345/models/123/vers/" + DATAKINDER_STR)
     assert response.status_code == 200

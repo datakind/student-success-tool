@@ -13,7 +13,7 @@ from ..utilities import (
 )
 
 router = APIRouter(
-    prefix="/api/v1/institutions",
+    prefix="/institutions",
     tags=["models"],
 )
 

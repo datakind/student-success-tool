@@ -15,7 +15,6 @@ from ..utilities import (
 from ..upload import generate_upload_signed_url
 
 router = APIRouter(
-    prefix="/api/v1",
     tags=["institutions"],
 )
 

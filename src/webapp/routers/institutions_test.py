@@ -21,14 +21,14 @@ def test_read_all_inst():
     """Test GET /institutions."""
     # Unauthorized.
     with pytest.raises(HTTPException) as err:
-        client.get("/api/v1/institutions" + USR_STR)
+        client.get("/institutions" + USR_STR)
     assert err.value.status_code == 401
     assert (
         err.value.detail
         == "Not authorized to read this resource. Select a specific institution."
     )
     # Authorized.
-    response = client.get("/api/v1/institutions" + DATAKINDER_STR)
+    response = client.get("/institutions" + DATAKINDER_STR)
     assert response.status_code == 200
     assert response.json() == []
 
@@ -37,12 +37,12 @@ def test_read_inst():
     """Test GET /institutions/123. For various user access types."""
     # Unauthorized.
     with pytest.raises(HTTPException) as err:
-        client.get("/api/v1/institutions/123" + USR_STR)
+        client.get("/institutions/123" + USR_STR)
     assert err.value.status_code == 401
     assert err.value.detail == "Not authorized to read this institution's resources."
 
     # Authorized.
-    response = client.get("/api/v1/institutions/345" + USR_STR)
+    response = client.get("/institutions/345" + USR_STR)
     assert response.status_code == 200
     assert response.json() == EMPTY_INSTITUTION_OBJ
 
@@ -51,13 +51,13 @@ def test_create_inst():
     """Test POST /institutions. For various user access types."""
     # Unauthorized.
     with pytest.raises(HTTPException) as err:
-        client.post("/api/v1/institutions/" + USR_STR, json=INSTITUTION_OBJ)
+        client.post("/institutions/" + USR_STR, json=INSTITUTION_OBJ)
     assert err.value.status_code == 401
     assert err.value.detail == "Not authorized to create an institution."
 
     # Authorized.
     response = client.post(
-        "/api/v1/institutions/" + DATAKINDER_STR, json=INSTITUTION_OBJ
+        "/institutions/" + DATAKINDER_STR, json=INSTITUTION_OBJ
     )
     assert response.status_code == 200
     assert response.json() == INSTITUTION_OBJ
