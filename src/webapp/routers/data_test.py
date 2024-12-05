@@ -59,9 +59,7 @@ def test_create_batch():
 def test_pull_pdp_sftp():
     """Test POST /institutions/345/input_train/pdp_sftp/."""
     # Authorized.
-    response = client.post(
-        "/institutions/345/input_train/10/pdp_sftp/" + USR_STR
-    )
+    response = client.post("/institutions/345/input_train/10/pdp_sftp/" + USR_STR)
     assert response.status_code == 200
 
 
@@ -91,7 +89,5 @@ def test_pull_pdp_sftp_inference():
 def test_upload_inference():
     """Test POST /institutions/345/input_train/."""
     # Authorized.
-    response = client.post(
-        "/institutions/345/input_inference/10/pdp_sftp/" + USR_STR
-    )
+    response = client.post("/institutions/345/input_inference/10/pdp_sftp/" + USR_STR)
     assert response.status_code == 200

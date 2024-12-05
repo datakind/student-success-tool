@@ -55,9 +55,7 @@ def test_create_user():
     """Test POST /institutions/345/users/. For various user access types."""
     # Unauthorized.
     with pytest.raises(HTTPException) as err:
-        client.post(
-            "/institutions/345/users/" + VIEWER_STR, json=USER_ACCT_REQUEST
-        )
+        client.post("/institutions/345/users/" + VIEWER_STR, json=USER_ACCT_REQUEST)
     assert err.value.status_code == 401
     assert err.value.detail == "Not authorized to create a more powerful user."
 

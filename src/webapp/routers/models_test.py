@@ -58,9 +58,7 @@ def test_read_inst_model_outputs():
 def test_read_inst_model_output():
     """Test GET /institutions/345/models/10/vers/0/output/1."""
     # Authorized.
-    response = client.get(
-        "/institutions/345/models/10/vers/0/output/1" + USR_STR
-    )
+    response = client.get("/institutions/345/models/10/vers/0/output/1" + USR_STR)
     assert response.status_code == 200
     assert response.json() == {
         "m_id": 10,

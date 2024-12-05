@@ -56,8 +56,6 @@ def test_create_inst():
     assert err.value.detail == "Not authorized to create an institution."
 
     # Authorized.
-    response = client.post(
-        "/institutions/" + DATAKINDER_STR, json=INSTITUTION_OBJ
-    )
+    response = client.post("/institutions/" + DATAKINDER_STR, json=INSTITUTION_OBJ)
     assert response.status_code == 200
     assert response.json() == INSTITUTION_OBJ
