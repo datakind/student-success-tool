@@ -18,3 +18,5 @@
     - '$LOCATION'
   images:
   - 'gcr.io/$PROJECT_ID/$TRIGGER_NAME:$COMMIT_SHA'
+options:
+  logging: CLOUD_LOGGING_ONLY
