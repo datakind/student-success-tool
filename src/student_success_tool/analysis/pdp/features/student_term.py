@@ -148,11 +148,20 @@ def add_features(
     feature_name_funcs = (
         {
             "year_of_enrollment_at_cohort_inst": year_of_enrollment_at_cohort_inst,
+            "term_is_pre_cohort": term_is_pre_cohort,
             "term_is_while_student_enrolled_at_other_inst": term_is_while_student_enrolled_at_other_inst,
             "frac_credits_earned": shared.frac_credits_earned,
             "student_term_enrollment_intensity": ft.partial(
                 student_term_enrollment_intensity,
                 min_num_credits_full_time=min_num_credits_full_time,
+            ),
+            "num_courses_in_program_of_study_area_term_1": ft.partial(
+                num_courses_in_study_area,
+                study_area_col="student_program_of_study_area_term_1",
+            ),
+            "num_courses_in_program_of_study_area_year_1": ft.partial(
+                num_courses_in_study_area,
+                study_area_col="student_program_of_study_area_year_1",
             ),
         }
         | {
@@ -195,11 +204,35 @@ def year_of_enrollment_at_cohort_inst(
     return pd.Series(np.ceil((dts_diff + 1) / 365.25), dtype="Int8")
 
 
+def term_is_pre_cohort(
+    df: pd.DataFrame,
+    *,
+    cohort_start_dt_col: str = "cohort_start_dt",
+    term_start_dt_col: str = "term_start_dt",
+) -> pd.Series:
+    return df[term_start_dt_col].lt(df[cohort_start_dt_col]).astype("boolean")
+
+
 # TODO: we could probably compute this directly, w/o an intermediate feature?
 def term_is_while_student_enrolled_at_other_inst(
     df: pd.DataFrame, *, col: str = "num_courses_enrolled_at_other_institution_s_Y"
 ) -> pd.Series:
     return df[col].gt(0)
+
+
+def num_courses_in_study_area(
+    df: pd.DataFrame,
+    *,
+    study_area_col: str,
+    course_subject_areas_col: str = "course_subject_areas",
+    fill_value: str = "-1",
+) -> pd.Series:
+    return (
+        pd.DataFrame(df[course_subject_areas_col].tolist(), dtype="string")
+        .eq(df[study_area_col].fillna(fill_value), axis="index")
+        .sum(axis="columns")
+        .astype("Int8")
+    )
 
 
 def compute_frac_courses(

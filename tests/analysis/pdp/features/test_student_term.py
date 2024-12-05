@@ -219,6 +219,74 @@ def test_year_of_enrollment_at_cohort_inst(df, ccol, tcol, exp):
 
 
 @pytest.mark.parametrize(
+    ["df", "ccol", "tcol", "exp"],
+    [
+        (
+            pd.DataFrame(
+                {
+                    "cohort_start_dt": ["2019-09-01", "2019-09-01", "2021-02-01"],
+                    "term_start_dt": ["2020-02-01", "2019-09-01", "2020-09-01"],
+                },
+                dtype="datetime64[s]",
+            ),
+            "cohort_start_dt",
+            "term_start_dt",
+            pd.Series([False, False, True], dtype="boolean"),
+        ),
+    ],
+)
+def test_term_is_pre_cohort(df, ccol, tcol, exp):
+    obs = student_term.term_is_pre_cohort(
+        df, cohort_start_dt_col=ccol, term_start_dt_col=tcol
+    )
+    assert isinstance(obs, pd.Series) and not obs.empty
+    assert obs.equals(exp) or obs.compare(exp).empty
+
+
+@pytest.mark.parametrize(
+    ["df", "study_area_col", "exp"],
+    [
+        (
+            pd.DataFrame(
+                {
+                    "study_area_term_1": ["01", "02", None, "03"],
+                    "study_area_year_1": ["01", "03", None, "03"],
+                    "course_subject_areas": [
+                        ["01", "01", "01", "02"],
+                        ["01", "02", "01"],
+                        ["01", "02", "03"],
+                        [],
+                    ],
+                }
+            ).astype({"study_area_term_1": "string", "study_area_year_1": "string"}),
+            "study_area_term_1",
+            pd.Series([3, 1, 0, 0], dtype="Int8"),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "study_area_term_1": ["01", "02", None, "03"],
+                    "study_area_year_1": ["01", "03", None, "03"],
+                    "course_subject_areas": [
+                        ["01", "01", "01", "02"],
+                        ["01", "02", "01"],
+                        ["01", "02", "03"],
+                        [],
+                    ],
+                }
+            ).astype({"study_area_term_1": "string", "study_area_year_1": "string"}),
+            "study_area_year_1",
+            pd.Series([3, 0, 0, 0], dtype="Int8"),
+        ),
+    ],
+)
+def test_num_courses_in_study_area(df, study_area_col, exp):
+    obs = student_term.num_courses_in_study_area(df, study_area_col=study_area_col)
+    assert isinstance(obs, pd.Series) and not obs.empty
+    assert obs.equals(exp) or obs.compare(exp).empty
+
+
+@pytest.mark.parametrize(
     ["df", "numer_col", "denom_col", "exp"],
     [
         (

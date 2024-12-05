@@ -45,6 +45,7 @@ def df():
             ],
             "term_rank": [1, 3, 4, 5, 9],
             "term_rank_fall_spring": [1, 2, pd.NA, 3, 5],
+            "term_is_pre_cohort": [True, False, False, False, False],
         }
     ).astype({"term_rank": "Int8", "term_rank_fall_spring": "Int8"})
 
@@ -64,12 +65,14 @@ def df_grped(df):
             ["num_courses_course_level_0", "num_courses_course_level_1"],
             [
                 ("term_id", "count"),
+                ("term_is_pre_cohort", "sum"),
                 ("course_grade_num_mean", ["mean", "std"]),
                 ("num_courses", "sum"),
             ],
             pd.DataFrame(
                 {
                     "term_id_cumcount": [1.0, 2.0, 3.0, 4.0, 5.0],
+                    "term_is_pre_cohort_cumsum": [1.0, 1.0, 1.0, 1.0, 1.0],
                     "course_grade_num_mean_cummean": [4.0, 3.25, 2.75, 2.875, 3.0],
                     "course_grade_num_mean_cumstd": [
                         np.nan,
