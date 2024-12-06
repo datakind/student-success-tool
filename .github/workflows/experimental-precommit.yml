@@ -4,7 +4,7 @@ name: test
 on:
   push:
     branches:
-      - 'fellows-experimental'
+      - 'fellows-experimental' # TODO: update branch name to dev
 
 jobs:
   test:
