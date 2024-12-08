@@ -3,6 +3,7 @@ from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
+import sklearn.utils
 
 
 def compute_dataset_splits(
@@ -27,7 +28,7 @@ def compute_dataset_splits(
             specify a value for reproducible splits, otherwise each call is unique.
 
     See Also:
-        - :func:`sklearn.model_selection.train_test_split()
+        - :func:`sklearn.model_selection.train_test_split()`
     """
     if len(labels) != len(fracs):
         raise ValueError(
@@ -41,4 +42,34 @@ def compute_dataset_splits(
         index=df.index,
         dtype="string",
         name="split",
+    )
+
+
+def compute_sample_weights(
+    df: pd.DataFrame,
+    *,
+    target_col: str = "target",
+    class_weight: t.Literal["balanced"] | dict[object, int] = "balanced",
+) -> pd.Series:
+    """
+    Estimate sample weights by class for imbalanced datasets.
+
+    Args:
+        df
+        target_col: Name of column in ``df`` containing class label values
+            i.e. "targets" to be predicted.
+        class_weight: Weights associated with classes in the form ``{class_label: weight}``
+            or "balanced" to automatically adjust weights inversely proportional to
+            class frequencies in the input data.
+
+    See Also:
+        - :func:`sklearn.utils.class_weight.compute_sample_weight()`
+    """
+    return pd.Series(
+        data=sklearn.utils.class_weight.compute_sample_weight(
+            class_weight, df[target_col]
+        ),
+        index=df.index,
+        dtype="float32",
+        name="sample_weight",
     )

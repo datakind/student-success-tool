@@ -54,3 +54,31 @@ def test_compute_dataset_splits(df, labels, fracs, shuffle, seed):
             df, labels=labels, fracs=fracs, shuffle=shuffle, seed=seed
         )
         assert obs.equals(obs2)
+
+
+@pytest.mark.parametrize(
+    ["df", "target_col", "class_weight", "exp"],
+    [
+        (
+            pd.DataFrame({"target": [1, 1, 1, 0]}),
+            "target",
+            "balanced",
+            pd.Series(
+                [0.667, 0.667, 0.667, 2.0], dtype="float32", name="sample_weight"
+            ),
+        ),
+        (
+            pd.DataFrame({"target": [1, 1, 1, 0]}),
+            "target",
+            {1: 2, 0: 0.5},
+            pd.Series([2.0, 2.0, 2.0, 0.5], dtype="float32", name="sample_weight"),
+        ),
+    ],
+)
+def test_compute_sample_weights(df, target_col, class_weight, exp):
+    obs = utils.compute_sample_weights(
+        df, target_col=target_col, class_weight=class_weight
+    )
+    assert isinstance(obs, pd.Series)
+    assert len(obs) == len(df)
+    assert pd.testing.assert_series_equal(obs, exp, rtol=0.01) is None
