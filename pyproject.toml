@@ -1,26 +1,25 @@
 [project]
 name = "student-success-tool"
-version = "0.1.0"
+version = "0.2.0.dev1"
 description = "School-agnostic lib for implementing Student Success Tool workflows."
 readme = "README.md"
-requires-python = ">=3.10,<3.12"
+requires-python = ">=3.10,<3.13"
 dependencies = [
-    "databricks-connect~=13.3",
+    "databricks-connect~=16.0",
+    "databricks-sdk~=0.38.0",
     "faker>=20.1",
     "ipywidgets~=8.1",
     "matplotlib~=3.7",
     "missingno~=0.5",
     "mlflow~=2.13",
-    "numpy~=1.23",
+    "numpy~=1.26",
     "pandas~=2.1",
-    "pandera~=0.20",
-    "pillow~=9.3",
-    "pyarrow~=14.0",
+    "pandera~=0.21",
+    "pyarrow~=16.0",
     "pyyaml~=6.0",
-    "scikit-learn~=1.3",
+    "scikit-learn~=1.4",
     "seaborn~=0.13",
     "statsmodels~=0.14",
-    "textwrap3~=0.9",
     "shap~=0.46.0",
 ]
 
