@@ -1,0 +1,26 @@
+name: lint
+
+on:
+  pull_request:  # any pull request
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python environment
+        uses: ./.github/actions/setup-python-env
+        with:
+          python-version: "3.10"
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v45
+        with:
+          files: |
+            **.py
+            **.ipynb
+      - name: Check style
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          uv tool run ruff check ${{ steps.changed-files.outputs.all_changed_files }}
