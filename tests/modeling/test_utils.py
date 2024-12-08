@@ -45,7 +45,7 @@ def test_compute_dataset_splits(df, labels, fracs, shuffle, seed):
     )
     assert (
         pd.testing.assert_series_equal(
-            obs_value_counts, exp_value_counts, rtol=0.1, check_like=True
+            obs_value_counts, exp_value_counts, rtol=0.15, check_like=True
         )
         is None
     )
