@@ -355,7 +355,7 @@ wheels = [
 
 [[package]]
 name = "databricks-connect"
-version = "13.3.3"
+version = "16.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "databricks-sdk" },
@@ -363,26 +363,28 @@ dependencies = [
     { name = "grpcio" },
     { name = "grpcio-status" },
     { name = "numpy" },
+    { name = "packaging" },
     { name = "pandas" },
     { name = "py4j" },
     { name = "pyarrow" },
+    { name = "setuptools" },
     { name = "six" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/75/e2/d4c2625b392448e855b72a2ee8dbe9911bd0162f5b2f3390afa9efe4c461/databricks_connect-13.3.3-py2.py3-none-any.whl", hash = "sha256:bef2f045ac276bb2e9ec611fee6d283be0d1c478c7c51adeaab332cf18c6965c", size = 2027128 },
+    { url = "https://files.pythonhosted.org/packages/fe/00/43447dbf85f7ab7520bd5501effb8908bfd8756b0c93d418279fead1be8a/databricks_connect-16.0.0-py2.py3-none-any.whl", hash = "sha256:ff134906cb6e2fde420f91a2a3aecdee71967d92e73fde1f262c744b057115d4", size = 2330396 },
 ]
 
 [[package]]
 name = "databricks-sdk"
-version = "0.35.0"
+version = "0.38.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "google-auth" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ca/ce/5983eda8527349fe91ebeb9fe9ed36ec82cf9b388082316861b240d55a0e/databricks_sdk-0.35.0.tar.gz", hash = "sha256:9446409fd321b43ac586653120b16734d13a97674fee9f89b6562f24d32d48e0", size = 585725 }
+sdist = { url = "https://files.pythonhosted.org/packages/1d/c2/02fd3dad8d25b8b24a69925f79f04902e906212808e267ce0e39462e525b/databricks_sdk-0.38.0.tar.gz", hash = "sha256:65e505201b65d8a2b4110d3eabfebce5a25426d3ccdd5f8bc69eb03333ea1f39", size = 594528 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/62/4d/de5db97965338cf50eb141ebfc32ba6ef0bc44d6275991bf20b4254b8a8c/databricks_sdk-0.35.0-py3-none-any.whl", hash = "sha256:00cce49014dfa1d5912cb18e376d28b2de8829a8f645d87d4040bae048630578", size = 568371 },
+    { url = "https://files.pythonhosted.org/packages/ed/0d/d203456eef915a40a90292be49ab87904509606d503eceff7ac8c28dbd8e/databricks_sdk-0.38.0-py3-none-any.whl", hash = "sha256:3cc3808e7a294ccf99a3f19f1e86c8e36a5dc0845ac62112dcae2e625ef97c28", size = 575096 },
 ]
 
 [[package]]
@@ -2413,6 +2415,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "databricks-connect" },
+    { name = "databricks-sdk" },
     { name = "faker" },
     { name = "ipywidgets" },
     { name = "matplotlib" },
@@ -2442,7 +2445,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "databricks-connect", specifier = "~=13.3" },
+    { name = "databricks-connect", specifier = "~=16.0" },
+    { name = "databricks-sdk", specifier = "~=0.38.0" },
     { name = "faker", specifier = ">=20.1" },
     { name = "ipywidgets", specifier = "~=8.1" },
     { name = "matplotlib", specifier = "~=3.7" },
