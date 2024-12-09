@@ -2,7 +2,8 @@
 """
 
 from typing import Union
-from enum import IntEnum
+from enum import IntEnum  # , StrEnum
+import uuid
 
 from fastapi import HTTPException, status
 from pydantic import BaseModel, ConfigDict
@@ -18,19 +19,28 @@ class AccessType(IntEnum):
     VIEWER = 4
 
 
+# class DataSource(StrEnum):
+#    """Where the Data was created from."""
+#
+#    UNNOWN = "UNKNOWN"
+#    PDP_SFTP = "PDP_SFTP"
+#    MANUAL_UPLOAD = "MANUAL_UPLOAD"
+
+
 class BaseUser(BaseModel):
     """BaseUser represents an access type. The frontend will include more detailed User info."""
 
     model_config = ConfigDict(use_enum_values=True)
     # user_id is permanent and each frontend orginated account will map to a unique user_id.
     # Bare API callers will likely not include a user_id.
-    user_id: Union[int, None] = None
-    # For Datakinders, institution = 0 (reserved value) which means "no inst specified".
-    institution: int
+    # The actual types of the ids will be UUIDs.
+    user_id: Union[str, None] = None
+    # For Datakinders, institution is None which means "no inst specified".
+    institution: Union[str, None] = None
     access_type: AccessType
 
     # Constructor
-    def __init__(self, usr: Union[int, None], inst: int, access: AccessType) -> None:
+    def __init__(self, usr: Union[str, None], inst: str, access: AccessType) -> None:
         super().__init__(user_id=usr, institution=inst, access_type=access)
 
     def is_datakinder(self) -> bool:
@@ -49,7 +59,7 @@ class BaseUser(BaseModel):
         """Whether a given user is a viewer."""
         return self.access_type == AccessType.VIEWER
 
-    def has_access_to_inst(self, inst: int) -> bool:
+    def has_access_to_inst(self, inst: str) -> bool:
         """Whether a given user has access to a given institution."""
         return self.institution == inst or self.access_type == AccessType.DATAKINDER
 
@@ -87,7 +97,7 @@ class BaseUser(BaseModel):
         return False
 
 
-def has_access_to_inst_or_err(inst: int, user: BaseUser):
+def has_access_to_inst_or_err(inst: str, user: BaseUser):
     """Raise error if a given user does not have access to a given institution."""
     if not user.has_access_to_inst(inst):
         raise HTTPException(

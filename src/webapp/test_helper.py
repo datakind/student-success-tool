@@ -3,13 +3,25 @@
 
 from .utilities import AccessType, BaseUser
 
-USR = BaseUser(12, 345, AccessType.MODEL_OWNER)
+USR = BaseUser(
+    "5301a352-c03d-4a39-beec-16c5668c4700",
+    "1d7c75c3-3eda-4294-9c66-75ea8af97b55",
+    AccessType.MODEL_OWNER,
+)
 USR_STR = USR.construct_query_param_string()
 
-VIEWER = BaseUser(12, 345, AccessType.VIEWER)
+VIEWER = BaseUser(
+    "5301a352-c03d-4a39-beec-16c5668c4700",
+    "1d7c75c3-3eda-4294-9c66-75ea8af97b55",
+    AccessType.VIEWER,
+)
 VIEWER_STR = VIEWER.construct_query_param_string()
 
-DATAKINDER = BaseUser(12, 345, AccessType.DATAKINDER)
+DATAKINDER = BaseUser(
+    "5301a352-c03d-4a39-beec-16c5668c4700",
+    "1d7c75c3-3eda-4294-9c66-75ea8af97b55",
+    AccessType.DATAKINDER,
+)
 DATAKINDER_STR = DATAKINDER.construct_query_param_string()
 
 BATCH_REQUEST = {
@@ -30,23 +42,29 @@ USER_ACCT = {
     "account_disabled": False,
     "deletion_request": None,
     "email": "abc@example.com",
-    "inst_id": 345,
-    "user_id": 1,
+    "inst_id": "5301a352-c03d-4a39-beec-16c5668c4700",
+    "user_id": "",
     "username": None,
 }
 
-INSTITUTION_OBJ = {
-    "inst_id": 345,
+INSTITUTION_REQ = {
     "name": "foobar school",
-    "description": "School foobar",
+    "description": "description of school",
     "retention_days": 1,
 }
 
 EMPTY_INSTITUTION_OBJ = {
-    "inst_id": 345,
+    "inst_id": "",
     "name": "",
     "description": "",
     "retention_days": 0,
+}
+
+INSTITUTION_OBJ = {
+    "inst_id": "1d7c75c3-3eda-4294-9c66-75ea8af97b55",
+    "name": "valid_school",
+    "description": None,
+    "retention_days": None,
 }
 
 MODEL_OBJ = {
@@ -60,9 +78,10 @@ MODEL_OBJ = {
 }
 
 DATA_OBJ = {
-    "batch_id": 10,
+    "batch_ids": [10],
     "name": "foo-data",
     "record_count": 100,
+    "retention_days": None,
     "size": 1,
     "description": "some model for foo",
     "uploader": 123,

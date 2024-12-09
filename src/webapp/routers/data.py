@@ -10,6 +10,7 @@ from ..utilities import (
     has_full_data_access_or_err,
     BaseUser,
     model_owner_and_higher_or_err,
+    # DataSource
 )
 
 router = APIRouter(
@@ -19,7 +20,7 @@ router = APIRouter(
 
 
 class BatchCreationRequest(BaseModel):
-    """The Batch Data object that's returned."""
+    """The Batch creation request."""
 
     # The name must be unique (to prevent confusion).
     name: str
@@ -34,21 +35,28 @@ class BatchInfo(BaseModel):
     batch_id: int
     name: str
     description: str
-    file_names: list[str]
+    file_names: set[str]
     # User id of uploader or person who triggered this data ingestion.
     creator: int
     # Disabled data means it is no longer in use.
     batch_disabled: bool = False
-    # Date in form YYMMDD
+    # Date in form YYMMDD. Deletion of a batch will apply to all files in a batch,
+    # unless the file is present in other batches.
     deletion_request: Union[str, None] = None
     created_date: str
+    # Completed batches means this batch is ready for use. Completed batches will
+    # trigger notifications to Datakind.
+    # Can be modified after completion, but this information will not re-trigger
+    # notifications to Datakind.
+    batch_completed: bool = False
 
 
 class DataInfo(BaseModel):
     """The Data object that's returned."""
 
-    batch_id: int
     name: str
+    # The batch(es) that this data is present in.
+    batch_ids: set[int]
     record_count: int = 0
     # Size to the nearest MB.
     size: int
@@ -56,11 +64,18 @@ class DataInfo(BaseModel):
     # User id of uploader or person who triggered this data ingestion.
     uploader: int
     # Can be PDP_SFTP, MANUAL_UPLOAD etc.
-    source: str
+    source: str  # DataSource = DataSource.UNKNOWN
     # Disabled data means it is no longer in use.
     data_disabled: bool = False
     # Date in form YYMMDD
     deletion_request: Union[str, None] = None
+    # How long to retain the data. Should be a recognizable format like 3y or 200d.
+    # By default (None) -- it is deleted after a successful run. For training dataset it
+    # is deleted after the trained model is approved. For inference input, it is deleted
+    # after the inference run occurs. For inference output, it is retained indefinitely
+    # unless an ad hoc deletion request is received. The type of data is determined by
+    # the storage location.
+    retention_days: Union[str, None] = None
 
 
 # Data related operations.
@@ -121,7 +136,7 @@ def read_inst_training_input(
     has_access_to_inst_or_err(inst_id, current_user)
     has_full_data_access_or_err(current_user, "input data")
     return {
-        "batch_id": batch_id,
+        "batch_ids": [batch_id],
         "name": "foo-data",
         "record_count": 100,
         "size": 1,
@@ -192,7 +207,7 @@ def create_inference_batch(
     """
     has_access_to_inst_or_err(inst_id, current_user)
     has_full_data_access_or_err(current_user, "inference data")
-    # TODO: check the batch name does not already exist, if it exists,
+    # TODO: check the batch name does not already exist (in an institution), if it exists,
     # notify user to update batch instead.
     return {
         "batch_id": 1,
@@ -218,7 +233,7 @@ def read_inst_inference_input(
     has_access_to_inst_or_err(inst_id, current_user)
     has_full_data_access_or_err(current_user, "inference data")
     return {
-        "batch_id": batch_id,
+        "batch_ids": [batch_id],
         "name": "foo-data",
         "record_count": 100,
         "size": 1,
