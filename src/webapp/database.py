@@ -178,7 +178,7 @@ def setup_db():
     connector = Connector(refresh_strategy="lazy")
     global LocalSession
     # initialize connection pool
-    engine = init_connection_pool("sst_tables", connector)
+    engine = init_connection_pool(os.getenv("DB_NAME"), connector)
     # Integrating FastAPI with SQL DB
     # create SQLAlchemy ORM session
     LocalSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
