@@ -150,35 +150,46 @@ def get_session():
 
 
 # helper function to return SQLAlchemy connection pool
-def init_connection_pool(
-    db_name: str, connector: Connector
-) -> sqlalchemy.engine.Engine:
+def init_connection_pool(connector: Connector) -> sqlalchemy.engine.Engine:
     # function used to generate database connection
-    def getconn() -> pymysql.connections.Connection:
-        # Don't speciy DB name so that multiple databases can be accessed from
-        # in one connection.
+    def getconnauth() -> pymysql.connections.Connection:
         conn = connector.connect(
             os.getenv("INSTANCE_CONNECTION_NAME"),
             "pymysql",
             user=os.getenv("DB_IAM_USER"),
-            database=db_name,
+            db=os.getenv("DB_NAME"),
             enable_iam_auth=True,
         )
         return conn
 
+    def getconnpw() -> pymysql.connections.Connection:
+        conn = connector.connect(
+            os.getenv("INSTANCE_CONNECTION_NAME"),
+            "pymysql",
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            db=os.getenv("DB_NAME"),
+        )
+        return conn
+
     # create connection pool
-    pool = sqlalchemy.create_engine("mysql+pymysql://", creator=getconn)
+    pool = sqlalchemy.create_engine("mysql+pymysql://", creator=getconnauth)
     return pool
 
 
 def setup_db():
     # initialize Cloud SQL Python Connector for the GCP databases. Global so
     # shutdown can access it as well.
+    print("[debugging_aaa1] Entering setup_db")
     global connector
-    connector = Connector(refresh_strategy="lazy")
+    connector = Connector(
+        ip_type="private", enable_iam_auth=True, refresh_strategy="lazy"
+    )
+    print("[debugging_aaa2] pass Connector")
     global LocalSession
     # initialize connection pool
-    engine = init_connection_pool(os.getenv("DB_NAME"), connector)
+    engine = init_connection_pool(connector)
+    print("[debugging_aaa3] pass connection pool")
     # Integrating FastAPI with SQL DB
     # create SQLAlchemy ORM session
     LocalSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
