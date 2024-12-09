@@ -29,6 +29,8 @@ dependencies = [
     "cloud-sql-python-connector[pymysql]>=1.14.0",
     "sqlalchemy>=2.0.36",
     "pytest>=8.3.3",
+    "pylint>=3.3.2",
+    "coverage>=7.6.9",
 ]
 
 [project.urls]
