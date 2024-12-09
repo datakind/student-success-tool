@@ -185,9 +185,14 @@ def setup_db():
     # shutdown can access it as well.
     print("[debugging_aaa1] Entering setup_db")
     global connector
-    connector = Connector(
-        ip_type="private", enable_iam_auth=True, refresh_strategy="lazy"
-    )
+    if os.getenv("USE_AUTH") == "True":
+        connector = Connector(
+            ip_type="private", enable_iam_auth=True, refresh_strategy="lazy"
+        )
+    else:
+        connector = Connector(
+            ip_type="public", enable_iam_auth=False, refresh_strategy="lazy"
+        )
     print("[debugging_aaa2] pass Connector")
     global LocalSession
     # initialize connection pool
