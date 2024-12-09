@@ -173,8 +173,11 @@ def init_connection_pool(connector: Connector) -> sqlalchemy.engine.Engine:
         return conn
 
     # create connection pool
-    pool = sqlalchemy.create_engine("mysql+pymysql://", creator=getconnauth)
-    return pool
+    if os.getenv("USE_AUTH") == "True":
+        print("[debugging_aaa4] using auth")
+        return sqlalchemy.create_engine("mysql+pymysql://", creator=getconnauth)
+    print("[debugging_aaa5] using pw")
+    return sqlalchemy.create_engine("mysql+pymysql://", creator=getconnpw)
 
 
 def setup_db():
