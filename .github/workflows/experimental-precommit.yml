@@ -35,10 +35,10 @@ jobs:
           version: "~= 22.0"
       - name: Using pylint
         run: |
-          pylint $(git ls-files './src/webapp/*.py') --errors-only
+          uv run pylint $(git ls-files './src/webapp/*.py') --errors-only
       - name: Test with pytest
         run: |
-          coverage run -m pytest  -v -s ./src/webapp/
+          uv run coverage run -m pytest  -v -s ./src/webapp/
       - name: Generate Coverage Report
         run: |
-          coverage report -m
+          uv run coverage report -m
