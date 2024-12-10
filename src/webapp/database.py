@@ -14,7 +14,6 @@ LocalSession = None
 local_session: ContextVar[Session] = ContextVar("local_session")
 db_engine = None
 
-
 # The institution overview table that maps ids to names. The parent table to
 # all other ables except for AccountHistory.
 class InstTable(Base):
@@ -154,7 +153,7 @@ def get_session():
 
 
 def connect_tcp_socket(
-    engine_args: Dict[str, str], connect_args: Dict[str, str]
+    engine_args: dict[str, str], connect_args: dict[str, str]
 ) -> sqlalchemy.engine.base.Engine:
     """Initializes a TCP connection pool for a Cloud SQL instance of MySQL."""
     pool = sqlalchemy.create_engine(
@@ -213,7 +212,7 @@ def init_connection_pool() -> (
         "DB_NAME": os.environ.get("DB_NAME"),
         "DB_PORT": os.environ.get("DB_PORT"),
     }
-    for elem_name, value in engine_args:
+    for elem_name, value in engine_args.items():
         if not value:
             raise ValueError("Missing " + elem_name + " value missing. Required.")
     # For deployments that connect directly to a Cloud SQL instance without
@@ -228,7 +227,7 @@ def init_connection_pool() -> (
         "DB_KEY": os.environ.get("DB_KEY"),
     }
 
-    for elem_name, value in ssl_env_vars:
+    for elem_name, value in ssl_env_vars.items():
         if not value:
             raise ValueError(
                 "Missing " + elem_name + " value missing. Required for SSL connection."
