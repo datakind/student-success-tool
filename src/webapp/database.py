@@ -5,7 +5,7 @@ import uuid
 
 from sqlalchemy.ext.declarative import declarative_base
 from contextvars import ContextVar
-from sqlalchemy import Column, Uuid, DateTime, ForeignKey, Table
+from sqlalchemy import Column, Uuid, DateTime, ForeignKey, Table, String
 from sqlalchemy.orm import sessionmaker, Session, relationship, mapped_column, Mapped
 from sqlalchemy.sql import func
 
@@ -13,6 +13,11 @@ Base = declarative_base()
 LocalSession = None
 local_session: ContextVar[Session] = ContextVar("local_session")
 db_engine = None
+
+# GCP MYSQL will throw an error if we don't specify the length for any varchar
+# fields. So we can't use mapped_column in string cases.
+VAR_CHAR_LENGTH = 30
+
 
 # The institution overview table that maps ids to names. The parent table to
 # all other ables except for AccountHistory.
@@ -28,12 +33,12 @@ class InstTable(Base):
         back_populates="inst"
     )
 
-    name: Mapped[str] = mapped_column(nullable=False, unique=True)
+    name = Column(String(VAR_CHAR_LENGTH), nullable=False, unique=True)
     # If retention unset, the Datakind default is used. File-level retentions overrides
     # this value.
     retention_days: Mapped[int] = mapped_column(nullable=True)
     # A short description or note on this inst.
-    description: Mapped[str] = mapped_column(nullable=True)
+    description = Column(String(VAR_CHAR_LENGTH))
     time_created = Column(DateTime(timezone=True), server_default=func.now())
     time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -49,16 +54,18 @@ class AccountTable(Base):
     )
 
     # Set the foreign key to link to the institution table.
-    inst_id: Mapped[str] = mapped_column(
-        ForeignKey("inst.id", ondelete="CASCADE"), nullable=False
+    inst_id = Column(
+        String(VAR_CHAR_LENGTH),
+        ForeignKey("inst.id", ondelete="CASCADE"),
+        nullable=False,
     )
     inst: Mapped["InstTable"] = relationship(back_populates="accounts")
 
-    name: Mapped[str] = mapped_column(nullable=False)
-    email: Mapped[str] = mapped_column(nullable=False, unique=True)
+    name = Column(String(VAR_CHAR_LENGTH), nullable=False)
+    email = Column(String(VAR_CHAR_LENGTH), nullable=False, unique=True)
     email_verified: Mapped[bool] = mapped_column(nullable=False)
-    access_type: Mapped[str] = mapped_column(nullable=False)
-    password_hash: Mapped[str] = mapped_column(nullable=False)
+    access_type = Column(String(VAR_CHAR_LENGTH), nullable=False)
+    password_hash = Column(String(VAR_CHAR_LENGTH), nullable=False)
     time_created = mapped_column(DateTime(timezone=True), server_default=func.now())
     time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -73,18 +80,22 @@ class AccountHistoryTable(Base):
     )
 
     # Set the parent foreign key to link to the accounts table.
-    account_id: Mapped[str] = mapped_column(
-        ForeignKey("account.id", ondelete="CASCADE"), nullable=False
+    account_id = Column(
+        String(VAR_CHAR_LENGTH),
+        ForeignKey("account.id", ondelete="CASCADE"),
+        nullable=False,
     )
     account: Mapped["AccountTable"] = relationship(back_populates="account_histories")
 
-    inst_id: Mapped[str] = mapped_column(
-        ForeignKey("inst.id", ondelete="CASCADE"), nullable=False
+    inst_id = Column(
+        String(VAR_CHAR_LENGTH),
+        ForeignKey("inst.id", ondelete="CASCADE"),
+        nullable=False,
     )
     inst: Mapped["InstTable"] = relationship(back_populates="account_histories")
 
-    action: Mapped[str] = mapped_column(nullable=False)
-    resource_id: Mapped[str] = mapped_column(nullable=False)
+    action = Column(String(VAR_CHAR_LENGTH), nullable=False)
+    resource_id = Column(String(VAR_CHAR_LENGTH), nullable=False)
 
 
 # An intermediary association table allows bi-directional many-to-many between files and batches.
@@ -102,8 +113,10 @@ class FileTable(Base):
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4())
 
     # Set the parent foreign key to link to the institution table.
-    inst_id: Mapped[str] = mapped_column(
-        ForeignKey("inst.id", ondelete="CASCADE"), nullable=False
+    inst_id = Column(
+        String(VAR_CHAR_LENGTH),
+        ForeignKey("inst.id", ondelete="CASCADE"),
+        nullable=False,
     )
     inst: Mapped["InstTable"] = relationship(back_populates="files")
 
@@ -111,7 +124,7 @@ class FileTable(Base):
         secondary=association_table, back_populates="files"
     )
 
-    name: Mapped[str] = mapped_column(nullable=False, unique=True)
+    name = Column(String(VAR_CHAR_LENGTH), nullable=False, unique=True)
     # If null, the following is non-deleted.
     deleted: Mapped[bool] = mapped_column(nullable=True)
     time_created = Column(DateTime(timezone=True), server_default=func.now())
@@ -124,8 +137,10 @@ class BatchTable(Base):
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4())
 
     # Set the parent foreign key to link to the institution table.
-    inst_id: Mapped[str] = mapped_column(
-        ForeignKey("inst.id", ondelete="CASCADE"), nullable=False
+    inst_id = Column(
+        String(VAR_CHAR_LENGTH),
+        ForeignKey("inst.id", ondelete="CASCADE"),
+        nullable=False,
     )
     inst: Mapped["InstTable"] = relationship(back_populates="batches")
 
@@ -133,7 +148,7 @@ class BatchTable(Base):
         secondary=association_table, back_populates="batches"
     )
 
-    name: Mapped[str] = mapped_column(nullable=False, unique=True)
+    name = Column(String(VAR_CHAR_LENGTH), nullable=False, unique=True)
     time_created = Column(DateTime(timezone=True), server_default=func.now())
     time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
