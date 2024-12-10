@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
 from .routers import models, users, data, institutions
-from .database import setup_db
+from .database import setup_db, db_engine
 
 # Set the logging
 logging.basicConfig(format="%(asctime)s [%(levelname)s]: %(message)s")
@@ -39,7 +39,7 @@ def on_startup():
 @app.on_event("shutdown")
 async def shutdown_event():
     print("Performing shutdown tasks...")
-    await connector.close()
+    await db_engine.dispose()
 
 
 @app.get("/")

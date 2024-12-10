@@ -3,7 +3,6 @@ import pymysql
 import sqlalchemy
 import uuid
 
-from google.cloud.sql.connector import Connector
 from sqlalchemy.ext.declarative import declarative_base
 from contextvars import ContextVar
 from sqlalchemy import Column, Uuid, DateTime, ForeignKey, Table
@@ -11,7 +10,9 @@ from sqlalchemy.orm import sessionmaker, Session, relationship, mapped_column, M
 from sqlalchemy.sql import func
 
 Base = declarative_base()
+LocalSession = None
 local_session: ContextVar[Session] = ContextVar("local_session")
+db_engine = None
 
 
 # The institution overview table that maps ids to names. The parent table to
@@ -149,56 +150,103 @@ def get_session():
         sess.close()
 
 
+# The following functions from the GCP open source sample code. xxxxxxxx
+
+
+def connect_tcp_socket(
+    engine_args: Dict[str, str], connect_args: Dict[str, str]
+) -> sqlalchemy.engine.base.Engine:
+    """Initializes a TCP connection pool for a Cloud SQL instance of MySQL."""
+    pool = sqlalchemy.create_engine(
+        # Equivalent URL:
+        # mysql+pymysql://<db_user>:<db_pass>@<db_host>:<db_port>/<db_name>
+        sqlalchemy.engine.url.URL.create(
+            drivername="mysql+pymysql",
+            username=engine_args["DB_USER"],
+            password=engine_args["DB_PASS"],
+            host=engine_args["INSTANCE_HOST"],
+            port=engine_args["DB_PORT"],
+            database=engine_args["DB_NAME"],
+        ),
+        # [END cloud_sql_mysql_sqlalchemy_connect_tcp]
+        connect_args=connect_args,
+        # [START cloud_sql_mysql_sqlalchemy_connect_tcp]
+        # [START_EXCLUDE]
+        # [START cloud_sql_mysql_sqlalchemy_limit]
+        # Pool size is the maximum number of permanent connections to keep.
+        pool_size=5,
+        # Temporarily exceeds the set pool_size if no connections are available.
+        max_overflow=2,
+        # The total number of concurrent connections for your application will be
+        # a total of pool_size and max_overflow.
+        # [END cloud_sql_mysql_sqlalchemy_limit]
+        # [START cloud_sql_mysql_sqlalchemy_backoff]
+        # SQLAlchemy automatically uses delays between failed connection attempts,
+        # but provides no arguments for configuration.
+        # [END cloud_sql_mysql_sqlalchemy_backoff]
+        # [START cloud_sql_mysql_sqlalchemy_timeout]
+        # 'pool_timeout' is the maximum number of seconds to wait when retrieving a
+        # new connection from the pool. After the specified amount of time, an
+        # exception will be thrown.
+        pool_timeout=30,  # 30 seconds
+        # [END cloud_sql_mysql_sqlalchemy_timeout]
+        # [START cloud_sql_mysql_sqlalchemy_lifetime]
+        # 'pool_recycle' is the maximum number of seconds a connection can persist.
+        # Connections that live longer than the specified amount of time will be
+        # re-established
+        pool_recycle=1800,  # 30 minutes
+        # [END cloud_sql_mysql_sqlalchemy_lifetime]
+        # [END_EXCLUDE]
+    )
+    return pool
+
+
 # helper function to return SQLAlchemy connection pool
-def init_connection_pool(connector: Connector) -> sqlalchemy.engine.Engine:
-    # function used to generate database connection
-    def getconnauth() -> pymysql.connections.Connection:
-        conn = connector.connect(
-            os.getenv("INSTANCE_CONNECTION_NAME"),
-            "pymysql",
-            user=os.getenv("DB_IAM_USER"),
-            db=os.getenv("DB_NAME"),
-            enable_iam_auth=True,
-        )
-        return conn
+def init_connection_pool() -> (
+    sqlalchemy.engine.Engine
+):  # should this be sqlalchemy.engine.base.Engine
+    # The INSTANCE_HOST is the private IP of CLoudSQL instance e.g. '127.0.0.1' ('172.17.0.1' if deployed to GAE Flex)
+    engine_args = {
+        "INSTANCE_HOST": os.environ.get("INSTANCE_HOST"),
+        "DB_USER": os.environ.get("DB_USER"),
+        "DB_PASS": os.environ.get("DB_PASS"),
+        "DB_NAME": os.environ.get("DB_NAME"),
+        "DB_PORT": os.environ.get("DB_PORT"),
+    }
+    for elem_name, value in engine_args:
+        if not value:
+            raise ValueError("Missing " + elem_name + " value missing. Required.")
+    # For deployments that connect directly to a Cloud SQL instance without
+    # using the Cloud SQL Proxy, configuring SSL certificates will ensure the
+    # connection is encrypted.
+    # root cert: e.g. '/path/to/server-ca.pem'
+    # cert: e.g. '/path/to/client-cert.pem'
+    # key: e.g. '/path/to/client-key.pem'
+    ssl_env_vars = {
+        "DB_ROOT_CERT": os.environ.get("DB_ROOT_CERT"),
+        "DB_CERT": os.environ.get("DB_CERT"),
+        "DB_KEY": os.environ.get("DB_KEY"),
+    }
 
-    def getconnpw() -> pymysql.connections.Connection:
-        conn = connector.connect(
-            os.getenv("INSTANCE_CONNECTION_NAME"),
-            "pymysql",
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            db=os.getenv("DB_NAME"),
-        )
-        return conn
-
-    # create connection pool
-    if os.getenv("USE_AUTH") == "True":
-        print("[debugging_aaa4] using auth")
-        return sqlalchemy.create_engine("mysql+pymysql://", creator=getconnauth)
-    print("[debugging_aaa5] using pw")
-    return sqlalchemy.create_engine("mysql+pymysql://", creator=getconnpw)
+    for elem_name, value in ssl_env_vars:
+        if not value:
+            raise ValueError(
+                "Missing " + elem_name + " value missing. Required for SSL connection."
+            )
+    ssl_args = {
+        "ssl_ca": ssl_env_vars["DB_ROOT_CERT"],
+        "ssl_cert": ssl_env_vars["DB_CERT"],
+        "ssl_key": ssl_env_vars["DB_KEY"],
+    }
+    return connect_tcp_socket(engine_args, ssl_args)
 
 
 def setup_db():
-    # initialize Cloud SQL Python Connector for the GCP databases. Global so
-    # shutdown can access it as well.
-    print("[debugging_aaa1] Entering setup_db")
-    global connector
-    if os.getenv("USE_AUTH") == "True":
-        connector = Connector(
-            ip_type="private", enable_iam_auth=True, refresh_strategy="lazy"
-        )
-    else:
-        connector = Connector(
-            ip_type="public", enable_iam_auth=False, refresh_strategy="lazy"
-        )
-    print("[debugging_aaa2] pass Connector")
-    global LocalSession
     # initialize connection pool
-    engine = init_connection_pool(connector)
-    print("[debugging_aaa3] pass connection pool")
+    global db_engine
+    db_engine = init_connection_pool()
     # Integrating FastAPI with SQL DB
     # create SQLAlchemy ORM session
-    LocalSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    Base.metadata.create_all(engine)
+    global LocalSession
+    LocalSession = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
+    Base.metadata.create_all(db_engine)
