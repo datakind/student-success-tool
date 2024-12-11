@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse
 
 from .routers import models, users, data, institutions
 from .database import setup_db, db_engine
+from .config import env_vars
 
 # Set the logging
 logging.basicConfig(format="%(asctime)s [%(levelname)s]: %(message)s")
@@ -32,6 +33,13 @@ app.include_router(data.router)
 @app.on_event("startup")
 def on_startup():
     print("Starting up app...")
+    env = env_vars["ENV"]
+    if not env:
+        raise ValueError(
+            "Missing ENV environment variable. Required. Can be PROD, STAGING, or DEV."
+        )
+    if env not in ["PROD", "STAGING", "DEV"]:
+        raise ValueError("ENV environment variable not one of: PROD, STAGING, or DEV.")
     setup_db()
 
 

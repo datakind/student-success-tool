@@ -1,25 +1,26 @@
 """Helper objects for unit tests across the various files.
 """
 
-from .utilities import AccessType, BaseUser
+from .utilities import AccessType, BaseUser, uuid_to_str
+import uuid
 
 USR = BaseUser(
-    "5301a352-c03d-4a39-beec-16c5668c4700",
-    "1d7c75c3-3eda-4294-9c66-75ea8af97b55",
+    uuid_to_str(uuid.UUID("5301a352-c03d-4a39-beec-16c5668c4700")),
+    uuid_to_str(uuid.UUID("1d7c75c3-3eda-4294-9c66-75ea8af97b55")),
     AccessType.MODEL_OWNER,
 )
 USR_STR = USR.construct_query_param_string()
 
 VIEWER = BaseUser(
-    "5301a352-c03d-4a39-beec-16c5668c4700",
-    "1d7c75c3-3eda-4294-9c66-75ea8af97b55",
+    uuid_to_str(uuid.UUID("5301a352-c03d-4a39-beec-16c5668c4700")),
+    uuid_to_str(uuid.UUID("1d7c75c3-3eda-4294-9c66-75ea8af97b55")),
     AccessType.VIEWER,
 )
 VIEWER_STR = VIEWER.construct_query_param_string()
 
 DATAKINDER = BaseUser(
-    "5301a352-c03d-4a39-beec-16c5668c4700",
-    "1d7c75c3-3eda-4294-9c66-75ea8af97b55",
+    uuid_to_str(uuid.UUID("5301a352-c03d-4a39-beec-16c5668c4700")),
+    uuid_to_str(uuid.UUID("1d7c75c3-3eda-4294-9c66-75ea8af97b55")),
     AccessType.DATAKINDER,
 )
 DATAKINDER_STR = DATAKINDER.construct_query_param_string()
@@ -42,7 +43,7 @@ USER_ACCT = {
     "account_disabled": False,
     "deletion_request": None,
     "email": "abc@example.com",
-    "inst_id": "5301a352-c03d-4a39-beec-16c5668c4700",
+    "inst_id": uuid_to_str(uuid.UUID("5301a352-c03d-4a39-beec-16c5668c4700")),
     "user_id": "",
     "username": None,
 }
@@ -61,7 +62,7 @@ EMPTY_INSTITUTION_OBJ = {
 }
 
 INSTITUTION_OBJ = {
-    "inst_id": "1d7c75c3-3eda-4294-9c66-75ea8af97b55",
+    "inst_id": uuid_to_str(uuid.UUID("1d7c75c3-3eda-4294-9c66-75ea8af97b55")),
     "name": "valid_school",
     "description": None,
     "retention_days": None,

@@ -8,8 +8,9 @@ from datetime import datetime
 import sqlalchemy
 from sqlalchemy.pool import StaticPool
 import uuid
+import os
 
-from .institutions import router
+from .institutions import router, create_institution
 from ..test_helper import (
     USR_STR,
     INSTITUTION_REQ,
@@ -17,15 +18,18 @@ from ..test_helper import (
     DATAKINDER_STR,
     INSTITUTION_OBJ,
 )
+
+from ..utilities import uuid_to_str
 from ..main import app
 from ..database import InstTable, Base, get_session, local_session
+
 
 DATETIME_TESTING = datetime.today()
 UUID_1 = uuid.uuid4()
 UUID_2 = uuid.uuid4()
-USER_UUID = "5301a352-c03d-4a39-beec-16c5668c4700"
-USER_VALID_INST_UUID = "1d7c75c3-3eda-4294-9c66-75ea8af97b55"
-INVALID_UUID = "27316b89-5e04-474a-9ea4-97beaf72c9af"
+USER_UUID = uuid.UUID("5301a352-c03d-4a39-beec-16c5668c4700")
+USER_VALID_INST_UUID = uuid.UUID("1d7c75c3-3eda-4294-9c66-75ea8af97b55")
+INVALID_UUID = uuid.UUID("27316b89-5e04-474a-9ea4-97beaf72c9af")
 
 
 @pytest.fixture(name="session")
@@ -55,7 +59,7 @@ def session_fixture():
                         time_updated=DATETIME_TESTING,
                     ),
                     InstTable(
-                        id=uuid.UUID(USER_VALID_INST_UUID),
+                        id=USER_VALID_INST_UUID,
                         name="valid_school",
                         time_created=DATETIME_TESTING,
                         time_updated=DATETIME_TESTING,
@@ -97,29 +101,29 @@ def test_read_all_inst(client: TestClient):
     assert response.json() == [
         {
             "description": None,
-            "inst_id": str(UUID_1),
+            "inst_id": uuid_to_str(UUID_1),
             "name": "school_1",
             "retention_days": None,
         },
         {
             "description": None,
-            "inst_id": str(UUID_2),
+            "inst_id": uuid_to_str(UUID_2),
             "name": "school_2",
             "retention_days": None,
         },
         {
             "description": None,
-            "inst_id": "1d7c75c3-3eda-4294-9c66-75ea8af97b55",
+            "inst_id": uuid_to_str(USER_VALID_INST_UUID),
             "name": "valid_school",
             "retention_days": None,
         },
     ]
 
 
-def test_read_inst(client: TestClient):
+def test_read_inst_by_name(client: TestClient):
     # Test GET /institutions/<uuid>. For various user access types.
     # Unauthorized.
-    response = client.get("/institutions/school_1" + USR_STR)
+    response = client.get("/institutions/name/school_1" + USR_STR)
 
     assert str(response) == "<Response [401 Unauthorized]>"
     assert (
@@ -128,13 +132,34 @@ def test_read_inst(client: TestClient):
     )
 
     # Authorized.
-    response = client.get("/institutions/valid_school" + USR_STR)
+    response = client.get("/institutions/name/valid_school" + USR_STR)
+    assert response.status_code == 200
+    assert response.json() == INSTITUTION_OBJ
+
+
+def test_read_inst(client: TestClient):
+    # Test GET /institutions/<uuid>. For various user access types.
+    # Unauthorized.
+    response = client.get("/institutions/" + uuid_to_str(UUID_1) + USR_STR)
+
+    assert str(response) == "<Response [401 Unauthorized]>"
+    assert (
+        response.text
+        == '{"detail":"Not authorized to read this institution\'s resources."}'
+    )
+
+    # Authorized.
+    response = client.get(
+        "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + USR_STR
+    )
     assert response.status_code == 200
     assert response.json() == INSTITUTION_OBJ
 
 
 def test_create_inst(client: TestClient):
     # Test POST /institutions. For various user access types.
+    os.environ["ENV"] = "DEV"
+    assert "DEV" == os.environ.get("ENV")
     # Unauthorized.
     response = client.post("/institutions/" + USR_STR, json=INSTITUTION_REQ)
     assert str(response) == "<Response [401 Unauthorized]>"

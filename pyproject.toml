@@ -31,6 +31,7 @@ dependencies = [
     "pytest>=8.3.3",
     "pylint>=3.3.2",
     "coverage>=7.6.9",
+    "google-cloud-storage-control>=1.1.1",
 ]
 
 [project.urls]

@@ -4,6 +4,7 @@
 from typing import Union
 from enum import IntEnum  # , StrEnum
 import uuid
+import os
 
 from fastapi import HTTPException, status
 from pydantic import BaseModel, ConfigDict
@@ -122,3 +123,20 @@ def model_owner_and_higher_or_err(user: BaseUser, resource_type: str):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="No permissions for " + resource_type + " for this institution.",
         )
+
+
+# At this point the value should not be empty as we checked on app startup.
+def prepend_env_prefix(name: str) -> str:
+    return os.environ["ENV"] + "_" + name
+
+
+def uuid_to_str(uuid_val: uuid.UUID) -> str:
+    return uuid_val.hex
+
+
+def uuids_to_strs(uuid_vals: list[uuid.UUID]) -> list[str]:
+    return [uuid_to_str(x) for x in uuid_vals]
+
+
+def str_to_uuid(hex_str: str) -> uuid.UUID:
+    return uuid.UUID(hex_str)

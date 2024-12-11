@@ -902,6 +902,12 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ba/7b/1137a9811be73d8ff8238eb2d9f60f0bc0bb6a1edd87f9d47557ab937a2b/google_api_core-2.22.0-py3-none-any.whl", hash = "sha256:a6652b6bd51303902494998626653671703c420f6f4c88cfd3f50ed723e9d021", size = 156538 },
 ]
 
+[package.optional-dependencies]
+grpc = [
+    { name = "grpcio" },
+    { name = "grpcio-status" },
+]
+
 [[package]]
 name = "google-auth"
 version = "2.35.0"
@@ -953,6 +959,21 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d6/b7/1554cdeb55d9626a4b8720746cba8119af35527b12e1780164f9ba0f659a/google_cloud_storage-2.18.2.tar.gz", hash = "sha256:aaf7acd70cdad9f274d29332673fcab98708d0e1f4dceb5a5356aaef06af4d99", size = 5532864 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fc/da/95db7bd4f0bd1644378ac1702c565c0210b004754d925a74f526a710c087/google_cloud_storage-2.18.2-py2.py3-none-any.whl", hash = "sha256:97a4d45c368b7d401ed48c4fdfe86e1e1cb96401c9e199e419d289e2c0370166", size = 130466 },
+]
+
+[[package]]
+name = "google-cloud-storage-control"
+version = "1.1.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "google-api-core", extra = ["grpc"] },
+    { name = "google-auth" },
+    { name = "proto-plus" },
+    { name = "protobuf" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2b/c3/85da97541977fcebda1954bd9baa559f5e38b4ae42798a108fd4cd0df21e/google_cloud_storage_control-1.1.1.tar.gz", hash = "sha256:8da1aa74fa3441945012d2535d56ee8643cfe7fb0336d8d446ff2ef0dc2f4c30", size = 55694 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7f/12/c0227522b53794b5659dfe461ba715b126c6ac9ad6790915ad0e7847e167/google_cloud_storage_control-1.1.1-py3-none-any.whl", hash = "sha256:584fcf534dd76814760225de241a81906c9fcf1b8595bfabbf3c868c793256fc", size = 51386 },
 ]
 
 [[package]]
@@ -3104,6 +3125,7 @@ dependencies = [
     { name = "fastapi", extra = ["standard"] },
     { name = "google-cloud" },
     { name = "google-cloud-storage" },
+    { name = "google-cloud-storage-control" },
     { name = "ipywidgets" },
     { name = "matplotlib" },
     { name = "missingno" },
@@ -3143,6 +3165,7 @@ requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = ">=0.115.4" },
     { name = "google-cloud", specifier = ">=0.34.0" },
     { name = "google-cloud-storage", specifier = ">=2.18.2" },
+    { name = "google-cloud-storage-control", specifier = ">=1.1.1" },
     { name = "ipywidgets", specifier = "~=8.1" },
     { name = "matplotlib", specifier = "~=3.7" },
     { name = "missingno", specifier = "~=0.5" },
