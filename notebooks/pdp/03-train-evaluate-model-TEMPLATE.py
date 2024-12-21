@@ -35,7 +35,7 @@
 
 import logging
 
-import mlflow
+# import mlflow
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 
