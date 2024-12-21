@@ -1,3 +1,4 @@
+import logging
 import pathlib
 import typing as t
 from collections.abc import Sequence
@@ -10,6 +11,9 @@ try:
     import tomllib  # noqa
 except ImportError:  # => PY3.10
     import tomli as tomllib  # noqa
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def compute_dataset_splits(
@@ -81,15 +85,23 @@ def compute_sample_weights(
     )
 
 
-def load_features_table(rel_path: str) -> dict[str, dict[str, str]]:
+def load_features_table(rel_fpath: str) -> dict[str, dict[str, str]]:
+    """
+    Load a features table mapping columns to readable names and (optionally) descriptions
+    from a TOML file located at ``rel_fpath`` within this package.
+
+    Args:
+        rel_fpath: Path to features table TOML file relative to package root;
+            for example: "assets/pdp/features_table.toml".
+    """
     pkg_root_dir = next(
         p
         for p in pathlib.Path(__file__).parents
         if p.parts[-1] == "student_success_tool"
     )
-    print(f"{pkg_root_dir=}")
-    file_path = pkg_root_dir / rel_path
+    file_path = pkg_root_dir / rel_fpath
     with file_path.open(mode="rb") as f:
         features_table = tomllib.load(f)
+    LOGGER.info("loaded features table from '%s'", file_path)
     assert isinstance(features_table, dict)  # type guard
     return features_table
