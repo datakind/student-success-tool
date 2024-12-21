@@ -62,43 +62,35 @@ num_courses_grade_above_section_avg = { name = "number of courses this term with
 cohort_term = { name = "student's cohort (enrollment) term" }
 enrollment_type = { name = "student's enrollment type " }
 enrollment_intensity_first_term = { name = "student's first-term enrollment intensity" }
-math_placement = { name = "TODO" }
-english_placement = { name = "TODO" }
-dual_and_summer_enrollment = { name = "TODO" }
-race = { name = "TODO" }
-ethnicity = { name = "TODO" }
-gender = { name = "TODO" }
-first_gen = { name = "TODO" }
-pell_status_first_year = { name = "TODO" }
-credential_type_sought_year_1 = { name = "TODO" }
-program_of_study_term_1 = { name = "TODO" }
-gpa_group_term_1 = { name = "TODO" }
-gpa_group_year_1 = { name = "TODO" }
-number_of_credits_attempted_year_1 = { name = "TODO" }
-number_of_credits_earned_year_1 = { name = "TODO" }
-number_of_credits_attempted_year_2 = { name = "TODO" }
-number_of_credits_earned_year_2 = { name = "TODO" }
-number_of_credits_attempted_year_3 = { name = "TODO" }
-number_of_credits_earned_year_3 = { name = "TODO" }
-number_of_credits_attempted_year_4 = { name = "TODO" }
-number_of_credits_earned_year_4 = { name = "TODO" }
-reading_placement = { name = "TODO" }
-special_program = { name = "TODO" }
-foreign_language_completion = { name = "TODO" }
-first_year_to_bachelors_at_cohort_inst = { name = "TODO" }
-first_year_to_associates_or_certificate_at_cohort_inst = { name = "TODO" }
-first_year_to_bachelor_at_other_inst = { name = "TODO" }
-first_year_to_associates_or_certificate_at_other_inst = { name = "TODO" }
-program_of_study_year_1 = { name = "TODO" }
-student_program_of_study_area_term_1 = { name = "TODO" }
-student_program_of_study_area_year_1 = { name = "TODO" }
-student_program_of_study_changed_term_1_to_year_1 = { name = "TODO" }
-student_program_of_study_area_changed_term_1_to_year_1 = { name = "TODO" }
-diff_gpa_term_1_to_year_1 = { name = "TODO" }
-frac_credits_earned_year_1 = { name = "TODO" }
-frac_credits_earned_year_2 = { name = "TODO" }
-frac_credits_earned_year_3 = { name = "TODO" }
-frac_credits_earned_year_4 = { name = "TODO" }
+math_placement = { name = "student's math placement upon enrollment" }
+english_placement = { name = "student's english placement upon enrollment" }
+reading_placement = { name = "student's reading placement upon enrollment" }
+dual_and_summer_enrollment = { name = "student's past dual and/or summer enrollment status" }
+pell_status_first_year = { name = "student's first-year Pell status" }
+credential_type_sought_year_1 = { name = "student's first-year credential type sought" }
+program_of_study_term_1 = { name = "student's first-term program of study" }
+program_of_study_year_1 = { name = "student's first-year program of study" }
+gpa_group_term_1 = { name = "student's GPA at end of first term" }
+gpa_group_year_1 = { name = "student's GPA at end of first year" }
+number_of_credits_attempted_year_1 = { name = "total number of credits attempted in year 1" }
+number_of_credits_earned_year_1 = { name = "total number of credits earned in year 1" }
+number_of_credits_attempted_year_2 = { name = "total number of credits attempted in year 2" }
+number_of_credits_earned_year_2 = { name = "total number of credits earned in year 2" }
+number_of_credits_attempted_year_3 = { name = "total number of credits attempted in year 3" }
+number_of_credits_earned_year_3 = { name = "total number of credits earned in year 3" }
+number_of_credits_attempted_year_4 = { name = "total number of credits attempted in year 4" }
+number_of_credits_earned_year_4 = { name = "total number of credits earned in year 4" }
+special_program = { name = "student is participating in a special program" }
+foreign_language_completion = { name = "term/year in which student completed foreign language requirement" }
+student_program_of_study_area_term_1 = { name = "student's first-term program of study area" }
+student_program_of_study_area_year_1 = { name = "student's first-year program of study area" }
+student_program_of_study_changed_term_1_to_year_1 = { name = "student's program of study changed from term 1 to year 1" }
+student_program_of_study_area_changed_term_1_to_year_1 = { name = "student's program of study area changed from term 1 to year 1" }
+diff_gpa_term_1_to_year_1 = { name = "change in student's GPA from term 1 to year 1" }
+frac_credits_earned_year_1 = { name = "fraction of credits earned in year 1" }
+frac_credits_earned_year_2 = { name = "fraction of credits earned in year 2" }
+frac_credits_earned_year_3 = { name = "fraction of credits earned in year 3" }
+frac_credits_earned_year_4 = { name = "fraction of credits earned in year 4" }
 year_of_enrollment_at_cohort_inst = { name = "TODO" }
 term_is_pre_cohort = { name = "TODO" }
 term_is_while_student_enrolled_at_other_inst = { name = "TODO" }
