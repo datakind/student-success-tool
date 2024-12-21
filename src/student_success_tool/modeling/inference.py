@@ -23,6 +23,8 @@ def select_top_features_for_display(
 
     Returns:
         explainability dataframe for display
+
+    TODO: refactor this functionality so it's vectorized and aggregates by student
     """
     top_features_info = []
 
@@ -32,18 +34,20 @@ def select_top_features_for_display(
         instance_shap_values = shap_values[i]
         top_indices = np.argsort(-np.abs(instance_shap_values))[:n_features]
         top_features = features.columns[top_indices]
+        top_feature_values = features.iloc[i][top_features]
         top_shap_values = instance_shap_values[top_indices]
 
-        for rank, (feature, shap_value) in enumerate(
-            zip(top_features, top_shap_values), start=1
+        for rank, (feature, feature_value, shap_value) in enumerate(
+            zip(top_features, top_feature_values, top_shap_values), start=1
         ):
             top_features_info.append(
                 {
                     "Student ID": unique_id,
                     "Support Score": predicted_proba,
                     "Top Indicators": feature,
+                    "Indicator Value": feature_value,
                     "SHAP Value": shap_value,
                     "Rank": rank,
-                }  # column names defined here https://app.asana.com/0/1206275396780585/1206834683873668/f
+                }
             )
     return pd.DataFrame(top_features_info)
