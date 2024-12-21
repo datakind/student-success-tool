@@ -25,7 +25,7 @@
 
 # install dependencies, most of which should come through our 1st-party SST package
 # %pip install "student-success-tool==0.1.0"
-%pip install git+https://github.com/datakind/student-success-tool.git@develop
+# %pip install git+https://github.com/datakind/student-success-tool.git@develop
 
 # COMMAND ----------
 
@@ -34,17 +34,13 @@
 # COMMAND ----------
 
 import logging
-import sys
 
 import mlflow
-import numpy as np
-import pandas as pd
-import sklearn.metrics
-import seaborn as sb
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
-from student_success_tool.analysis import pdp
+
 from student_success_tool import modeling
+from student_success_tool.analysis import pdp
 
 # COMMAND ----------
 
@@ -93,9 +89,9 @@ optimization_metric = "log_loss"
 prediction_col = "prediction"
 risk_score_col = "risk_score"
 
-optional_automl_parameters["exclude_cols"] = list(set(
-    optional_automl_parameters.get("exclude_cols", []) + student_group_cols
-))
+optional_automl_parameters["exclude_cols"] = list(
+    set(optional_automl_parameters.get("exclude_cols", []) + student_group_cols)
+)
 optional_automl_parameters
 
 # COMMAND ----------
@@ -106,9 +102,7 @@ optional_automl_parameters
 # COMMAND ----------
 
 df = pdp.schemas.PDPLabeledDataSchema(
-    pdp.dataio.read_data_from_delta_table(
-        table_name, spark_session=spark_session
-    )
+    pdp.dataio.read_data_from_delta_table(table_name, spark_session=spark_session)
 )
 print(f"rows x cols = {df.shape}")
 df.head()
@@ -163,5 +157,3 @@ model = summary.best_trial.load_model()
 model
 
 # COMMAND ----------
-
-
