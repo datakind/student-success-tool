@@ -1,9 +1,15 @@
+import pathlib
 import typing as t
 from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
 import sklearn.utils
+
+try:
+    import tomllib  # noqa
+except ImportError:  # => PY3.10
+    import tomli as tomllib  # noqa
 
 
 def compute_dataset_splits(
@@ -73,3 +79,17 @@ def compute_sample_weights(
         dtype="float32",
         name="sample_weight",
     )
+
+
+def load_features_table(rel_path: str) -> dict[str, dict[str, str]]:
+    pkg_root_dir = next(
+        p
+        for p in pathlib.Path(__file__).parents
+        if p.parts[-1] == "student_success_tool"
+    )
+    print(f"{pkg_root_dir=}")
+    file_path = pkg_root_dir / rel_path
+    with file_path.open(mode="rb") as f:
+        features_table = tomllib.load(f)
+    assert isinstance(features_table, dict)  # type guard
+    return features_table
