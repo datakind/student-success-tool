@@ -15,7 +15,7 @@ course_grade_numeric_std = { name = "std. dev. in numeric course grades this ter
 section_num_students_enrolled_mean = { name = "avg. number of students enrolled per section this term" }
 section_num_students_enrolled_std = { name = "std. dev. in number of students enrolled per section this term" }
 num_courses_core_course_Y = { name = "number of core courses taken this term" }
-num_courses_enrolled_at_other_institution_s_Y = { name = "number of courses taken this term while enrolled at other institution" }
+num_courses_enrolled_at_other_institution_s_Y = { name = "number of courses taken this term while enrolled at another institution" }
 "num_courses_course_subject_area_*" = { name = "TODO: number of courses taken in subject area this term" }
 "num_courses_course_id_*" = { name = "TODO: number of times this course taken this term" }
 num_courses_course_type_CU = { name = "number of college-level, undergraduate courses taken this term" }
@@ -44,14 +44,14 @@ num_courses_course_instructor_rank_4 = { name = "number of courses taken this te
 num_courses_course_instructor_rank_5 = { name = "number of courses taken this term with an associate professor (rank 5)" }
 num_courses_course_instructor_rank_6 = { name = "number of courses taken this term with a professor (rank 6)" }
 num_courses_course_instructor_rank_7 = { name = "number of courses taken this term with an 'other' instructor (rank 7)" }
-num_courses_course_level_1 = { name = "number of level-1 courses taken this term" }
-num_courses_course_level_2 = { name = "number of level-2 courses taken this term" }
-num_courses_course_level_3 = { name = "number of level-3 courses taken this term" }
-num_courses_course_level_4 = { name = "number of level-4 courses taken this term" }
-num_courses_course_level_5 = { name = "number of level-5 courses taken this term" }
-num_courses_course_level_6 = { name = "number of level-6 courses taken this term" }
-num_courses_course_level_7 = { name = "number of level-7 courses taken this term" }
-num_courses_course_level_8 = { name = "number of level-8 courses taken this term" }
+num_courses_course_level_1 = { name = "number of 100-level courses taken this term" }
+num_courses_course_level_2 = { name = "number of 200-level courses taken this term" }
+num_courses_course_level_3 = { name = "number of 300-level courses taken this term" }
+num_courses_course_level_4 = { name = "number of 400-level courses taken this term" }
+num_courses_course_level_5 = { name = "number of 500-level courses taken this term" }
+num_courses_course_level_6 = { name = "number of 600-level courses taken this term" }
+num_courses_course_level_7 = { name = "number of 700-level courses taken this term" }
+num_courses_course_level_8 = { name = "number of 800-level courses taken this term" }
 num_courses_course_grade_a = { name = "number of A grades earned this term" }
 num_courses_course_grade_b = { name = "number of B grades earned this term" }
 num_courses_course_grade_c = { name = "number of C grades earned this term" }
@@ -91,139 +91,137 @@ frac_credits_earned_year_1 = { name = "fraction of credits earned in year 1" }
 frac_credits_earned_year_2 = { name = "fraction of credits earned in year 2" }
 frac_credits_earned_year_3 = { name = "fraction of credits earned in year 3" }
 frac_credits_earned_year_4 = { name = "fraction of credits earned in year 4" }
-year_of_enrollment_at_cohort_inst = { name = "TODO" }
-term_is_pre_cohort = { name = "TODO" }
-term_is_while_student_enrolled_at_other_inst = { name = "TODO" }
-frac_credits_earned = { name = "TODO" }
-student_term_enrollment_intensity = { name = "TODO" }
-num_courses_in_program_of_study_area_term_1 = { name = "TODO" }
-num_courses_in_program_of_study_area_year_1 = { name = "TODO" }
-frac_courses_passed = { name = "TODO" }
-frac_courses_completed = { name = "TODO" }
-frac_courses_core_course_Y = { name = "TODO" }
-frac_courses_enrolled_at_other_institution_s_Y = { name = "TODO" }
-frac_courses_course_subject_area_51 = { name = "TODO" }
-frac_courses_course_id_ENGLB101 = { name = "TODO" }
-frac_courses_course_id_ENGLB102 = { name = "TODO" }
-frac_courses_course_type_CU = { name = "TODO" }
-frac_courses_course_type_CG = { name = "TODO" }
-frac_courses_course_type_CC = { name = "TODO" }
-frac_courses_course_type_CD = { name = "TODO" }
-frac_courses_course_type_EL = { name = "TODO" }
-frac_courses_course_type_AB = { name = "TODO" }
-frac_courses_course_type_GE = { name = "TODO" }
-frac_courses_course_type_NC = { name = "TODO" }
-frac_courses_course_type_O = { name = "TODO" }
-frac_courses_delivery_method_F = { name = "TODO" }
-frac_courses_delivery_method_O = { name = "TODO" }
-frac_courses_delivery_method_H = { name = "TODO" }
-frac_courses_math_or_english_gateway_M = { name = "TODO" }
-frac_courses_math_or_english_gateway_E = { name = "TODO" }
-frac_courses_math_or_english_gateway_NA = { name = "TODO" }
-frac_courses_co_requisite_course_Y = { name = "TODO" }
-frac_courses_co_requisite_course_N = { name = "TODO" }
-frac_courses_course_instructor_employment_status_PT = { name = "TODO" }
-frac_courses_course_instructor_employment_status_FT = { name = "TODO" }
-frac_courses_course_instructor_rank_1 = { name = "TODO" }
-frac_courses_course_instructor_rank_2 = { name = "TODO" }
-frac_courses_course_instructor_rank_3 = { name = "TODO" }
-frac_courses_course_instructor_rank_4 = { name = "TODO" }
-frac_courses_course_instructor_rank_5 = { name = "TODO" }
-frac_courses_course_instructor_rank_6 = { name = "TODO" }
-frac_courses_course_instructor_rank_7 = { name = "TODO" }
-frac_courses_course_level_1 = { name = "TODO" }
-frac_courses_course_level_2 = { name = "TODO" }
-frac_courses_course_level_3 = { name = "TODO" }
-frac_courses_course_level_4 = { name = "TODO" }
-frac_courses_course_level_5 = { name = "TODO" }
-frac_courses_course_level_6 = { name = "TODO" }
-frac_courses_course_level_7 = { name = "TODO" }
-frac_courses_course_level_8 = { name = "TODO" }
-frac_courses_course_grade_A = { name = "TODO" }
-frac_courses_course_grade_B = { name = "TODO" }
-frac_courses_course_grade_C = { name = "TODO" }
-frac_courses_course_grade_D = { name = "TODO" }
-frac_courses_course_grade_F = { name = "TODO" }
-frac_courses_grade_is_failing_or_withdrawal = { name = "TODO" }
-frac_courses_grade_above_section_avg = { name = "TODO" }
-frac_sections_students_passed = { name = "TODO" }
-frac_sections_students_completed = { name = "TODO" }
-student_pass_rate_above_sections_avg = { name = "TODO" }
-student_completion_rate_above_sections_avg = { name = "TODO" }
-cumnum_unique_course_ids = { name = "TODO" }
-cumnum_unique_course_subjects = { name = "TODO" }
-cumnum_unique_course_subject_areas = { name = "TODO" }
-cumnum_repeated_course_ids = { name = "TODO" }
-cumnum_repeated_course_subjects = { name = "TODO" }
-cumnum_repeated_course_subject_areas = { name = "TODO" }
-cumnum_terms_enrolled = { name = "TODO" }
-term_in_peak_covid_cumsum = { name = "TODO" }
-cumnum_fall_spring_terms_enrolled = { name = "TODO" }
-term_is_while_student_enrolled_at_other_inst_cumsum = { name = "TODO" }
-term_is_pre_cohort_cumsum = { name = "TODO" }
-course_level_mean_cummean = { name = "TODO" }
-course_level_mean_cummin = { name = "TODO" }
-course_level_mean_cumstd = { name = "TODO" }
-course_grade_numeric_mean_cummean = { name = "TODO" }
-course_grade_numeric_mean_cummin = { name = "TODO" }
-course_grade_numeric_mean_cumstd = { name = "TODO" }
-num_courses_cumsum = { name = "TODO" }
-num_courses_cummean = { name = "TODO" }
-num_courses_cummin = { name = "TODO" }
-num_credits_attempted_cumsum = { name = "TODO" }
-num_credits_attempted_cummean = { name = "TODO" }
-num_credits_attempted_cummin = { name = "TODO" }
-num_credits_earned_cumsum = { name = "TODO" }
-num_credits_earned_cummean = { name = "TODO" }
-num_credits_earned_cummin = { name = "TODO" }
+year_of_enrollment_at_cohort_inst = { name = "year of enrollment at cohort institution" }
+term_is_pre_cohort = { name = "term occurred before student's cohort (enrollment) term" }
+term_is_while_student_enrolled_at_other_inst = { name = "term occurred while student is enrolled at another institution" }
+frac_credits_earned = { name = "fraction of credits earned this term" }
+student_term_enrollment_intensity = { name = "student's enrollment intensity this term" }
+num_courses_in_program_of_study_area_term_1 = { name = "number of courses taken this term in student's first-term program of study area" }
+num_courses_in_program_of_study_area_year_1 = { name = "number of courses taken this term in student's first-year program of study area" }
+frac_courses_passed = { name = "fraction of courses passed this term" }
+frac_courses_completed = { name = "fraction of courses completed this term" }
+frac_courses_core_course_Y = { name = "fraction of core courses taken this term" }
+frac_courses_enrolled_at_other_institution_s_Y = { name = "fraction of courses taken this term while student enrolled at another institution" }
+"frac_courses_course_subject_area_*" = { name = "TODO" }
+"frac_courses_course_id_*" = { name = "TODO" }
+frac_courses_course_type_CU = { name = "fraction of college-level, undergraduate courses taken this term" }
+frac_courses_course_type_CG = { name = "fraction of college-level, graduate courses taken this term" }
+frac_courses_course_type_CC = { name = "fraction of college developmental, remedial, or preparatory courses taken this term" }
+frac_courses_course_type_CD = { name = "fraction of college developmental, remedial, or preparatory courses taken this term" }
+frac_courses_course_type_EL = { name = "fraction of ESL courses taken this term" }
+frac_courses_course_type_AB = { name = "fraction of adult basic education courses taken this term" }
+frac_courses_course_type_GE = { name = "fraction of adult secondary education / GED courses taken this term" }
+frac_courses_course_type_NC = { name = "fraction of non-credit vocational courses taken this term" }
+frac_courses_course_type_O = { name = "fraction of 'other' courses taken this term" }
+frac_courses_delivery_method_F = { name = "fraction of face-to-face courses taken this term" }
+frac_courses_delivery_method_O = { name = "fraction of online courses taken this term" }
+frac_courses_delivery_method_H = { name = "fraction of hybrid (face-to-face / online) courses taken this term" }
+frac_courses_math_or_english_gateway_M = { name = "fraction of math gateway courses taken this term" }
+frac_courses_math_or_english_gateway_E = { name = "fraction of english gateway courses taken this term" }
+frac_courses_math_or_english_gateway_NA = { name = "fraction of non-gateway courses taken this term" }
+frac_courses_co_requisite_course_Y = { name = "fraction of co-requisite courses taken this term" }
+frac_courses_co_requisite_course_N = { name = "fraction of non-co-requsite courses taken this term" }
+frac_courses_course_instructor_employment_status_PT = { name = "fraction of courses taken this term with a part-time instructor" }
+frac_courses_course_instructor_employment_status_FT = { name = "fraction of courses taken this term with a full-time instructor" }
+frac_courses_course_instructor_rank_1 = { name = "fraction of courses taken this term with an instructor (rank 1)" }
+frac_courses_course_instructor_rank_2 = { name = "fraction of courses taken this term with a lecturer (rank 2)" }
+frac_courses_course_instructor_rank_3 = { name = "fraction of courses taken this term with a senior lecturer (rank 3)" }
+frac_courses_course_instructor_rank_4 = { name = "fraction of courses taken this term with an assistant professor (rank 4)" }
+frac_courses_course_instructor_rank_5 = { name = "fraction of courses taken this term with an associate professor (rank 5)" }
+frac_courses_course_instructor_rank_6 = { name = "fraction of courses taken this term with a professor (rank 6)" }
+frac_courses_course_instructor_rank_7 = { name = "fraction of courses taken this term with an 'other' instructor (rank 7)" }
+frac_courses_course_level_1 = { name = "fraction of 100-level courses taken this term" }
+frac_courses_course_level_2 = { name = "fraction of 200-level courses taken this term" }
+frac_courses_course_level_3 = { name = "fraction of 300-level courses taken this term" }
+frac_courses_course_level_4 = { name = "fraction of 400-level courses taken this term" }
+frac_courses_course_level_5 = { name = "fraction of 500-level courses taken this term" }
+frac_courses_course_level_6 = { name = "fraction of 600-level courses taken this term" }
+frac_courses_course_level_7 = { name = "fraction of 700-level courses taken this term" }
+frac_courses_course_level_8 = { name = "fraction of 800-level courses taken this term" }
+frac_courses_course_grade_a = { name = "fraction of A grades earned this term" }
+frac_courses_course_grade_b = { name = "fraction of B grades earned this term" }
+frac_courses_course_grade_c = { name = "fraction of C grades earned this term" }
+frac_courses_course_grade_d = { name = "fraction of D grades earned this term" }
+frac_courses_course_grade_f = { name = "fraction of F grades earned this term" }
+frac_courses_grade_is_failing_or_withdrawal = { name = "fraction of courses failed or withdrawn this term" }
+frac_courses_grade_above_section_avg = { name = "fraction of courses this term with grades above the sections' avg. grades" }
+frac_sections_students_passed = { name = "fraction of section's students that passed the course" }
+frac_sections_students_completed = { name = "fraction of section's students that completed the course" }
+student_pass_rate_above_sections_avg = { name = "student's pass rate this term is above sections' avg. pass rate" }
+student_completion_rate_above_sections_avg = { name = "student's completion rate this term is above sections' avg. completion rate" }
+cumnum_unique_course_ids = { name = "number of unique courses taken so far" }
+cumnum_unique_course_subjects = { name = "number of unique course subjects taken so far" }
+cumnum_unique_course_subject_areas = { name = "number of unique course subject areas taken so far" }
+cumnum_repeated_course_ids = { name = "number of courses repeated so far" }
+cumnum_repeated_course_subjects = { name = "number of course subjects repeated so far" }
+cumnum_repeated_course_subject_areas = { name = "number of course subject areas repeated so far" }
+cumnum_terms_enrolled = { name = "number of terms enrolled so far" }
+cumnum_fall_spring_terms_enrolled = { name = "number of fall or spring terms enrolled so far" }
+term_in_peak_covid_cumsum = { name = "number of terms so far that occurred in 'peak' COVID" }
+term_is_while_student_enrolled_at_other_inst_cumsum = { name = "number of terms so far that occurred while student was enrolled at another institution" }
+term_is_pre_cohort_cumsum = { name = "number of terms so far that occurred before student's cohort (enrollment) term" }
+course_level_mean_cummean = { name = "avg. course level so far" }
+course_level_mean_cummin = { name = "min. course level so far" }
+course_level_mean_cumstd = { name = "std. dev. in course levels so far" }
+course_grade_numeric_mean_cummean = { name = "avg. numeric course grade so far" }
+course_grade_numeric_mean_cummin = { name = "min. numeric course grade so far" }
+course_grade_numeric_mean_cumstd = { name = "std. dev. in numeric course grades so far" }
+num_courses_cumsum = { name = "total number of courses taken so far" }
+num_courses_cummean = { name = "avg. number of courses taken per term so far" }
+num_courses_cummin = { name = "min. number of courses taken per term so far" }
+num_credits_attempted_cumsum = { name = "total number of credits attempted so far" }
+num_credits_attempted_cummean = { name = "avg. number of credits attempted per term so far" }
+num_credits_attempted_cummin = { name = "min. number of credits attempted per term so far" }
+num_credits_earned_cumsum = { name = "total number of credits earned so far" }
+num_credits_earned_cummean = { name = "avg. number of credits earned per term so far" }
+num_credits_earned_cummin = { name = "min. number of credits earned per term so far" }
 student_pass_rate_above_sections_avg_cumsum = { name = "TODO" }
 student_completion_rate_above_sections_avg_cumsum = { name = "TODO" }
-num_courses_passed_cumfrac = { name = "TODO" }
-num_courses_completed_cumfrac = { name = "TODO" }
-num_courses_core_course_Y_cumfrac = { name = "TODO" }
+num_courses_passed_cumfrac = { name = "fraction of courses passed so far" }
+num_courses_completed_cumfrac = { name = "fraction of courses completed so far" }
+num_courses_core_course_Y_cumfrac = { name = "fraction of core courses taken so far" }
 num_courses_enrolled_at_other_institution_s_Y_cumfrac = { name = "TODO" }
-num_courses_course_subject_area_51_cumfrac = { name = "TODO" }
-num_courses_course_id_ENGLB101_cumfrac = { name = "TODO" }
-num_courses_course_id_ENGLB102_cumfrac = { name = "TODO" }
-num_courses_course_type_CU_cumfrac = { name = "TODO" }
-num_courses_course_type_CG_cumfrac = { name = "TODO" }
-num_courses_course_type_CC_cumfrac = { name = "TODO" }
-num_courses_course_type_CD_cumfrac = { name = "TODO" }
-num_courses_course_type_EL_cumfrac = { name = "TODO" }
-num_courses_course_type_AB_cumfrac = { name = "TODO" }
-num_courses_course_type_GE_cumfrac = { name = "TODO" }
-num_courses_course_type_NC_cumfrac = { name = "TODO" }
-num_courses_course_type_O_cumfrac = { name = "TODO" }
-num_courses_delivery_method_F_cumfrac = { name = "TODO" }
-num_courses_delivery_method_O_cumfrac = { name = "TODO" }
-num_courses_delivery_method_H_cumfrac = { name = "TODO" }
-num_courses_math_or_english_gateway_M_cumfrac = { name = "TODO" }
-num_courses_math_or_english_gateway_E_cumfrac = { name = "TODO" }
-num_courses_math_or_english_gateway_NA_cumfrac = { name = "TODO" }
-num_courses_co_requisite_course_Y_cumfrac = { name = "TODO" }
-num_courses_co_requisite_course_N_cumfrac = { name = "TODO" }
-num_courses_course_instructor_employment_status_PT_cumfrac = { name = "TODO" }
-num_courses_course_instructor_employment_status_FT_cumfrac = { name = "TODO" }
-num_courses_course_instructor_rank_1_cumfrac = { name = "TODO" }
-num_courses_course_instructor_rank_2_cumfrac = { name = "TODO" }
-num_courses_course_instructor_rank_3_cumfrac = { name = "TODO" }
-num_courses_course_instructor_rank_4_cumfrac = { name = "TODO" }
-num_courses_course_instructor_rank_5_cumfrac = { name = "TODO" }
-num_courses_course_instructor_rank_6_cumfrac = { name = "TODO" }
-num_courses_course_instructor_rank_7_cumfrac = { name = "TODO" }
-num_courses_course_level_1_cumfrac = { name = "TODO" }
-num_courses_course_level_2_cumfrac = { name = "TODO" }
-num_courses_course_level_3_cumfrac = { name = "TODO" }
-num_courses_course_level_4_cumfrac = { name = "TODO" }
-num_courses_course_level_5_cumfrac = { name = "TODO" }
-num_courses_course_level_6_cumfrac = { name = "TODO" }
-num_courses_course_level_7_cumfrac = { name = "TODO" }
-num_courses_course_level_8_cumfrac = { name = "TODO" }
-num_courses_course_grade_A_cumfrac = { name = "TODO" }
-num_courses_course_grade_B_cumfrac = { name = "TODO" }
-num_courses_course_grade_C_cumfrac = { name = "TODO" }
-num_courses_course_grade_D_cumfrac = { name = "TODO" }
-num_courses_course_grade_F_cumfrac = { name = "TODO" }
+"num_courses_course_subject_area_*_cumfrac" = { name = "TODO" }
+"num_courses_course_id_*_cumfrac" = { name = "TODO" }
+num_courses_course_type_CU_cumfrac = { name = "fraction of college-level, undergraduate courses taken so far" }
+num_courses_course_type_CG_cumfrac = { name = "fraction of college-level, graduate courses taken so far" }
+num_courses_course_type_CC_cumfrac = { name = "fraction of college developmental, remedial, or preparatory courses taken so far" }
+num_courses_course_type_CD_cumfrac = { name = "fraction of college developmental, remedial, or preparatory courses taken so far" }
+num_courses_course_type_EL_cumfrac = { name = "fraction of ESL courses taken so far" }
+num_courses_course_type_AB_cumfrac = { name = "fraction of adult basic education courses taken so far" }
+num_courses_course_type_GE_cumfrac = { name = "fraction of adult secondary education / GED courses taken so far" }
+num_courses_course_type_NC_cumfrac = { name = "fraction of non-credit vocational courses taken so far" }
+num_courses_course_type_O_cumfrac = { name = "fraction of 'other' courses taken so far" }
+num_courses_delivery_method_F_cumfrac = { name = "fraction of face-to-face courses taken so far" }
+num_courses_delivery_method_O_cumfrac = { name = "fraction of online courses taken so far" }
+num_courses_delivery_method_H_cumfrac = { name = "fraction of hybrid (face-to-face / online) courses taken so far" }
+num_courses_math_or_english_gateway_M_cumfrac = { name = "fraction of math gateway courses taken so far" }
+num_courses_math_or_english_gateway_E_cumfrac = { name = "fraction of english gateway courses taken so far" }
+num_courses_math_or_english_gateway_NA_cumfrac = { name = "fraction of non-gateway courses taken so far" }
+num_courses_co_requisite_course_Y_cumfrac = { name = "fraction of co-requisite courses taken so far" }
+num_courses_co_requisite_course_N_cumfrac = { name = "fraction of non-co-requsite courses taken so far" }
+num_courses_course_instructor_employment_status_PT_cumfrac = { name = "fraction of courses taken so far with a part-time instructor" }
+num_courses_course_instructor_employment_status_FT_cumfrac = { name = "fraction of courses taken so far with a full-time instructor" }
+num_courses_course_instructor_rank_1_cumfrac = { name = "fraction of courses taken so far with an instructor (rank 1)" }
+num_courses_course_instructor_rank_2_cumfrac = { name = "fraction of courses taken so far with a lecturer (rank 2)" }
+num_courses_course_instructor_rank_3_cumfrac = { name = "fraction of courses taken so far with a senior lecturer (rank 3)" }
+num_courses_course_instructor_rank_4_cumfrac = { name = "fraction of courses taken so far with an assistant professor (rank 4)" }
+num_courses_course_instructor_rank_5_cumfrac = { name = "fraction of courses taken so far with an associate professor (rank 5)" }
+num_courses_course_instructor_rank_6_cumfrac = { name = "fraction of courses taken so far with a professor (rank 6)" }
+num_courses_course_instructor_rank_7_cumfrac = { name = "fraction of courses taken so far with an 'other' instructor (rank 7)" }
+num_courses_course_level_1_cumfrac = { name = "fraction of 100-level courses taken so far" }
+num_courses_course_level_2_cumfrac = { name = "fraction of 200-level courses taken so far" }
+num_courses_course_level_3_cumfrac = { name = "fraction of 300-level courses taken so far" }
+num_courses_course_level_4_cumfrac = { name = "fraction of 400-level courses taken so far" }
+num_courses_course_level_5_cumfrac = { name = "fraction of 500-level courses taken so far" }
+num_courses_course_level_6_cumfrac = { name = "fraction of 600-level courses taken so far" }
+num_courses_course_level_7_cumfrac = { name = "fraction of 700-level courses taken so far" }
+num_courses_course_level_8_cumfrac = { name = "fraction of 800-level courses taken so far" }
+num_courses_course_grade_a_cumfrac = { name = "fraction of A grades earned so far" }
+num_courses_course_grade_b_cumfrac = { name = "fraction of B grades earned so far" }
+num_courses_course_grade_c_cumfrac = { name = "fraction of C grades earned so far" }
+num_courses_course_grade_d_cumfrac = { name = "fraction of D grades earned so far" }
+num_courses_course_grade_f_cumfrac = { name = "fraction of F grades earned so far" }
 num_courses_grade_is_failing_or_withdrawal_cumfrac = { name = "TODO" }
 num_courses_grade_above_section_avg_cumfrac = { name = "TODO" }
 num_courses_in_program_of_study_area_term_1_cumfrac = { name = "TODO" }
