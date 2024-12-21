@@ -1,3 +1,5 @@
+import typing as t
+
 import numpy as np
 import pandas as pd
 
@@ -8,6 +10,7 @@ def select_top_features_for_display(
     predicted_probabilities: list[float],
     shap_values: pd.Series,
     n_features: int = 3,
+    features_table: t.Optional[dict[str, dict[str, str]]] = None,
 ) -> pd.DataFrame:
     """
     Select most important features from SHAP for each student
@@ -20,6 +23,8 @@ def select_top_features_for_display(
             order as unique_ids, of shape len(unique_ids)
         shap_values: array of arrays of SHAP values, of shape len(unique_ids)
         n_features: number of important features to return
+        features_table: Optional mapping of column to human-friendly feature name/desc,
+            loaded via :func:`utils.load_features_table()`
 
     Returns:
         explainability dataframe for display
@@ -40,11 +45,16 @@ def select_top_features_for_display(
         for rank, (feature, feature_value, shap_value) in enumerate(
             zip(top_features, top_feature_values, top_shap_values), start=1
         ):
+            feature_name = (
+                features_table.get(feature, {}).get("name", feature)
+                if features_table is not None
+                else feature
+            )
             top_features_info.append(
                 {
                     "Student ID": unique_id,
                     "Support Score": predicted_proba,
-                    "Top Indicators": feature,
+                    "Top Indicators": feature_name,
                     "Indicator Value": feature_value,
                     "SHAP Value": shap_value,
                     "Rank": rank,
