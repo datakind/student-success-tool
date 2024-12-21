@@ -25,8 +25,7 @@
 
 # install dependencies, most of which should come through our 1st-party SST package
 # %pip install "student-success-tool==0.1.0"
-# %pip install git+https://github.com/datakind/student-success-tool.git@develop
-%pip install git+https://github.com/datakind/student-success-tool.git@upgrade-package-deps
+%pip install git+https://github.com/datakind/student-success-tool.git@develop
 
 # COMMAND ----------
 
@@ -65,10 +64,14 @@ except Exception:
 
 # COMMAND ----------
 
+run_parameters = dict(dbutils.notebook.entry_point.getCurrentBindings())
+job_run_id = run_parameters.get("job_run_id", "interactive")
+
+# COMMAND ----------
+
 # TODO: specify school-specific configuration
-institution_id = "uscb"
-# table_name = "CATALOG.SCHEMA.TABLE"
-table_name = "sst_dev.uni_south_carolina_beaufort_silver.modeling_dataset"
+institution_id = "SCHOOL"
+table_name = "CATALOG.SCHEMA.TABLE"
 student_id_col = "student_guid"
 target_col = "target"
 student_group_cols = [
@@ -80,13 +83,12 @@ student_group_cols = [
 ]
 optional_automl_parameters = {
     "split_col": "split",
-    # "sample_weight_col": "sample_weight",
+    "sample_weight_col": "sample_weight",
     # "pos_label": True,
     # exclude_frameworks: ["lightgbm", "xgboost"],
-    "timeout_minutes": 15,
-    # "max_trials": 100
+    "timeout_minutes": 5,
 }
-optimization_metric = "f1"
+optimization_metric = "log_loss"
 
 prediction_col = "prediction"
 risk_score_col = "risk_score"
@@ -95,11 +97,6 @@ optional_automl_parameters["exclude_cols"] = list(set(
     optional_automl_parameters.get("exclude_cols", []) + student_group_cols
 ))
 optional_automl_parameters
-
-# COMMAND ----------
-
-run_parameters = dict(dbutils.notebook.entry_point.getCurrentBindings())
-job_run_id = run_parameters.get("job_run_id", "interactive")
 
 # COMMAND ----------
 
@@ -140,14 +137,30 @@ summary = modeling.training.run_automl_classification(
 
 experiment_id = summary.experiment.experiment_id
 experiment_run_id = summary.best_trial.mlflow_run_id
+print(
+    f"experiment_id: {experiment_id}"
+    f"\n{optimization_metric} metric distribution = {summary.metric_distribution}"
+    f"\nbest trial experiment_run_id: {experiment_run_id}"
+)
+
 dbutils.jobs.taskValues.set(key="experiment_id", value=experiment_id)
 dbutils.jobs.taskValues.set(key="experiment_run_id", value=experiment_run_id)
 
-print(f"experiment_id: {experiment_id}, experiment_run_id: {experiment_run_id}")
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC # evaluate model
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC **TODO:** This doesn't currently work, owing to version incompatibilities between Databricks AutoML runtime and the `student-success-tool` package. Revisit this once we're using our own "auto"-ML framework. Look to existing nb for guidance on additional evaluation needs.
 
+# COMMAND ----------
+
+# mlflow.sklearn.load_model(summary.best_trial.model_path)
+model = summary.best_trial.load_model()
+model
 
 # COMMAND ----------
 
