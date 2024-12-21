@@ -46,7 +46,10 @@ def select_top_features_for_display(
             zip(top_features, top_feature_values, top_shap_values), start=1
         ):
             feature_name = (
-                features_table.get(feature, {}).get("name", feature)
+                # HACK: lowercase feature column name in features table lookup
+                # TODO: we should *ensure* feature column names are lowercased
+                # before using them in a model; current behavior should be considered a bug
+                features_table.get(feature.lower(), {}).get("name", feature)
                 if features_table is not None
                 else feature
             )
