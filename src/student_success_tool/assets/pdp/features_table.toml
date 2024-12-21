@@ -14,29 +14,29 @@ course_grade_numeric_mean = { name = "avg. numeric course grade this term" }
 course_grade_numeric_std = { name = "std. dev. in numeric course grades this term" }
 section_num_students_enrolled_mean = { name = "avg. number of students enrolled per section this term" }
 section_num_students_enrolled_std = { name = "std. dev. in number of students enrolled per section this term" }
-num_courses_core_course_Y = { name = "number of core courses taken this term" }
-num_courses_enrolled_at_other_institution_s_Y = { name = "number of courses taken this term while enrolled at another institution" }
+num_courses_core_course_y = { name = "number of core courses taken this term" }
+num_courses_enrolled_at_other_institution_s_y = { name = "number of courses taken this term while enrolled at another institution" }
 "num_courses_course_subject_area_*" = { name = "TODO: number of courses taken in subject area this term" }
 "num_courses_course_id_*" = { name = "TODO: number of times this course taken this term" }
-num_courses_course_type_CU = { name = "number of college-level, undergraduate courses taken this term" }
-num_courses_course_type_CG = { name = "number of college-level, graduate courses taken this term" }
-num_courses_course_type_CC = { name = "number of college developmental, remedial, or preparatory courses taken this term" }
-num_courses_course_type_CD = { name = "number of college developmental, remedial, or preparatory courses taken this term" }
-num_courses_course_type_EL = { name = "number of ESL courses taken this term" }
-num_courses_course_type_AB = { name = "number of adult basic education courses taken this term" }
-num_courses_course_type_GE = { name = "number of adult secondary education / GED courses taken this term" }
-num_courses_course_type_NC = { name = "number of non-credit vocational courses taken this term" }
-num_courses_course_type_O = { name = "number of 'other' courses taken this term" }
-num_courses_delivery_method_F = { name = "number of face-to-face courses taken this term" }
-num_courses_delivery_method_O = { name = "number of online courses taken this term" }
-num_courses_delivery_method_H = { name = "number of hybrid (face-to-face / online) courses taken this term" }
-num_courses_math_or_english_gateway_M = { name = "number of math gateway courses taken this term" }
-num_courses_math_or_english_gateway_E = { name = "number of english gateway courses taken this term" }
-num_courses_math_or_english_gateway_NA = { name = "number of non-gateway courses taken this term" }
-num_courses_co_requisite_course_Y = { name = "number of co-requisite courses taken this term" }
-num_courses_co_requisite_course_N = { name = "number of non-co-requsite courses taken this term" }
-num_courses_course_instructor_employment_status_PT = { name = "number of courses taken this term with a part-time instructor" }
-num_courses_course_instructor_employment_status_FT = { name = "number of courses taken this term with a full-time instructor" }
+num_courses_course_type_cu = { name = "number of college-level, undergraduate courses taken this term" }
+num_courses_course_type_cg = { name = "number of college-level, graduate courses taken this term" }
+num_courses_course_type_cc = { name = "number of college developmental, remedial, or preparatory courses taken this term" }
+num_courses_course_type_cd = { name = "number of college developmental, remedial, or preparatory courses taken this term" }
+num_courses_course_type_el = { name = "number of ESL courses taken this term" }
+num_courses_course_type_ab = { name = "number of adult basic education courses taken this term" }
+num_courses_course_type_ge = { name = "number of adult secondary education / GED courses taken this term" }
+num_courses_course_type_nc = { name = "number of non-credit vocational courses taken this term" }
+num_courses_course_type_o = { name = "number of 'other' courses taken this term" }
+num_courses_delivery_method_f = { name = "number of face-to-face courses taken this term" }
+num_courses_delivery_method_o = { name = "number of online courses taken this term" }
+num_courses_delivery_method_h = { name = "number of hybrid (face-to-face / online) courses taken this term" }
+num_courses_math_or_english_gateway_m = { name = "number of math gateway courses taken this term" }
+num_courses_math_or_english_gateway_e = { name = "number of english gateway courses taken this term" }
+num_courses_math_or_english_gateway_na = { name = "number of non-gateway courses taken this term" }
+num_courses_co_requisite_course_y = { name = "number of co-requisite courses taken this term" }
+num_courses_co_requisite_course_n = { name = "number of non-co-requsite courses taken this term" }
+num_courses_course_instructor_employment_status_pt = { name = "number of courses taken this term with a part-time instructor" }
+num_courses_course_instructor_employment_status_ft = { name = "number of courses taken this term with a full-time instructor" }
 num_courses_course_instructor_rank_1 = { name = "number of courses taken this term with an instructor (rank 1)" }
 num_courses_course_instructor_rank_2 = { name = "number of courses taken this term with a lecturer (rank 2)" }
 num_courses_course_instructor_rank_3 = { name = "number of courses taken this term with a senior lecturer (rank 3)" }
@@ -100,29 +100,29 @@ num_courses_in_program_of_study_area_term_1 = { name = "number of courses taken 
 num_courses_in_program_of_study_area_year_1 = { name = "number of courses taken this term in student's first-year program of study area" }
 frac_courses_passed = { name = "fraction of courses passed this term" }
 frac_courses_completed = { name = "fraction of courses completed this term" }
-frac_courses_core_course_Y = { name = "fraction of core courses taken this term" }
-frac_courses_enrolled_at_other_institution_s_Y = { name = "fraction of courses taken this term while student enrolled at another institution" }
+frac_courses_core_course_y = { name = "fraction of core courses taken this term" }
+frac_courses_enrolled_at_other_institution_s_y = { name = "fraction of courses taken this term while student enrolled at another institution" }
 "frac_courses_course_subject_area_*" = { name = "TODO" }
 "frac_courses_course_id_*" = { name = "TODO" }
-frac_courses_course_type_CU = { name = "fraction of college-level, undergraduate courses taken this term" }
-frac_courses_course_type_CG = { name = "fraction of college-level, graduate courses taken this term" }
-frac_courses_course_type_CC = { name = "fraction of college developmental, remedial, or preparatory courses taken this term" }
-frac_courses_course_type_CD = { name = "fraction of college developmental, remedial, or preparatory courses taken this term" }
-frac_courses_course_type_EL = { name = "fraction of ESL courses taken this term" }
-frac_courses_course_type_AB = { name = "fraction of adult basic education courses taken this term" }
-frac_courses_course_type_GE = { name = "fraction of adult secondary education / GED courses taken this term" }
-frac_courses_course_type_NC = { name = "fraction of non-credit vocational courses taken this term" }
-frac_courses_course_type_O = { name = "fraction of 'other' courses taken this term" }
-frac_courses_delivery_method_F = { name = "fraction of face-to-face courses taken this term" }
-frac_courses_delivery_method_O = { name = "fraction of online courses taken this term" }
-frac_courses_delivery_method_H = { name = "fraction of hybrid (face-to-face / online) courses taken this term" }
-frac_courses_math_or_english_gateway_M = { name = "fraction of math gateway courses taken this term" }
-frac_courses_math_or_english_gateway_E = { name = "fraction of english gateway courses taken this term" }
-frac_courses_math_or_english_gateway_NA = { name = "fraction of non-gateway courses taken this term" }
-frac_courses_co_requisite_course_Y = { name = "fraction of co-requisite courses taken this term" }
-frac_courses_co_requisite_course_N = { name = "fraction of non-co-requsite courses taken this term" }
-frac_courses_course_instructor_employment_status_PT = { name = "fraction of courses taken this term with a part-time instructor" }
-frac_courses_course_instructor_employment_status_FT = { name = "fraction of courses taken this term with a full-time instructor" }
+frac_courses_course_type_cu = { name = "fraction of college-level, undergraduate courses taken this term" }
+frac_courses_course_type_cg = { name = "fraction of college-level, graduate courses taken this term" }
+frac_courses_course_type_cc = { name = "fraction of college developmental, remedial, or preparatory courses taken this term" }
+frac_courses_course_type_cd = { name = "fraction of college developmental, remedial, or preparatory courses taken this term" }
+frac_courses_course_type_el = { name = "fraction of ESL courses taken this term" }
+frac_courses_course_type_ab = { name = "fraction of adult basic education courses taken this term" }
+frac_courses_course_type_ge = { name = "fraction of adult secondary education / GED courses taken this term" }
+frac_courses_course_type_nc = { name = "fraction of non-credit vocational courses taken this term" }
+frac_courses_course_type_o = { name = "fraction of 'other' courses taken this term" }
+frac_courses_delivery_method_f = { name = "fraction of face-to-face courses taken this term" }
+frac_courses_delivery_method_o = { name = "fraction of online courses taken this term" }
+frac_courses_delivery_method_h = { name = "fraction of hybrid (face-to-face / online) courses taken this term" }
+frac_courses_math_or_english_gateway_m = { name = "fraction of math gateway courses taken this term" }
+frac_courses_math_or_english_gateway_e = { name = "fraction of english gateway courses taken this term" }
+frac_courses_math_or_english_gateway_na = { name = "fraction of non-gateway courses taken this term" }
+frac_courses_co_requisite_course_y = { name = "fraction of co-requisite courses taken this term" }
+frac_courses_co_requisite_course_n = { name = "fraction of non-co-requsite courses taken this term" }
+frac_courses_course_instructor_employment_status_pt = { name = "fraction of courses taken this term with a part-time instructor" }
+frac_courses_course_instructor_employment_status_ft = { name = "fraction of courses taken this term with a full-time instructor" }
 frac_courses_course_instructor_rank_1 = { name = "fraction of courses taken this term with an instructor (rank 1)" }
 frac_courses_course_instructor_rank_2 = { name = "fraction of courses taken this term with a lecturer (rank 2)" }
 frac_courses_course_instructor_rank_3 = { name = "fraction of courses taken this term with a senior lecturer (rank 3)" }
@@ -179,29 +179,29 @@ student_pass_rate_above_sections_avg_cumsum = { name = "TODO" }
 student_completion_rate_above_sections_avg_cumsum = { name = "TODO" }
 num_courses_passed_cumfrac = { name = "fraction of courses passed so far" }
 num_courses_completed_cumfrac = { name = "fraction of courses completed so far" }
-num_courses_core_course_Y_cumfrac = { name = "fraction of core courses taken so far" }
-num_courses_enrolled_at_other_institution_s_Y_cumfrac = { name = "TODO" }
+num_courses_core_course_y_cumfrac = { name = "fraction of core courses taken so far" }
+num_courses_enrolled_at_other_institution_s_y_cumfrac = { name = "TODO" }
 "num_courses_course_subject_area_*_cumfrac" = { name = "TODO" }
 "num_courses_course_id_*_cumfrac" = { name = "TODO" }
-num_courses_course_type_CU_cumfrac = { name = "fraction of college-level, undergraduate courses taken so far" }
-num_courses_course_type_CG_cumfrac = { name = "fraction of college-level, graduate courses taken so far" }
-num_courses_course_type_CC_cumfrac = { name = "fraction of college developmental, remedial, or preparatory courses taken so far" }
-num_courses_course_type_CD_cumfrac = { name = "fraction of college developmental, remedial, or preparatory courses taken so far" }
-num_courses_course_type_EL_cumfrac = { name = "fraction of ESL courses taken so far" }
-num_courses_course_type_AB_cumfrac = { name = "fraction of adult basic education courses taken so far" }
-num_courses_course_type_GE_cumfrac = { name = "fraction of adult secondary education / GED courses taken so far" }
-num_courses_course_type_NC_cumfrac = { name = "fraction of non-credit vocational courses taken so far" }
-num_courses_course_type_O_cumfrac = { name = "fraction of 'other' courses taken so far" }
-num_courses_delivery_method_F_cumfrac = { name = "fraction of face-to-face courses taken so far" }
-num_courses_delivery_method_O_cumfrac = { name = "fraction of online courses taken so far" }
-num_courses_delivery_method_H_cumfrac = { name = "fraction of hybrid (face-to-face / online) courses taken so far" }
-num_courses_math_or_english_gateway_M_cumfrac = { name = "fraction of math gateway courses taken so far" }
-num_courses_math_or_english_gateway_E_cumfrac = { name = "fraction of english gateway courses taken so far" }
-num_courses_math_or_english_gateway_NA_cumfrac = { name = "fraction of non-gateway courses taken so far" }
-num_courses_co_requisite_course_Y_cumfrac = { name = "fraction of co-requisite courses taken so far" }
-num_courses_co_requisite_course_N_cumfrac = { name = "fraction of non-co-requsite courses taken so far" }
-num_courses_course_instructor_employment_status_PT_cumfrac = { name = "fraction of courses taken so far with a part-time instructor" }
-num_courses_course_instructor_employment_status_FT_cumfrac = { name = "fraction of courses taken so far with a full-time instructor" }
+num_courses_course_type_cu_cumfrac = { name = "fraction of college-level, undergraduate courses taken so far" }
+num_courses_course_type_cg_cumfrac = { name = "fraction of college-level, graduate courses taken so far" }
+num_courses_course_type_cc_cumfrac = { name = "fraction of college developmental, remedial, or preparatory courses taken so far" }
+num_courses_course_type_cd_cumfrac = { name = "fraction of college developmental, remedial, or preparatory courses taken so far" }
+num_courses_course_type_el_cumfrac = { name = "fraction of ESL courses taken so far" }
+num_courses_course_type_ab_cumfrac = { name = "fraction of adult basic education courses taken so far" }
+num_courses_course_type_ge_cumfrac = { name = "fraction of adult secondary education / GED courses taken so far" }
+num_courses_course_type_nc_cumfrac = { name = "fraction of non-credit vocational courses taken so far" }
+num_courses_course_type_o_cumfrac = { name = "fraction of 'other' courses taken so far" }
+num_courses_delivery_method_f_cumfrac = { name = "fraction of face-to-face courses taken so far" }
+num_courses_delivery_method_o_cumfrac = { name = "fraction of online courses taken so far" }
+num_courses_delivery_method_h_cumfrac = { name = "fraction of hybrid (face-to-face / online) courses taken so far" }
+num_courses_math_or_english_gateway_m_cumfrac = { name = "fraction of math gateway courses taken so far" }
+num_courses_math_or_english_gateway_e_cumfrac = { name = "fraction of english gateway courses taken so far" }
+num_courses_math_or_english_gateway_na_cumfrac = { name = "fraction of non-gateway courses taken so far" }
+num_courses_co_requisite_course_y_cumfrac = { name = "fraction of co-requisite courses taken so far" }
+num_courses_co_requisite_course_n_cumfrac = { name = "fraction of non-co-requsite courses taken so far" }
+num_courses_course_instructor_employment_status_pt_cumfrac = { name = "fraction of courses taken so far with a part-time instructor" }
+num_courses_course_instructor_employment_status_ft_cumfrac = { name = "fraction of courses taken so far with a full-time instructor" }
 num_courses_course_instructor_rank_1_cumfrac = { name = "fraction of courses taken so far with an instructor (rank 1)" }
 num_courses_course_instructor_rank_2_cumfrac = { name = "fraction of courses taken so far with a lecturer (rank 2)" }
 num_courses_course_instructor_rank_3_cumfrac = { name = "fraction of courses taken so far with a senior lecturer (rank 3)" }
@@ -240,6 +240,3 @@ num_credits_earned_diff_term_3_to_term_4 = { name = "TODO" }
 course_grade_numeric_mean_diff_term_1_to_term_2 = { name = "TODO" }
 course_grade_numeric_mean_diff_term_2_to_term_3 = { name = "TODO" }
 course_grade_numeric_mean_diff_term_3_to_term_4 = { name = "TODO" }
-"num_courses_course_type_CC|CD" = { name = "TODO" }
-"frac_courses_course_type_CC|CD" = { name = "TODO" }
-"num_courses_course_type_CC|CD_cumfrac" = { name = "TODO" }
