@@ -13,6 +13,10 @@ LOGGER = logging.getLogger(__name__)
 
 
 def load_config(file_path: str, schema: pyd.BaseModel) -> pyd.BaseModel:
+    """
+    Load config from ``file_path`` and validate it using ``schema`` ,
+    returning an instance with configuration fields accessible by attribute.
+    """
     fpath = pathlib.Path(file_path).resolve()
     with fpath.open(mode="rb") as f:
         config = tomllib.load(f)
