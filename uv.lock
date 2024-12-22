@@ -2666,11 +2666,13 @@ dependencies = [
     { name = "pandas" },
     { name = "pandera" },
     { name = "pyarrow" },
+    { name = "pydantic" },
     { name = "pyyaml" },
     { name = "scikit-learn" },
     { name = "seaborn" },
     { name = "shap" },
     { name = "statsmodels" },
+    { name = "tomli", marker = "python_full_version < '3.11'" },
 ]
 
 [package.dev-dependencies]
@@ -2695,11 +2697,13 @@ requires-dist = [
     { name = "pandas", specifier = "~=2.1" },
     { name = "pandera", specifier = "~=0.21" },
     { name = "pyarrow", specifier = "~=16.0" },
+    { name = "pydantic", specifier = "~=2.10" },
     { name = "pyyaml", specifier = "~=6.0" },
     { name = "scikit-learn", specifier = "~=1.4" },
     { name = "seaborn", specifier = "~=0.13" },
     { name = "shap", specifier = "~=0.46.0" },
     { name = "statsmodels", specifier = "~=0.14" },
+    { name = "tomli", marker = "python_full_version < '3.11'", specifier = "~=2.0" },
 ]
 
 [package.metadata.requires-dev]
