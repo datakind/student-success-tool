@@ -16,6 +16,7 @@ dependencies = [
     "pandas~=2.1",
     "pandera~=0.21",
     "pyarrow~=16.0",
+    "pydantic~=2.10",
     "pyyaml~=6.0",
     "scikit-learn~=1.4",
     "seaborn~=0.13",
