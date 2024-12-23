@@ -42,6 +42,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sb
 from databricks.connect import DatabricksSession
+from databricks.sdk.runtime import dbutils
 
 from student_success_tool.analysis import pdp
 
@@ -301,7 +302,7 @@ df_cohort.shape
 # COMMAND ----------
 
 # decent, general-purpose summarization of a data frame
-dbutils.data.summarize(df_course, precise=False)  # noqa: F405
+dbutils.data.summarize(df_course, precise=False)
 
 # COMMAND ----------
 
@@ -311,7 +312,7 @@ dbutils.data.summarize(df_course, precise=False)  # noqa: F405
 
 # COMMAND ----------
 
-dbutils.data.summarize(df_cohort, precise=True)  # noqa: F405
+dbutils.data.summarize(df_cohort, precise=True)
 
 # COMMAND ----------
 

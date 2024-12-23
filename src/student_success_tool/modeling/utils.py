@@ -19,14 +19,14 @@ LOGGER = logging.getLogger(__name__)
 def compute_dataset_splits(
     df: pd.DataFrame,
     *,
-    labels: Sequence[str] = ("train", "test", "valid"),
+    labels: Sequence[str] = ("train", "test", "validate"),
     fracs: Sequence[float] = (0.6, 0.2, 0.2),
     shuffle: bool = True,
     seed: t.Optional[int] = None,
 ) -> pd.Series:
     """
     Split input dataset into random subsets with configurable proportions;
-    by default, Databricks' standard train/test/valid splits are generated.
+    by default, Databricks' standard train/test/validate splits are generated.
 
     Args:
         df
