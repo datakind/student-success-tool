@@ -1,5 +1,3 @@
-import warnings
-
 import numpy as np
 import pandas as pd
 import pytest
@@ -7,9 +5,6 @@ import pytest
 from student_success_tool.modeling.inference import (
     select_top_features_for_display,
 )
-
-# Ignore warnings that might clutter the output
-warnings.simplefilter(action="ignore")
 
 
 # Set up the common data as fixtures in pytest
@@ -19,53 +14,54 @@ def predicted_probabilities():
 
 
 @pytest.fixture(scope="module")
-def test_data():
-    return {
-        "UNIQUE_ID": [1, 2, 3],
-        "FULL_TIME_ONLY_TERMS": [0, 0, 0],
-        "PART_TIME_ONLY_TERMS": [0, 0, 0],
-        "BOTH_FULL_PART_TIME_TERMS": [1, 1, 1],
-        "FRACTION_FULL_TIME_TERMS": [0.67, 0.71, 0.6],
-        "TOTAL_FAILED_HOURS": [49.0, 4.5, 0.0],
-        "TOTAL_EXCLUDED_HOURS": [39.0, 16.5, 0.0],
-        "TOTAL_HOURS_ENROLLED": [61.0, 78.5, 47.0],
-        "TOTAL_PASSED_HOURS": [12.0, 74.0, 47.0],
-        "CREDITS_HOURS_SEMESTER_COMPLETED_PERF_SUM": [47.0, 74.0, 47.0],
-        "AVG_CREDITS_SEM_COMPLETED": [7.83, 10.6, 9.4],
-        "STDEV_CREDITS_SEM": [4.67, 4.43, 5.50],
-        "COURSE_PASS_RATE": [0.19, 0.94, 1.0],
-        "CREDITS_ENROLLED_LAST_SEM": [7.0, 14.0, 9.0],
-        "CREDITS_ENROLLED_LAST_2_SEM": [19.0, 21.0, 22.0],
-        "CREDITS_ENROLLED_LAST_3_SEM": [30.0, 35.0, 34.0],
-        "CREDITS_ENROLLED_LAST_4_SEM": [35.0, 50.0, 47.0],
-        "HAS_ANY_FINANCIAL_AID": [1, 0, 1],
-        "IR_TOTAL_FA_AWD_AMT_SUM": [0.0, 0.0, 10106.5],
-        "IR_TOTAL_GRANTS_NB_AWD_AMT_SUM": [0.0, 0.0, 7291.5],
-        "IR_STUDENT_LOANS_NB_AWD_AMT_SUM": [0.0, 0.0, 0.0],
-        "IR_FED_WORK_STUDY_NB_AWD_AMT_SUM": [0.0, 0.0, 0.0],
-        "PELL_AMOUNT_AWARD_SUM": [2155.0, 0.0, 797.5],
-        "TAP_AMOUNT_AWARD_SUM": [635.0, 0.0, 1019.5],
-        "PELL_FLAG_COUNT": [1, 0, 2],
-        "TAP_FLAG_COUNT": [2, 0, 2],
-        "PELL_TO_TAP_AMOUNT_RATIO": [3.40, 2.41, 0.78],
-        "PELL_TO_TAP_COUNT_RATIO": [0.5, 1.31, 1.0],
-        "GPA_SEMESTER_AVERAGE": [0.96, 3.23, 3.94],
-        "GPA_SEMESTER_MIN": [0.0, 2.56, 3.83],
-        "GPA_SEMESTER_STDEV": [1.69, 0.37, 0.0804],
-        "GPA_LAST_SEM": [0.0, 3.15, 4.0],
-        "GPA_LAST_2_SEM": [0.0, 2.85, 4.0],
-        "GPA_LAST_3_SEM": [0.0, 2.97, 3.94],
-        "GPA_LAST_4_SEM": [0.0, 3.07, 3.94],
-        "YEARS_ENROLLED": [2.42, 2.25, 1.67],
-        "MAJOR_CHANGES_NUM": [2.0, 0.0, 0.0],
-        "HAS_ASSOCIATE_DEGREE": [0, 1, 1],
-        "IS_JUSTICE_ACADEMY": [0, 1, 1],
-    }
+def features():
+    return pd.DataFrame(
+        {
+            "FULL_TIME_ONLY_TERMS": [0, 0, 0],
+            "PART_TIME_ONLY_TERMS": [0, 0, 0],
+            "BOTH_FULL_PART_TIME_TERMS": [1, 1, 1],
+            "FRACTION_FULL_TIME_TERMS": [0.67, 0.71, 0.6],
+            "TOTAL_FAILED_HOURS": [49.0, 4.5, 0.0],
+            "TOTAL_EXCLUDED_HOURS": [39.0, 16.5, 0.0],
+            "TOTAL_HOURS_ENROLLED": [61.0, 78.5, 47.0],
+            "TOTAL_PASSED_HOURS": [12.0, 74.0, 47.0],
+            "CREDITS_HOURS_SEMESTER_COMPLETED_PERF_SUM": [47.0, 74.0, 47.0],
+            "AVG_CREDITS_SEM_COMPLETED": [7.83, 10.6, 9.4],
+            "STDEV_CREDITS_SEM": [4.67, 4.43, 5.50],
+            "COURSE_PASS_RATE": [0.19, 0.94, 1.0],
+            "CREDITS_ENROLLED_LAST_SEM": [7.0, 14.0, 9.0],
+            "CREDITS_ENROLLED_LAST_2_SEM": [19.0, 21.0, 22.0],
+            "CREDITS_ENROLLED_LAST_3_SEM": [30.0, 35.0, 34.0],
+            "CREDITS_ENROLLED_LAST_4_SEM": [35.0, 50.0, 47.0],
+            "HAS_ANY_FINANCIAL_AID": [1, 0, 1],
+            "IR_TOTAL_FA_AWD_AMT_SUM": [0.0, 0.0, 10106.5],
+            "IR_TOTAL_GRANTS_NB_AWD_AMT_SUM": [0.0, 0.0, 7291.5],
+            "IR_STUDENT_LOANS_NB_AWD_AMT_SUM": [0.0, 0.0, 0.0],
+            "IR_FED_WORK_STUDY_NB_AWD_AMT_SUM": [0.0, 0.0, 0.0],
+            "PELL_AMOUNT_AWARD_SUM": [2155.0, 0.0, 797.5],
+            "TAP_AMOUNT_AWARD_SUM": [635.0, 0.0, 1019.5],
+            "PELL_FLAG_COUNT": [1, 0, 2],
+            "TAP_FLAG_COUNT": [2, 0, 2],
+            "PELL_TO_TAP_AMOUNT_RATIO": [3.40, 2.41, 0.78],
+            "PELL_TO_TAP_COUNT_RATIO": [0.5, 1.31, 1.0],
+            "GPA_SEMESTER_AVERAGE": [0.96, 3.23, 3.94],
+            "GPA_SEMESTER_MIN": [0.0, 2.56, 3.83],
+            "GPA_SEMESTER_STDEV": [1.69, 0.37, 0.0804],
+            "GPA_LAST_SEM": [0.0, 3.15, 4.0],
+            "GPA_LAST_2_SEM": [0.0, 2.85, 4.0],
+            "GPA_LAST_3_SEM": [0.0, 2.97, 3.94],
+            "GPA_LAST_4_SEM": [0.0, 3.07, 3.94],
+            "YEARS_ENROLLED": [2.42, 2.25, 1.67],
+            "MAJOR_CHANGES_NUM": [2.0, 0.0, 0.0],
+            "HAS_ASSOCIATE_DEGREE": [0, 1, 1],
+            "IS_JUSTICE_ACADEMY": [0, 1, 1],
+        }
+    )
 
 
 @pytest.fixture(scope="module")
-def test_df(test_data):
-    return pd.DataFrame(test_data)
+def unique_ids():
+    return pd.Series([1, 2, 3])
 
 
 @pytest.fixture(scope="module")
@@ -206,10 +202,11 @@ def shap_values():
 #     assert not result_df.isnull().values.any()
 
 
-def test_explanation_output_structure(test_df, predicted_probabilities, shap_values):
-    features = test_df.drop(columns="UNIQUE_ID")
+def test_explanation_output_structure(
+    features, unique_ids, predicted_probabilities, shap_values
+):
     result_df = select_top_features_for_display(
-        features, test_df["UNIQUE_ID"], predicted_probabilities, shap_values
+        features, unique_ids, predicted_probabilities, shap_values
     )
 
     # Basic checks for the result's structure
@@ -221,7 +218,7 @@ def test_explanation_output_structure(test_df, predicted_probabilities, shap_val
     assert "Rank" in result_df.columns
 
     # Check if the output DataFrame contains the expected number of rows
-    expected_rows = len(test_df) * 3
+    expected_rows = len(features) * 3
     assert len(result_df) == expected_rows
 
     sorted_results = result_df.sort_values(["Student ID", "Rank"])
@@ -245,4 +242,43 @@ def test_explanation_output_structure(test_df, predicted_probabilities, shap_val
         "BOTH_FULL_PART_TIME_TERMS",
         "IS_JUSTICE_ACADEMY",
         "CREDITS_ENROLLED_LAST_3_SEM",
+    ]
+
+
+def test_explanation_output_structure_with_features_table(
+    features, unique_ids, predicted_probabilities, shap_values
+):
+    features_table = {
+        "both_full_part_time_terms": {"name": "both full part time terms"},
+        "credits_enrolled_last_3_sem": {
+            "name": "number of credits enrolled in last 3 terms"
+        },
+    }
+    result_df = select_top_features_for_display(
+        features,
+        unique_ids,
+        predicted_probabilities,
+        shap_values,
+        features_table=features_table,
+    )
+
+    # Basic checks for the result's structure
+    assert isinstance(result_df, pd.DataFrame)
+    assert "Student ID" in result_df.columns
+    assert "Support Score" in result_df.columns
+    assert "Top Indicators" in result_df.columns
+    assert "SHAP Value" in result_df.columns
+    assert "Rank" in result_df.columns
+
+    # Check if the output DataFrame contains the expected number of rows
+    expected_rows = len(features) * 3
+    assert len(result_df) == expected_rows
+
+    sorted_results = result_df.sort_values(["Student ID", "Rank"])
+    assert sorted_results[sorted_results["Student ID"] == 1][
+        "Top Indicators"
+    ].tolist() == [
+        "both full part time terms",
+        "number of credits enrolled in last 3 terms",
+        "PELL_FLAG_COUNT",
     ]
