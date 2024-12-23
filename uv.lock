@@ -2671,6 +2671,7 @@ dependencies = [
     { name = "seaborn" },
     { name = "shap" },
     { name = "statsmodels" },
+    { name = "tomli", marker = "python_full_version < '3.11'" },
 ]
 
 [package.dev-dependencies]
@@ -2700,6 +2701,7 @@ requires-dist = [
     { name = "seaborn", specifier = "~=0.13" },
     { name = "shap", specifier = "~=0.46.0" },
     { name = "statsmodels", specifier = "~=0.14" },
+    { name = "tomli", marker = "python_full_version < '3.11'", specifier = "~=2.0" },
 ]
 
 [package.metadata.requires-dev]

@@ -21,6 +21,7 @@ dependencies = [
     "seaborn~=0.13",
     "statsmodels~=0.14",
     "shap~=0.46.0",
+    "tomli~=2.0; python_version<'3.11'",
 ]
 
 [project.urls]
