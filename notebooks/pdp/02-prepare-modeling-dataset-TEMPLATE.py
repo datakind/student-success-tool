@@ -39,6 +39,7 @@ import pandas as pd
 import seaborn as sb
 from databricks.connect import DatabricksSession
 
+from student_success_tool import configs
 from student_success_tool.analysis import pdp
 
 # COMMAND ----------
@@ -74,7 +75,13 @@ from analysis import *  # noqa: F403
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Unity Catalog config
+# MAGIC ## project config
+
+# COMMAND ----------
+
+# TODO: create a config file in TOML format to school directory
+config = configs.load_config("./config.toml", schema=configs.PDPProjectConfig)
+config
 
 # COMMAND ----------
 
@@ -123,24 +130,18 @@ df_cohort.head()
 
 # COMMAND ----------
 
-# school-specific parameters that configure featurization code
-# these should all be changed, as desired, and confirmed with client stakeholders
-min_passing_grade = pdp.constants.DEFAULT_MIN_PASSING_GRADE
-min_num_credits_full_time = pdp.constants.DEFAULT_MIN_NUM_CREDITS_FULL_TIME
-course_level_pattern = pdp.constants.DEFAULT_COURSE_LEVEL_PATTERN
-key_course_subject_areas = None
-key_course_ids = None
+dict(config.prepare_modeling_dataset)
 
 # COMMAND ----------
 
 df_student_terms = pdp.dataops.make_student_term_dataset(
     df_cohort,
     df_course,
-    min_passing_grade=min_passing_grade,
-    min_num_credits_full_time=min_num_credits_full_time,
-    course_level_pattern=course_level_pattern,
-    key_course_subject_areas=key_course_subject_areas,
-    key_course_ids=key_course_ids,
+    min_passing_grade=config.prepare_modeling_dataset.min_passing_grade,
+    min_num_credits_full_time=config.prepare_modeling_dataset.min_num_credits_full_time,
+    course_level_pattern=config.prepare_modeling_dataset.course_level_pattern,
+    key_course_subject_areas=config.prepare_modeling_dataset.key_course_subject_areas,
+    key_course_ids=config.prepare_modeling_dataset.key_course_ids,
 )
 df_student_terms
 
@@ -313,5 +314,3 @@ target_assocs
 # MAGIC # Wrap-up
 # MAGIC
 # MAGIC TODO
-
-# COMMAND ----------
