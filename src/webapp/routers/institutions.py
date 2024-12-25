@@ -41,7 +41,7 @@ DEFAULT_FOLDERS = [
     "input/validated",
     "output/unapproved",
     "output/approved",
-    "softdelete",
+    "softdelete",  # TODO: we might not need this folder
 ]
 
 
@@ -135,7 +135,6 @@ def create_institution(
                 description=req.description,
             )
         )
-        local_session.get().commit()
         query_result = (
             local_session.get()
             .execute(select(InstTable).where(InstTable.name == req.name))

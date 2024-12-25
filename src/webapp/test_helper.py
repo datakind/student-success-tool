@@ -26,7 +26,7 @@ DATAKINDER = BaseUser(
 DATAKINDER_STR = DATAKINDER.construct_query_param_string()
 
 BATCH_REQUEST = {
-    "name": "",
+    "name": "batch_foobar",
     "description": "",
     "batch_disabled": False,
 }

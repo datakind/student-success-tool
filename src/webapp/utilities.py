@@ -131,11 +131,9 @@ def prepend_env_prefix(name: str) -> str:
 
 
 def uuid_to_str(uuid_val: uuid.UUID) -> str:
+    if uuid_val is None:
+        return ""
     return uuid_val.hex
-
-
-def uuids_to_strs(uuid_vals: list[uuid.UUID]) -> list[str]:
-    return [uuid_to_str(x) for x in uuid_vals]
 
 
 def str_to_uuid(hex_str: str) -> uuid.UUID:

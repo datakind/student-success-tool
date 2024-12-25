@@ -1,10 +1,10 @@
 version = 1
 requires-python = ">=3.10, <3.12"
 resolution-markers = [
-    "python_full_version < '3.11' and platform_system != 'Windows'",
-    "python_full_version >= '3.11' and platform_system != 'Windows'",
-    "python_full_version < '3.11' and platform_system == 'Windows'",
-    "python_full_version >= '3.11' and platform_system == 'Windows'",
+    "python_full_version < '3.11' and sys_platform != 'win32'",
+    "python_full_version >= '3.11' and sys_platform != 'win32'",
+    "python_full_version < '3.11' and sys_platform == 'win32'",
+    "python_full_version >= '3.11' and sys_platform == 'win32'",
 ]
 
 [[package]]
@@ -404,7 +404,7 @@ name = "click"
 version = "8.1.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/96/d3/f04c7bfcf5c1862a2a5b845c6b2b360488cf47af55dfa79c98f6a6bf98b5/click-8.1.7.tar.gz", hash = "sha256:ca9853ad459e787e2192211578cc907e7594e294c7ccc834310722b41b9ca6de", size = 336121 }
 wheels = [
@@ -1127,7 +1127,7 @@ name = "gunicorn"
 version = "23.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "packaging", marker = "platform_system != 'Windows'" },
+    { name = "packaging", marker = "sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/34/72/9614c465dc206155d93eff0ca20d42e1e35afc533971379482de953521a4/gunicorn-23.0.0.tar.gz", hash = "sha256:f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec", size = 375031 }
 wheels = [
@@ -1229,7 +1229,7 @@ name = "ipykernel"
 version = "6.29.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "appnope", marker = "platform_system == 'Darwin'" },
+    { name = "appnope", marker = "sys_platform == 'darwin'" },
     { name = "comm" },
     { name = "debugpy" },
     { name = "ipython" },
@@ -1356,6 +1356,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/91/59/51b032d53212a51f17ebbcc01bd4217faab6d6c09ed0d856a987a5f42bbc/json5-0.9.25.tar.gz", hash = "sha256:548e41b9be043f9426776f05df8635a00fe06104ea51ed24b67f908856e151ae", size = 40332 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8a/3c/4f8791ee53ab9eeb0b022205aa79387119a74cc9429582ce04098e6fc540/json5-0.9.25-py3-none-any.whl", hash = "sha256:34ed7d834b1341a86987ed52f3f76cd8ee184394906b6e22a1e0deb9ab294e8f", size = 30109 },
+]
+
+[[package]]
+name = "jsondiff"
+version = "2.2.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/35/48/841137f1843fa215ea284834d1514b8e9e20962bda63a636c7417e02f8fb/jsondiff-2.2.1.tar.gz", hash = "sha256:658d162c8a86ba86de26303cd86a7b37e1b2c1ec98b569a60e2ca6180545f7fe", size = 26649 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/63/94/a8066f84d62ab666d61ef97deba1a33126e3e5c0c0da2c458ada17053ed6/jsondiff-2.2.1-py3-none-any.whl", hash = "sha256:b1f0f7e2421881848b1d556d541ac01a91680cfcc14f51a9b62cdf4da0e56722", size = 13440 },
 ]
 
 [[package]]
@@ -1789,7 +1801,7 @@ dependencies = [
     { name = "docker" },
     { name = "flask" },
     { name = "graphene" },
-    { name = "gunicorn", marker = "platform_system != 'Windows'" },
+    { name = "gunicorn", marker = "sys_platform != 'win32'" },
     { name = "jinja2" },
     { name = "markdown" },
     { name = "matplotlib" },
@@ -1800,7 +1812,7 @@ dependencies = [
     { name = "scikit-learn" },
     { name = "scipy" },
     { name = "sqlalchemy" },
-    { name = "waitress", marker = "platform_system == 'Windows'" },
+    { name = "waitress", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/1f/37/d1cbc901baf6be85be5bc8ee5557c6c96ade6e01af73475413c3047ed2e9/mlflow-2.17.0.tar.gz", hash = "sha256:5bb2089b833da48e4a92a9b4cb1cb5fa509a571eb3c603be39f5238b4721e076", size = 26190360 }
 wheels = [
@@ -2190,7 +2202,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess" },
+    { name = "ptyprocess", marker = "sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450 }
 wheels = [
@@ -3127,6 +3139,7 @@ dependencies = [
     { name = "google-cloud-storage" },
     { name = "google-cloud-storage-control" },
     { name = "ipywidgets" },
+    { name = "jsondiff" },
     { name = "matplotlib" },
     { name = "missingno" },
     { name = "mlflow" },
@@ -3167,6 +3180,7 @@ requires-dist = [
     { name = "google-cloud-storage", specifier = ">=2.18.2" },
     { name = "google-cloud-storage-control", specifier = ">=1.1.1" },
     { name = "ipywidgets", specifier = "~=8.1" },
+    { name = "jsondiff", specifier = ">=2.2.1" },
     { name = "matplotlib", specifier = "~=3.7" },
     { name = "missingno", specifier = "~=0.5" },
     { name = "mlflow", specifier = "~=2.13" },
@@ -3281,7 +3295,7 @@ name = "tqdm"
 version = "4.66.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/58/83/6ba9844a41128c62e810fddddd72473201f3eacde02046066142a2d96cc5/tqdm-4.66.5.tar.gz", hash = "sha256:e1020aef2e5096702d8a025ac7d16b1577279c9d63f8375b63083e9a5f0fcbad", size = 169504 }
 wheels = [

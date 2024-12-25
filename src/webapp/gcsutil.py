@@ -7,6 +7,7 @@ from google.cloud import storage, storage_control_v2
 from google.cloud.storage import Client
 from typing import Any
 
+
 def generate_upload_signed_url(bucket_name: str, blob_name: str) -> str:
     """Generates a v4 signed URL for uploading a blob using HTTP PUT."""
 
