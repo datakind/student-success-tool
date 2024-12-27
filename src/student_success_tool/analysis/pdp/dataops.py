@@ -78,10 +78,16 @@ def make_student_term_dataset(
             min_num_credits_full_time=min_num_credits_full_time,
         )
     )
-    df_student_terms_plus = features.cumulative.add_features(
-        df_student_terms,
-        student_id_cols=["institution_id", "student_guid"],
-        sort_cols=["academic_year", "academic_term"],
+    df_student_terms_plus = (
+        features.cumulative.add_features(
+            df_student_terms,
+            student_id_cols=["institution_id", "student_guid"],
+            sort_cols=["academic_year", "academic_term"],
+        )
+        # NOTE: this is important! delta tables mangle tables' column names
+        # most notably lower-casing everything; this ensures that the names of features
+        # generated (on-the-fly) here are the same if read (pre-computed) from storage
+        .rename(columns=str.lower)
     )
     return df_student_terms_plus
 
