@@ -5,7 +5,7 @@ import typing as t
 
 import pandas as pd
 
-from . import constants, features, types
+from . import constants, features, types, utils
 
 LOGGER = logging.getLogger(__name__)
 
@@ -84,10 +84,11 @@ def make_student_term_dataset(
             student_id_cols=["institution_id", "student_guid"],
             sort_cols=["academic_year", "academic_term"],
         )
-        # NOTE: this is important! delta tables mangle tables' column names
-        # most notably lower-casing everything; this ensures that the names of features
-        # generated (on-the-fly) here are the same if read (pre-computed) from storage
-        .rename(columns=str.lower)
+        # NOTE: it's important to standardize column names here to avoid name mismatches
+        # when features are generated here (on-the-fly) as opposed to read (pre-computed)
+        # from a delta table; spark can be configured to behave nicely...
+        # but let's not take any chances
+        .rename(columns=utils.convert_to_snake_case)
     )
     return df_student_terms_plus
 
