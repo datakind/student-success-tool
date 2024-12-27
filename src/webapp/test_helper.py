@@ -3,25 +3,36 @@
 
 from .utilities import AccessType, BaseUser, uuid_to_str
 import uuid
+from datetime import datetime
+
+DATETIME_TESTING = datetime(2024, 12, 24, 20, 22, 20, 132022)
+
+USER_VALID_INST_UUID = uuid.UUID("1d7c75c3-3eda-4294-9c66-75ea8af97b55")
+USER_UUID = uuid.UUID("5301a352-c03d-4a39-beec-16c5668c4700")
+USER_1_UUID = uuid.UUID("27316b89-5e04-474a-9ea4-97beaf72c9af")
+UUID_INVALID = uuid.UUID("64dbce41-111b-46fe-8e84-c38757477ef2")
 
 USR = BaseUser(
-    uuid_to_str(uuid.UUID("5301a352-c03d-4a39-beec-16c5668c4700")),
-    uuid_to_str(uuid.UUID("1d7c75c3-3eda-4294-9c66-75ea8af97b55")),
+    uuid_to_str(USER_UUID),
+    uuid_to_str(USER_VALID_INST_UUID),
     AccessType.MODEL_OWNER,
+    "abc@example.com",
 )
 USR_STR = USR.construct_query_param_string()
 
 VIEWER = BaseUser(
-    uuid_to_str(uuid.UUID("5301a352-c03d-4a39-beec-16c5668c4700")),
-    uuid_to_str(uuid.UUID("1d7c75c3-3eda-4294-9c66-75ea8af97b55")),
+    uuid_to_str(USER_1_UUID),
+    uuid_to_str(USER_VALID_INST_UUID),
     AccessType.VIEWER,
+    "janesmith@example.com",
 )
 VIEWER_STR = VIEWER.construct_query_param_string()
 
 DATAKINDER = BaseUser(
-    uuid_to_str(uuid.UUID("5301a352-c03d-4a39-beec-16c5668c4700")),
-    uuid_to_str(uuid.UUID("1d7c75c3-3eda-4294-9c66-75ea8af97b55")),
+    uuid_to_str(USER_UUID),
+    uuid_to_str(USER_VALID_INST_UUID),
     AccessType.DATAKINDER,
+    "taylor@example.com",
 )
 DATAKINDER_STR = DATAKINDER.construct_query_param_string()
 
@@ -33,19 +44,18 @@ BATCH_REQUEST = {
 
 USER_ACCT_REQUEST = {
     "name": "Taylor Smith",
-    "access_type": 2,
+    "access_type": "DATAKINDER",
     "email": "abc@example.com",
 }
 
 USER_ACCT = {
     "name": "Taylor Smith",
-    "access_type": 2,
+    "access_type": "DATAKINDER",
     "account_disabled": False,
     "deletion_request": None,
     "email": "abc@example.com",
-    "inst_id": uuid_to_str(uuid.UUID("5301a352-c03d-4a39-beec-16c5668c4700")),
-    "user_id": "",
-    "username": None,
+    "inst_id": uuid_to_str(USER_VALID_INST_UUID),
+    "user_id": uuid_to_str(USER_UUID),
 }
 
 INSTITUTION_REQ = {
@@ -62,7 +72,7 @@ EMPTY_INSTITUTION_OBJ = {
 }
 
 INSTITUTION_OBJ = {
-    "inst_id": uuid_to_str(uuid.UUID("1d7c75c3-3eda-4294-9c66-75ea8af97b55")),
+    "inst_id": uuid_to_str(USER_VALID_INST_UUID),
     "name": "valid_school",
     "description": None,
     "retention_days": None,

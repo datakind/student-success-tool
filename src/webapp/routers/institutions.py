@@ -53,8 +53,8 @@ class InstitutionCreationRequest(BaseModel):
 
     # The name should be unique amongst all other institutions.
     name: str
-    description: Union[str, None] = None
-    retention_days: Union[int, None] = None
+    description: str | None = None
+    retention_days: int | None = None
 
 
 class Institution(BaseModel):
@@ -62,10 +62,10 @@ class Institution(BaseModel):
 
     inst_id: str
     name: str
-    description: Union[str, None] = None
+    description: str | None = None
     # The following are characteristics of an institution set at institution creation time.
     # If zero, it follows DK defaults (deletion after completion).
-    retention_days: Union[int, None] = None  # In Days
+    retention_days: int | None = None  # In Days
 
 
 @router.get("/institutions", response_model=list[Institution])
@@ -101,7 +101,7 @@ def read_all_inst(
     return res
 
 
-@router.post("/institutions/", response_model=Institution)
+@router.post("/institutions", response_model=Institution)
 def create_institution(
     req: InstitutionCreationRequest,
     current_user: Annotated[BaseUser, Depends()],

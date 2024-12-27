@@ -2,6 +2,7 @@ import os
 import pymysql
 import sqlalchemy
 import uuid
+import datetime
 
 from sqlalchemy.ext.declarative import declarative_base
 from contextvars import ContextVar
@@ -17,8 +18,11 @@ from sqlalchemy import (
 from typing import Set, List
 from sqlalchemy.orm import sessionmaker, Session, relationship, mapped_column, Mapped
 from sqlalchemy.sql import func
+from sqlalchemy.pool import StaticPool
 
 from .config import env_vars, engine_vars, ssl_env_vars
+
+from .authn import get_password_hash
 
 Base = declarative_base()
 LocalSession = None
@@ -28,6 +32,46 @@ db_engine = None
 # GCP MYSQL will throw an error if we don't specify the length for any varchar
 # fields. So we can't use mapped_column in string cases.
 VAR_CHAR_LENGTH = 30
+
+# Constants for the local
+LOCAL_INST_UUID = uuid.UUID("14c81c50-935e-4151-8561-c2fc3bdabc0f")
+LOCAL_USER_UUID = uuid.UUID("f21a3e53-c967-404e-91fd-f657cb922c39")
+LOCAL_USER_EMAIL = "tester@datakind.org"
+HASHED_PASSWORD = "tester_password"
+DATETIME_TESTING = datetime.datetime(2024, 12, 26, 19, 37, 59, 753357)
+
+
+def setup_db_local():
+    # add some sample users to the database
+    try:
+        with sqlalchemy.orm.Session(db_engine) as session:
+            session.add_all(
+                [
+                    InstTable(
+                        id=LOCAL_INST_UUID,
+                        name="Foobar University",
+                        time_created=DATETIME_TESTING,
+                        time_updated=DATETIME_TESTING,
+                    ),
+                    AccountTable(
+                        id=LOCAL_USER_UUID,
+                        inst_id=LOCAL_INST_UUID,
+                        name="Tester S",
+                        email=LOCAL_USER_EMAIL,
+                        email_verified=True,
+                        password_hash=get_password_hash(HASHED_PASSWORD),
+                        access_type="DATAKINDER",
+                        time_created=DATETIME_TESTING,
+                        time_updated=DATETIME_TESTING,
+                    ),
+                ]
+            )
+            session.commit()
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
 
 
 # The institution overview table that maps ids to names. The parent table to
@@ -66,7 +110,7 @@ class AccountTable(Base):
 
     # Set the foreign key to link to the institution table.
     inst_id = Column(
-        String(VAR_CHAR_LENGTH),
+        Uuid(as_uuid=True),
         ForeignKey("inst.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -92,21 +136,21 @@ class AccountHistoryTable(Base):
 
     # Set the parent foreign key to link to the accounts table.
     account_id = Column(
-        String(VAR_CHAR_LENGTH),
+        Uuid(as_uuid=True),
         ForeignKey("account.id", ondelete="CASCADE"),
         nullable=False,
     )
     account: Mapped["AccountTable"] = relationship(back_populates="account_histories")
 
     inst_id = Column(
-        String(VAR_CHAR_LENGTH),
+        Uuid(as_uuid=True),
         ForeignKey("inst.id", ondelete="CASCADE"),
         nullable=False,
     )
     inst: Mapped["InstTable"] = relationship(back_populates="account_histories")
 
     action = Column(String(VAR_CHAR_LENGTH), nullable=False)
-    resource_id = Column(String(VAR_CHAR_LENGTH), nullable=False)
+    resource_id = Column(Uuid(as_uuid=True), nullable=False)
 
 
 # An intermediary association table allows bi-directional many-to-many between files and batches.
@@ -249,6 +293,17 @@ def get_session():
         sess.close()
 
 
+def init_connection_pool_local() -> sqlalchemy.engine.base.Engine:
+    # Creates a local sqlite db for local env testing
+    return sqlalchemy.create_engine(
+        "sqlite://",
+        echo=True,
+        echo_pool="debug",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+
+
 # The following functions are heavily inspired from the GCP open source sample code.
 
 
@@ -321,12 +376,18 @@ def init_connection_pool() -> (
     return connect_tcp_socket(engine_vars, ssl_args)
 
 
-def setup_db():
+def setup_db(env: str):
     # initialize connection pool
     global db_engine
-    db_engine = init_connection_pool()
+    if env == "LOCAL":
+        db_engine = init_connection_pool_local()
+    else:
+        db_engine = init_connection_pool()
     # Integrating FastAPI with SQL DB
     # create SQLAlchemy ORM session
     global LocalSession
     LocalSession = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
     Base.metadata.create_all(db_engine)
+    if env == "LOCAL":
+        # Creates a fake user in the local db
+        setup_db_local()

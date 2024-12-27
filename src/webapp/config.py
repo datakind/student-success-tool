@@ -2,6 +2,27 @@
 """
 
 import os
+from dotenv import load_dotenv
+
+
+# Setup function to get environment variables. Should be called at startup time.
+def startup_env_vars():
+    env_file = os.environ.get("ENV_FILE_PATH")
+    if not env_file:
+        raise ValueError(
+            "Missing .env filepath variable. Required. Set ENV_FILE_PATH to full path of .env file."
+        )
+    load_dotenv(env_file)
+    env = os.environ.get("ENV")
+    if not env:
+        raise ValueError(
+            "Missing ENV environment variable. Required. Can be PROD, STAGING, DEV, or LOCAL."
+        )
+    if env not in ["PROD", "STAGING", "DEV", "LOCAL"]:
+        raise ValueError(
+            "ENV environment variable not one of: PROD, STAGING, DEV, or LOCAL."
+        )
+
 
 env_vars = {
     "ENV": os.environ.get("ENV"),

@@ -15,6 +15,10 @@ from ..test_helper import (
     VIEWER_STR,
     DATAKINDER_STR,
     BATCH_REQUEST,
+    USR,
+    USER_VALID_INST_UUID,
+    USER_UUID,
+    UUID_INVALID,
 )
 from ..main import app
 from ..database import (
@@ -30,11 +34,7 @@ from .data import router, DataOverview, DataInfo, BatchCreationRequest
 from collections import Counter
 
 DATETIME_TESTING = datetime(2024, 12, 24, 20, 22, 20, 132022)
-UUID_1 = uuid.UUID("64dbce41-111b-46fe-8e84-c38757477ef2")
 UUID_2 = uuid.UUID("9bcbc782-2e71-4441-afa2-7a311024a5ec")
-USER_UUID = uuid.UUID("5301a352-c03d-4a39-beec-16c5668c4700")
-USER_VALID_INST_UUID = uuid.UUID("1d7c75c3-3eda-4294-9c66-75ea8af97b55")
-INVALID_UUID = uuid.UUID("27316b89-5e04-474a-9ea4-97beaf72c9af")
 FILE_UUID_1 = uuid.UUID("f0bb3a20-6d92-4254-afed-6a72f43c562a")
 FILE_UUID_2 = uuid.UUID("cb02d06c-2a59-486a-9bdd-d394a4fcb833")
 FILE_UUID_3 = uuid.UUID("fbe67a2e-50e0-40c7-b7b8-07043cb813a5")
@@ -187,7 +187,9 @@ def client_fixture(session: sqlalchemy.orm.Session):
 
 def test_read_inst_all_input_files(client: TestClient):
     """Test GET /institutions/<uuid>/input."""
-    response = client.get("/institutions/" + uuid_to_str(UUID_1) + "/input" + USR_STR)
+    response = client.get(
+        "/institutions/" + uuid_to_str(UUID_INVALID) + "/input" + USR_STR
+    )
 
     assert str(response) == "<Response [401 Unauthorized]>"
     assert (
@@ -257,7 +259,9 @@ def test_read_inst_all_input_files(client: TestClient):
 
 def test_read_inst_all_output_files(client: TestClient):
     """Test GET /institutions/<uuid>/output."""
-    response = client.get("/institutions/" + uuid_to_str(UUID_1) + "/output" + USR_STR)
+    response = client.get(
+        "/institutions/" + uuid_to_str(UUID_INVALID) + "/output" + USR_STR
+    )
 
     assert str(response) == "<Response [401 Unauthorized]>"
     assert (
@@ -314,7 +318,7 @@ def test_read_batch_info(client: TestClient):
     """Test GET /institutions/<uuid>/batch/<uuid>."""
     response = client.get(
         "/institutions/"
-        + uuid_to_str(UUID_1)
+        + uuid_to_str(UUID_INVALID)
         + "/batch/"
         + uuid_to_str(BATCH_UUID)
         + USR_STR
@@ -394,7 +398,7 @@ def test_read_file_info(client: TestClient):
     """Test GET /institutions/<uuid>/file/<uuid>."""
     response = client.get(
         "/institutions/"
-        + uuid_to_str(UUID_1)
+        + uuid_to_str(UUID_INVALID)
         + "/file/"
         + uuid_to_str(FILE_UUID_1)
         + USR_STR
@@ -437,7 +441,7 @@ def test_read_file_info(client: TestClient):
 def test_create_batch(client: TestClient):
     """Test POST /institutions/<uuid>/batch."""
     response = client.post(
-        "/institutions/" + uuid_to_str(UUID_1) + "/batch/" + USR_STR,
+        "/institutions/" + uuid_to_str(UUID_INVALID) + "/batch" + USR_STR,
         json={"name": "batch_name_foo"},
     )
     assert str(response) == "<Response [401 Unauthorized]>"
@@ -447,7 +451,7 @@ def test_create_batch(client: TestClient):
     )
     # Authorized.
     response = client.post(
-        "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + "/batch/" + USR_STR,
+        "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + "/batch" + USR_STR,
         json=BATCH_REQUEST,
     )
     assert response.status_code == 200
@@ -464,10 +468,9 @@ def test_update_batch(client: TestClient):
     """Test PATCH /institutions/<uuid>/batch."""
     response = client.patch(
         "/institutions/"
-        + uuid_to_str(UUID_1)
+        + uuid_to_str(UUID_INVALID)
         + "/batch/"
         + uuid_to_str(BATCH_UUID)
-        + "/"
         + USR_STR,
         json={"name": "batch_name_updated_foo"},
     )
@@ -482,7 +485,6 @@ def test_update_batch(client: TestClient):
         + uuid_to_str(USER_VALID_INST_UUID)
         + "/batch/"
         + uuid_to_str(BATCH_UUID)
-        + "/"
         + USR_STR,
         json={
             "name": "batch_name_updated_foo",
@@ -504,19 +506,19 @@ def test_update_batch(client: TestClient):
 def test_pull_pdp_sftp(client: TestClient):
     """Test POST /institutions/345/input/pdp_sftp/."""
     # Authorized.
-    response = client.post("/institutions/345/input/pdp_sftp/" + USR_STR)
+    response = client.post("/institutions/345/input/pdp_sftp")
     # assert response.status_code == 200
 
 
 def test_upload_file(client: TestClient):
     """Test POST /institutions/345/input/."""
     # Authorized.
-    response = client.post("/institutions/345/input/" + USR_STR)
+    response = client.post("/institutions/345/input")
     # assert response.status_code == 200
 
 
 def test_download_inst_file(client: TestClient):
     """Test GET /institutions/<uuid>/output/<uuid>."""
     # Authorized.
-    response = client.get("/institutions/345/output/10/" + USR_STR)
+    response = client.get("/institutions/345/output/10")
     # assert response.status_code == 200

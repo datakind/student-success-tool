@@ -354,7 +354,7 @@ def read_batch_info(
     return {"batches": [batch_info], "files": data_infos}
 
 
-@router.post("/{inst_id}/batch/", response_model=BatchInfo)
+@router.post("/{inst_id}/batch", response_model=BatchInfo)
 def create_batch(
     inst_id: str,
     req: BatchCreationRequest,
@@ -432,7 +432,7 @@ def construct_modify_query(modify_vals: dict, batch_id: str) -> Any:
     return query
 
 
-@router.patch("/{inst_id}/batch/{batch_id}/", response_model=BatchInfo)
+@router.patch("/{inst_id}/batch/{batch_id}", response_model=BatchInfo)
 def update_batch(
     inst_id: str,
     batch_id: str,
@@ -603,7 +603,7 @@ def read_file_info(
 
 
 # TODO: ADD TESTS for the below and finish implementing the below
-@router.get("/{inst_id}/output/{file_id}", response_model=DataInfo)
+@router.get("/{inst_id}/file/{file_id}/download", response_model=DataInfo)
 def download_inst_file(
     inst_id: str,
     file_id: str,
@@ -692,7 +692,7 @@ def download_inst_file(
     }
 
 
-@router.post("/{inst_id}/input/")
+@router.post("/{inst_id}/input/uploadfile")
 def upload_file(inst_id: int, current_user: Annotated[BaseUser, Depends()]) -> Any:
     """Add new data from local filesystem.
 
@@ -706,7 +706,7 @@ def upload_file(inst_id: int, current_user: Annotated[BaseUser, Depends()]) -> A
     # Update or create batch.
 
 
-@router.post("/{inst_id}/input/pdp_sftp/")
+@router.post("/{inst_id}/input/pdp_sftp")
 def pull_pdp_sftp(inst_id: int, current_user: Annotated[BaseUser, Depends()]) -> Any:
     """Add new data from PDP directly.
 

@@ -2,7 +2,7 @@
 """
 
 from typing import Union
-from enum import IntEnum  # , StrEnum
+from enum import StrEnum
 import uuid
 import os
 
@@ -11,21 +11,21 @@ from pydantic import BaseModel, ConfigDict
 
 
 # TODO: Store in a python package to be usable by the frontend.
-class AccessType(IntEnum):
+class AccessType(StrEnum):
     """Access types available."""
 
-    DATAKINDER = 1
-    MODEL_OWNER = 2
-    DATA_OWNER = 3
-    VIEWER = 4
+    DATAKINDER = "DATAKINDER"
+    MODEL_OWNER = "MODEL_OWNER"
+    DATA_OWNER = "DATA_OWNER"
+    VIEWER = "VIEWER"
 
 
-# class DataSource(StrEnum):
-#    """Where the Data was created from."""
-#
-#    UNNOWN = "UNKNOWN"
-#    PDP_SFTP = "PDP_SFTP"
-#    MANUAL_UPLOAD = "MANUAL_UPLOAD"
+class DataSource(StrEnum):
+    """Where the Data was created from."""
+
+    UNNOWN = "UNKNOWN"
+    PDP_SFTP = "PDP_SFTP"
+    MANUAL_UPLOAD = "MANUAL_UPLOAD"
 
 
 class BaseUser(BaseModel):
@@ -35,14 +35,16 @@ class BaseUser(BaseModel):
     # user_id is permanent and each frontend orginated account will map to a unique user_id.
     # Bare API callers will likely not include a user_id.
     # The actual types of the ids will be UUIDs.
-    user_id: Union[str, None] = None
+    user_id: str | None = None
+    email: str | None = None
     # For Datakinders, institution is None which means "no inst specified".
-    institution: Union[str, None] = None
+    institution: str | None = None
     access_type: AccessType
+    disabled: bool | None = None
 
     # Constructor
-    def __init__(self, usr: Union[str, None], inst: str, access: AccessType) -> None:
-        super().__init__(user_id=usr, institution=inst, access_type=access)
+    def __init__(self, usr: str | None, inst: str, access: str, email: str) -> None:
+        super().__init__(user_id=usr, institution=inst, access_type=access, email=email)
 
     def is_datakinder(self) -> bool:
         """Whether a given user is a Datakinder."""
@@ -72,13 +74,15 @@ class BaseUser(BaseModel):
             AccessType.DATA_OWNER,
         )
 
+    # TODO: remove
     def construct_query_param_string(self) -> str:
         """Construct query paramstring from BaseUser. Mostly used for testing."""
         ret = "?"
         if self.user_id is not None:
-            ret += "usr=" + str(self.user_id) + "&"
-        ret += "inst=" + str(self.institution) + "&"
-        ret += "access=" + str(self.access_type)
+            ret += "usr=" + self.user_id + "&"
+        ret += "inst=" + self.institution + "&"
+        ret += "access=" + self.access_type + "&"
+        ret += "email=" + self.email
         return ret
 
     def has_stronger_permissions_than(self, other_access_type: AccessType) -> bool:

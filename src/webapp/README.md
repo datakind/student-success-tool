@@ -7,6 +7,9 @@ For local testing:
 
 Enter into the root directory of the repo.
 
+
+1. Copy the `.env.example` file to `.env`
+1. Run `export ENV_FILE_PATH='/full/path/to/.env'`
 1. `python3 -m venv .venv`
 1. `source .venv/bin/activate`
 1. `pip install uv`

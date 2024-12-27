@@ -5,10 +5,11 @@ import logging
 from typing import Any
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
+from datetime import timedelta
 
 from .routers import models, users, data, institutions
 from .database import setup_db, db_engine
-from .config import env_vars
+from .config import env_vars, startup_env_vars
 
 # Set the logging
 logging.basicConfig(format="%(asctime)s [%(levelname)s]: %(message)s")
@@ -24,6 +25,17 @@ app = FastAPI(
     root_path="/api/v1",
 )
 
+
+"""
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+"""
+
 app.include_router(institutions.router)
 app.include_router(models.router)
 app.include_router(users.router)
@@ -33,14 +45,8 @@ app.include_router(data.router)
 @app.on_event("startup")
 def on_startup():
     print("Starting up app...")
-    env = env_vars["ENV"]
-    if not env:
-        raise ValueError(
-            "Missing ENV environment variable. Required. Can be PROD, STAGING, or DEV."
-        )
-    if env not in ["PROD", "STAGING", "DEV"]:
-        raise ValueError("ENV environment variable not one of: PROD, STAGING, or DEV.")
-    setup_db()
+    startup_env_vars()
+    setup_db(env_vars["ENV"])
 
 
 # On shutdown, we have to cleanup the GCP database connections

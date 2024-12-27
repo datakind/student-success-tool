@@ -10,16 +10,16 @@ from sqlalchemy.pool import StaticPool
 import uuid
 import os
 import unittest
-from unittest import mock
-from unittest.mock import Mock
 
-from .institutions import router
+from . import institutions
 from ..test_helper import (
     USR_STR,
     INSTITUTION_REQ,
     VIEWER_STR,
     DATAKINDER_STR,
     INSTITUTION_OBJ,
+    USR,
+    DATAKINDER,
 )
 
 from ..utilities import uuid_to_str
@@ -79,7 +79,7 @@ def client_fixture(session: sqlalchemy.orm.Session):
     def get_session_override():
         return session
 
-    app.include_router(router)
+    app.include_router(institutions.router)
     app.dependency_overrides[get_session] = get_session_override
 
     client = TestClient(app)
@@ -97,6 +97,10 @@ def test_read_all_inst(client: TestClient):
         response.text
         == '{"detail":"Not authorized to read this resource. Select a specific institution."}'
     )
+
+
+def test_read_all_inst_datakinder(client: TestClient):
+    """Test GET /institutions."""
     # Authorized.
     response = client.get("/institutions" + DATAKINDER_STR)
     assert response.status_code == 200
@@ -156,34 +160,3 @@ def test_read_inst(client: TestClient):
     )
     assert response.status_code == 200
     assert response.json() == INSTITUTION_OBJ
-
-
-# XXX figure out how to mock the gcs call
-# @mock.patch("create_bucket")
-# def test_create_inst(mock_storage: Mock, client: TestClient):
-def test_create_inst(client: TestClient):
-    # Test POST /institutions. For various user access types.
-    os.environ["ENV"] = "DEV"
-    assert "DEV" == os.environ.get("ENV")
-    # mock_gcs_client = mock_storage.Client.return_value
-    # mock_bucket = Mock()
-    # mock_bucket.blob.return_value.download_as_string.return_value = (
-    #    "teresa teng".encode("utf-8")
-    # )
-    # mock_gcs_client.bucket.return_value = mock_bucket
-
-    # Unauthorized.
-    response = client.post("/institutions/" + USR_STR, json=INSTITUTION_REQ)
-    assert str(response) == "<Response [401 Unauthorized]>"
-    assert response.text == '{"detail":"Not authorized to create an institution."}'
-
-    # Authorized.
-    """
-    The following won't work until we can mock out the gcs call.
-    response = client.post("/institutions/" + DATAKINDER_STR, json=INSTITUTION_REQ)
-    assert response.status_code == 200
-    assert response.json()["name"] == "foobar school"
-    assert response.json()["description"] == "description of school"
-    assert response.json()["retention_days"] == 1
-    assert response.json()["inst_id"] != None
-    """

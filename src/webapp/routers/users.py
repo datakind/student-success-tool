@@ -4,6 +4,7 @@
 from typing import Annotated, Any, Union
 from fastapi import HTTPException, status, APIRouter, Depends
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from ..utilities import (
     has_access_to_inst_or_err,
@@ -11,6 +12,8 @@ from ..utilities import (
     BaseUser,
     AccessType,
 )
+
+from ..database import get_session, local_session
 
 router = APIRouter(
     prefix="/institutions",
@@ -26,8 +29,6 @@ class UserAccountRequest(BaseModel):
     access_type: AccessType
     # The email value must be unique across all accounts and provided.
     email: str
-    # The username can be set by the user
-    username: Union[str, None] = None
     account_disabled: bool = False
 
 
@@ -35,14 +36,12 @@ class UserAccount(BaseModel):
     """The user account object that's returned."""
 
     # The user_id will be guaranteed to be unique across all accounts.
-    user_id: int
-    name: Union[str, None] = None
-    inst_id: int
+    user_id: str
+    name: str | None = None
+    inst_id: str
     access_type: AccessType
-    # The email value must be unique across all accounts.
+    # The email value must be unique across all accounts. This is also the username.
     email: str
-    # The username value must be unique across all accounts.
-    username: Union[str, None] = None
     account_disabled: bool = False
     # Date in form YYMMDD
     deletion_request: Union[str, None] = None
@@ -52,7 +51,11 @@ class UserAccount(BaseModel):
 
 
 @router.get("/{inst_id}/users", response_model=list[UserAccount])
-def read_inst_users(inst_id: int, current_user: Annotated[BaseUser, Depends()]) -> Any:
+def read_inst_users(
+    inst_id: str,
+    current_user: Annotated[BaseUser, Depends()],
+    sql_session: Annotated[Session, Depends(get_session)],
+) -> Any:
     """Returns all users attributed to a given institution and account type.
 
     Only visible to data owners of that institution or higher.
@@ -62,17 +65,19 @@ def read_inst_users(inst_id: int, current_user: Annotated[BaseUser, Depends()]) 
     """
     has_access_to_inst_or_err(inst_id, current_user)
     has_full_data_access_or_err(current_user, "users")
+
     return []
 
 
 # TODO: Create a way to bulk create users?
 
 
-@router.post("/{inst_id}/users/", response_model=UserAccount)
+@router.post("/{inst_id}/users", response_model=UserAccount)
 def create_new_user(
-    inst_id: int,
+    inst_id: str,
     user_account_request: UserAccountRequest,
     current_user: Annotated[BaseUser, Depends()],
+    sql_session: Annotated[Session, Depends(get_session)],
 ) -> Any:
     """Create a new user for a given institution.
 
@@ -97,20 +102,21 @@ def create_new_user(
         )
     # TODO: check if the email exists in the user table, otherwise, create it.
     # Generate a UUID in the user table.
-    uuid = 1
     return {
-        "user_id": uuid,
+        "user_id": "",
         "name": user_account_request.name,
         "inst_id": inst_id,
         "access_type": user_account_request.access_type,
         "email": user_account_request.email,
-        "username": user_account_request.username,
     }
 
 
 @router.get("/{inst_id}/users/{user_id}", response_model=UserAccount)
 def read_inst_user(
-    inst_id: int, user_id: int, current_user: Annotated[BaseUser, Depends()]
+    inst_id: str,
+    user_id: str,
+    current_user: Annotated[BaseUser, Depends()],
+    sql_session: Annotated[Session, Depends(get_session)],
 ) -> Any:
     """Returns info on a specific user.
 
@@ -129,9 +135,8 @@ def read_inst_user(
         "user_id": user_id,
         "name": "",
         "inst_id": inst_id,
-        "access_type": 1,
+        "access_type": AccessType.DATAKINDER,
         "email": "",
-        "username": "",
         "account_disabled": False,
         "deletion_request": None,
     }
