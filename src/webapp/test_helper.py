@@ -18,7 +18,6 @@ USR = BaseUser(
     AccessType.MODEL_OWNER,
     "abc@example.com",
 )
-USR_STR = USR.construct_query_param_string()
 
 VIEWER = BaseUser(
     uuid_to_str(USER_1_UUID),
@@ -26,7 +25,6 @@ VIEWER = BaseUser(
     AccessType.VIEWER,
     "janesmith@example.com",
 )
-VIEWER_STR = VIEWER.construct_query_param_string()
 
 DATAKINDER = BaseUser(
     uuid_to_str(USER_UUID),
@@ -34,7 +32,6 @@ DATAKINDER = BaseUser(
     AccessType.DATAKINDER,
     "taylor@example.com",
 )
-DATAKINDER_STR = DATAKINDER.construct_query_param_string()
 
 BATCH_REQUEST = {
     "name": "batch_foobar",

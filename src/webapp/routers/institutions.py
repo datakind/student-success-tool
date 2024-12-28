@@ -17,6 +17,7 @@ from ..utilities import (
     prepend_env_prefix,
     str_to_uuid,
     uuid_to_str,
+    get_current_active_user,
 )
 
 from ..gcsutil import generate_upload_signed_url, create_bucket, create_folders
@@ -31,6 +32,7 @@ from ..database import (
 router = APIRouter(
     tags=["institutions"],
 )
+
 
 # The following are the default top-level folders created in a new GCS bucket.
 # softdelete/ is the folder where files in soft-deletion (from user requests or retention time-up) are held prior to deletion.
@@ -70,7 +72,7 @@ class Institution(BaseModel):
 
 @router.get("/institutions", response_model=list[Institution])
 def read_all_inst(
-    current_user: Annotated[BaseUser, Depends()],
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
 ) -> Any:
     """Returns overview data on all institutions.
@@ -104,7 +106,7 @@ def read_all_inst(
 @router.post("/institutions", response_model=Institution)
 def create_institution(
     req: InstitutionCreationRequest,
-    current_user: Annotated[BaseUser, Depends()],
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
 ) -> Any:
     """Create a new institution.
@@ -178,7 +180,7 @@ def create_institution(
 @router.get("/institutions/name/{inst_name}", response_model=Institution)
 def read_inst_name(
     inst_name: str,
-    current_user: Annotated[BaseUser, Depends()],
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
 ) -> Any:
     """Returns overview data on a specific institution.
@@ -217,7 +219,7 @@ def read_inst_name(
 @router.get("/institutions/{inst_id}", response_model=Institution)
 def read_inst_id(
     inst_id: str,
-    current_user: Annotated[BaseUser, Depends()],
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
 ) -> Any:
     """Returns overview data on a specific institution.
@@ -253,11 +255,13 @@ def read_inst_id(
 
 
 @router.get("/institutions/{inst_id}/upload-url", response_model=str)
-def get_upload_url(inst_id: str) -> Any:
+def get_upload_url(
+    inst_id: str, current_user: Annotated[BaseUser, Depends(get_current_active_user)]
+) -> Any:
     """Returns a signed URL for uploading data to a specific institution.
 
     Args:
         current_user: the user making the request.
     """
-    # has_access_to_inst_or_err(inst_id, current_user)
+    has_access_to_inst_or_err(inst_id, current_user)
     return generate_upload_signed_url("local-upload-test", f"{inst_id}/test.csv")

@@ -15,3 +15,20 @@ Enter into the root directory of the repo.
 1. `pip install uv`
 1. `uv sync --all-extras --dev`
 1. `coverage run -m pytest  -v -s ./src/webapp/`
+
+For all of the following, be in the repo root folder (`student-success-tool/`).
+
+Spin up the app locally:
+
+1. `fastapi dev src/webapp/main.p`
+1. Go to `http://127.0.0.1:8000/docs`
+1. Hit the `Authorize` button on the top right and enter the tester credentials:
+
+* username: `tester@datakind.org`
+* password: `tester_password`
+
+Before committing, make sure to run:
+
+1. `black src/webapp/.`
+1. Test using `coverage run -m pytest  -v -s ./src/webapp/*.py`
+1. Test using `coverage run -m pytest  -v -s ./src/webapp/routers/*.py`

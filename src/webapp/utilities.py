@@ -1,13 +1,22 @@
 """Helper functions that may be used across multiple API router subpackages.
 """
 
-from typing import Union
+from typing import Union, Annotated
 from enum import StrEnum
 import uuid
 import os
+import jwt
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
 from pydantic import BaseModel, ConfigDict
+from jwt.exceptions import InvalidTokenError
+from sqlalchemy.orm import Session
+from datetime import datetime, timedelta, timezone
+from sqlalchemy.future import select
+
+from .authn import verify_password, TokenData, oauth2_scheme
+from .database import get_session, AccountTable
+from .config import env_vars
 
 
 # TODO: Store in a python package to be usable by the frontend.
@@ -74,17 +83,6 @@ class BaseUser(BaseModel):
             AccessType.DATA_OWNER,
         )
 
-    # TODO: remove
-    def construct_query_param_string(self) -> str:
-        """Construct query paramstring from BaseUser. Mostly used for testing."""
-        ret = "?"
-        if self.user_id is not None:
-            ret += "usr=" + self.user_id + "&"
-        ret += "inst=" + self.institution + "&"
-        ret += "access=" + self.access_type + "&"
-        ret += "email=" + self.email
-        return ret
-
     def has_stronger_permissions_than(self, other_access_type: AccessType) -> bool:
         """Check that self has stronger permissions than other."""
         if self.access_type == AccessType.DATAKINDER:
@@ -100,6 +98,71 @@ class BaseUser(BaseModel):
         if self.access_type == AccessType.VIEWER:
             return other_access_type == AccessType.VIEWER
         return False
+
+
+def get_user(sess: Session, username: str) -> BaseUser:
+    query_result = sess.execute(
+        select(AccountTable).where(
+            AccountTable.email == username,
+        )
+    ).all()
+    if len(query_result) == 0 or len(query_result) > 1:
+        return None
+    return BaseUser(
+        usr=uuid_to_str(query_result[0][0].id),
+        inst=uuid_to_str(query_result[0][0].inst_id),
+        access=query_result[0][0].access_type,
+        email=username,
+    )
+
+
+def authenticate_user(username: str, password: str, sess: Session) -> BaseUser:
+    query_result = sess.execute(
+        select(AccountTable).where(
+            AccountTable.email == username,
+        )
+    ).all()
+    if len(query_result) == 0 or len(query_result) > 1:
+        return False
+    if not verify_password(password, query_result[0][0].password_hash):
+        return False
+    return BaseUser(
+        usr=uuid_to_str(query_result[0][0].id),
+        inst=uuid_to_str(query_result[0][0].inst_id),
+        access=query_result[0][0].access_type,
+        email=username,
+    )
+
+
+async def get_current_user(
+    sess: Annotated[Session, Depends(get_session)],
+    token: Annotated[str, Depends(oauth2_scheme)],
+):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except InvalidTokenError:
+        raise credentials_exception
+    user = get_user(sess, username=token_data.username)
+    if user is None:
+        raise credentials_exception
+    return user
+
+
+async def get_current_active_user(
+    current_user: Annotated[BaseUser, Depends(get_current_user)],
+):
+    if current_user.disabled:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
 
 
 def has_access_to_inst_or_err(inst: str, user: BaseUser):
@@ -131,7 +194,7 @@ def model_owner_and_higher_or_err(user: BaseUser, resource_type: str):
 
 # At this point the value should not be empty as we checked on app startup.
 def prepend_env_prefix(name: str) -> str:
-    return os.environ["ENV"] + "_" + name
+    return env_vars["ENV"] + "_" + name
 
 
 def uuid_to_str(uuid_val: uuid.UUID) -> str:

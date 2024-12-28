@@ -10,19 +10,18 @@ from sqlalchemy.pool import StaticPool
 import uuid
 import os
 import unittest
+from unittest import mock
+from unittest.mock import Mock, patch
 
 from . import institutions
 from ..test_helper import (
-    USR_STR,
     INSTITUTION_REQ,
-    VIEWER_STR,
-    DATAKINDER_STR,
     INSTITUTION_OBJ,
     USR,
     DATAKINDER,
 )
 
-from ..utilities import uuid_to_str
+from ..utilities import uuid_to_str, get_current_active_user
 from ..main import app
 from ..database import InstTable, Base, get_session, local_session
 
@@ -79,19 +78,56 @@ def client_fixture(session: sqlalchemy.orm.Session):
     def get_session_override():
         return session
 
+    def get_current_active_user_override():
+        return USR
+
     app.include_router(institutions.router)
     app.dependency_overrides[get_session] = get_session_override
+    app.dependency_overrides[get_current_active_user] = get_current_active_user_override
 
     client = TestClient(app)
     yield client
     app.dependency_overrides.clear()
 
 
+# The following uses the Datakind user
+@pytest.fixture(name="client_datakind_user")
+def client_fixture_datakind_user(session: sqlalchemy.orm.Session):
+    def get_session_override():
+        return session
+
+    def get_current_active_user_override():
+        return DATAKINDER
+
+    app.include_router(institutions.router)
+    app.dependency_overrides[get_session] = get_session_override
+    app.dependency_overrides[get_current_active_user] = get_current_active_user_override
+
+    client = TestClient(app)
+    yield client
+    app.dependency_overrides.clear()
+
+
+"""
+@pytest.fixture(name="storage")
+def storage_fixture():
+    def get_session_override():
+        return session
+
+    app.include_router(institutions.router)
+    app.dependency_overrides[get_session] = get_session_override
+
+    client = TestClient(app)
+    yield client
+    app.dependency_overrides.clear()
+"""
+
+
 def test_read_all_inst(client: TestClient):
     """Test GET /institutions."""
 
     # Unauthorized.
-    response = client.get("/institutions" + USR_STR)
+    response = client.get("/institutions")
     assert str(response) == "<Response [401 Unauthorized]>"
     assert (
         response.text
@@ -99,10 +135,10 @@ def test_read_all_inst(client: TestClient):
     )
 
 
-def test_read_all_inst_datakinder(client: TestClient):
+def test_read_all_inst_datakinder(client_datakind_user: TestClient):
     """Test GET /institutions."""
     # Authorized.
-    response = client.get("/institutions" + DATAKINDER_STR)
+    response = client_datakind_user.get("/institutions")
     assert response.status_code == 200
     assert response.json() == [
         {
@@ -129,7 +165,7 @@ def test_read_all_inst_datakinder(client: TestClient):
 def test_read_inst_by_name(client: TestClient):
     # Test GET /institutions/<uuid>. For various user access types.
     # Unauthorized.
-    response = client.get("/institutions/name/school_1" + USR_STR)
+    response = client.get("/institutions/name/school_1")
 
     assert str(response) == "<Response [401 Unauthorized]>"
     assert (
@@ -138,7 +174,7 @@ def test_read_inst_by_name(client: TestClient):
     )
 
     # Authorized.
-    response = client.get("/institutions/name/valid_school" + USR_STR)
+    response = client.get("/institutions/name/valid_school")
     assert response.status_code == 200
     assert response.json() == INSTITUTION_OBJ
 
@@ -146,7 +182,7 @@ def test_read_inst_by_name(client: TestClient):
 def test_read_inst(client: TestClient):
     # Test GET /institutions/<uuid>. For various user access types.
     # Unauthorized.
-    response = client.get("/institutions/" + uuid_to_str(UUID_1) + USR_STR)
+    response = client.get("/institutions/" + uuid_to_str(UUID_1))
 
     assert str(response) == "<Response [401 Unauthorized]>"
     assert (
@@ -155,8 +191,39 @@ def test_read_inst(client: TestClient):
     )
 
     # Authorized.
-    response = client.get(
-        "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + USR_STR
-    )
+    response = client.get("/institutions/" + uuid_to_str(USER_VALID_INST_UUID))
     assert response.status_code == 200
     assert response.json() == INSTITUTION_OBJ
+
+
+# XXX figure out how to mock the gcs call
+# @patch.object(institutions, "create_bucket", Mock(return_value=None))
+@mock.patch(institutions.__name__ + ".create_bucket", Mock(return_value=None))
+def test_create_inst(mock_create_bucket, client):
+    # Test POST /institutions. For various user access types.
+    os.environ["ENV"] = "DEV"
+    assert "DEV" == os.environ.get("ENV")
+    assert institutions.create_bucket() == None
+    print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+    mock_gcs_client = mock_create_bucket.Client.return_value
+    mock_bucket = Mock()
+    mock_bucket.blob.return_value.download_as_string.return_value = (
+        "teresa teng".encode("utf-8")
+    )
+    mock_gcs_client.bucket.return_value = mock_bucket
+
+    # Unauthorized.
+    response = client.post("/institutions/", json=INSTITUTION_REQ)
+    assert str(response) == "<Response [401 Unauthorized]>"
+    assert response.text == '{"detail":"Not authorized to create an institution."}'
+
+    # Authorized.
+    """
+    The following won't work until we can mock out the gcs call.
+    response = client.post("/institutions/" + DATAKINDER_STR, json=INSTITUTION_REQ)
+    assert response.status_code == 200
+    assert response.json()["name"] == "foobar school"
+    assert response.json()["description"] == "description of school"
+    assert response.json()["retention_days"] == 1
+    assert response.json()["inst_id"] != None
+    """

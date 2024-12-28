@@ -1,7 +1,7 @@
 """API functions related to users.
 """
 
-from typing import Annotated, Any, Union
+from typing import Annotated, Any
 from fastapi import HTTPException, status, APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -11,6 +11,7 @@ from ..utilities import (
     has_full_data_access_or_err,
     BaseUser,
     AccessType,
+    get_current_active_user,
 )
 
 from ..database import get_session, local_session
@@ -25,10 +26,12 @@ class UserAccountRequest(BaseModel):
     """The user account creation request object."""
 
     # The name can be set by the user
-    name: Union[str, None] = None
+    name: str | None = None
     access_type: AccessType
     # The email value must be unique across all accounts and provided.
     email: str
+    # The username can be set by the user
+    username: str | None = None
     account_disabled: bool = False
 
 
@@ -40,11 +43,13 @@ class UserAccount(BaseModel):
     name: str | None = None
     inst_id: str
     access_type: AccessType
-    # The email value must be unique across all accounts. This is also the username.
+    # The email value must be unique across all accounts.
     email: str
+    # The username value must be unique across all accounts.
+    username: str | None = None
     account_disabled: bool = False
     # Date in form YYMMDD
-    deletion_request: Union[str, None] = None
+    deletion_request: str | None = None
 
 
 # User account related operations.
@@ -53,7 +58,7 @@ class UserAccount(BaseModel):
 @router.get("/{inst_id}/users", response_model=list[UserAccount])
 def read_inst_users(
     inst_id: str,
-    current_user: Annotated[BaseUser, Depends()],
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
 ) -> Any:
     """Returns all users attributed to a given institution and account type.
@@ -76,7 +81,7 @@ def read_inst_users(
 def create_new_user(
     inst_id: str,
     user_account_request: UserAccountRequest,
-    current_user: Annotated[BaseUser, Depends()],
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
 ) -> Any:
     """Create a new user for a given institution.
@@ -108,6 +113,7 @@ def create_new_user(
         "inst_id": inst_id,
         "access_type": user_account_request.access_type,
         "email": user_account_request.email,
+        "username": user_account_request.username,
     }
 
 
@@ -115,7 +121,7 @@ def create_new_user(
 def read_inst_user(
     inst_id: str,
     user_id: str,
-    current_user: Annotated[BaseUser, Depends()],
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
 ) -> Any:
     """Returns info on a specific user.
@@ -135,8 +141,9 @@ def read_inst_user(
         "user_id": user_id,
         "name": "",
         "inst_id": inst_id,
-        "access_type": AccessType.DATAKINDER,
+        "access_type": "DATAKINDER",
         "email": "",
+        "username": "",
         "account_disabled": False,
         "deletion_request": None,
     }

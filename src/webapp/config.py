@@ -4,37 +4,21 @@
 import os
 from dotenv import load_dotenv
 
-
-# Setup function to get environment variables. Should be called at startup time.
-def startup_env_vars():
-    env_file = os.environ.get("ENV_FILE_PATH")
-    if not env_file:
-        raise ValueError(
-            "Missing .env filepath variable. Required. Set ENV_FILE_PATH to full path of .env file."
-        )
-    load_dotenv(env_file)
-    env = os.environ.get("ENV")
-    if not env:
-        raise ValueError(
-            "Missing ENV environment variable. Required. Can be PROD, STAGING, DEV, or LOCAL."
-        )
-    if env not in ["PROD", "STAGING", "DEV", "LOCAL"]:
-        raise ValueError(
-            "ENV environment variable not one of: PROD, STAGING, DEV, or LOCAL."
-        )
-
-
 env_vars = {
-    "ENV": os.environ.get("ENV"),
+    "ENV": "",
+    "SECRET_KEY": "",
+    "ALGORITHM": "",
+    "ACCESS_TOKEN_EXPIRE_MINUTES": "",
+    "ACCESS_TOKEN_EXPIRE_MINUTES_DEFAULT": "",
 }
 
 # The INSTANCE_HOST is the private IP of CLoudSQL instance e.g. '127.0.0.1' ('172.17.0.1' if deployed to GAE Flex)
 engine_vars = {
-    "INSTANCE_HOST": os.environ.get("INSTANCE_HOST"),
-    "DB_USER": os.environ.get("DB_USER"),
-    "DB_PASS": os.environ.get("DB_PASS"),
-    "DB_NAME": os.environ.get("DB_NAME"),
-    "DB_PORT": os.environ.get("DB_PORT"),
+    "INSTANCE_HOST": "",
+    "DB_USER": "",
+    "DB_PASS": "",
+    "DB_NAME": "",
+    "DB_PORT": "",
 }
 
 # For deployments that connect directly to a Cloud SQL instance without
@@ -44,7 +28,59 @@ engine_vars = {
 # cert: e.g. '/path/to/client-cert.pem'
 # key: e.g. '/path/to/client-key.pem'
 ssl_env_vars = {
-    "DB_ROOT_CERT": os.environ.get("DB_ROOT_CERT"),
-    "DB_CERT": os.environ.get("DB_CERT"),
-    "DB_KEY": os.environ.get("DB_KEY"),
+    "DB_ROOT_CERT": "",
+    "DB_CERT": "",
+    "DB_KEY": "",
 }
+
+
+# Setup function to get environment variables. Should be called at startup time.
+def startup_env_vars():
+    env_file = os.environ.get("ENV_FILE_PATH")
+    if not env_file:
+        raise ValueError(
+            "Missing .env filepath variable. Required. Set ENV_FILE_PATH to full path of .env file."
+        )
+    load_dotenv(env_file)
+    global env_vars
+    for name in env_vars:
+        env_var = os.environ.get(name)
+        if not env_var:
+            raise ValueError(
+                "Missing " + name + " value missing. Required environment variable."
+            )
+        if name == "ENV" and env_var not in ["PROD", "STAGING", "DEV", "LOCAL"]:
+            raise ValueError(
+                "ENV environment variable not one of: PROD, STAGING, DEV, or LOCAL."
+            )
+        if (
+            name == "ACCESS_TOKEN_EXPIRE_MINUTES"
+            or name == "ACCESS_TOKEN_EXPIRE_MINUTES"
+        ) and not env_var.isdigit():
+            raise ValueError(
+                "ACCESS_TOKEN_EXPIRE_MINUTES and ACCESS_TOKEN_EXPIRE_MINUTES environment variables must be an int."
+            )
+        env_vars[name] = env_var
+
+
+# Setup function to get db environment variables. Should be called at db startup time.
+def setup_database_vars():
+    global engine_vars
+    for name in engine_vars:
+        env_var = os.environ.get(name)
+        if not env_var:
+            raise ValueError("Missing " + name + " value missing. Required.")
+        engine_vars[name] = env_var
+
+    if env_vars["ENV"] == "LOCAL":
+        # LOCAL env doesn't require ssl vars
+        return
+
+    global ssl_env_vars
+    for name in ssl_env_vars:
+        env_var = os.environ.get(name)
+        if not os.environ.get(name):
+            raise ValueError(
+                "Missing " + name + " value missing. Required for SSL connection."
+            )
+        ssl_env_vars[name] = env_var

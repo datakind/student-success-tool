@@ -10,10 +10,7 @@ from sqlalchemy.pool import StaticPool
 import uuid
 import os
 from ..test_helper import (
-    USR_STR,
     DATA_OBJ,
-    VIEWER_STR,
-    DATAKINDER_STR,
     BATCH_REQUEST,
     USR,
     USER_VALID_INST_UUID,
@@ -29,7 +26,7 @@ from ..database import (
     get_session,
     local_session,
 )
-from ..utilities import uuid_to_str
+from ..utilities import uuid_to_str, get_current_active_user
 from .data import router, DataOverview, DataInfo, BatchCreationRequest
 from collections import Counter
 
@@ -177,8 +174,12 @@ def client_fixture(session: sqlalchemy.orm.Session):
     def get_session_override():
         return session
 
+    def get_current_active_user_override():
+        return USR
+
     app.include_router(router)
     app.dependency_overrides[get_session] = get_session_override
+    app.dependency_overrides[get_current_active_user] = get_current_active_user_override
 
     client = TestClient(app)
     yield client
@@ -187,9 +188,7 @@ def client_fixture(session: sqlalchemy.orm.Session):
 
 def test_read_inst_all_input_files(client: TestClient):
     """Test GET /institutions/<uuid>/input."""
-    response = client.get(
-        "/institutions/" + uuid_to_str(UUID_INVALID) + "/input" + USR_STR
-    )
+    response = client.get("/institutions/" + uuid_to_str(UUID_INVALID) + "/input")
 
     assert str(response) == "<Response [401 Unauthorized]>"
     assert (
@@ -198,7 +197,7 @@ def test_read_inst_all_input_files(client: TestClient):
     )
     # Authorized.
     response = client.get(
-        "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + "/input" + USR_STR
+        "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + "/input"
     )
     assert response.status_code == 200
     assert same_orderless(
@@ -259,9 +258,7 @@ def test_read_inst_all_input_files(client: TestClient):
 
 def test_read_inst_all_output_files(client: TestClient):
     """Test GET /institutions/<uuid>/output."""
-    response = client.get(
-        "/institutions/" + uuid_to_str(UUID_INVALID) + "/output" + USR_STR
-    )
+    response = client.get("/institutions/" + uuid_to_str(UUID_INVALID) + "/output")
 
     assert str(response) == "<Response [401 Unauthorized]>"
     assert (
@@ -270,7 +267,7 @@ def test_read_inst_all_output_files(client: TestClient):
     )
     # Authorized.
     response = client.get(
-        "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + "/output" + USR_STR
+        "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + "/output"
     )
     assert response.status_code == 200
     assert same_orderless(
@@ -321,7 +318,6 @@ def test_read_batch_info(client: TestClient):
         + uuid_to_str(UUID_INVALID)
         + "/batch/"
         + uuid_to_str(BATCH_UUID)
-        + USR_STR
     )
 
     assert str(response) == "<Response [401 Unauthorized]>"
@@ -335,7 +331,6 @@ def test_read_batch_info(client: TestClient):
         + uuid_to_str(USER_VALID_INST_UUID)
         + "/batch/"
         + uuid_to_str(BATCH_UUID)
-        + USR_STR
     )
     assert response.status_code == 200
     assert same_orderless(
@@ -401,7 +396,6 @@ def test_read_file_info(client: TestClient):
         + uuid_to_str(UUID_INVALID)
         + "/file/"
         + uuid_to_str(FILE_UUID_1)
-        + USR_STR
     )
 
     assert str(response) == "<Response [401 Unauthorized]>"
@@ -415,7 +409,6 @@ def test_read_file_info(client: TestClient):
         + uuid_to_str(USER_VALID_INST_UUID)
         + "/file/"
         + uuid_to_str(FILE_UUID_1)
-        + USR_STR
     )
     assert response.status_code == 200
     assert same_file_orderless(
@@ -441,7 +434,7 @@ def test_read_file_info(client: TestClient):
 def test_create_batch(client: TestClient):
     """Test POST /institutions/<uuid>/batch."""
     response = client.post(
-        "/institutions/" + uuid_to_str(UUID_INVALID) + "/batch" + USR_STR,
+        "/institutions/" + uuid_to_str(UUID_INVALID) + "/batch",
         json={"name": "batch_name_foo"},
     )
     assert str(response) == "<Response [401 Unauthorized]>"
@@ -451,7 +444,7 @@ def test_create_batch(client: TestClient):
     )
     # Authorized.
     response = client.post(
-        "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + "/batch" + USR_STR,
+        "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + "/batch",
         json=BATCH_REQUEST,
     )
     assert response.status_code == 200
@@ -470,8 +463,7 @@ def test_update_batch(client: TestClient):
         "/institutions/"
         + uuid_to_str(UUID_INVALID)
         + "/batch/"
-        + uuid_to_str(BATCH_UUID)
-        + USR_STR,
+        + uuid_to_str(BATCH_UUID),
         json={"name": "batch_name_updated_foo"},
     )
     assert str(response) == "<Response [401 Unauthorized]>"
@@ -484,8 +476,7 @@ def test_update_batch(client: TestClient):
         "/institutions/"
         + uuid_to_str(USER_VALID_INST_UUID)
         + "/batch/"
-        + uuid_to_str(BATCH_UUID)
-        + USR_STR,
+        + uuid_to_str(BATCH_UUID),
         json={
             "name": "batch_name_updated_foo",
             "completed": "True",

@@ -33,7 +33,7 @@ db_engine = None
 # fields. So we can't use mapped_column in string cases.
 VAR_CHAR_LENGTH = 30
 
-# Constants for the local
+# Constants for the local env
 LOCAL_INST_UUID = uuid.UUID("14c81c50-935e-4151-8561-c2fc3bdabc0f")
 LOCAL_USER_UUID = uuid.UUID("f21a3e53-c967-404e-91fd-f657cb922c39")
 LOCAL_USER_EMAIL = "tester@datakind.org"
@@ -359,15 +359,7 @@ def connect_tcp_socket(
 def init_connection_pool() -> (
     sqlalchemy.engine.Engine
 ):  # should this be sqlalchemy.engine.base.Engine
-    for elem_name, value in engine_vars.items():
-        if not value:
-            raise ValueError("Missing " + elem_name + " value missing. Required.")
-
-    for elem_name, value in ssl_env_vars.items():
-        if not value:
-            raise ValueError(
-                "Missing " + elem_name + " value missing. Required for SSL connection."
-            )
+    setup_database_vars()
     ssl_args = {
         "ssl_ca": ssl_env_vars["DB_ROOT_CERT"],
         "ssl_cert": ssl_env_vars["DB_CERT"],
