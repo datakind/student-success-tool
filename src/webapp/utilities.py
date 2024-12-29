@@ -1,7 +1,8 @@
 """Helper functions that may be used across multiple API router subpackages.
 """
 
-from typing import Union, Annotated
+from typing import Annotated
+# the following needed for python pre 3.11
 from strenum import StrEnum
 import uuid
 import os

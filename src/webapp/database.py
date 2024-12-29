@@ -20,8 +20,7 @@ from sqlalchemy.orm import sessionmaker, Session, relationship, mapped_column, M
 from sqlalchemy.sql import func
 from sqlalchemy.pool import StaticPool
 
-from .config import env_vars, engine_vars, ssl_env_vars
-
+from .config import env_vars, engine_vars, ssl_env_vars, setup_database_vars
 from .authn import get_password_hash
 
 Base = declarative_base()
