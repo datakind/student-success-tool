@@ -165,8 +165,7 @@ if evaluate_model_bias := (training_params.get("split_col") is not None):
         split_col,
     ] + training_params["exclude_cols"]
     df_features = df.drop(columns=non_feature_cols)
-#     train_df[prediction_col] = model.predict(features)
-#     train_df[risk_score_col] = model.predict_proba(features)[:, 1]
+# TODO: figure this out
 # else:
 #     train_df = extract_training_data_from_model(experiment_id)
 #     train_df[prediction_col] = model.predict(train_df)
