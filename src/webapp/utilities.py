@@ -2,7 +2,7 @@
 """
 
 from typing import Union, Annotated
-from enum import StrEnum
+from strenum import StrEnum
 import uuid
 import os
 import jwt

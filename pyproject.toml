@@ -39,6 +39,7 @@ dependencies = [
     "bcrypt>=4.2.0",
     "crypto>=1.4.1",
     "python-dotenv>=1.0.1",
+    "strenum>=0.4.15",
 ]
 
 [project.urls]
