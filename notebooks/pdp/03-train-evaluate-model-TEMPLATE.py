@@ -23,9 +23,10 @@
 
 # COMMAND ----------
 
-# install dependencies, most of which should come through our 1st-party SST package
+# install (minimal!) extra dependencies not provided by databricks runtime
 # %pip install "student-success-tool==0.1.0"
-# %pip install git+https://github.com/datakind/student-success-tool.git@develop
+# %pip install git+https://github.com/datakind/student-success-tool.git@develop --no-deps
+# %pip install pandera
 
 # COMMAND ----------
 
