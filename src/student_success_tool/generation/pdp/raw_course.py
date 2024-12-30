@@ -8,7 +8,7 @@ from ...analysis.pdp import utils
 
 class Provider(BaseProvider):
     def raw_course_record(
-        self, cohort_record: t.Optional[dict] = None, normalize_col_names: bool = False
+        self, cohort_record: t.Optional[dict] = None, normalize_col_names: bool = False, institution_id: int = 12345
     ) -> dict[str, object]:
         # use existing values where records overlap
         if cohort_record is not None:
@@ -18,7 +18,6 @@ class Provider(BaseProvider):
             race = cr.get("race", cr["Race"])
             ethnicity = cr.get("ethnicity", cr["Ethnicity"])
             gender = cr.get("gender", cr["Gender"])
-            institution_id = cr.get("institution_id", cr["Institution ID"])
             cohort = cr.get("cohort", cr["Cohort"])
             cohort_term = cr.get("cohort_term", cr["Cohort Term"])
             _has_enrollment_other_inst: bool = (
@@ -34,7 +33,6 @@ class Provider(BaseProvider):
             race = self.race()
             ethnicity = self.ethnicity()
             gender = self.gender()
-            institution_id = self.institution_id()
             cohort = self.cohort()
             cohort_term = self.cohort_term()
             _has_enrollment_other_inst: bool = self.generator.random.random() < 0.25  # type: ignore
@@ -107,9 +105,6 @@ class Provider(BaseProvider):
         return record
 
     def student_guid(self) -> str:
-        return self.numerify("#####!")  # type: ignore
-
-    def institution_id(self) -> str:
         return self.numerify("#####!")  # type: ignore
 
     def student_age(self) -> str:
