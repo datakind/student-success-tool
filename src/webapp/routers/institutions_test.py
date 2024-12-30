@@ -9,9 +9,7 @@ import sqlalchemy
 from sqlalchemy.pool import StaticPool
 import uuid
 import os
-import unittest
 from unittest import mock
-from unittest.mock import Mock, patch
 
 from . import institutions
 from ..test_helper import (
@@ -24,6 +22,7 @@ from ..test_helper import (
 from ..utilities import uuid_to_str, get_current_active_user
 from ..main import app
 from ..database import InstTable, Base, get_session, local_session
+from ..gcsutil import StorageControl
 
 DATETIME_TESTING = datetime.today()
 UUID_1 = uuid.uuid4()
@@ -31,6 +30,8 @@ UUID_2 = uuid.uuid4()
 USER_UUID = uuid.UUID("5301a352-c03d-4a39-beec-16c5668c4700")
 USER_VALID_INST_UUID = uuid.UUID("1d7c75c3-3eda-4294-9c66-75ea8af97b55")
 INVALID_UUID = uuid.UUID("27316b89-5e04-474a-9ea4-97beaf72c9af")
+
+MOCK_STORAGE = mock.AsyncMock()
 
 
 @pytest.fixture(name="session")
@@ -81,46 +82,38 @@ def client_fixture(session: sqlalchemy.orm.Session):
     def get_current_active_user_override():
         return USR
 
+    def storage_control_override():
+        return MOCK_STORAGE
+
     app.include_router(institutions.router)
     app.dependency_overrides[get_session] = get_session_override
     app.dependency_overrides[get_current_active_user] = get_current_active_user_override
+    app.dependency_overrides[StorageControl] = storage_control_override
 
     client = TestClient(app)
     yield client
     app.dependency_overrides.clear()
 
 
-# The following uses the Datakind user
-@pytest.fixture(name="client_datakind_user")
-def client_fixture_datakind_user(session: sqlalchemy.orm.Session):
+@pytest.fixture(name="datakinder_client")
+def datakinder_client_fixture(session: sqlalchemy.orm.Session):
     def get_session_override():
         return session
 
     def get_current_active_user_override():
         return DATAKINDER
 
+    def storage_control_override():
+        return MOCK_STORAGE
+
     app.include_router(institutions.router)
     app.dependency_overrides[get_session] = get_session_override
     app.dependency_overrides[get_current_active_user] = get_current_active_user_override
+    app.dependency_overrides[StorageControl] = storage_control_override
 
     client = TestClient(app)
     yield client
     app.dependency_overrides.clear()
-
-
-"""
-@pytest.fixture(name="storage")
-def storage_fixture():
-    def get_session_override():
-        return session
-
-    app.include_router(institutions.router)
-    app.dependency_overrides[get_session] = get_session_override
-
-    client = TestClient(app)
-    yield client
-    app.dependency_overrides.clear()
-"""
 
 
 def test_read_all_inst(client: TestClient):
@@ -135,10 +128,10 @@ def test_read_all_inst(client: TestClient):
     )
 
 
-def test_read_all_inst_datakinder(client_datakind_user: TestClient):
+def test_read_all_inst_datakinder(datakinder_client: TestClient):
     """Test GET /institutions."""
     # Authorized.
-    response = client_datakind_user.get("/institutions")
+    response = datakinder_client.get("/institutions")
     assert response.status_code == 200
     assert response.json() == [
         {
@@ -196,34 +189,25 @@ def test_read_inst(client: TestClient):
     assert response.json() == INSTITUTION_OBJ
 
 
-# XXX figure out how to mock the gcs call
-# @patch.object(institutions, "create_bucket", Mock(return_value=None))
-@mock.patch(institutions.__name__ + ".create_bucket", Mock(return_value=None))
-def test_create_inst(mock_create_bucket, client):
+def test_create_inst(client):
     # Test POST /institutions. For various user access types.
     os.environ["ENV"] = "DEV"
-    assert "DEV" == os.environ.get("ENV")
-    assert institutions.create_bucket() == None
-    print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-    mock_gcs_client = mock_create_bucket.Client.return_value
-    mock_bucket = Mock()
-    mock_bucket.blob.return_value.download_as_string.return_value = (
-        "teresa teng".encode("utf-8")
-    )
-    mock_gcs_client.bucket.return_value = mock_bucket
-
     # Unauthorized.
     response = client.post("/institutions/", json=INSTITUTION_REQ)
     assert str(response) == "<Response [401 Unauthorized]>"
     assert response.text == '{"detail":"Not authorized to create an institution."}'
 
+
+def test_create_inst(datakinder_client):
+    # Test POST /institutions. For various user access types.
+    os.environ["ENV"] = "DEV"
+    assert "DEV" == os.environ.get("ENV")
+    MOCK_STORAGE.create_bucket.return_value = None
+    MOCK_STORAGE.create_folders.return_value = None
     # Authorized.
-    """
-    The following won't work until we can mock out the gcs call.
-    response = client.post("/institutions/" + DATAKINDER_STR, json=INSTITUTION_REQ)
+    response = datakinder_client.post("/institutions/", json=INSTITUTION_REQ)
     assert response.status_code == 200
     assert response.json()["name"] == "foobar school"
     assert response.json()["description"] == "description of school"
     assert response.json()["retention_days"] == 1
     assert response.json()["inst_id"] != None
-    """

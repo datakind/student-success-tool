@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 import uuid
 from google.cloud import storage
+from google.cloud.storage import Client
 
 from ..utilities import (
     has_access_to_inst_or_err,
@@ -20,7 +21,7 @@ from ..utilities import (
     get_current_active_user,
 )
 
-from ..gcsutil import generate_upload_signed_url, create_bucket, create_folders
+from ..gcsutil import StorageControl
 from ..database import (
     get_session,
     InstTable,
@@ -108,6 +109,7 @@ def create_institution(
     req: InstitutionCreationRequest,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
+    storage_control: Annotated[StorageControl, Depends(StorageControl)],
 ) -> Any:
     """Create a new institution.
 
@@ -155,14 +157,14 @@ def create_institution(
         # Create a storage bucket for it
         bucket_name = prepend_env_prefix(str(query_result[0][0].id))
         try:
-            create_bucket(bucket_name)
+            storage_control.create_bucket(bucket_name)
         except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Storage bucket creation failed, storage already exists.",
             )
         # Create the initial folders:
-        create_folders(bucket_name, DEFAULT_FOLDERS)
+        storage_control.create_folders(bucket_name, DEFAULT_FOLDERS)
     if len(query_result) > 1:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -256,7 +258,9 @@ def read_inst_id(
 
 @router.get("/institutions/{inst_id}/upload-url", response_model=str)
 def get_upload_url(
-    inst_id: str, current_user: Annotated[BaseUser, Depends(get_current_active_user)]
+    inst_id: str,
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
+    storage_control: Annotated[StorageControl, Depends(StorageControl)],
 ) -> Any:
     """Returns a signed URL for uploading data to a specific institution.
 
@@ -264,4 +268,6 @@ def get_upload_url(
         current_user: the user making the request.
     """
     has_access_to_inst_or_err(inst_id, current_user)
-    return generate_upload_signed_url("local-upload-test", f"{inst_id}/test.csv")
+    return storage_control.generate_upload_signed_url(
+        "local-upload-test", f"{inst_id}/test.csv"
+    )

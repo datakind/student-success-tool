@@ -24,7 +24,7 @@ from ..utilities import (
 
 from ..database import get_session, local_session, BatchTable, FileTable
 
-from ..gcsutil import list_blobs_in_folder, download_file
+from ..gcsutil import StorageControl
 
 router = APIRouter(
     prefix="/institutions",
@@ -695,7 +695,7 @@ def download_inst_file(
 
 @router.post("/{inst_id}/input/uploadfile")
 def upload_file(
-    inst_id: int, current_user: Annotated[BaseUser, Depends(get_current_active_user)]
+    inst_id: str, current_user: Annotated[BaseUser, Depends(get_current_active_user)]
 ) -> Any:
     """Add new data from local filesystem.
 
@@ -711,7 +711,7 @@ def upload_file(
 
 @router.post("/{inst_id}/input/pdp_sftp")
 def pull_pdp_sftp(
-    inst_id: int, current_user: Annotated[BaseUser, Depends(get_current_active_user)]
+    inst_id: str, current_user: Annotated[BaseUser, Depends(get_current_active_user)]
 ) -> Any:
     """Add new data from PDP directly.
 

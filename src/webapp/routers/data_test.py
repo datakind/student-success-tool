@@ -9,6 +9,7 @@ import sqlalchemy
 from sqlalchemy.pool import StaticPool
 import uuid
 import os
+from unittest import mock
 from ..test_helper import (
     DATA_OBJ,
     BATCH_REQUEST,
@@ -29,6 +30,9 @@ from ..database import (
 from ..utilities import uuid_to_str, get_current_active_user
 from .data import router, DataOverview, DataInfo, BatchCreationRequest
 from collections import Counter
+from ..gcsutil import StorageControl
+
+MOCK_STORAGE = mock.AsyncMock()
 
 DATETIME_TESTING = datetime(2024, 12, 24, 20, 22, 20, 132022)
 UUID_2 = uuid.UUID("9bcbc782-2e71-4441-afa2-7a311024a5ec")
@@ -177,9 +181,13 @@ def client_fixture(session: sqlalchemy.orm.Session):
     def get_current_active_user_override():
         return USR
 
+    def storage_control_override():
+        return MOCK_STORAGE
+
     app.include_router(router)
     app.dependency_overrides[get_session] = get_session_override
     app.dependency_overrides[get_current_active_user] = get_current_active_user_override
+    app.dependency_overrides[StorageControl] = storage_control_override
 
     client = TestClient(app)
     yield client

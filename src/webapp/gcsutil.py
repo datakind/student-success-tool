@@ -2,168 +2,185 @@
 """
 
 import datetime
+from pydantic import BaseModel
 
 from google.cloud import storage, storage_control_v2
 from google.cloud.storage import Client
+from google.cloud.storage_control_v2 import StorageControlClient
 from typing import Any
 
 
-def generate_upload_signed_url(bucket_name: str, blob_name: str) -> str:
-    """Generates a v4 signed URL for uploading a blob using HTTP PUT."""
+# Wrapping the usages in a class makes it easier to unit test via mocks.
+class StorageControl(BaseModel):
+    """Object to manage interfacing with GCS."""
 
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-    if not bucket.exists():
-        raise ValueError("Storage bucket not found.")
-    blob = bucket.blob(blob_name)
-    if not blob.exists():
-        raise ValueError("Blob not found.")
+    class Config:
+        arbitrary_types_allowed = True
 
-    url = blob.generate_signed_url(
-        version="v4",
-        # This URL is valid for 15 minutes
-        expiration=datetime.timedelta(minutes=15),
-        # Allow PUT requests using this URL.
-        method="PUT",
-        content_type="text/csv",
-    )
+    # The name should be unique amongst all other institutions.
+    storage_client: Client | None = None
+    storage_folder_client: StorageControlClient | None = None
 
-    return url
+    def __init__(self):
+        self.storage_client = storage.Client()
+        self.storage_folder_client = storage_control_v2.StorageControlClient()
 
+    # For some reason the storage client used for buckets and folder manipulation are different.
+    def get_storage_client(self) -> Client:
+        if not self.storage_client:
+            self.storage_client = storage.Client()
+        return self.storage_client
 
-def generate_download_signed_url(bucket_name: str, blob_name: str) -> str:
-    """Generates a v4 signed URL for uploading a blob using HTTP PUT."""
+    def get_storage_folder_client(self) -> StorageControlClient:
+        if not self.storage_folder_client:
+            self.storage_folder_client = storage_control_v2.StorageControlClient()
+        return self.storage_folder_client
 
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-    if not bucket.exists():
-        raise ValueError("Storage bucket not found.")
-    blob = bucket.blob(blob_name)
-    if not blob.exists():
-        raise ValueError("Blob not found.")
+    def generate_upload_signed_url(self, bucket_name: str, blob_name: str) -> str:
+        """Generates a v4 signed URL for uploading a blob using HTTP PUT."""
 
-    url = blob.generate_signed_url(
-        version="v4",
-        # This URL is valid for 15 minutes
-        expiration=datetime.timedelta(minutes=15),
-        # Allow GET requests using this URL.
-        method="GET",
-        content_type="text/csv",
-    )
+        bucket = self.storage_client.bucket(bucket_name)
+        if not bucket.exists():
+            raise ValueError("Storage bucket not found.")
+        blob = bucket.blob(blob_name)
+        if not blob.exists():
+            raise ValueError("Blob not found.")
 
-    return url
-
-
-def create_bucket(bucket_name: str) -> Any:
-    """
-    Create a new bucket in the US region with the standard storage
-    class.
-    """
-    client = storage.Client()
-    bucket = client.bucket(bucket_name)
-    if bucket.exists():
-        raise ValueError(bucket_name + " already exists. Creation failed.")
-    bucket.storage_class = "STANDARD"
-    new_bucket = client.create_bucket(bucket, location="us")
-    return new_bucket
-
-
-def create_folders(bucket_name: str, folder_names: list[str]) -> None:
-    """
-    Create a list of new folders in a GCS bucket.
-    """
-
-    storage_control_client = storage_control_v2.StorageControlClient()
-    # The storage bucket path uses the global access pattern, in which the "_"
-    # denotes this bucket exists in the global namespace.
-    project_path = storage_control_client.common_project_path("_")
-    bucket_path = f"{project_path}/buckets/{bucket_name}"
-
-    for f in folder_names:
-        request = storage_control_v2.CreateFolderRequest(
-            parent=bucket_path,
-            folder_id=f,
+        url = blob.generate_signed_url(
+            version="v4",
+            # This URL is valid for 15 minutes
+            expiration=datetime.timedelta(minutes=15),
+            # Allow PUT requests using this URL.
+            method="PUT",
+            content_type="text/csv",
         )
-        response = storage_control_client.create_folder(request=request)
 
+        return url
 
-def list_folders(bucket_name: str, folder_names: list[str]) -> None:
-    """
-    Create a list of new folders in a GCS bucket.
-    """
+    def generate_download_signed_url(self, bucket_name: str, blob_name: str) -> str:
+        """Generates a v4 signed URL for uploading a blob using HTTP PUT."""
 
-    storage_control_client = storage_control_v2.StorageControlClient()
-    # The storage bucket path uses the global access pattern, in which the "_"
-    # denotes this bucket exists in the global namespace.
-    project_path = storage_control_client.common_project_path("_")
-    bucket_path = f"{project_path}/buckets/{bucket_name}"
+        bucket = self.storage_client.bucket(bucket_name)
+        if not bucket.exists():
+            raise ValueError("Storage bucket not found.")
+        blob = bucket.blob(blob_name)
+        if not blob.exists():
+            raise ValueError("Blob not found.")
 
-    for f in folder_names:
-        request = storage_control_v2.CreateFolderRequest(
-            parent=bucket_path,
-            folder_id=f,
+        url = blob.generate_signed_url(
+            version="v4",
+            # This URL is valid for 15 minutes
+            expiration=datetime.timedelta(minutes=15),
+            # Allow GET requests using this URL.
+            method="GET",
+            content_type="text/csv",
         )
-        response = storage_control_client.create_folder(request=request)
 
+        return url
 
-def list_blobs_in_folder(bucket_name: str, prefix: str, delimiter=None) -> list[str]:
-    """Lists all the blobs in the bucket that begin with the prefix.
+    def create_bucket(self, bucket_name: str) -> None:
+        """
+        Create a new bucket in the US region with the standard storage
+        class.
+        """
+        bucket = self.storage_client.bucket(bucket_name)
+        if bucket.exists():
+            raise ValueError(bucket_name + " already exists. Creation failed.")
+        bucket.storage_class = "STANDARD"
+        new_bucket = client.create_bucket(bucket, location="us")
 
-    This can be used to list all blobs in a "folder", e.g. "public/".
+    def create_folders(self, bucket_name: str, folder_names: list[str]) -> None:
+        """
+        Create a list of new folders in a GCS bucket.
+        """
+        # The storage bucket path uses the global access pattern, in which the "_"
+        # denotes this bucket exists in the global namespace.
+        project_path = self.storage_folder_client.common_project_path("_")
+        bucket_path = f"{project_path}/buckets/{bucket_name}"
 
-    The delimiter argument can be used to restrict the results to only the
-    "files" in the given "folder". Without the delimiter, the entire tree under
-    the prefix is returned. For example, given these blobs:
+        for f in folder_names:
+            request = storage_control_v2.CreateFolderRequest(
+                parent=bucket_path,
+                folder_id=f,
+            )
+            response = self.storage_folder_client.create_folder(request=request)
 
-        a/1.txt
-        a/b/2.txt
+    # For this function specifically, use get_storage_folder_client() to get the client.
+    def list_folders(self, bucket_name: str, folder_names: list[str]) -> None:
+        """
+        Create a list of new folders in a GCS bucket.
+        """
+        # The storage bucket path uses the global access pattern, in which the "_"
+        # denotes this bucket exists in the global namespace.
+        project_path = self.storage_folder_client.common_project_path("_")
+        bucket_path = f"{project_path}/buckets/{bucket_name}"
 
-    If you specify prefix ='a/', without a delimiter, you'll get back:
+        for f in folder_names:
+            request = storage_control_v2.CreateFolderRequest(
+                parent=bucket_path,
+                folder_id=f,
+            )
+            response = self.storage_folder_client.create_folder(request=request)
 
-        a/1.txt
-        a/b/2.txt
+    def list_blobs_in_folder(
+        self, bucket_name: str, prefix: str, delimiter=None
+    ) -> list[str]:
+        """Lists all the blobs in the bucket that begin with the prefix.
 
-    However, if you specify prefix='a/' and delimiter='/', you'll get back
-    only the file directly under 'a/':
+        This can be used to list all blobs in a "folder", e.g. "public/".
 
-        a/1.txt
+        The delimiter argument can be used to restrict the results to only the
+        "files" in the given "folder". Without the delimiter, the entire tree under
+        the prefix is returned. For example, given these blobs:
 
-    As part of the response, you'll also get back a blobs.prefixes entity
-    that lists the "subfolders" under `a/`:
+            a/1.txt
+            a/b/2.txt
 
-        a/b/
-    """
+        If you specify prefix ='a/', without a delimiter, you'll get back:
 
-    storage_client = storage.Client()
+            a/1.txt
+            a/b/2.txt
 
-    # Note: Client.list_blobs requires at least package version 1.17.0.
-    blobs = storage_client.list_blobs(bucket_name, prefix=prefix, delimiter=delimiter)
+        However, if you specify prefix='a/' and delimiter='/', you'll get back
+        only the file directly under 'a/':
 
-    # Note: The call returns a response only when the iterator is consumed.
-    res = []
-    for blob in blobs:
-        res.append(blob.name)
+            a/1.txt
 
-    if delimiter:
-        for prefix in blobs.prefixes:
-            res.append(prefix)
+        As part of the response, you'll also get back a blobs.prefixes entity
+        that lists the "subfolders" under `a/`:
 
+            a/b/
+        """
 
-def download_file(bucket_name: str, file_name: str, destination_file_name: str):
-    """Downloads a blob from the bucket."""
+        # Note: Client.list_blobs requires at least package version 1.17.0.
+        blobs = self.storage_client.list_blobs(
+            bucket_name, prefix=prefix, delimiter=delimiter
+        )
 
-    # The path to which the file should be downloaded
-    # destination_file_name = "local/path/to/file"
+        # Note: The call returns a response only when the iterator is consumed.
+        res = []
+        for blob in blobs:
+            res.append(blob.name)
 
-    client = storage.Client()
+        if delimiter:
+            for prefix in blobs.prefixes:
+                res.append(prefix)
 
-    bucket = client.bucket(bucket_name)
-    if not bucket.exists():
-        raise ValueError("Storage bucket not found.")
+    def download_file(
+        self, bucket_name: str, file_name: str, destination_file_name: str
+    ):
+        """Downloads a blob from the bucket."""
 
-    # Construct a client side representation of a blob.
-    # Note `Bucket.blob` differs from `Bucket.get_blob` as it doesn't retrieve
-    # any content from Google Cloud Storage. As we don't need additional data,
-    # using `Bucket.blob` is preferred here.
-    blob = bucket.blob(file_name)
-    blob.download_to_filename(destination_file_name)
+        # The path to which the file should be downloaded
+        # destination_file_name = "local/path/to/file"
+
+        bucket = self.storage_client.bucket(bucket_name)
+        if not bucket.exists():
+            raise ValueError("Storage bucket not found.")
+
+        # Construct a client side representation of a blob.
+        # Note `Bucket.blob` differs from `Bucket.get_blob` as it doesn't retrieve
+        # any content from Google Cloud Storage. As we don't need additional data,
+        # using `Bucket.blob` is preferred here.
+        blob = bucket.blob(file_name)
+        blob.download_to_filename(destination_file_name)

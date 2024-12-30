@@ -20,7 +20,7 @@ For all of the following, be in the repo root folder (`student-success-tool/`).
 
 Spin up the app locally:
 
-1. `fastapi dev src/webapp/main.p`
+1. `fastapi dev src/webapp/main.py`
 1. Go to `http://127.0.0.1:8000/docs`
 1. Hit the `Authorize` button on the top right and enter the tester credentials:
 
