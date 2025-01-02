@@ -1,9 +1,9 @@
 import typing as t
 from typing import Iterator
+from shap import KernelExplainer
 
 import numpy as np
 import pandas as pd
-from shap import KernelExplainer
 
 def select_top_features_for_display(
     features: pd.DataFrame,
@@ -67,9 +67,13 @@ def select_top_features_for_display(
     return pd.DataFrame(top_features_info)
 
 
-def calculate_shap_values(iterator: Iterator[pd.DataFrame], *, student_id_col: str,
-                model_features: list[str], explainer: KernelExplainer,
-                mode: pd.Series) -> Iterator[pd.DataFrame]:
+def calculate_shap_values(
+    iterator: Iterator[pd.DataFrame], *, 
+    student_id_col: str,
+    model_features: list[str], 
+    explainer: KernelExplainer,
+    mode: pd.Series
+) -> Iterator[pd.DataFrame]:
     """
     SHAP is computationally expensive, so this function enables parallelization,
     by calculating SHAP values over an iterator of DataFrames. Sparks' repartition
