@@ -1,8 +1,9 @@
 import typing as t
+from typing import Iterator
 
 import numpy as np
 import pandas as pd
-
+from shap import KernelExplainer
 
 def select_top_features_for_display(
     features: pd.DataFrame,
@@ -64,3 +65,45 @@ def select_top_features_for_display(
                 }
             )
     return pd.DataFrame(top_features_info)
+
+
+def calculate_shap_values(iterator: Iterator[pd.DataFrame], *, student_id_col: str,
+                model_features: list[str], explainer: KernelExplainer,
+                mode: pd.Series) -> Iterator[pd.DataFrame]:
+    """
+    SHAP is computationally expensive, so this function enables parallelization,
+    by calculating SHAP values over an iterator of DataFrames. Sparks' repartition
+    performs a full shuffle (does not preserve row order), so it is critical to 
+    extract the student_id_col prior to creating shap values and then reattach 
+    for our final output.
+
+    Args:
+        iterator (Iterator[pd.DataFrame]): An iterator over Pandas DataFrames.
+        Each DataFrame is a batch of data points.
+        student_id_col (str): The name of the column containing student_id
+        model_features (list[str]): A list of strings representing the names 
+        of the features for our model
+        explainer (shap.KernelExplainer): A KernelExplainer object used to compute
+        shap values from our loaded model.
+        mode (pd.Series): A Series containing values to impute missing values
+
+    Returns:
+        Iterator[pd.DataFrame]: An iterator over Pandas DataFrames. Each DataFrame
+        contains the SHAP values for that partition of data.
+    """
+
+    for pdf in iterator:
+        # Preserve student_id column
+        student_ids_batch = pdf.loc[:, student_id_col]
+
+        # Impute missing values and run shap values using just pdf features
+        pdf_features = pdf[model_features].fillna(mode)
+        shap_values = explainer.shap_values(pdf_features)
+
+        # Create a DataFrame from the SHAP values
+        shap_df = pd.DataFrame(shap_values, columns=model_features)
+
+        # Reattach the student_id column to our SHAP values DataFrame
+        shap_df[student_id_col] = student_ids_batch
+
+        yield shap_df
