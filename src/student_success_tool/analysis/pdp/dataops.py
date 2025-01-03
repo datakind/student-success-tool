@@ -5,7 +5,7 @@ import typing as t
 
 import pandas as pd
 
-from . import constants, features, types
+from . import constants, features, types, utils
 
 LOGGER = logging.getLogger(__name__)
 
@@ -78,10 +78,17 @@ def make_student_term_dataset(
             min_num_credits_full_time=min_num_credits_full_time,
         )
     )
-    df_student_terms_plus = features.cumulative.add_features(
-        df_student_terms,
-        student_id_cols=["institution_id", "student_guid"],
-        sort_cols=["academic_year", "academic_term"],
+    df_student_terms_plus = (
+        features.cumulative.add_features(
+            df_student_terms,
+            student_id_cols=["institution_id", "student_guid"],
+            sort_cols=["academic_year", "academic_term"],
+        )
+        # NOTE: it's important to standardize column names here to avoid name mismatches
+        # when features are generated here (on-the-fly) as opposed to read (pre-computed)
+        # from a delta table; spark can be configured to behave nicely...
+        # but let's not take any chances
+        .rename(columns=utils.convert_to_snake_case)
     )
     return df_student_terms_plus
 
