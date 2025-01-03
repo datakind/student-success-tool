@@ -27,8 +27,7 @@ def main():
     ]
     course_records = [
         FAKER.raw_course_record(
-            cohort_record, normalize_col_names=args.normalize_col_names, institution_id=institution_id
-        )
+            cohort_record, normalize_col_names=args.normalize_col_names)
         for cohort_record in cohort_records
         for _ in range(
             FAKER.randomize_nb_elements(args.avg_num_courses_per_student, min=1)

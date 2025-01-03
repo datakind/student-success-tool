@@ -20,13 +20,3 @@ def test_raw_course_record(normalize_col_names):
         df_obs = pd.DataFrame([obs])
         obs_valid = RawPDPCourseDataSchema.validate(df_obs, lazy=True)
         assert isinstance(obs_valid, pd.DataFrame)  # => data passed validation
-        
-
-def test_multiple_raw_course_records():
-    institution_id = 123
-    course_records = [
-        FAKER.raw_course_record(normalize_col_names=True, institution_id=institution_id) for _ in range(10)
-    ]
-    df_obs = pd.DataFrame(course_records)
-    obs_valid = RawPDPCourseDataSchema.validate(df_obs, lazy=False)
-    assert isinstance(obs_valid, pd.DataFrame)  # => data passed validation
