@@ -4,6 +4,7 @@ import time
 import typing as t
 
 import pandas as pd
+from pandas.api.types import is_bool_dtype
 import pandera as pda
 import pandera.errors
 import pyspark.sql
@@ -182,7 +183,10 @@ def _replace_values_with_null(
 
 
 def _cast_to_bool_via_int(df: pd.DataFrame, *, col: str) -> pd.Series:
+    if is_bool_dtype(df[col]):
+        return df[col]
     return df[col].astype("Int8").astype("boolean")
+    
 
 
 def read_data_from_delta_table(

@@ -158,6 +158,16 @@ def test_replace_values_with_null(df, col, to_replace, exp):
             "col2",
             pd.Series([True, False, None], dtype="boolean"),
         ),
+        (
+            pd.DataFrame({"col2": [True, False]}, dtype="boolean"),
+            "col2",
+            pd.Series([True, False], dtype="boolean"),
+        ),
+        (
+            pd.DataFrame({"col2": [True, False]}, dtype="boolean"),
+            "col2",
+            pd.Series([True, False], dtype="boolean"),
+        ),
     ],
 )
 def test_cast_to_bool_via_int(df, col, exp):
