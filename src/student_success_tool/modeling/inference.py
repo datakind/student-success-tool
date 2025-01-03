@@ -1,5 +1,4 @@
 import typing as t
-from typing import Iterator
 from shap import KernelExplainer
 
 import numpy as np
@@ -68,12 +67,12 @@ def select_top_features_for_display(
 
 
 def calculate_shap_values(
-    iterator: Iterator[pd.DataFrame], *, 
+    dfs: t.Iterator[pd.DataFrame], *, 
     student_id_col: str,
     model_features: list[str], 
     explainer: KernelExplainer,
-    mode: pd.Series
-) -> Iterator[pd.DataFrame]:
+    mode: pd.Series,
+) -> t.Iterator[pd.DataFrame]:
     """
     SHAP is computationally expensive, so this function enables parallelization,
     by calculating SHAP values over an iterator of DataFrames. Sparks' repartition
@@ -82,27 +81,26 @@ def calculate_shap_values(
     for our final output.
 
     Args:
-        iterator (Iterator[pd.DataFrame]): An iterator over Pandas DataFrames.
+        dfs: An iterator over Pandas DataFrames.
         Each DataFrame is a batch of data points.
-        student_id_col (str): The name of the column containing student_id
-        model_features (list[str]): A list of strings representing the names 
+        student_id_col: The name of the column containing student_id
+        model_features: A list of strings representing the names 
         of the features for our model
-        explainer (shap.KernelExplainer): A KernelExplainer object used to compute
+        explainer: A KernelExplainer object used to compute
         shap values from our loaded model.
-        mode (pd.Series): A Series containing values to impute missing values
+        mode: A Series containing values to impute missing values
 
     Returns:
         Iterator[pd.DataFrame]: An iterator over Pandas DataFrames. Each DataFrame
         contains the SHAP values for that partition of data.
     """
-
-    for pdf in iterator:
+    for df in dfs:
         # Preserve student_id column
-        student_ids_batch = pdf.loc[:, student_id_col]
+        student_ids_batch = df.loc[:, student_id_col]
 
         # Impute missing values and run shap values using just pdf features
-        pdf_features = pdf[model_features].fillna(mode)
-        shap_values = explainer.shap_values(pdf_features)
+        df_features = df[model_features].fillna(mode)
+        shap_values = explainer.shap_values(df_features)
 
         # Create a DataFrame from the SHAP values
         shap_df = pd.DataFrame(shap_values, columns=model_features)

@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
 import pytest
 
 from student_success_tool.modeling.inference import select_top_features_for_display
@@ -161,8 +162,8 @@ def test_calculate_shap_values_basic(input_data, expected_shape, explainer):
     assert student_id_col in shap_df.columns
     
     # Ensure that SHAP values are generated and are numeric
-    assert isinstance(shap_df[model_features].iloc[0, 0], (float, np.float64))
-    assert isinstance(shap_df[model_features].iloc[0, 1], (float, np.float64))
+    assert is_numeric_dtype(shap_df[model_features].iloc[0, 0])
+    assert is_numeric_dtype(shap_df[model_features].iloc[0, 1])
     
     # Ensure student IDs are correctly reattached
     assert shap_df[student_id_col].iloc[0] == 1
