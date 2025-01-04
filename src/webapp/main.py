@@ -9,10 +9,18 @@ from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from datetime import timedelta
 
 from .routers import models, users, data, institutions
-from .database import setup_db, db_engine, Session, get_session, local_session
+from .database import (
+    setup_db,
+    db_engine,
+    Session,
+    get_session,
+    local_session,
+    AccountTable,
+)
 from .config import env_vars, startup_env_vars
 
-from .utilities import authenticate_user
+from sqlalchemy.future import select
+from .utilities import authenticate_user, BaseUser, get_current_active_user, uuid_to_str
 from .authn import (
     Token,
     create_access_token,
@@ -77,7 +85,7 @@ async def login_for_access_token(
 ) -> Token:
     local_session.set(sql_session)
     user = authenticate_user(
-        form_data.username, form_data.password, local_session.get()
+        form_data.username, form_data.password, False, local_session.get()
     )
     if not user:
         raise HTTPException(
@@ -94,20 +102,63 @@ async def login_for_access_token(
     return Token(access_token=access_token, token_type="bearer")
 
 
-# Get users that are cross-institution
-"""
-@app.get("/users", response_model=UserAccount)
-async def read_users_me(
+@app.post("/token_from_frontend")
+async def frontend_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    sql_session: Annotated[Session, Depends(get_session)],
+) -> Token:
+    local_session.set(sql_session)
+    user = authenticate_user(
+        form_data.username, form_data.password, True, local_session.get()
+    )
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(
+        minutes=int(env_vars["ACCESS_TOKEN_EXPIRE_MINUTES"])
+    )
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type="bearer")
+
+
+# Get users that don't have institution specifications. (either datakinders or people who haven't set their institution yet)
+@app.get("/non_inst_users", response_model=list[users.UserAccount])
+async def read_cross_inst_users(
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
+    sql_session: Annotated[Session, Depends(get_session)],
 ):
-    return {}
-    
-    return {
-        "user_id": uuid,
-        "name": user_account_request.name,
-        "inst_id": inst_id,
-        "access_type": user_account_request.access_type,
-        "email": user_account_request.email,
-        "username": user_account_request.username,
-    }
-    """
+    if not current_user.is_datakinder():
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Only Datakinders can see non-institution user list",
+        )
+    local_session.set(sql_session)
+    query_result = (
+        local_session.get()
+        .execute(
+            select(AccountTable).where(
+                AccountTable.inst_id == None,
+            )
+        )
+        .all()
+    )
+    res = []
+    if not query_result or len(query_result) == 0:
+        return res
+
+    for elem in query_result[0]:
+        res.append(
+            {
+                "user_id": uuid_to_str(elem.id),
+                "name": elem.name,
+                "inst_id": uuid_to_str(elem.inst_id),
+                "access_type": elem.access_type,
+                "email": elem.email,
+            }
+        )
+    return res

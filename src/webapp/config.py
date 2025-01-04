@@ -4,12 +4,13 @@
 import os
 from dotenv import load_dotenv
 
+# defaults to unit test values.
 env_vars = {
-    "ENV": "",
+    "ENV": "LOCAL",
     "SECRET_KEY": "",
-    "ALGORITHM": "",
-    "ACCESS_TOKEN_EXPIRE_MINUTES": "",
-    "ACCESS_TOKEN_EXPIRE_MINUTES_DEFAULT": "",
+    "ALGORITHM": "HS256",
+    "ACCESS_TOKEN_EXPIRE_MINUTES": "15",
+    "ACCESS_TOKEN_EXPIRE_MINUTES_DEFAULT": "15",
 }
 
 # The INSTANCE_HOST is the private IP of CLoudSQL instance e.g. '127.0.0.1' ('172.17.0.1' if deployed to GAE Flex)
@@ -49,9 +50,14 @@ def startup_env_vars():
             raise ValueError(
                 "Missing " + name + " value missing. Required environment variable."
             )
-        if name == "ENV" and env_var not in ["PROD", "STAGING", "DEV", "LOCAL"]:
+        if name == "ENV" and env_var not in [
+            "PROD",
+            "STAGING",
+            "DEV",
+            "LOCAL",
+        ]:
             raise ValueError(
-                "ENV environment variable not one of: PROD, STAGING, DEV, or LOCAL."
+                "ENV environment variable not one of: PROD, STAGING, DEV, LOCAL."
             )
         if (
             name == "ACCESS_TOKEN_EXPIRE_MINUTES"
@@ -72,8 +78,8 @@ def setup_database_vars():
             raise ValueError("Missing " + name + " value missing. Required.")
         engine_vars[name] = env_var
 
-    if env_vars["ENV"] == "LOCAL":
-        # LOCAL env doesn't require ssl vars
+    if env_vars["ENV"] in ("LOCAL"):
+        # doesn't require ssl vars
         return
 
     global ssl_env_vars

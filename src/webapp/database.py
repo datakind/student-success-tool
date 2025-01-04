@@ -14,6 +14,7 @@ from sqlalchemy import (
     Table,
     String,
     UniqueConstraint,
+    Text,
 )
 from typing import Set, List
 from sqlalchemy.orm import sessionmaker, Session, relationship, mapped_column, Mapped
@@ -31,7 +32,7 @@ db_engine = None
 # GCP MYSQL will throw an error if we don't specify the length for any varchar
 # fields. So we can't use mapped_column in string cases.
 VAR_CHAR_LENGTH = 30
-
+VAR_CHAR_LONGER_LENGTH = 100
 # Constants for the local env
 LOCAL_INST_UUID = uuid.UUID("14c81c50-935e-4151-8561-c2fc3bdabc0f")
 LOCAL_USER_UUID = uuid.UUID("f21a3e53-c967-404e-91fd-f657cb922c39")
@@ -49,19 +50,19 @@ def setup_db_local():
                     InstTable(
                         id=LOCAL_INST_UUID,
                         name="Foobar University",
-                        time_created=DATETIME_TESTING,
-                        time_updated=DATETIME_TESTING,
+                        created_at=DATETIME_TESTING,
+                        updated_at=DATETIME_TESTING,
                     ),
                     AccountTable(
                         id=LOCAL_USER_UUID,
                         inst_id=LOCAL_INST_UUID,
                         name="Tester S",
                         email=LOCAL_USER_EMAIL,
-                        email_verified=True,
+                        email_verified_at=None,
                         password_hash=get_password_hash(HASHED_PASSWORD),
                         access_type="DATAKINDER",
-                        time_created=DATETIME_TESTING,
-                        time_updated=DATETIME_TESTING,
+                        created_at=DATETIME_TESTING,
+                        updated_at=DATETIME_TESTING,
                     ),
                 ]
             )
@@ -93,13 +94,13 @@ class InstTable(Base):
     retention_days: Mapped[int] = mapped_column(nullable=True)
     # A short description or note on this inst.
     description = Column(String(VAR_CHAR_LENGTH))
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 
 # The user accounts table
 class AccountTable(Base):
-    __tablename__ = "account"
+    __tablename__ = "users"  # Name to be compliant with Laravel.
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4())
 
     # Set account histories to be children
@@ -111,17 +112,34 @@ class AccountTable(Base):
     inst_id = Column(
         Uuid(as_uuid=True),
         ForeignKey("inst.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
     )
     inst: Mapped["InstTable"] = relationship(back_populates="accounts")
 
-    name = Column(String(VAR_CHAR_LENGTH), nullable=False)
+    name = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False)
     email = Column(String(VAR_CHAR_LENGTH), nullable=False, unique=True)
-    email_verified: Mapped[bool] = mapped_column(nullable=False)
-    access_type = Column(String(VAR_CHAR_LENGTH), nullable=False)
-    password_hash = Column(String(VAR_CHAR_LENGTH), nullable=False)
-    time_created = mapped_column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
+    google_id = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=True)
+    azure_id = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=True)
+
+    email_verified_at = Column(DateTime(timezone=True), nullable=True)
+    password_hash = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False)
+    two_factor_secret = Column(Text, nullable=True)
+    two_factor_recovery_codes = Column(Text, nullable=True)
+    two_factor_confirmed_at = Column(DateTime(timezone=True), nullable=True)
+
+    remember_token = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=True)
+    """
+    # TODO: add in team integration with laravel
+    current_team_id = Column(
+        Uuid(as_uuid=True),
+        ForeignKey("teams.id"),
+        nullable=True,
+    )
+    """
+    access_type = Column(String(VAR_CHAR_LENGTH), nullable=True)
+    profile_photo_path = Column(String(VAR_CHAR_LENGTH), nullable=True)
+    created_at = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     inst = relationship("InstTable", backref="account")
 
@@ -129,14 +147,14 @@ class AccountTable(Base):
 # The user history table
 class AccountHistoryTable(Base):
     __tablename__ = "account_history"
-    time_occurred = Column(
+    timestamp = Column(
         DateTime(timezone=True), server_default=func.now(), primary_key=True
     )
 
-    # Set the parent foreign key to link to the accounts table.
+    # Set the parent foreign key to link to the users table.
     account_id = Column(
         Uuid(as_uuid=True),
-        ForeignKey("account.id", ondelete="CASCADE"),
+        ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
     account: Mapped["AccountTable"] = relationship(back_populates="account_histories")
@@ -190,14 +208,14 @@ class FileTable(Base):
     # intents and purposes is no longer accessible by the app.
     deleted: Mapped[bool] = mapped_column(nullable=True)
     # When the deletion request was made
-    deletion_request_time = Column(DateTime(timezone=True), nullable=True)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
     retention_days: Mapped[int] = mapped_column(nullable=True)
     # Whether the file was generated by SST. (e.g. was it input or output)
     sst_generated: Mapped[bool] = mapped_column(nullable=False)
     # Whether the file was validated (in the case of input) or approved (in the case of output).
     valid: Mapped[bool] = mapped_column(nullable=False)
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Within a given institution, there should be no duplicated file names.
     __table_args__ = (UniqueConstraint("name", "inst_id", name="name_inst_uc"),)
@@ -229,9 +247,9 @@ class BatchTable(Base):
     # If true, the batch is ready for use.
     completed: Mapped[bool] = mapped_column(nullable=True)
     # The time the deletion request was set.
-    time_deleted = Column(DateTime(timezone=True), nullable=True)
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     # Within a given institution, there should be no duplicated batch names.
     __table_args__ = (UniqueConstraint("name", "inst_id", name="name_inst_uc"),)
 

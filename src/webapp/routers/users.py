@@ -30,9 +30,6 @@ class UserAccountRequest(BaseModel):
     access_type: AccessType
     # The email value must be unique across all accounts and provided.
     email: str
-    # The username can be set by the user
-    username: str | None = None
-    account_disabled: bool = False
 
 
 class UserAccount(BaseModel):
@@ -45,11 +42,6 @@ class UserAccount(BaseModel):
     access_type: AccessType
     # The email value must be unique across all accounts.
     email: str
-    # The username value must be unique across all accounts.
-    username: str | None = None
-    account_disabled: bool = False
-    # Date in form YYMMDD
-    deletion_request: str | None = None
 
 
 # User account related operations.
@@ -113,7 +105,6 @@ def create_new_user(
         "inst_id": inst_id,
         "access_type": user_account_request.access_type,
         "email": user_account_request.email,
-        "username": user_account_request.username,
     }
 
 
@@ -143,7 +134,4 @@ def read_inst_user(
         "inst_id": inst_id,
         "access_type": "DATAKINDER",
         "email": "",
-        "username": "",
-        "account_disabled": False,
-        "deletion_request": None,
     }

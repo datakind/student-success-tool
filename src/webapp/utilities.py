@@ -25,6 +25,7 @@ from .config import env_vars
 class AccessType(StrEnum):
     """Access types available."""
 
+    UNKNOWN = ""
     DATAKINDER = "DATAKINDER"
     MODEL_OWNER = "MODEL_OWNER"
     DATA_OWNER = "DATA_OWNER"
@@ -34,7 +35,7 @@ class AccessType(StrEnum):
 class DataSource(StrEnum):
     """Where the Data was created from."""
 
-    UNNOWN = "UNKNOWN"
+    UNNOWN = ""
     PDP_SFTP = "PDP_SFTP"
     MANUAL_UPLOAD = "MANUAL_UPLOAD"
 
@@ -118,13 +119,17 @@ def get_user(sess: Session, username: str) -> BaseUser:
     )
 
 
-def authenticate_user(username: str, password: str, sess: Session) -> BaseUser:
+def authenticate_user(
+    username: str, password: str, hashed_password: bool, sess: Session
+) -> BaseUser:
     query_result = sess.execute(
         select(AccountTable).where(
             AccountTable.email == username,
         )
     ).all()
     if len(query_result) == 0 or len(query_result) > 1:
+        return False
+    if hashed_password and password != query_result[0][0].password_hash:
         return False
     if not verify_password(password, query_result[0][0].password_hash):
         return False

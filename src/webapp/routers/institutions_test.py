@@ -51,20 +51,20 @@ def session_fixture():
                     InstTable(
                         id=UUID_1,
                         name="school_1",
-                        time_created=DATETIME_TESTING,
-                        time_updated=DATETIME_TESTING,
+                        created_at=DATETIME_TESTING,
+                        updated_at=DATETIME_TESTING,
                     ),
                     InstTable(
                         id=UUID_2,
                         name="school_2",
-                        time_created=DATETIME_TESTING,
-                        time_updated=DATETIME_TESTING,
+                        created_at=DATETIME_TESTING,
+                        updated_at=DATETIME_TESTING,
                     ),
                     InstTable(
                         id=USER_VALID_INST_UUID,
                         name="valid_school",
-                        time_created=DATETIME_TESTING,
-                        time_updated=DATETIME_TESTING,
+                        created_at=DATETIME_TESTING,
+                        updated_at=DATETIME_TESTING,
                     ),
                 ]
             )

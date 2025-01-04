@@ -169,11 +169,11 @@ def get_all_files(
                 "uploader": uuid_to_str(elem.uploader),
                 "source": elem.source,
                 "deleted": False if elem.deleted is None else elem.deleted,
-                "deletion_request_time": elem.deletion_request_time,
+                "deletion_request_time": elem.deleted_at,
                 "retention_days": elem.retention_days,
                 "sst_generated": elem.sst_generated,
                 "valid": elem.valid,
-                "uploaded_date": elem.time_created,
+                "uploaded_date": elem.created_at,
             }
         )
     return result_files
@@ -208,8 +208,8 @@ def get_all_batches(
                 "creator": uuid_to_str(elem.creator),
                 "deleted": False if elem.deleted is None else elem.deleted,
                 "completed": False if elem.completed is None else elem.completed,
-                "deletion_request_time": elem.time_deleted,
-                "created_date": elem.time_created,
+                "deletion_request_time": elem.deleted_at,
+                "created_date": elem.created_at,
             }
         )
     return result_batches
@@ -329,8 +329,8 @@ def read_batch_info(
         "creator": uuid_to_str(res.creator),
         "deleted": False if res.deleted is None else res.deleted,
         "completed": False if res.completed is None else res.completed,
-        "deletion_request_time": res.time_deleted,
-        "created_date": res.time_created,
+        "deletion_request_time": res.deleted_at,
+        "created_date": res.created_at,
     }
     data_infos = []
     for elem in res.files:
@@ -345,11 +345,11 @@ def read_batch_info(
                 "uploader": uuid_to_str(elem.uploader),
                 "source": elem.source,
                 "deleted": False if elem.deleted is None else elem.deleted,
-                "deletion_request_time": elem.deletion_request_time,
+                "deletion_request_time": elem.deleted_at,
                 "retention_days": elem.retention_days,
                 "sst_generated": elem.sst_generated,
                 "valid": elem.valid,
-                "uploaded_date": elem.time_created,
+                "uploaded_date": elem.created_at,
             }
         )
     return {"batches": [batch_info], "files": data_infos}
@@ -414,7 +414,7 @@ def create_batch(
         "deleted": False,
         "completed": False,
         "deletion_request_time": None,
-        "created_date": query_result[0][0].time_created,
+        "created_date": query_result[0][0].created_at,
     }
 
 
@@ -426,7 +426,7 @@ def construct_modify_query(modify_vals: dict, batch_id: str) -> Any:
         query.values(description=modify_vals["description"])
     if "deleted" in modify_vals:
         if modify_vals["deleted"]:
-            query.values(time_deleted=func.now())
+            query.values(deleted_at=func.now())
         query.values(deleted=modify_vals["deleted"])
     if "completed" in modify_vals:
         query.values(completed=modify_vals["completed"])
@@ -517,7 +517,7 @@ def update_batch(
             update(BatchTable)
             .where(BatchTable.id == str_to_uuid(batch_id))
             .values(deleted=update_data["deleted"])
-            .values(time_deleted=func.now())
+            .values(deleted_at=func.now())
         )
     if "completed" in update_data:
         local_session.get().execute(
@@ -539,8 +539,8 @@ def update_batch(
         "creator": uuid_to_str(res[0][0].creator),
         "deleted": res[0][0].deleted,
         "completed": res[0][0].completed,
-        "deletion_request_time": res[0][0].time_deleted,
-        "created_date": res[0][0].time_created,
+        "deletion_request_time": res[0][0].deleted_at,
+        "created_date": res[0][0].created_at,
     }
 
 
@@ -595,11 +595,11 @@ def read_file_info(
         "uploader": uuid_to_str(res.uploader),
         "source": res.source,
         "deleted": False if res.deleted is None else res.deleted,
-        "deletion_request_time": res.deletion_request_time,
+        "deletion_request_time": res.deleted_at,
         "retention_days": res.retention_days,
         "sst_generated": res.sst_generated,
         "valid": res.valid,
-        "uploaded_date": res.time_created,
+        "uploaded_date": res.created_at,
     }
 
 
@@ -685,11 +685,11 @@ def download_inst_file(
         "uploader": uuid_to_str(res.uploader),
         "source": res.source,
         "deleted": False if res.deleted is None else res.deleted,
-        "deletion_request_time": res.deletion_request_time,
+        "deletion_request_time": res.deleted_at,
         "retention_days": res.retention_days,
         "sst_generated": res.sst_generated,
         "valid": res.valid,
-        "uploaded_date": res.time_created,
+        "uploaded_date": res.created_at,
     }
 
 

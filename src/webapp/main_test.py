@@ -9,11 +9,13 @@ import sqlalchemy
 from sqlalchemy.pool import StaticPool
 import uuid
 from .database import AccountTable, InstTable, Base, get_session, local_session
+from .authn import get_password_hash
 from .test_helper import (
-    USR,
+    DATAKINDER,
     USER_VALID_INST_UUID,
     DATETIME_TESTING,
     USER_UUID,
+    USER_1_UUID,
 )
 from .utilities import get_current_active_user
 
@@ -33,11 +35,22 @@ def session_fixture():
         inst_id=USER_VALID_INST_UUID,
         name="John Smith",
         email="johnsmith@example.com",
-        email_verified=True,
-        password_hash="xxxx",
+        email_verified_at=None,
+        password_hash=get_password_hash("xxxx"),
+        access_type="VIEWER",
+        created_at=DATETIME_TESTING,
+        updated_at=DATETIME_TESTING,
+    )
+    user_2 = AccountTable(
+        id=USER_1_UUID,
+        inst_id=None,
+        name="Jane Doe",
+        email="janedoe@example.com",
+        email_verified_at=None,
+        password_hash=get_password_hash("abc"),
         access_type="DATAKINDER",
-        time_created=DATETIME_TESTING,
-        time_updated=DATETIME_TESTING,
+        created_at=DATETIME_TESTING,
+        updated_at=DATETIME_TESTING,
     )
     try:
         with sqlalchemy.orm.Session(engine) as session:
@@ -46,10 +59,11 @@ def session_fixture():
                     InstTable(
                         id=USER_VALID_INST_UUID,
                         name="school_1",
-                        time_created=DATETIME_TESTING,
-                        time_updated=DATETIME_TESTING,
+                        created_at=DATETIME_TESTING,
+                        updated_at=DATETIME_TESTING,
                     ),
                     user_1,
+                    user_2,
                 ]
             )
             session.commit()
@@ -64,7 +78,7 @@ def client_fixture(session: sqlalchemy.orm.Session):
         return session
 
     def get_current_active_user_override():
-        return USR
+        return DATAKINDER
 
     app.dependency_overrides[get_session] = get_session_override
     app.dependency_overrides[get_current_active_user] = get_current_active_user_override
@@ -84,7 +98,32 @@ def test_retrieve_token(client: TestClient):
     """Test POST /token."""
     response = client.post(
         "/token",
-        data={"username": "foobar", "password": "password_foobar"},
+        data={"username": "johnsmith@example.com", "password": "xxxx"},
+        headers={"content-type": "application/x-www-form-urlencoded"},
+    )
+    assert response.status_code == 200
+
+
+def test_retrieve_token_for_frontend(client: TestClient):
+    """Test POST /token_from_frontend."""
+    response = client.post(
+        "/token_from_frontend",
+        data={"username": "johnsmith@example.com", "password": "xxxx"},
         headers={"content-type": "application/x-www-form-urlencoded"},
     )
     assert response.status_code == 401
+
+
+def test_get_cross_isnt_users(client: TestClient):
+    """Test POST /non_inst_users."""
+    response = client.get("/non_inst_users")
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "access_type": "DATAKINDER",
+            "email": "janedoe@example.com",
+            "inst_id": "",
+            "name": "Jane Doe",
+            "user_id": "27316b895e04474a9ea497beaf72c9af",
+        },
+    ]

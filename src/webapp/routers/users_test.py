@@ -38,22 +38,22 @@ def session_fixture():
         inst_id=USER_VALID_INST_UUID,
         name="John Smith",
         email="johnsmith@example.com",
-        email_verified=True,
+        email_verified_at=None,
         password_hash="xxxx",
         access_type="DATAKINDER",
-        time_created=DATETIME_TESTING,
-        time_updated=DATETIME_TESTING,
+        created_at=DATETIME_TESTING,
+        updated_at=DATETIME_TESTING,
     )
     user_2 = AccountTable(
         id=USER_UUID,
         inst_id=USER_VALID_INST_UUID,
         name="Jane Doe",
         email="janedoe@example.com",
-        email_verified=True,
+        email_verified_at=None,
         password_hash="xxxx",
         access_type="DATAKINDER",
-        time_created=DATETIME_TESTING,
-        time_updated=DATETIME_TESTING,
+        created_at=DATETIME_TESTING,
+        updated_at=DATETIME_TESTING,
     )
     try:
         with sqlalchemy.orm.Session(engine) as session:
@@ -62,8 +62,8 @@ def session_fixture():
                     InstTable(
                         id=USER_VALID_INST_UUID,
                         name="school_1",
-                        time_created=DATETIME_TESTING,
-                        time_updated=DATETIME_TESTING,
+                        created_at=DATETIME_TESTING,
+                        updated_at=DATETIME_TESTING,
                     ),
                     user_1,
                     user_2,
@@ -134,9 +134,6 @@ def test_read_inst_user(client: TestClient):
         "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
         "access_type": "DATAKINDER",
         "email": "",
-        "username": "",
-        "account_disabled": False,
-        "deletion_request": None,
     }
     # Unauthorized cases.
     """
@@ -178,7 +175,4 @@ def test_create_user_datakinder(datakinder_client: TestClient):
         "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
         "access_type": "DATAKINDER",
         "email": "abc@example.com",
-        "username": None,
-        "account_disabled": False,
-        "deletion_request": None,
     }

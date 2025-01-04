@@ -48,8 +48,6 @@ USER_ACCT_REQUEST = {
 USER_ACCT = {
     "name": "Taylor Smith",
     "access_type": "DATAKINDER",
-    "account_disabled": False,
-    "deletion_request": None,
     "email": "abc@example.com",
     "inst_id": uuid_to_str(USER_VALID_INST_UUID),
     "user_id": uuid_to_str(USER_UUID),
@@ -95,5 +93,5 @@ DATA_OBJ = {
     "uploader": 123,
     "source": "MANUAL_UPLOAD",
     "data_disabled": False,
-    "deletion_request": None,
+    "deleted_at": None,
 }
