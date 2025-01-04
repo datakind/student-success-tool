@@ -22,11 +22,13 @@ class Provider(BaseProvider):
         number_of_credits_attempted_year_3 = self.number_of_credits_attempted_year_3()
         number_of_credits_attempted_year_4 = self.number_of_credits_attempted_year_4()
         _has_enrollment_other_inst: bool = self.generator.random.random() < 0.25
-        
+
         # TODO: handle other cases, e.g. gateway course attempted/completed/grades
         record = {
             "Student GUID": self.student_guid(),
-            "Institution ID": institution_id if institution_id is not None else self.institution_id(),
+            "Institution ID": institution_id
+            if institution_id is not None
+            else self.institution_id(),
             "Cohort": self.cohort(min_yr=min_cohort_yr, max_yr=max_cohort_yr),
             "Cohort Term": self.cohort_term(),
             "Student Age": self.student_age(),
