@@ -31,7 +31,7 @@ db_engine = None
 
 # GCP MYSQL will throw an error if we don't specify the length for any varchar
 # fields. So we can't use mapped_column in string cases.
-VAR_CHAR_LENGTH = 30
+VAR_CHAR_LENGTH = 36
 VAR_CHAR_LONGER_LENGTH = 100
 # Constants for the local env
 LOCAL_INST_UUID = uuid.UUID("14c81c50-935e-4151-8561-c2fc3bdabc0f")
@@ -78,7 +78,7 @@ def setup_db_local():
 # all other ables except for AccountHistory.
 class InstTable(Base):
     __tablename__ = "inst"
-    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4())
+    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     # Linked children tables.
     accounts: Mapped[Set["AccountTable"]] = relationship(back_populates="inst")
@@ -101,7 +101,7 @@ class InstTable(Base):
 # The user accounts table
 class AccountTable(Base):
     __tablename__ = "users"  # Name to be compliant with Laravel.
-    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4())
+    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     # Set account histories to be children
     account_histories: Mapped[List["AccountHistoryTable"]] = relationship(
@@ -183,7 +183,7 @@ association_table = Table(
 class FileTable(Base):
     __tablename__ = "file"
     name = Column(String(VAR_CHAR_LENGTH), nullable=False)
-    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4())
+    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     batches: Mapped[Set["BatchTable"]] = relationship(
         secondary=association_table, back_populates="files"
     )
@@ -224,7 +224,7 @@ class FileTable(Base):
 # The institution batch table
 class BatchTable(Base):
     __tablename__ = "batch"
-    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4())
+    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     # Set the parent foreign key to link to the institution table.
     inst_id = Column(
