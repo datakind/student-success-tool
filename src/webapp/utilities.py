@@ -76,7 +76,7 @@ class BaseUser(BaseModel):
 
     def has_access_to_inst(self, inst: str) -> bool:
         """Whether a given user has access to a given institution."""
-        return self.institution == inst or self.access_type == AccessType.DATAKINDER
+        return self.access_type == AccessType.DATAKINDER or self.institution == inst
 
     def has_full_data_access(self) -> bool:
         """Datakinders, model_owners, data_owners, all have full data access."""
@@ -149,7 +149,7 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, env_vars["SECRET_KEY"], algorithms=env_vars["ALGORITHM"])
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
