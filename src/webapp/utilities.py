@@ -120,7 +120,7 @@ def get_user(sess: Session, username: str) -> BaseUser:
 
 
 def authenticate_user(
-    username: str, password: str, hashed_password: bool, sess: Session
+    username: str, password: str, sess: Session
 ) -> BaseUser:
     query_result = sess.execute(
         select(AccountTable).where(
@@ -128,8 +128,6 @@ def authenticate_user(
         )
     ).all()
     if len(query_result) == 0 or len(query_result) > 1:
-        return False
-    if hashed_password and password != query_result[0][0].password_hash:
         return False
     if not verify_password(password, query_result[0][0].password_hash):
         return False
