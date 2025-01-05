@@ -693,7 +693,7 @@ def download_inst_file(
     }
 
 
-@router.post("/{inst_id}/input/uploadfile")
+@router.post("/{inst_id}/input/uploadfile", response_model=DataInfo)
 def upload_file(
     inst_id: str, current_user: Annotated[BaseUser, Depends(get_current_active_user)]
 ) -> Any:
@@ -707,6 +707,9 @@ def upload_file(
     # generate_upload_signed_url(str(inst_id), f"training_data/FOO.csv")
     # TODO: make the POST call to the upload url with the file.
     # Update or create batch.
+    return {
+        "name": "TEST_UPLOAD_NAME",
+    }
 
 
 @router.post("/{inst_id}/input/pdp_sftp")

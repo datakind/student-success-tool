@@ -48,34 +48,36 @@ def init_db(env: str):
         return
     try:
         with sqlalchemy.orm.Session(db_engine) as session:
-            session.add_all(
-                [
-                    InstTable(
-                        id=LOCAL_INST_UUID,
-                        name="Foobar University",
-                        created_at=DATETIME_TESTING,
-                        updated_at=DATETIME_TESTING,
+            session.merge(
+                AccountTable(
+                    id=LOCAL_USER_UUID,
+                    inst_id=None,
+                    name="Tester S",
+                    email=(
+                        LOCAL_USER_EMAIL
+                        if env == "LOCAL"
+                        else os.getenv("DEV_INIT_DB_USER")
                     ),
-                    AccountTable(
-                        id=LOCAL_USER_UUID,
-                        inst_id=None,
-                        name="Tester S",
-                        email=(
-                            LOCAL_USER_EMAIL
-                            if env == "LOCAL"
-                            else os.getenv("DEV_INIT_DB_USER")
-                        ),
-                        email_verified_at=None,
-                        password_hash=(
-                            get_password_hash(HASHED_PASSWORD)
+                    email_verified_at=None,
+                    password_hash=(
+                        get_password_hash(
+                            HASHED_PASSWORD
                             if env == "LOCAL"
                             else os.getenv("DEV_INIT_DB_PASSWORD")
-                        ),
-                        access_type="DATAKINDER",
-                        created_at=DATETIME_TESTING,
-                        updated_at=DATETIME_TESTING,
+                        )
                     ),
-                ]
+                    access_type="DATAKINDER",
+                    created_at=DATETIME_TESTING,
+                    updated_at=DATETIME_TESTING,
+                )
+            )
+            session.merge(
+                InstTable(
+                    id=LOCAL_INST_UUID,
+                    name="Foobar University",
+                    created_at=DATETIME_TESTING,
+                    updated_at=DATETIME_TESTING,
+                )
             )
             session.commit()
     except Exception as e:
@@ -408,6 +410,6 @@ def setup_db(env: str):
     global LocalSession
     LocalSession = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
     Base.metadata.create_all(db_engine)
-    if env in ("LOCAL", "DEV") :
+    if env in ("LOCAL", "DEV"):
         # Creates a fake user in the local db
         init_db(env)
