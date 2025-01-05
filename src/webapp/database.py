@@ -41,8 +41,11 @@ HASHED_PASSWORD = "tester_password"
 DATETIME_TESTING = datetime.datetime(2024, 12, 26, 19, 37, 59, 753357)
 
 
-def setup_db_local():
-    # add some sample users to the database
+def init_db(env: str):
+    # add some sample users to the database for development utility.
+    if env not in ("LOCAL", "DEV"):
+        # this init db setup only applies for Local and Dev.
+        return
     try:
         with sqlalchemy.orm.Session(db_engine) as session:
             session.add_all(
@@ -55,11 +58,19 @@ def setup_db_local():
                     ),
                     AccountTable(
                         id=LOCAL_USER_UUID,
-                        inst_id=LOCAL_INST_UUID,
+                        inst_id=None,
                         name="Tester S",
-                        email=LOCAL_USER_EMAIL,
+                        email=(
+                            LOCAL_USER_EMAIL
+                            if env == "LOCAL"
+                            else os.getenv("DEV_INIT_DB_USER")
+                        ),
                         email_verified_at=None,
-                        password_hash=get_password_hash(HASHED_PASSWORD),
+                        password_hash=(
+                            get_password_hash(HASHED_PASSWORD)
+                            if env == "LOCAL"
+                            else os.getenv("DEV_INIT_DB_PASSWORD")
+                        ),
                         access_type="DATAKINDER",
                         created_at=DATETIME_TESTING,
                         updated_at=DATETIME_TESTING,
@@ -397,6 +408,6 @@ def setup_db(env: str):
     global LocalSession
     LocalSession = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
     Base.metadata.create_all(db_engine)
-    if env == "LOCAL":
+    if env in ("LOCAL", "DEV") :
         # Creates a fake user in the local db
-        setup_db_local()
+        init_db(env)
