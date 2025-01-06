@@ -119,9 +119,7 @@ def get_user(sess: Session, username: str) -> BaseUser:
     )
 
 
-def authenticate_user(
-    username: str, password: str, sess: Session
-) -> BaseUser:
+def authenticate_user(username: str, password: str, sess: Session) -> BaseUser:
     query_result = sess.execute(
         select(AccountTable).where(
             AccountTable.email == username,
@@ -149,7 +147,9 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, env_vars["SECRET_KEY"], algorithms=env_vars["ALGORITHM"])
+        payload = jwt.decode(
+            token, env_vars["SECRET_KEY"], algorithms=env_vars["ALGORITHM"]
+        )
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
