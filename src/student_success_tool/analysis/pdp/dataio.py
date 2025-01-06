@@ -182,7 +182,21 @@ def _replace_values_with_null(
 
 
 def _cast_to_bool_via_int(df: pd.DataFrame, *, col: str) -> pd.Series:
-    return df[col].astype("Int8").astype("boolean")
+    return (
+        df[col]
+        .astype("string")
+        .map(
+            {
+                "1": True,
+                "0": False,
+                "True": True,
+                "False": False,
+                "true": True,
+                "false": False,
+            }
+        )
+        .astype("boolean")
+    )
 
 
 def read_data_from_delta_table(

@@ -64,6 +64,8 @@ def test_read_raw_pdp_course_data_from_file_preprocessing(
     [
         ("raw_pdp_cohort_data.csv", None, None),
         ("raw_pdp_cohort_data.csv", schemas.RawPDPCohortDataSchema, None),
+        # Yes and No replace 1 and 0.
+        ("raw_pdp_cohort_data_ys.csv", schemas.RawPDPCohortDataSchema, None),
         ("raw_pdp_cohort_data.csv", schemas.RawPDPCohortDataSchema, {"nrows": 1}),
     ],
 )
@@ -157,6 +159,11 @@ def test_replace_values_with_null(df, col, to_replace, exp):
             pd.DataFrame({"col2": ["1", "0", None]}, dtype="string"),
             "col2",
             pd.Series([True, False, None], dtype="boolean"),
+        ),
+        (
+            pd.DataFrame({"col3": ["True", "False"]}, dtype="string"),
+            "col3",
+            pd.Series([True, False], dtype="boolean"),
         ),
     ],
 )
