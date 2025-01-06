@@ -59,7 +59,7 @@ def init_db(env: str):
                         else os.getenv("DEV_INIT_DB_USER")
                     ),
                     email_verified_at=None,
-                    password_hash=(
+                    password=(
                         get_password_hash(
                             HASHED_PASSWORD
                             if env == "LOCAL"
@@ -135,7 +135,7 @@ class AccountTable(Base):
     azure_id = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=True)
 
     email_verified_at = Column(DateTime(timezone=True), nullable=True)
-    password_hash = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False)
+    password = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False)
     two_factor_secret = Column(Text, nullable=True)
     two_factor_recovery_codes = Column(Text, nullable=True)
     two_factor_confirmed_at = Column(DateTime(timezone=True), nullable=True)

@@ -129,7 +129,7 @@ def authenticate_user(
     ).all()
     if len(query_result) == 0 or len(query_result) > 1:
         return False
-    if not verify_password(password, query_result[0][0].password_hash):
+    if not verify_password(password, query_result[0][0].password):
         return False
     return BaseUser(
         usr=uuid_to_str(query_result[0][0].id),
