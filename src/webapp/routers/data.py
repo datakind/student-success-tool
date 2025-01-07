@@ -751,3 +751,20 @@ def pull_pdp_sftp(
     has_access_to_inst_or_err(inst_id, current_user)
     model_owner_and_higher_or_err(current_user, "data")
     # TODO: call function that handles PDP SFTP request here.
+
+
+@router.get("{inst_id}/upload-url", response_model=str)
+def get_upload_url(
+    inst_id: str,
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
+    storage_control: Annotated[StorageControl, Depends(StorageControl)],
+) -> Any:
+    """Returns a signed URL for uploading data to a specific institution.
+
+    Args:
+        current_user: the user making the request.
+    """
+    has_access_to_inst_or_err(inst_id, current_user)
+    return storage_control.generate_upload_signed_url(
+        "local-upload-test", f"{inst_id}/test.csv"
+    )

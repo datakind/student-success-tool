@@ -39,7 +39,7 @@ class UserAccount(BaseModel):
     user_id: str
     name: str | None = None
     inst_id: str
-    access_type: AccessType
+    access_type: AccessType | None = None
     # The email value must be unique across all accounts.
     email: str
 

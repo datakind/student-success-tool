@@ -127,14 +127,14 @@ async def read_cross_inst_users(
     if not query_result or len(query_result) == 0:
         return res
 
-    for elem in query_result[0]:
+    for elem in query_result:
         res.append(
             {
-                "user_id": uuid_to_str(elem.id),
-                "name": elem.name,
-                "inst_id": uuid_to_str(elem.inst_id),
-                "access_type": elem.access_type,
-                "email": elem.email,
+                "user_id": uuid_to_str(elem[0].id),
+                "name": elem[0].name,
+                "inst_id": uuid_to_str(elem[0].inst_id),
+                "access_type": elem[0].access_type,
+                "email": elem[0].email,
             }
         )
     return res
