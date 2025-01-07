@@ -10,6 +10,33 @@ from google.cloud.storage_control_v2 import StorageControlClient
 from typing import Any
 
 
+def rename_file(
+    bucket_name,
+    file_name,
+    new_file_name,
+):
+    """Moves a blob from one bucket to another with a new name."""
+    storage_client = storage.Client()
+    source_bucket = storage_client.bucket(bucket_name)
+    source_blob = source_bucket.blob(file_name)
+
+    # Optional: set a generation-match precondition to avoid potential race conditions
+    # and data corruptions. The request is aborted if the object's
+    # generation number does not match your precondition. For a destination
+    # object that does not yet exist, set the if_generation_match precondition to 0.
+    # If the destination object already exists in your bucket, set instead a
+    # generation-match precondition using its generation number.
+    # There is also an `if_source_generation_match` parameter, which is not used in this example.
+    destination_generation_match_precondition = 0
+
+    blob_copy = source_bucket.copy_blob(
+        source_blob,
+        new_file_name,
+        if_generation_match=destination_generation_match_precondition,
+    )
+    source_bucket.delete_blob(file_name)
+
+
 def generate_upload_signed_url(client: Client, bucket_name: str, file_name: str) -> str:
     """Generates a v4 signed URL for uploading a blob using HTTP PUT."""
     bucket = client.bucket(bucket_name)
