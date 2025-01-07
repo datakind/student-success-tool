@@ -53,9 +53,3 @@ Please read the [CONTRIBUTING](CONTRIBUTING.md) to learn how to contribute to th
     - a GitHub repo (for a specific branch): `%pip install git+https://github.com/datakind/student-success-tool.git@develop`
     - public PyPI: `%pip install student-success-tool`  (NOTE: THIS DOESN'T WORK YET)
 1. Restart Python, per usual: `dbutils.library.restartPython()`
-
-
-
-### API Callers
-
-API callers will need to create a user using the backend and then generate an API token. They will also need the GCloud upload auth token.

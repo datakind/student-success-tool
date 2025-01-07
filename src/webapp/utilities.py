@@ -206,7 +206,7 @@ def model_owner_and_higher_or_err(user: BaseUser, resource_type: str):
 
 # At this point the value should not be empty as we checked on app startup.
 def prepend_env_prefix(name: str) -> str:
-    return env_vars["ENV"] + "_" + name
+    return env_vars["ENV"].lower() + "-" + name
 
 
 def uuid_to_str(uuid_val: uuid.UUID) -> str:
@@ -217,3 +217,11 @@ def uuid_to_str(uuid_val: uuid.UUID) -> str:
 
 def str_to_uuid(hex_str: str) -> uuid.UUID:
     return uuid.UUID(hex_str)
+
+
+def get_bucket_name_from_uuid(inst_id: uuid.UUID) -> str:
+    return prepend_env_prefix(uuid_to_str(inst_id))
+
+
+def get_bucket_name(inst_id: str) -> str:
+    return prepend_env_prefix(inst_id)

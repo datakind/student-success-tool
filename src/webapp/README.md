@@ -2,8 +2,21 @@ Notes:
 
 REST API for SST functionality.
 
+Notes:
+### API Callers
 
-For local testing:
+API callers will need to create a user using the backend and then generate an API token. They will also need the GCloud upload auth token.
+
+### Prerequisites
+
+In order to work with and test GCS related functionality, you'll need to setup default credentials:
+https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment#local-user-cred
+
+You will also need to add the permission Storage Writer or Storage Admin to your Datakind Account in GCP to allow for local interaction with the storage buckets.
+
+Note that to generate GCP URLS you'll need a service account key (doesn't work locally).
+
+### For local testing:
 
 Enter into the root directory of the repo.
 

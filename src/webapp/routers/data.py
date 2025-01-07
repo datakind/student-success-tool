@@ -15,16 +15,16 @@ from ..utilities import (
     has_full_data_access_or_err,
     BaseUser,
     model_owner_and_higher_or_err,
-    prepend_env_prefix,
     uuid_to_str,
     str_to_uuid,
     get_current_active_user,
     DataSource,
+    get_bucket_name,
 )
 
 from ..database import get_session, local_session, BatchTable, FileTable
 
-from ..gcsutil import StorageControl
+from ..gcsutil import StorageControl, generate_upload_signed_url  # get_storage_client
 
 router = APIRouter(
     prefix="/institutions",
@@ -657,7 +657,7 @@ def download_inst_file(
         )
     if res.valid or current_user.is_datakinder:
         # download the file
-        bucket_name = prepend_env_prefix(str(res.inst_id))
+        bucket_name = get_bucket_name(inst_id)
         file_name = "output/approved/" + res.name
         dest = (
             "Downloads/" + res.name
@@ -753,11 +753,13 @@ def pull_pdp_sftp(
     # TODO: call function that handles PDP SFTP request here.
 
 
-@router.get("/{inst_id}/upload-url", response_model=str)
+@router.get("/{inst_id}/upload_url/{file_name}", response_model=str)
 def get_upload_url(
     inst_id: str,
+    file_name: str,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     storage_control: Annotated[StorageControl, Depends(StorageControl)],
+    # storage_control: Annotated[Any, Depends(get_storage_client)],
 ) -> Any:
     """Returns a signed URL for uploading data to a specific institution.
 
@@ -765,6 +767,6 @@ def get_upload_url(
         current_user: the user making the request.
     """
     has_access_to_inst_or_err(inst_id, current_user)
-    return storage_control.generate_upload_signed_url(
-        "local-upload-test", f"{inst_id}/test.csv"
-    )
+    bucket_name = get_bucket_name(inst_id)
+    # return generate_upload_signed_url(storage_control, bucket_name, file_name)
+    return storage_control.generate_upload_signed_url(bucket_name, file_name)

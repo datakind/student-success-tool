@@ -10,41 +10,64 @@ from google.cloud.storage_control_v2 import StorageControlClient
 from typing import Any
 
 
+def generate_upload_signed_url(client: Client, bucket_name: str, file_name: str) -> str:
+    """Generates a v4 signed URL for uploading a blob using HTTP PUT."""
+    bucket = client.bucket(bucket_name)
+    if not bucket.exists():
+        raise ValueError("Storage bucket not found.")
+    for prefix in ("unvalidated/", "validated/"):
+        blob_name = prefix + file_name
+        blob = bucket.blob(blob_name)
+        if blob.exists():
+            raise ValueError("File already exists.")
+    # All files uploaded directly are considered unvalidated.
+    blob_name = "unvalidated/" + file_name
+    blob = bucket.blob(blob_name)
+    url = blob.generate_signed_url(
+        version="v4",
+        # This URL is valid for 15 minutes
+        expiration=datetime.timedelta(minutes=15),
+        # Allow PUT requests using this URL.
+        method="PUT",
+        content_type="text/csv",
+    )
+
+    return url
+
+
+def create_bucket(client: Client, bucket_name: str) -> None:
+    """
+    Create a new bucket in the US region with the standard storage
+    class.
+    """
+    bucket = client.bucket(bucket_name)
+    if bucket.exists():
+        raise ValueError(bucket_name + " already exists. Creation failed.")
+    bucket.storage_class = "STANDARD"
+    new_bucket = client.create_bucket(bucket, location="us")
+
+
+# Wrapping the usages in a class makes it easier to unit test via mocks.
+
+
 # Wrapping the usages in a class makes it easier to unit test via mocks.
 class StorageControl(BaseModel):
     """Object to manage interfacing with GCS."""
 
-    class Config:
-        arbitrary_types_allowed = True
-
-    # The name should be unique amongst all other institutions.
-    storage_client: Client | None = None
-    storage_folder_client: StorageControlClient | None = None
-
-    # For some reason the storage client used for buckets and folder manipulation are different.
-    def get_storage_client(self) -> Client:
-        if not self.storage_client:
-            self.storage_client = storage.Client()
-        return self.storage_client
-
-    def get_storage_folder_client(self) -> StorageControlClient:
-        if not self.storage_folder_client:
-            self.storage_folder_client = storage_control_v2.StorageControlClient()
-        return self.storage_folder_client
-
-    def generate_upload_signed_url(self, bucket_name: str, blob_name: str) -> str:
+    def generate_upload_signed_url(self, bucket_name: str, file_name: str) -> str:
         """Generates a v4 signed URL for uploading a blob using HTTP PUT."""
-
-        if not self.storage_client:
-            self.storage_client = storage.Client()
-
-        bucket = self.storage_client.bucket(bucket_name)
+        client = storage.Client()
+        bucket = client.bucket(bucket_name)
         if not bucket.exists():
             raise ValueError("Storage bucket not found.")
+        for prefix in ("unvalidated/", "validated/"):
+            blob_name = prefix + file_name
+            blob = bucket.blob(blob_name)
+            if blob.exists():
+                raise ValueError("File already exists.")
+        # All files uploaded directly are considered unvalidated.
+        blob_name = "unvalidated/" + file_name
         blob = bucket.blob(blob_name)
-        if not blob.exists():
-            raise ValueError("Blob not found.")
-
         url = blob.generate_signed_url(
             version="v4",
             # This URL is valid for 15 minutes
@@ -59,10 +82,9 @@ class StorageControl(BaseModel):
     def generate_download_signed_url(self, bucket_name: str, blob_name: str) -> str:
         """Generates a v4 signed URL for uploading a blob using HTTP PUT."""
 
-        if not self.storage_client:
-            self.storage_client = storage.Client()
+        storage_client = storage.Client()
 
-        bucket = self.storage_client.bucket(bucket_name)
+        bucket = storage_client.bucket(bucket_name)
         if not bucket.exists():
             raise ValueError("Storage bucket not found.")
         blob = bucket.blob(blob_name)
@@ -85,50 +107,12 @@ class StorageControl(BaseModel):
         Create a new bucket in the US region with the standard storage
         class.
         """
-        if not self.storage_client:
-            self.storage_client = storage.Client()
-        bucket = self.storage_client.bucket(bucket_name)
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(bucket_name)
         if bucket.exists():
             raise ValueError(bucket_name + " already exists. Creation failed.")
         bucket.storage_class = "STANDARD"
-        new_bucket = client.create_bucket(bucket, location="us")
-
-    def create_folders(self, bucket_name: str, folder_names: list[str]) -> None:
-        """
-        Create a list of new folders in a GCS bucket.
-        """
-        # The storage bucket path uses the global access pattern, in which the "_"
-        # denotes this bucket exists in the global namespace.
-        if not self.storage_folder_client:
-            self.storage_folder_client = storage_control_v2.StorageControlClient()
-        project_path = self.storage_folder_client.common_project_path("_")
-        bucket_path = f"{project_path}/buckets/{bucket_name}"
-
-        for f in folder_names:
-            request = storage_control_v2.CreateFolderRequest(
-                parent=bucket_path,
-                folder_id=f,
-            )
-            response = self.storage_folder_client.create_folder(request=request)
-
-    # For this function specifically, use get_storage_folder_client() to get the client.
-    def list_folders(self, bucket_name: str, folder_names: list[str]) -> None:
-        """
-        Create a list of new folders in a GCS bucket.
-        """
-        # The storage bucket path uses the global access pattern, in which the "_"
-        # denotes this bucket exists in the global namespace.
-        if not self.storage_folder_client:
-            self.storage_folder_client = storage_control_v2.StorageControlClient()
-        project_path = self.storage_folder_client.common_project_path("_")
-        bucket_path = f"{project_path}/buckets/{bucket_name}"
-
-        for f in folder_names:
-            request = storage_control_v2.CreateFolderRequest(
-                parent=bucket_path,
-                folder_id=f,
-            )
-            response = self.storage_folder_client.create_folder(request=request)
+        new_bucket = storage_client.create_bucket(bucket, location="us")
 
     def list_blobs_in_folder(
         self, bucket_name: str, prefix: str, delimiter=None
@@ -159,10 +143,9 @@ class StorageControl(BaseModel):
 
             a/b/
         """
-        if not self.storage_client:
-            self.storage_client = storage.Client()
+        storage_client = storage.Client()
         # Note: Client.list_blobs requires at least package version 1.17.0.
-        blobs = self.storage_client.list_blobs(
+        blobs = storage_client.list_blobs(
             bucket_name, prefix=prefix, delimiter=delimiter
         )
 
@@ -182,9 +165,8 @@ class StorageControl(BaseModel):
 
         # The path to which the file should be downloaded
         # destination_file_name = "local/path/to/file"
-        if not self.storage_client:
-            self.storage_client = storage.Client()
-        bucket = self.storage_client.bucket(bucket_name)
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(bucket_name)
         if not bucket.exists():
             raise ValueError("Storage bucket not found.")
 

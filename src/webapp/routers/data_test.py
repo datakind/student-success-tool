@@ -4,7 +4,6 @@
 from fastapi.testclient import TestClient
 from fastapi import HTTPException
 import pytest
-from datetime import datetime
 import sqlalchemy
 from sqlalchemy.pool import StaticPool
 import uuid
@@ -17,6 +16,7 @@ from ..test_helper import (
     USER_VALID_INST_UUID,
     USER_UUID,
     UUID_INVALID,
+    DATETIME_TESTING,
 )
 from ..main import app
 from ..database import (
@@ -34,7 +34,6 @@ from ..gcsutil import StorageControl
 
 MOCK_STORAGE = mock.AsyncMock()
 
-DATETIME_TESTING = datetime(2024, 12, 24, 20, 22, 20, 132022)
 UUID_2 = uuid.UUID("9bcbc782-2e71-4441-afa2-7a311024a5ec")
 FILE_UUID_1 = uuid.UUID("f0bb3a20-6d92-4254-afed-6a72f43c562a")
 FILE_UUID_2 = uuid.UUID("cb02d06c-2a59-486a-9bdd-d394a4fcb833")

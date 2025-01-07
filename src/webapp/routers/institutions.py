@@ -15,13 +15,13 @@ from ..utilities import (
     has_full_data_access_or_err,
     BaseUser,
     AccessType,
-    prepend_env_prefix,
+    get_bucket_name_from_uuid,
     str_to_uuid,
     uuid_to_str,
     get_current_active_user,
 )
 
-from ..gcsutil import StorageControl
+from ..gcsutil import create_bucket, StorageControl  # get_storage_client
 from ..database import (
     get_session,
     InstTable,
@@ -34,7 +34,7 @@ router = APIRouter(
     tags=["institutions"],
 )
 
-
+# xxx
 # The following are the default top-level folders created in a new GCS bucket.
 # softdelete/ is the folder where files in soft-deletion (from user requests or retention time-up) are held prior to deletion.
 # Files in softdelete/ should not be visible to even datakinders unless they are in a debugging group -- they can view these files from the gcs console.
@@ -110,6 +110,7 @@ def create_institution(
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
     storage_control: Annotated[StorageControl, Depends(StorageControl)],
+    # storage_control: Annotated[Any, Depends(get_storage_client)],
 ) -> Any:
     """Create a new institution.
 
@@ -139,6 +140,7 @@ def create_institution(
                 description=req.description,
             )
         )
+        local_session.get().commit()
         query_result = (
             local_session.get()
             .execute(select(InstTable).where(InstTable.name == req.name))
@@ -154,17 +156,16 @@ def create_institution(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Database write of the institution created duplicate entries.",
             )
-        # Create a storage bucket for it
-        bucket_name = prepend_env_prefix(str(query_result[0][0].id))
+        # Create a storage bucket for it. During creation, we have to include the /.
+        bucket_name = get_bucket_name_from_uuid(query_result[0][0].id)
         try:
+            # create_bucket(storage_control, bucket_name)
             storage_control.create_bucket(bucket_name)
         except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Storage bucket creation failed, storage already exists.",
             )
-        # Create the initial folders:
-        storage_control.create_folders(bucket_name, DEFAULT_FOLDERS)
     if len(query_result) > 1:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
