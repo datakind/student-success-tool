@@ -21,10 +21,6 @@ class StorageControl(BaseModel):
     storage_client: Client | None = None
     storage_folder_client: StorageControlClient | None = None
 
-    def __init__(self):
-        self.storage_client = storage.Client()
-        self.storage_folder_client = storage_control_v2.StorageControlClient()
-
     # For some reason the storage client used for buckets and folder manipulation are different.
     def get_storage_client(self) -> Client:
         if not self.storage_client:
@@ -38,6 +34,9 @@ class StorageControl(BaseModel):
 
     def generate_upload_signed_url(self, bucket_name: str, blob_name: str) -> str:
         """Generates a v4 signed URL for uploading a blob using HTTP PUT."""
+
+        if not self.storage_client:
+            self.storage_client = storage.Client()
 
         bucket = self.storage_client.bucket(bucket_name)
         if not bucket.exists():
@@ -59,6 +58,9 @@ class StorageControl(BaseModel):
 
     def generate_download_signed_url(self, bucket_name: str, blob_name: str) -> str:
         """Generates a v4 signed URL for uploading a blob using HTTP PUT."""
+
+        if not self.storage_client:
+            self.storage_client = storage.Client()
 
         bucket = self.storage_client.bucket(bucket_name)
         if not bucket.exists():
@@ -83,6 +85,8 @@ class StorageControl(BaseModel):
         Create a new bucket in the US region with the standard storage
         class.
         """
+        if not self.storage_client:
+            self.storage_client = storage.Client()
         bucket = self.storage_client.bucket(bucket_name)
         if bucket.exists():
             raise ValueError(bucket_name + " already exists. Creation failed.")
@@ -95,6 +99,8 @@ class StorageControl(BaseModel):
         """
         # The storage bucket path uses the global access pattern, in which the "_"
         # denotes this bucket exists in the global namespace.
+        if not self.storage_folder_client:
+            self.storage_folder_client = storage_control_v2.StorageControlClient()
         project_path = self.storage_folder_client.common_project_path("_")
         bucket_path = f"{project_path}/buckets/{bucket_name}"
 
@@ -112,6 +118,8 @@ class StorageControl(BaseModel):
         """
         # The storage bucket path uses the global access pattern, in which the "_"
         # denotes this bucket exists in the global namespace.
+        if not self.storage_folder_client:
+            self.storage_folder_client = storage_control_v2.StorageControlClient()
         project_path = self.storage_folder_client.common_project_path("_")
         bucket_path = f"{project_path}/buckets/{bucket_name}"
 
@@ -151,7 +159,8 @@ class StorageControl(BaseModel):
 
             a/b/
         """
-
+        if not self.storage_client:
+            self.storage_client = storage.Client()
         # Note: Client.list_blobs requires at least package version 1.17.0.
         blobs = self.storage_client.list_blobs(
             bucket_name, prefix=prefix, delimiter=delimiter
@@ -173,7 +182,8 @@ class StorageControl(BaseModel):
 
         # The path to which the file should be downloaded
         # destination_file_name = "local/path/to/file"
-
+        if not self.storage_client:
+            self.storage_client = storage.Client()
         bucket = self.storage_client.bucket(bucket_name)
         if not bucket.exists():
             raise ValueError("Storage bucket not found.")

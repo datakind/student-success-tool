@@ -753,7 +753,7 @@ def pull_pdp_sftp(
     # TODO: call function that handles PDP SFTP request here.
 
 
-@router.get("{inst_id}/upload-url", response_model=str)
+@router.get("/{inst_id}/upload-url", response_model=str)
 def get_upload_url(
     inst_id: str,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
