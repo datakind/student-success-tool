@@ -51,7 +51,7 @@ class BaseUser(BaseModel):
     email: str | None = None
     # For Datakinders, institution is None which means "no inst specified".
     institution: str | None = None
-    access_type: AccessType
+    access_type: AccessType | None = None
     disabled: bool | None = None
 
     # Constructor
@@ -60,27 +60,29 @@ class BaseUser(BaseModel):
 
     def is_datakinder(self) -> bool:
         """Whether a given user is a Datakinder."""
-        return self.access_type == AccessType.DATAKINDER
+        return self.access_type and self.access_type == AccessType.DATAKINDER
 
     def is_model_owner(self) -> bool:
         """Whether a given user is a model owner."""
-        return self.access_type == AccessType.MODEL_OWNER
+        return self.access_type and self.access_type == AccessType.MODEL_OWNER
 
     def is_data_owner(self) -> bool:
         """Whether a given user is a data owner."""
-        return self.access_type == AccessType.DATA_OWNER
+        return self.access_type and self.access_type == AccessType.DATA_OWNER
 
     def is_viewer(self) -> bool:
         """Whether a given user is a viewer."""
-        return self.access_type == AccessType.VIEWER
+        return self.access_type and self.access_type == AccessType.VIEWER
 
     def has_access_to_inst(self, inst: str) -> bool:
         """Whether a given user has access to a given institution."""
-        return self.access_type == AccessType.DATAKINDER or self.institution == inst
+        return self.access_type and (
+            self.access_type == AccessType.DATAKINDER or self.institution == inst
+        )
 
     def has_full_data_access(self) -> bool:
         """Datakinders, model_owners, data_owners, all have full data access."""
-        return self.access_type in (
+        return self.access_type and self.access_type in (
             AccessType.DATAKINDER,
             AccessType.MODEL_OWNER,
             AccessType.DATA_OWNER,
@@ -88,6 +90,8 @@ class BaseUser(BaseModel):
 
     def has_stronger_permissions_than(self, other_access_type: AccessType) -> bool:
         """Check that self has stronger permissions than other."""
+        if not self.access_type:
+            return False
         if self.access_type == AccessType.DATAKINDER:
             return True
         if self.access_type == AccessType.MODEL_OWNER:
@@ -140,7 +144,7 @@ def authenticate_user(username: str, password: str, sess: Session) -> BaseUser:
 async def get_current_user(
     sess: Annotated[Session, Depends(get_session)],
     token: Annotated[str, Depends(oauth2_scheme)],
-):
+) -> BaseUser:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -190,7 +194,10 @@ def has_full_data_access_or_err(user: BaseUser, resource_type: str):
 
 def model_owner_and_higher_or_err(user: BaseUser, resource_type: str):
     """Raise error if a given user does not have model ownership or higher."""
-    if not user.access_type in (AccessType.MODEL_OWNER, AccessType.DATAKINDER):
+    if not user.access_type or user.access_type not in (
+        AccessType.MODEL_OWNER,
+        AccessType.DATAKINDER,
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="No permissions for " + resource_type + " for this institution.",
