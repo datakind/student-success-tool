@@ -27,7 +27,7 @@ class UserAccountRequest(BaseModel):
 
     # The name can be set by the user
     name: str | None = None
-    access_type: AccessType
+    access_type: AccessType | None = None
     # The email value must be unique across all accounts and provided.
     email: str
 
