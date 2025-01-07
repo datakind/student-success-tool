@@ -8,6 +8,7 @@ from google.cloud import storage, storage_control_v2
 from google.cloud.storage import Client
 from google.cloud.storage_control_v2 import StorageControlClient
 from typing import Any
+from .config import gcs_vars
 
 
 def rename_file(
@@ -37,43 +38,6 @@ def rename_file(
     source_bucket.delete_blob(file_name)
 
 
-def generate_upload_signed_url(client: Client, bucket_name: str, file_name: str) -> str:
-    """Generates a v4 signed URL for uploading a blob using HTTP PUT."""
-    bucket = client.bucket(bucket_name)
-    if not bucket.exists():
-        raise ValueError("Storage bucket not found.")
-    for prefix in ("unvalidated/", "validated/"):
-        blob_name = prefix + file_name
-        blob = bucket.blob(blob_name)
-        if blob.exists():
-            raise ValueError("File already exists.")
-    # All files uploaded directly are considered unvalidated.
-    blob_name = "unvalidated/" + file_name
-    blob = bucket.blob(blob_name)
-    url = blob.generate_signed_url(
-        version="v4",
-        # This URL is valid for 15 minutes
-        expiration=datetime.timedelta(minutes=15),
-        # Allow PUT requests using this URL.
-        method="PUT",
-        content_type="text/csv",
-    )
-
-    return url
-
-
-def create_bucket(client: Client, bucket_name: str) -> None:
-    """
-    Create a new bucket in the US region with the standard storage
-    class.
-    """
-    bucket = client.bucket(bucket_name)
-    if bucket.exists():
-        raise ValueError(bucket_name + " already exists. Creation failed.")
-    bucket.storage_class = "STANDARD"
-    new_bucket = client.create_bucket(bucket, location="us")
-
-
 # Wrapping the usages in a class makes it easier to unit test via mocks.
 
 
@@ -83,7 +47,14 @@ class StorageControl(BaseModel):
 
     def generate_upload_signed_url(self, bucket_name: str, file_name: str) -> str:
         """Generates a v4 signed URL for uploading a blob using HTTP PUT."""
-        client = storage.Client()
+        if (
+            not gcs_vars["GCP_SERVICE_ACCOUNT_KEY_PATH"]
+            or gcs_vars["GCP_SERVICE_ACCOUNT_KEY_PATH"] == ""
+        ):
+            raise ValueError("GCP_SERVICE_ACCOUNT_KEY_PATH env var not set.")
+        client = storage.Client.from_service_account_json(
+            gcs_vars["GCP_SERVICE_ACCOUNT_KEY_PATH"]
+        )
         bucket = client.bucket(bucket_name)
         if not bucket.exists():
             raise ValueError("Storage bucket not found.")

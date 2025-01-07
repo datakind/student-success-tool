@@ -24,7 +24,7 @@ from ..utilities import (
 
 from ..database import get_session, local_session, BatchTable, FileTable
 
-from ..gcsutil import StorageControl, generate_upload_signed_url  # get_storage_client
+from ..gcsutil import StorageControl
 
 router = APIRouter(
     prefix="/institutions",
@@ -729,7 +729,6 @@ def validate_file(
     """
     has_access_to_inst_or_err(inst_id, current_user)
     model_owner_and_higher_or_err(current_user, "model training data")
-    # generate_upload_signed_url(str(inst_id), f"training_data/FOO.csv")
     # TODO: make the POST call to the upload url with the file.
     # Update or create batch.
     return {
@@ -759,7 +758,6 @@ def get_upload_url(
     file_name: str,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     storage_control: Annotated[StorageControl, Depends(StorageControl)],
-    # storage_control: Annotated[Any, Depends(get_storage_client)],
 ) -> Any:
     """Returns a signed URL for uploading data to a specific institution.
 
@@ -768,5 +766,4 @@ def get_upload_url(
     """
     has_access_to_inst_or_err(inst_id, current_user)
     bucket_name = get_bucket_name(inst_id)
-    # return generate_upload_signed_url(storage_control, bucket_name, file_name)
     return storage_control.generate_upload_signed_url(bucket_name, file_name)

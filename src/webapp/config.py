@@ -34,6 +34,10 @@ ssl_env_vars = {
     "DB_KEY": "",
 }
 
+gcs_vars = {
+    "GCP_SERVICE_ACCOUNT_KEY_PATH": "",
+}
+
 
 # Setup function to get environment variables. Should be called at startup time.
 def startup_env_vars():
@@ -67,6 +71,17 @@ def startup_env_vars():
                 "ACCESS_TOKEN_EXPIRE_MINUTES and ACCESS_TOKEN_EXPIRE_MINUTES environment variables must be an int."
             )
         env_vars[name] = env_var
+    if env_vars["ENV"] != "LOCAL":
+        global gcs_vars
+        for name in gcs_vars:
+            env_var = os.environ.get(name)
+            if not env_var:
+                raise ValueError(
+                    "Missing "
+                    + name
+                    + " value missing. Required GCP environment variable."
+                )
+            gcs_vars[name] = env_var
 
 
 # Setup function to get db environment variables. Should be called at db startup time.

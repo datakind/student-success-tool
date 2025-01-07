@@ -21,7 +21,7 @@ from ..utilities import (
     get_current_active_user,
 )
 
-from ..gcsutil import create_bucket, StorageControl  # get_storage_client
+from ..gcsutil import StorageControl
 from ..database import (
     get_session,
     InstTable,
@@ -110,7 +110,6 @@ def create_institution(
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
     storage_control: Annotated[StorageControl, Depends(StorageControl)],
-    # storage_control: Annotated[Any, Depends(get_storage_client)],
 ) -> Any:
     """Create a new institution.
 
@@ -123,6 +122,11 @@ def create_institution(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authorized to create an institution.",
+        )
+    if len(req.description) > 29:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Description length too long.",
         )
     local_session.set(sql_session)
     query_result = (
@@ -159,7 +163,6 @@ def create_institution(
         # Create a storage bucket for it. During creation, we have to include the /.
         bucket_name = get_bucket_name_from_uuid(query_result[0][0].id)
         try:
-            # create_bucket(storage_control, bucket_name)
             storage_control.create_bucket(bucket_name)
         except ValueError as e:
             raise HTTPException(
