@@ -693,11 +693,36 @@ def download_inst_file(
     }
 
 
+# the process to upload a file would involve three API calls:
+# 1. Get the upload URL
+# 2. Post to the upload URL
+# 3. Validate the file
 @router.post("/{inst_id}/input/uploadfile", response_model=DataInfo)
 def upload_file(
     inst_id: str, current_user: Annotated[BaseUser, Depends(get_current_active_user)]
 ) -> Any:
     """Add new data from local filesystem.
+
+    Args:
+        current_user: the user making the request.
+    """
+    has_access_to_inst_or_err(inst_id, current_user)
+    model_owner_and_higher_or_err(current_user, "model training data")
+    # generate_upload_signed_url(str(inst_id), f"training_data/FOO.csv")
+    # TODO: make the POST call to the upload url with the file.
+    # Update or create batch.
+    return {
+        "name": "TEST_UPLOAD_NAME",
+    }
+
+
+@router.post("/{inst_id}/input/validatefile/{file_name}", response_model=DataInfo)
+def validate_file(
+    inst_id: str,
+    file_name: str,
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
+) -> Any:
+    """Validate a given file.
 
     Args:
         current_user: the user making the request.
