@@ -105,8 +105,8 @@ class InstTable(Base):
     # If retention unset, the Datakind default is used. File-level retentions overrides
     # this value.
     retention_days: Mapped[int] = mapped_column(nullable=True)
-    # Only populated for PDP schools.
-    pdp_id: Mapped[int] = mapped_column(nullable=True)
+    # Only populated for PDP schools. Uncomment once logic available.
+    # pdp_id: Mapped[int] = mapped_column(nullable=True)
     # A short description or note on this inst.
     description = Column(String(VAR_CHAR_LENGTH))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
