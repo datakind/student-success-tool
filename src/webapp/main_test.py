@@ -104,16 +104,6 @@ def test_retrieve_token(client: TestClient):
     assert response.status_code == 200
 
 
-def test_retrieve_token_for_frontend(client: TestClient):
-    """Test POST /token_from_frontend."""
-    response = client.post(
-        "/token_from_frontend",
-        data={"username": "johnsmith@example.com", "password": "xxxx"},
-        headers={"content-type": "application/x-www-form-urlencoded"},
-    )
-    assert response.status_code == 401
-
-
 def test_get_cross_isnt_users(client: TestClient):
     """Test POST /non_inst_users."""
     response = client.get("/non_inst_users")

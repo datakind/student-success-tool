@@ -111,6 +111,7 @@ class InstTable(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 
+# NOTE: only users created by the frontend are accessible through the fronted. Users created by API calls can only directly call API calls. Frontend will not work.
 # The user accounts table
 class AccountTable(Base):
     __tablename__ = "users"  # Name to be compliant with Laravel.
@@ -141,14 +142,8 @@ class AccountTable(Base):
     two_factor_confirmed_at = Column(DateTime(timezone=True), nullable=True)
 
     remember_token = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=True)
-    """
-    # TODO: add in team integration with laravel
-    current_team_id = Column(
-        Uuid(as_uuid=True),
-        ForeignKey("teams.id"),
-        nullable=True,
-    )
-    """
+    # Required for team integration with laravel
+    current_team_id = Column(Uuid(as_uuid=True), nullable=True)
     access_type = Column(String(VAR_CHAR_LENGTH), nullable=True)
     profile_photo_path = Column(String(VAR_CHAR_LENGTH), nullable=True)
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -409,6 +404,8 @@ def setup_db(env: str):
     # create SQLAlchemy ORM session
     global LocalSession
     LocalSession = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
+    # TODO: instead of create_all, check if exists and only create all if no exist
+    # https://stackoverflow.com/questions/33053241/sqlalchemy-if-table-does-not-exist
     Base.metadata.create_all(db_engine)
     if env in ("LOCAL", "DEV"):
         # Creates a fake user in the local db
