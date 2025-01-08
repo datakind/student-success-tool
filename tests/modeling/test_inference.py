@@ -4,9 +4,21 @@ import pytest
 from pandas.api.types import is_numeric_dtype
 
 from student_success_tool.modeling.inference import (
+    calculate_shap_values,
     calculate_shap_values_spark_udf,
     select_top_features_for_display,
 )
+
+
+class DummyKernelExplainer:
+    def shap_values(self, X):
+        # for simplicity, return random numbers of the proper shape
+        return np.random.rand(len(X), len(X.columns)) * 0.1
+
+
+@pytest.fixture(scope="module")
+def explainer():
+    return DummyKernelExplainer()
 
 
 @pytest.mark.parametrize(
@@ -121,28 +133,39 @@ def test_select_top_features_for_display(
     assert pd.testing.assert_frame_equal(obs, exp) is None
 
 
-@pytest.fixture
-def sample_data():
-    data = {
-        "student_id": [1, 2, 3],
-        "feature1": [0.1, 0.2, 0.3],
-        "feature2": [0.4, 0.5, 0.6],
-    }
-    return pd.DataFrame(data)
-
-
-# Create dummy KernelExplainer
-class SimpleKernelExplainer:
-    def shap_values(self, X):
-        # Simulate SHAP values: For simplicity, we return random numbers
-        return (
-            np.random.rand(len(X), len(X.columns)) * 0.1
-        )  # Random SHAP values between 0 and 0.1
-
-
-@pytest.fixture
-def explainer():
-    return SimpleKernelExplainer()
+@pytest.mark.parametrize(
+    ["df", "feature_names", "fillna_values", "student_id_col", "exp_shape"],
+    [
+        (
+            pd.DataFrame(
+                {
+                    "student_id": [1, 2, 3],
+                    "feature1": [0.1, 0.2, 0.3],
+                    "feature2": [0.4, 0.5, 0.6],
+                }
+            ),
+            ["feature1", "feature2"],
+            pd.Series([0.2, 0.5]),
+            "student_id",
+            (3, 3),
+        ),
+    ],
+)
+def test_calculate_shap_values(
+    explainer, df, feature_names, fillna_values, student_id_col, exp_shape
+):
+    obs = calculate_shap_values(
+        df,
+        explainer,
+        feature_names=feature_names,
+        fillna_values=fillna_values,
+        student_id_col=student_id_col,
+    )
+    assert isinstance(obs, pd.DataFrame) and not obs.empty
+    assert obs.shape == exp_shape
+    assert student_id_col in obs.columns
+    assert all(is_numeric_dtype(obs[feature_name]) for feature_name in feature_names)
+    assert obs[student_id_col].equals(df[student_id_col])
 
 
 @pytest.mark.parametrize(
