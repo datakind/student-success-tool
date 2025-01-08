@@ -1,8 +1,9 @@
 import typing as t
-from shap import KernelExplainer
 
 import numpy as np
 import pandas as pd
+from shap import KernelExplainer
+
 
 def select_top_features_for_display(
     features: pd.DataFrame,
@@ -66,25 +67,26 @@ def select_top_features_for_display(
     return pd.DataFrame(top_features_info)
 
 
-def calculate_shap_values(
-    dfs: t.Iterator[pd.DataFrame], *, 
+def calculate_shap_values_spark_udf(
+    dfs: t.Iterator[pd.DataFrame],
+    *,
     student_id_col: str,
-    model_features: list[str], 
+    model_features: list[str],
     explainer: KernelExplainer,
     mode: pd.Series,
 ) -> t.Iterator[pd.DataFrame]:
     """
     SHAP is computationally expensive, so this function enables parallelization,
     by calculating SHAP values over an iterator of DataFrames. Sparks' repartition
-    performs a full shuffle (does not preserve row order), so it is critical to 
-    extract the student_id_col prior to creating shap values and then reattach 
+    performs a full shuffle (does not preserve row order), so it is critical to
+    extract the student_id_col prior to creating shap values and then reattach
     for our final output.
 
     Args:
         dfs: An iterator over Pandas DataFrames.
         Each DataFrame is a batch of data points.
         student_id_col: The name of the column containing student_id
-        model_features: A list of strings representing the names 
+        model_features: A list of strings representing the names
         of the features for our model
         explainer: A KernelExplainer object used to compute
         shap values from our loaded model.
@@ -95,17 +97,45 @@ def calculate_shap_values(
         contains the SHAP values for that partition of data.
     """
     for df in dfs:
-        # Preserve student_id column
-        student_ids_batch = df.loc[:, student_id_col]
+        yield calculate_shap_values(
+            df,
+            explainer,
+            feature_names=model_features,
+            fillna_values=mode,
+            student_id_col=student_id_col,
+        )
 
-        # Impute missing values and run shap values using just pdf features
-        df_features = df[model_features].fillna(mode)
-        shap_values = explainer.shap_values(df_features)
 
-        # Create a DataFrame from the SHAP values
-        shap_df = pd.DataFrame(shap_values, columns=model_features)
+def calculate_shap_values(
+    df: pd.DataFrame,
+    explainer: KernelExplainer,
+    *,
+    feature_names: list[str],
+    fillna_values: pd.Series,
+    student_id_col: str = "student_guid",
+) -> pd.DataFrame:
+    """
+    Compute SHAP values for the features in ``df`` using ``explainer`` and return result
+    as a reassembled data frame with ``feature_names`` as columns and ``student_id_col``
+    added as an extra (identifying) column.
 
-        # Reattach the student_id column to our SHAP values DataFrame
-        shap_df[student_id_col] = student_ids_batch
+    Args:
+        df
+        explainer
+        feature_names
+        fillna_values
+        student_id_col
 
-        yield shap_df
+    Reference:
+        https://shap.readthedocs.io/en/stable/generated/shap.KernelExplainer.html
+    """
+    # preserve student ids
+    student_ids = df.loc[:, student_id_col]
+    # impute missing values and run shap values using just features
+    features_imp = df.loc[:, feature_names].fillna(fillna_values)
+    shap_values = explainer.shap_values(features_imp)
+    return (
+        pd.DataFrame(data=shap_values, columns=feature_names)
+        # reattach student ids to their shap values
+        .assign(**{student_id_col: student_ids})
+    )
