@@ -1,10 +1,12 @@
 import numpy as np
 import pandas as pd
-from pandas.api.types import is_numeric_dtype
 import pytest
+from pandas.api.types import is_numeric_dtype
 
-from student_success_tool.modeling.inference import select_top_features_for_display
-from student_success_tool.modeling.inference import calculate_shap_values
+from student_success_tool.modeling.inference import (
+    calculate_shap_values_spark_udf,
+    select_top_features_for_display,
+)
 
 
 @pytest.mark.parametrize(
@@ -160,7 +162,7 @@ def explainer():
         ),
     ],
 )
-def test_calculate_shap_values_basic(input_data, expected_shape, explainer):
+def test_calculate_shap_values_spark_udf_basic(input_data, expected_shape, explainer):
     df = pd.DataFrame(input_data)
     student_id_col = "student_id"
     model_features = ["feature1", "feature2"]
@@ -169,7 +171,7 @@ def test_calculate_shap_values_basic(input_data, expected_shape, explainer):
     iterator = iter([df])
 
     result = list(
-        calculate_shap_values(
+        calculate_shap_values_spark_udf(
             iterator,
             student_id_col=student_id_col,
             model_features=model_features,
@@ -227,7 +229,7 @@ def test_calculate_shap_values_basic(input_data, expected_shape, explainer):
         ),
     ],
 )
-def test_calculate_shap_values_multiple_batches(
+def test_calculate_shap_values_spark_udf_multiple_batches(
     batch1_data, batch2_data, expected_shape1, expected_shape2, explainer
 ):
     batch1 = pd.DataFrame(batch1_data)
@@ -240,7 +242,7 @@ def test_calculate_shap_values_multiple_batches(
     iterator = iter([batch1, batch2])
 
     result = list(
-        calculate_shap_values(
+        calculate_shap_values_spark_udf(
             iterator,
             student_id_col=student_id_col,
             model_features=model_features,
