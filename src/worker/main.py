@@ -9,6 +9,8 @@ from fastapi.responses import FileResponse
 from src.webapp.config import env_vars, startup_env_vars
 from src.webapp.database import setup_db, db_engine
 from pydantic import BaseModel
+import pandas as pd
+from google.cloud import storage
 
 
 # Set the logging
@@ -49,10 +51,19 @@ def read_root() -> Any:
 
 class DataUploadValidationRequest(BaseModel):
     filename: str
-    inst_id: int
+    inst_id: str
 
 
 @app.post("/validate-data-upload")
 def validate_file(request: DataUploadValidationRequest) -> Any:
     """Validates the file."""
-    return {"status": "ok", "filename": request.filename, "inst_id": request.inst_id}
+    client = storage.Client()
+    bucket = client.bucket(request.inst_id)
+    blob = bucket.blob(f"unvalidated/{request.filename}")
+    logger.info(f"Blob content type: {blob.content_type}")
+    return {
+        "status": "ok",
+        "filename": request.filename,
+        "inst_id": request.inst_id,
+        "content_type": blob.content_type,
+    }
