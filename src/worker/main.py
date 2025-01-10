@@ -60,6 +60,7 @@ class DataUploadValidationRequest(BaseModel):
 @app.post("/validate-data-upload")
 def validate_file(request: DataUploadValidationRequest) -> Any:
     """Validates the file."""
+    logger.info(request.model_dump_json())
     client = storage.Client()
     bucket = client.bucket(request.inst_id)
     blob = bucket.blob(f"unvalidated/{request.filename}")
