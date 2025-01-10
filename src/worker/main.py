@@ -8,9 +8,12 @@ from fastapi.responses import FileResponse
 
 from src.webapp.config import env_vars, startup_env_vars
 from src.webapp.database import setup_db, db_engine
+from src.webapp.validation import validate_file_reader
+from src.webapp.gcsutil import rename_file
 from pydantic import BaseModel
 import pandas as pd
 from google.cloud import storage
+from fastapi import HTTPException
 
 
 # Set the logging
@@ -61,9 +64,27 @@ def validate_file(request: DataUploadValidationRequest) -> Any:
     bucket = client.bucket(request.inst_id)
     blob = bucket.blob(f"unvalidated/{request.filename}")
     logger.info(f"Blob content type: {blob.content_type}")
+    with blob.open("r") as file:
+        try:
+            with blob.open("r") as file:
+                validate_file_reader(file)
+        except Exception as e:
+            logger.error(f"Error validating file: {e}")
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "filename": request.filename,
+                    "inst_id": request.inst_id,
+                    "error": str(e),
+                },
+            )
+    new_blob_name = f"validated/{request.filename}"
+    logger.info(f"Renaming file to: {new_blob_name}")
+    bucket.copy_blob(blob, bucket, new_blob_name)
+    blob.delete()
+    logger.info(f"File renamed to: {new_blob_name}")
     return {
-        "status": "ok",
-        "filename": request.filename,
+        "filename": new_blob_name,
         "inst_id": request.inst_id,
         "content_type": blob.content_type,
     }

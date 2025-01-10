@@ -8,6 +8,7 @@ import builtins
 from collections import Counter
 from enum import IntEnum
 from typing import Final
+from io import TextIOWrapper, TextIOBase
 
 
 class SchemaType(IntEnum):
@@ -307,5 +308,27 @@ def get_col_names(filename: str) -> list[str]:
 
 def validate_file(filename: str) -> bool:
     if detect_file_type(get_col_names(filename)) == SchemaType.UNKNOWN:
+        raise ValueError("CSV file schema not recognized")
+    return True
+
+
+def get_col_names_reader(f) -> None:
+    try:
+        # Use the sniffer to detect the columns and dialect.
+        csv_dialect = csv.Sniffer().sniff(f.readline())
+        f.seek(0)
+        if not csv.Sniffer().has_header(f.readline()):
+            raise ValueError("CSV file malformed: Headers not found")
+    except csv.Error as e:
+        raise ValueError(f"CSV file malformed: {e}")
+    # Read the column names and store in col_names.
+    f.seek(0)
+    dict_reader = csv.DictReader(f, dialect=csv_dialect)
+    col_names = dict_reader.fieldnames
+    return col_names
+
+
+def validate_file_reader(reader) -> bool:
+    if detect_file_type(get_col_names_reader(reader)) == SchemaType.UNKNOWN:
         raise ValueError("CSV file schema not recognized")
     return True
