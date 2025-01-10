@@ -251,6 +251,21 @@ def read_inst_all_input_files(
         ),
     }
 
+@router.get("/{inst_id}/input_debugging", response_model=list[str])
+def get_all_files_in_bucket(
+    inst_id: str,
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
+    storage_control: Annotated[StorageControl, Depends(StorageControl)],
+) -> Any:
+    """DEBUGGING ENDPOINT. DELETE ONCE SHIPPED.
+    """
+    if not current_user.is_datakinder:
+        raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Debugging endpoint needs to be datakinder.",
+        )
+    return storage_control.list_blobs_in_folder(get_bucket_name(inst_id), "")
+
 
 @router.get("/{inst_id}/output", response_model=DataOverview)
 def read_inst_all_output_files(

@@ -69,7 +69,7 @@ class StorageControl(BaseModel):
         url = blob.generate_signed_url(
             version="v4",
             # This URL is valid for 15 minutes
-            expiration=datetime.timedelta(minutes=15),
+            expiration=datetime.timedelta(minutes=30),
             # Allow PUT requests using this URL.
             method="PUT",
             content_type="text/csv",
@@ -105,6 +105,8 @@ class StorageControl(BaseModel):
         Create a new bucket in the US region with the standard storage
         class.
         """
+        # XXX TODO: add cors config to allow frontend access
+        # API callers will need t update this as well probs
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
         if bucket.exists():
@@ -155,6 +157,7 @@ class StorageControl(BaseModel):
         if delimiter:
             for prefix in blobs.prefixes:
                 res.append(prefix)
+        return res
 
     def download_file(
         self, bucket_name: str, file_name: str, destination_file_name: str
