@@ -163,7 +163,7 @@ class Provider(BaseProvider):
             start_date=date(min_yr, 1, 1), end_date=_end_date
         )
         end_dt = start_dt.replace(year=start_dt.year + 1)
-        return f"{start_dt:%Y}-{end_dt:%Y}"
+        return f"{start_dt:%Y}-{end_dt:%y}"
 
     def cohort_term(self) -> str:
         return self.random_element(["FALL", "WINTER", "SPRING", "SUMMER"])
