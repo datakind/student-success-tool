@@ -11,6 +11,7 @@ def select_top_features_for_display(
     predicted_probabilities: list[float],
     shap_values: pd.Series,
     n_features: int = 3,
+    needs_support_threshold_prob: t.Optional[float] = 0.5,
     features_table: t.Optional[dict[str, dict[str, str]]] = None,
 ) -> pd.DataFrame:
     """
@@ -24,6 +25,7 @@ def select_top_features_for_display(
             order as unique_ids, of shape len(unique_ids)
         shap_values: array of arrays of SHAP values, of shape len(unique_ids)
         n_features: number of important features to return
+        needs_support_threshold_prob
         features_table: Optional mapping of column to human-friendly feature name/desc,
             loaded via :func:`utils.load_features_table()`
 
@@ -43,7 +45,16 @@ def select_top_features_for_display(
         top_feature_values = features.iloc[i][top_features]
         top_shap_values = instance_shap_values[top_indices]
 
-        for rank, (feature, feature_value, shap_value) in enumerate(
+        student_output = {
+            "Student ID": unique_id,
+            "Support Score": predicted_proba,
+        }
+        if needs_support_threshold_prob is not None:
+            student_output["Support Needed"] = (
+                predicted_proba >= needs_support_threshold_prob
+            )
+
+        for feature_rank, (feature, feature_value, shap_value) in enumerate(
             zip(top_features, top_feature_values, top_shap_values), start=1
         ):
             feature_name = (
@@ -54,16 +65,18 @@ def select_top_features_for_display(
                 if features_table is not None
                 else feature
             )
-            top_features_info.append(
-                {
-                    "Student ID": unique_id,
-                    "Support Score": predicted_proba,
-                    "Top Indicators": feature_name,
-                    "Indicator Value": feature_value,
-                    "SHAP Value": shap_value,
-                    "Rank": rank,
-                }
+            feature_value = (
+                str(round(feature_value, 2))
+                if isinstance(feature_value, float)
+                else str(feature_value)
             )
+            student_output |= {
+                f"Feature_{feature_rank}_Name": feature_name,
+                f"Feature_{feature_rank}_Value": feature_value,
+                f"Feature_{feature_rank}_Importance": round(shap_value, 2),
+            }
+
+        top_features_info.append(student_output)
     return pd.DataFrame(top_features_info)
 
 
