@@ -1,6 +1,7 @@
 import typing as t
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from shap import KernelExplainer
 
@@ -9,7 +10,7 @@ def select_top_features_for_display(
     features: pd.DataFrame,
     unique_ids: pd.Series,
     predicted_probabilities: list[float],
-    shap_values: pd.Series,
+    shap_values: npt.NDArray[np.float64],
     n_features: int = 3,
     needs_support_threshold_prob: t.Optional[float] = 0.5,
     features_table: t.Optional[dict[str, dict[str, str]]] = None,
@@ -34,11 +35,10 @@ def select_top_features_for_display(
 
     TODO: refactor this functionality so it's vectorized and aggregates by student
     """
-    top_features_info = []
+    pred_probs = np.asarray(predicted_probabilities)
 
-    for i, (unique_id, predicted_proba) in enumerate(
-        zip(unique_ids, predicted_probabilities)
-    ):
+    top_features_info = []
+    for i, (unique_id, predicted_proba) in enumerate(zip(unique_ids, pred_probs)):
         instance_shap_values = shap_values[i]
         top_indices = np.argsort(-np.abs(instance_shap_values))[:n_features]
         top_features = features.columns[top_indices]
