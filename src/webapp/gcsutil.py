@@ -11,6 +11,9 @@ from typing import Any
 from .config import gcs_vars
 
 
+SIGNED_URL_EXPIRY_MIN = 30
+
+
 def rename_file(
     bucket_name,
     file_name,
@@ -68,8 +71,8 @@ class StorageControl(BaseModel):
         blob = bucket.blob(blob_name)
         url = blob.generate_signed_url(
             version="v4",
-            # This URL is valid for 15 minutes
-            expiration=datetime.timedelta(minutes=30),
+            # How long the url is usable for.
+            expiration=datetime.timedelta(minutes=SIGNED_URL_EXPIRY_MIN),
             # Allow PUT requests using this URL.
             method="PUT",
             content_type="text/csv",
@@ -78,26 +81,29 @@ class StorageControl(BaseModel):
         return url
 
     def generate_download_signed_url(self, bucket_name: str, blob_name: str) -> str:
-        """Generates a v4 signed URL for uploading a blob using HTTP PUT."""
-
-        storage_client = storage.Client()
-
-        bucket = storage_client.bucket(bucket_name)
+        """Generates a v4 signed URL for downloading a blob using HTTP GET."""
+        if (
+            not gcs_vars["GCP_SERVICE_ACCOUNT_KEY_PATH"]
+            or gcs_vars["GCP_SERVICE_ACCOUNT_KEY_PATH"] == ""
+        ):
+            raise ValueError("GCP_SERVICE_ACCOUNT_KEY_PATH env var not set.")
+        client = storage.Client.from_service_account_json(
+            gcs_vars["GCP_SERVICE_ACCOUNT_KEY_PATH"]
+        )
+        bucket = client.bucket(bucket_name)
         if not bucket.exists():
             raise ValueError("Storage bucket not found.")
         blob = bucket.blob(blob_name)
         if not blob.exists():
-            raise ValueError("Blob not found.")
-
+            raise ValueError("File not found.")
         url = blob.generate_signed_url(
             version="v4",
-            # This URL is valid for 15 minutes
-            expiration=datetime.timedelta(minutes=15),
+            # How long the url is usable for.
+            expiration=datetime.timedelta(minutes=SIGNED_URL_EXPIRY_MIN),
             # Allow GET requests using this URL.
             method="GET",
             content_type="text/csv",
         )
-
         return url
 
     def create_bucket(self, bucket_name: str) -> None:
@@ -105,12 +111,19 @@ class StorageControl(BaseModel):
         Create a new bucket in the US region with the standard storage
         class.
         """
-        # XXX TODO: add cors config to allow frontend access
-        # API callers will need t update this as well probs
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
         if bucket.exists():
             raise ValueError(bucket_name + " already exists. Creation failed.")
+        bucket.cors = [
+            {
+                "origin": ["*"],  # TODO: update with url?
+                "responseHeader": ["*"],
+                "method": ["GET", "OPTIONS", "PUT", "POST"],
+                "maxAgeSeconds": 3600,
+            }
+        ]
+        bucket.patch()
         bucket.storage_class = "STANDARD"
         new_bucket = storage_client.create_bucket(bucket, location="us")
 

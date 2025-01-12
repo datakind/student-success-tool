@@ -251,18 +251,18 @@ def read_inst_all_input_files(
         ),
     }
 
+
 @router.get("/{inst_id}/input_debugging", response_model=list[str])
 def get_all_files_in_bucket(
     inst_id: str,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     storage_control: Annotated[StorageControl, Depends(StorageControl)],
 ) -> Any:
-    """DEBUGGING ENDPOINT. DELETE ONCE SHIPPED.
-    """
+    """DEBUGGING ENDPOINT. DELETE ONCE SHIPPED."""
     if not current_user.is_datakinder:
         raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Debugging endpoint needs to be datakinder.",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Debugging endpoint needs to be datakinder.",
         )
     return storage_control.list_blobs_in_folder(get_bucket_name(inst_id), "")
 
@@ -559,6 +559,9 @@ def update_batch(
     }
 
 
+# TODO: check expiration of files and batches
+
+
 @router.get("/{inst_id}/file/{file_id}", response_model=DataInfo)
 def read_file_info(
     inst_id: str,
@@ -618,13 +621,74 @@ def read_file_info(
     }
 
 
-# TODO: ADD TESTS for the below and finish implementing the below
-@router.get("/{inst_id}/file/{file_id}/download", response_model=DataInfo)
-def download_inst_file(
+@router.get("/{inst_id}/file/{file_name}", response_model=DataInfo)
+def read_file_info(
     inst_id: str,
-    file_id: str,
+    file_name: str,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
+    # storage_control: Annotated[StorageControl, Depends(StorageControl)],
+) -> Any:
+    """Returns a given file's data.
+
+    Only visible to users of that institution or Datakinder access types.
+
+    Args:
+        current_user: the user making the request.
+    """
+    has_access_to_inst_or_err(inst_id, current_user)
+    has_full_data_access_or_err(current_user, "file data")
+    local_session.set(sql_session)
+    query_result = (
+        local_session.get()
+        .execute(
+            select(FileTable).where(
+                and_(
+                    FileTable.name == str_to_uuid(file_name),
+                    FileTable.inst_id == str_to_uuid(inst_id),
+                )
+            )
+        )
+        .all()
+    )
+    # This should only result in a match of a single file.
+    if not query_result or len(query_result) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="File not found.",
+        )
+    if len(query_result) > 1:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="File duplicates found.",
+        )
+    res = query_result[0][0]
+    return {
+        "name": res.name,
+        "data_id": uuid_to_str(res.id),
+        "batch_ids": uuids_to_strs(res.batches),
+        "inst_id": uuid_to_str(res.inst_id),
+        # "size_mb": res.size_mb,
+        "description": res.description,
+        "uploader": uuid_to_str(res.uploader),
+        "source": res.source,
+        "deleted": False if res.deleted is None else res.deleted,
+        "deletion_request_time": res.deleted_at,
+        "retention_days": res.retention_days,
+        "sst_generated": res.sst_generated,
+        "valid": res.valid,
+        "uploaded_date": res.created_at,
+    }
+
+
+# TODO: ADD TESTS for the below
+@router.get("/{inst_id}/file/{file_name}/download_url", response_model=DataInfo)
+def download_url_inst_file(
+    inst_id: str,
+    file_name: str,
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
+    sql_session: Annotated[Session, Depends(get_session)],
+    storage_control: Annotated[StorageControl, Depends(StorageControl)],
 ) -> Any:
     """Enables download of approved output files.
 
@@ -641,7 +705,7 @@ def download_inst_file(
         .execute(
             select(FileTable).where(
                 and_(
-                    FileTable.id == str_to_uuid(file_id),
+                    FileTable.name == str_to_uuid(file_name),
                     FileTable.inst_id == str_to_uuid(inst_id),
                 )
             )
@@ -670,48 +734,26 @@ def download_inst_file(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Only SST generated files can be downloaded.",
         )
-    if res.valid or current_user.is_datakinder:
-        # download the file
-        bucket_name = get_bucket_name(inst_id)
-        file_name = "output/approved/" + res.name
-        dest = (
-            "Downloads/" + res.name
-        )  # xxx TODO update?? Do we want to use signed url for downloads?
-        try:
-            download_file(bucket_name, file_name, dest)
-        except ValueError as e:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="File not found:" + str(e),
-            )
+    if res.valid:
+        file_name = "output/approved/" + file_name
+    elif current_user.is_datakinder:
+        file_name = "output/unapproved/" + file_name
     else:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="File not yet approved by Datakind. Cannot be downloaded.",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File not yet approved by Datakind. Cannot be downloaded by non Datakinders.",
         )
-    res = query_result[0][0]
-    return {
-        "name": res.name,
-        "data_id": uuid_to_str(res.id),
-        "batch_ids": uuids_to_strs(res.batches),
-        "inst_id": uuid_to_str(res.inst_id),
-        # "size_mb": res.size_mb,
-        "description": res.description,
-        "uploader": uuid_to_str(res.uploader),
-        "source": res.source,
-        "deleted": False if res.deleted is None else res.deleted,
-        "deletion_request_time": res.deleted_at,
-        "retention_days": res.retention_days,
-        "sst_generated": res.sst_generated,
-        "valid": res.valid,
-        "uploaded_date": res.created_at,
-    }
+    bucket_name = get_bucket_name(inst_id)
+    return storage_control.generate_download_signed_url(bucket_name, file_name)
 
 
 # the process to upload a file would involve three API calls:
 # 1. Get the upload URL
 # 2. Post to the upload URL
 # 3. Validate the file
+
+
+# TODO delete following?
 @router.post("/{inst_id}/input/uploadfile", response_model=DataInfo)
 def upload_file(
     inst_id: str, current_user: Annotated[BaseUser, Depends(get_current_active_user)]
