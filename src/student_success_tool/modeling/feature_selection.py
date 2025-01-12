@@ -204,24 +204,22 @@ def drop_collinear_features_iteratively(
     assert isinstance(df_features, pd.DataFrame)  # type guard
 
     n_features_dropped_so_far = 0
-    while (
-        max_vif := max(
-            (
-                uncentered_vif_dict := {
-                    # calculate VIF of features that are not force-included
-                    # against all numeric variables
-                    col: variance_inflation_factor(df_features, col_index)
-                    for col_index, col in enumerate(df_features.columns.tolist())
-                    if col not in force_include_cols
-                }
-            ).values()
-        )
-    ) >= threshold:
-        highest_vif_cols = [
-            col for col, vif in uncentered_vif_dict.items() if vif == max_vif
-        ]
-        n_drop_this_round = len(highest_vif_cols)
-        n_features_dropped_so_far += n_drop_this_round
+
+    # Calculate initial VIFs
+    uncentered_vif_dict = {
+        col: variance_inflation_factor(df_features.values, i)
+        for i, col in enumerate(df_features.columns)
+        if col not in force_include_cols
+    }
+
+    if set(uncentered_vif_dict.values()) == {np.inf}:
+        LOGGER.info("all features are perfectly correlated with one another, therefore none are dropped")
+        return df
+
+    while max(uncentered_vif_dict.values()) >= threshold:
+        max_vif = max(uncentered_vif_dict.values())
+        highest_vif_cols = [col for col, vif in uncentered_vif_dict.items() if vif == max_vif]
+        n_features_dropped_so_far += len(highest_vif_cols)
         LOGGER.info(
             "dropping %s columns with VIF >= %s: %s ...",
             len(highest_vif_cols),
@@ -230,6 +228,14 @@ def drop_collinear_features_iteratively(
         )
         df = df.drop(columns=highest_vif_cols)
         df_features = df_features.drop(columns=highest_vif_cols)
+
+        # Recalculate VIFs after dropping columns
+        uncentered_vif_dict = {
+            col: variance_inflation_factor(df_features.values, i)
+            for i, col in enumerate(df_features.columns)
+            if col not in force_include_cols
+        }
+
     LOGGER.info("dropping %s collinear features", n_features_dropped_so_far)
 
     assert all(
