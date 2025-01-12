@@ -205,20 +205,23 @@ def drop_collinear_features_iteratively(
 
     n_features_dropped_so_far = 0
 
-    # Calculate initial VIFs
+    # calculate initial VIFs for features that aren't force-included
     uncentered_vif_dict = {
-        col: variance_inflation_factor(df_features.values, i)
-        for i, col in enumerate(df_features.columns)
+        col: variance_inflation_factor(df_features, col_idx)
+        for col_idx, col in enumerate(df_features.columns)
         if col not in force_include_cols
     }
-
-    if set(uncentered_vif_dict.values()) == {np.inf}:
-        LOGGER.info("all features are perfectly correlated with one another, therefore none are dropped")
+    if np.isinf(list(uncentered_vif_dict.values())).all():
+        LOGGER.warning(
+            "all features are perfectly correlated with one another; "
+            "no collinear features will be dropped ..."
+        )
         return df
 
-    while max(uncentered_vif_dict.values()) >= threshold:
-        max_vif = max(uncentered_vif_dict.values())
-        highest_vif_cols = [col for col, vif in uncentered_vif_dict.items() if vif == max_vif]
+    while (max_vif := max(uncentered_vif_dict.values())) >= threshold:
+        highest_vif_cols = [
+            col for col, vif in uncentered_vif_dict.items() if vif >= max_vif
+        ]
         n_features_dropped_so_far += len(highest_vif_cols)
         LOGGER.info(
             "dropping %s columns with VIF >= %s: %s ...",
@@ -229,10 +232,10 @@ def drop_collinear_features_iteratively(
         df = df.drop(columns=highest_vif_cols)
         df_features = df_features.drop(columns=highest_vif_cols)
 
-        # Recalculate VIFs after dropping columns
+        # recalculate VIFs after dropping columns
         uncentered_vif_dict = {
-            col: variance_inflation_factor(df_features.values, i)
-            for i, col in enumerate(df_features.columns)
+            col: variance_inflation_factor(df_features, col_idx)
+            for col_idx, col in enumerate(df_features.columns)
             if col not in force_include_cols
         }
 
