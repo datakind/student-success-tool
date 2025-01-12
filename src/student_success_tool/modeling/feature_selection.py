@@ -18,7 +18,7 @@ def select_features(
     force_include_cols: t.Optional[list[str]] = None,
     incomplete_threshold: float = 0.5,
     low_variance_threshold: float = 0.0,
-    collinear_threshold: float = 10.0,
+    collinear_threshold: t.Optional[float] = 10.0,
 ) -> pd.DataFrame:
     """
     Select features by dropping incomplete features, low variance features,
@@ -55,16 +55,15 @@ def select_features(
         .pipe(drop_low_variance_features, threshold=low_variance_threshold)
     )
     sel_incl_feature_cols = list(set(df_selected.columns.tolist() + force_include_cols))
-    df_selected = (
-        df.loc[:, sel_incl_feature_cols]
+    df_selected = df.loc[:, sel_incl_feature_cols]
+    if collinear_threshold is not None:
         # multi-collinearity: it may not interfere with the model's performance
         # but it does negatively affect the interpretation of the predictors
-        .pipe(
-            drop_collinear_features_iteratively,
+        df_selected = drop_collinear_features_iteratively(
+            df_selected,
             threshold=collinear_threshold,
             force_include_cols=force_include_cols,
         )
-    )
 
     orig_feature_cols = set(df.columns) - set(non_feature_cols)
     selected_feature_cols = set(df_selected.columns)
