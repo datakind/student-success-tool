@@ -31,7 +31,8 @@ def select_features(
         force_include_cols: list of features to force include in the final dataset.
         incomplete_threshold: Threshold for determining incomplete features.
         low_variance_threshold: Threshold for determining low-variance features.
-        collinear_threshold: Threshold for determining collinear features.
+        collinear_threshold: Threshold for determining collinear features;
+            if null, skip this selection step.
 
     Returns:
         df with non_features_cols, force_include_cols, and any other columns selected
