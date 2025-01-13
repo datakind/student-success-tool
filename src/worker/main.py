@@ -53,14 +53,15 @@ def read_root() -> Any:
 
 
 class DataUploadValidationRequest(BaseModel):
-    filename: str
-    inst_id: str
+    protoPayload: Annotated[dict, "The protoPayload object."]
 
 
 @app.post("/validate-data-upload")
 def validate_file(request: DataUploadValidationRequest) -> Any:
     """Validates the file."""
-    logger.debug("model keys", request.model_dump().keys())
+    logger.debug("payload", request.protoPayload)
+    print("payload", request.protoPayload)
+    logger.error("payload", request.protoPayload)
     client = storage.Client()
     bucket = client.bucket(request.inst_id)
     blob = bucket.blob(f"unvalidated/{request.filename}")
