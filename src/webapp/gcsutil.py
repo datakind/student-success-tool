@@ -102,7 +102,6 @@ class StorageControl(BaseModel):
             expiration=datetime.timedelta(minutes=SIGNED_URL_EXPIRY_MIN),
             # Allow GET requests using this URL.
             method="GET",
-            content_type="text/csv",
         )
         return url
 
