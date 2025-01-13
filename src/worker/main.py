@@ -72,28 +72,24 @@ def validate_file(request: DataUploadValidationRequest) -> Any:
     client = storage.Client()
     bucket = client.bucket(inst_id)
     blob = bucket.blob(f"unvalidated/{filename}")
-    logger.info(f"Blob content type: {blob.content_type}")
+    new_blob_name = f"validated/{filename}"
     with blob.open("r") as file:
         try:
             with blob.open("r") as file:
                 validate_file_reader(file)
         except Exception as e:
             logger.error(f"Error validating file: {e}")
-            raise HTTPException(
-                status_code=422,
-                detail={
-                    "filename": filename,
-                    "inst_id": inst_id,
-                    "error": str(e),
-                },
-            )
-    new_blob_name = f"validated/{filename}"
-    logger.info(f"Renaming file to: {new_blob_name}")
-    bucket.copy_blob(blob, bucket, new_blob_name)
-    blob.delete()
-    logger.info(f"File renamed to: {new_blob_name}")
+            new_blob_name = f"invalid/{filename}"
+    rename_and_move_blob(bucket, blob, new_blob_name)
     return {
         "filename": new_blob_name,
         "inst_id": inst_id,
         "content_type": blob.content_type,
     }
+
+
+def rename_and_move_blob(bucket, blob, new_blob_name):
+    logger.debug(f"Renaming file to: {new_blob_name}")
+    bucket.copy_blob(blob, bucket, new_blob_name)
+    blob.delete()
+    logger.debug(f"File renamed to: {new_blob_name}")
