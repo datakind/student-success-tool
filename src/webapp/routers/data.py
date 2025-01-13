@@ -563,7 +563,7 @@ def update_batch(
 
 
 @router.get("/{inst_id}/file_id/{file_id}", response_model=DataInfo)
-def read_file_info(
+def read_file_id_info(
     inst_id: str,
     file_id: str,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
@@ -735,9 +735,9 @@ def download_url_inst_file(
             detail="Only SST generated files can be downloaded.",
         )
     if res.valid:
-        file_name = "output/approved/" + file_name
+        file_name = "approved/" + file_name
     elif current_user.is_datakinder:
-        file_name = "output/unapproved/" + file_name
+        file_name = "unapproved/" + file_name
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

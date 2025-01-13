@@ -396,12 +396,12 @@ def test_read_batch_info(client: TestClient):
     )
 
 
-def test_read_file_info(client: TestClient):
+def test_read_file_id_info(client: TestClient):
     """Test GET /institutions/<uuid>/file/<uuid>."""
     response = client.get(
         "/institutions/"
         + uuid_to_str(UUID_INVALID)
-        + "/file/"
+        + "/file_id/"
         + uuid_to_str(FILE_UUID_1)
     )
 
@@ -414,7 +414,7 @@ def test_read_file_info(client: TestClient):
     response = client.get(
         "/institutions/"
         + uuid_to_str(USER_VALID_INST_UUID)
-        + "/file/"
+        + "/file_id/"
         + uuid_to_str(FILE_UUID_1)
     )
     assert response.status_code == 200

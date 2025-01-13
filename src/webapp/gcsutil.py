@@ -95,7 +95,7 @@ class StorageControl(BaseModel):
             raise ValueError("Storage bucket not found.")
         blob = bucket.blob(blob_name)
         if not blob.exists():
-            raise ValueError("File not found.")
+            raise ValueError(blob_name + ": File not found.")
         url = blob.generate_signed_url(
             version="v4",
             # How long the url is usable for.
