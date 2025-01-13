@@ -59,12 +59,19 @@ class DataUploadValidationRequest(BaseModel):
 @app.post("/validate-data-upload")
 def validate_file(request: DataUploadValidationRequest) -> Any:
     """Validates the file."""
-    logger.debug("payload", request.protoPayload)
-    print("payload", request.protoPayload)
-    logger.error("payload", request.protoPayload)
+    resource = request.protoPayload.get("resourceName")
+    if not resource:
+        raise HTTPException(status_code=422, detail="resourceName is required.")
+    parts = resource.split("/")
+    inst_id, filename = parts[3], parts[-1]
+    if not inst_id or not filename:
+        raise HTTPException(
+            status_code=422,
+            detail="resourceName must be in the format: projects/.../buckets/.../objects/...",
+        )
     client = storage.Client()
-    bucket = client.bucket(request.inst_id)
-    blob = bucket.blob(f"unvalidated/{request.filename}")
+    bucket = client.bucket(inst_id)
+    blob = bucket.blob(f"unvalidated/{filename}")
     logger.info(f"Blob content type: {blob.content_type}")
     with blob.open("r") as file:
         try:
@@ -75,18 +82,18 @@ def validate_file(request: DataUploadValidationRequest) -> Any:
             raise HTTPException(
                 status_code=422,
                 detail={
-                    "filename": request.filename,
-                    "inst_id": request.inst_id,
+                    "filename": filename,
+                    "inst_id": inst_id,
                     "error": str(e),
                 },
             )
-    new_blob_name = f"validated/{request.filename}"
+    new_blob_name = f"validated/{filename}"
     logger.info(f"Renaming file to: {new_blob_name}")
     bucket.copy_blob(blob, bucket, new_blob_name)
     blob.delete()
     logger.info(f"File renamed to: {new_blob_name}")
     return {
         "filename": new_blob_name,
-        "inst_id": request.inst_id,
+        "inst_id": inst_id,
         "content_type": blob.content_type,
     }
