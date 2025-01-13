@@ -562,7 +562,7 @@ def update_batch(
 # TODO: check expiration of files and batches
 
 
-@router.get("/{inst_id}/file/{file_id}", response_model=DataInfo)
+@router.get("/{inst_id}/file_id/{file_id}", response_model=DataInfo)
 def read_file_info(
     inst_id: str,
     file_id: str,
@@ -644,7 +644,7 @@ def read_file_info(
         .execute(
             select(FileTable).where(
                 and_(
-                    FileTable.name == str_to_uuid(file_name),
+                    FileTable.name == file_name,
                     FileTable.inst_id == str_to_uuid(inst_id),
                 )
             )
@@ -705,7 +705,7 @@ def download_url_inst_file(
         .execute(
             select(FileTable).where(
                 and_(
-                    FileTable.name == str_to_uuid(file_name),
+                    FileTable.name == file_name,
                     FileTable.inst_id == str_to_uuid(inst_id),
                 )
             )
