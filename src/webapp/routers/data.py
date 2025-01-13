@@ -682,7 +682,7 @@ def read_file_info(
 
 
 # TODO: ADD TESTS for the below
-@router.get("/{inst_id}/file/{file_name}/download_url", response_model=DataInfo)
+@router.get("/{inst_id}/download_url/{file_name}", response_model=str)
 def download_url_inst_file(
     inst_id: str,
     file_name: str,
