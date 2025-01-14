@@ -28,6 +28,7 @@ def explainer():
         "predicted_probabilities",
         "shap_values",
         "n_features",
+        "needs_support_threshold_prob",
         "features_table",
         "exp",
     ],
@@ -37,7 +38,7 @@ def explainer():
                 {
                     "x1": ["val1", "val2", "val3"],
                     "x2": [True, False, True],
-                    "x3": [2.0, 1.0, 0.5],
+                    "x3": [2.0, 1.0001, 0.5],
                     "x4": [1, 2, 3],
                 }
             ),
@@ -47,6 +48,7 @@ def explainer():
                 [[1.0, 0.9, 0.8, 0.7], [0.0, -1.0, 0.9, -0.8], [0.25, 0.0, -0.5, 0.75]]
             ),
             3,
+            0.5,
             {
                 "x1": {"name": "feature #1"},
                 "x2": {"name": "feature #2"},
@@ -54,32 +56,18 @@ def explainer():
             },
             pd.DataFrame(
                 {
-                    "Student ID": [1, 1, 1, 2, 2, 2, 3, 3, 3],
-                    "Support Score": [0.9, 0.9, 0.9, 0.1, 0.1, 0.1, 0.5, 0.5, 0.5],
-                    "Top Indicators": [
-                        "feature #1",
-                        "feature #2",
-                        "feature #3",
-                        "feature #2",
-                        "feature #3",
-                        "x4",
-                        "x4",
-                        "feature #3",
-                        "feature #1",
-                    ],
-                    "Indicator Value": [
-                        "val1",
-                        True,
-                        2.0,
-                        False,
-                        1.0,
-                        2,
-                        3,
-                        0.5,
-                        "val3",
-                    ],
-                    "SHAP Value": [1.0, 0.9, 0.8, -1.0, 0.9, -0.8, 0.75, -0.5, 0.25],
-                    "Rank": [1, 2, 3, 1, 2, 3, 1, 2, 3],
+                    "Student ID": [1, 2, 3],
+                    "Support Score": [0.9, 0.1, 0.5],
+                    "Support Needed": [True, False, True],
+                    "Feature_1_Name": ["feature #1", "feature #2", "x4"],
+                    "Feature_1_Value": ["val1", "False", "3"],
+                    "Feature_1_Importance": [1.0, -1.0, 0.75],
+                    "Feature_2_Name": ["feature #2", "feature #3", "feature #3"],
+                    "Feature_2_Value": ["True", "1.0", "0.5"],
+                    "Feature_2_Importance": [0.9, 0.9, -0.5],
+                    "Feature_3_Name": ["feature #3", "x4", "feature #1"],
+                    "Feature_3_Value": ["2.0", "2", "val3"],
+                    "Feature_3_Importance": [0.8, -0.8, 0.25],
                 }
             ),
         ),
@@ -99,14 +87,14 @@ def explainer():
             ),
             1,
             None,
+            None,
             pd.DataFrame(
                 {
                     "Student ID": [1, 2, 3],
                     "Support Score": [0.9, 0.1, 0.5],
-                    "Top Indicators": ["x1", "x2", "x4"],
-                    "Indicator Value": ["val1", False, 3],
-                    "SHAP Value": [1.0, -1.0, 0.75],
-                    "Rank": [1, 1, 1],
+                    "Feature_1_Name": ["x1", "x2", "x4"],
+                    "Feature_1_Value": ["val1", "False", "3"],
+                    "Feature_1_Importance": [1.0, -1.0, 0.75],
                 }
             ),
         ),
@@ -118,6 +106,7 @@ def test_select_top_features_for_display(
     predicted_probabilities,
     shap_values,
     n_features,
+    needs_support_threshold_prob,
     features_table,
     exp,
 ):
@@ -127,6 +116,7 @@ def test_select_top_features_for_display(
         predicted_probabilities,
         shap_values,
         n_features=n_features,
+        needs_support_threshold_prob=needs_support_threshold_prob,
         features_table=features_table,
     )
     assert isinstance(obs, pd.DataFrame) and not obs.empty

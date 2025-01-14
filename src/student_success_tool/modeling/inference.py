@@ -1,6 +1,7 @@
 import typing as t
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from shap import KernelExplainer
 
@@ -9,8 +10,9 @@ def select_top_features_for_display(
     features: pd.DataFrame,
     unique_ids: pd.Series,
     predicted_probabilities: list[float],
-    shap_values: pd.Series,
+    shap_values: npt.NDArray[np.float64],
     n_features: int = 3,
+    needs_support_threshold_prob: t.Optional[float] = 0.5,
     features_table: t.Optional[dict[str, dict[str, str]]] = None,
 ) -> pd.DataFrame:
     """
@@ -24,6 +26,14 @@ def select_top_features_for_display(
             order as unique_ids, of shape len(unique_ids)
         shap_values: array of arrays of SHAP values, of shape len(unique_ids)
         n_features: number of important features to return
+        needs_support_threshold_prob: Minimum probability in [0.0, 1.0] used to compute
+            a boolean "needs support" field added to output records. Values in
+            ``predicted_probabilities`` greater than or equal to this threshold result in
+            a True value, otherwise it's False; if this threshold is set to null,
+            then no "needs support" values are added to the output records.
+            Note that this doesn't have to be the "optimal" decision threshold for
+            the trained model that produced ``predicted_probabilities`` , it can
+            be tailored to a school's preferences and use case.
         features_table: Optional mapping of column to human-friendly feature name/desc,
             loaded via :func:`utils.load_features_table()`
 
@@ -32,18 +42,26 @@ def select_top_features_for_display(
 
     TODO: refactor this functionality so it's vectorized and aggregates by student
     """
-    top_features_info = []
+    pred_probs = np.asarray(predicted_probabilities)
 
-    for i, (unique_id, predicted_proba) in enumerate(
-        zip(unique_ids, predicted_probabilities)
-    ):
+    top_features_info = []
+    for i, (unique_id, predicted_proba) in enumerate(zip(unique_ids, pred_probs)):
         instance_shap_values = shap_values[i]
         top_indices = np.argsort(-np.abs(instance_shap_values))[:n_features]
         top_features = features.columns[top_indices]
         top_feature_values = features.iloc[i][top_features]
         top_shap_values = instance_shap_values[top_indices]
 
-        for rank, (feature, feature_value, shap_value) in enumerate(
+        student_output = {
+            "Student ID": unique_id,
+            "Support Score": predicted_proba,
+        }
+        if needs_support_threshold_prob is not None:
+            student_output["Support Needed"] = (
+                predicted_proba >= needs_support_threshold_prob
+            )
+
+        for feature_rank, (feature, feature_value, shap_value) in enumerate(
             zip(top_features, top_feature_values, top_shap_values), start=1
         ):
             feature_name = (
@@ -54,16 +72,18 @@ def select_top_features_for_display(
                 if features_table is not None
                 else feature
             )
-            top_features_info.append(
-                {
-                    "Student ID": unique_id,
-                    "Support Score": predicted_proba,
-                    "Top Indicators": feature_name,
-                    "Indicator Value": feature_value,
-                    "SHAP Value": shap_value,
-                    "Rank": rank,
-                }
+            feature_value = (
+                str(round(feature_value, 2))
+                if isinstance(feature_value, float)
+                else str(feature_value)
             )
+            student_output |= {
+                f"Feature_{feature_rank}_Name": feature_name,
+                f"Feature_{feature_rank}_Value": feature_value,
+                f"Feature_{feature_rank}_Importance": round(shap_value, 2),
+            }
+
+        top_features_info.append(student_output)
     return pd.DataFrame(top_features_info)
 
 
