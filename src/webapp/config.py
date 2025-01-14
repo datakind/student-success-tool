@@ -9,8 +9,7 @@ env_vars = {
     "ENV": "LOCAL",
     "SECRET_KEY": "",
     "ALGORITHM": "HS256",
-    "ACCESS_TOKEN_EXPIRE_MINUTES": "15",
-    "ACCESS_TOKEN_EXPIRE_MINUTES_DEFAULT": "15",
+    "ACCESS_TOKEN_EXPIRE_MINUTES": "120",
 }
 
 # The INSTANCE_HOST is the private IP of CLoudSQL instance e.g. '127.0.0.1' ('172.17.0.1' if deployed to GAE Flex)
