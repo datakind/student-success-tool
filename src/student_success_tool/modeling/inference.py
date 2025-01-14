@@ -26,7 +26,14 @@ def select_top_features_for_display(
             order as unique_ids, of shape len(unique_ids)
         shap_values: array of arrays of SHAP values, of shape len(unique_ids)
         n_features: number of important features to return
-        needs_support_threshold_prob
+        needs_support_threshold_prob: Minimum probability in [0.0, 1.0] used to compute
+            a boolean "needs support" field added to output records. Values in
+            ``predicted_probabilities`` greater than or equal to this threshold result in
+            a True value, otherwise it's False; if this threshold is set to null,
+            then no "needs support" values are added to the output records.
+            Note that this doesn't have to be the "optimal" decision threshold for
+            the trained model that produced ``predicted_probabilities`` , it can
+            be tailored to a school's preferences and use case.
         features_table: Optional mapping of column to human-friendly feature name/desc,
             loaded via :func:`utils.load_features_table()`
 
