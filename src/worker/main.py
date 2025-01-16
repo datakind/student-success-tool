@@ -52,6 +52,18 @@ def read_root() -> Any:
     return FileResponse("src/worker/index.html")
 
 
+class SendNotificationRequest(BaseModel):
+    inst_id: str
+    roles: list[str]
+    content: str
+
+
+@app.post("/send-notification")
+def send_notification(request: SendNotificationRequest) -> Any:
+    """Sends a notification."""
+    return {"content": "Notification sent."}
+
+
 class DataUploadValidationRequest(BaseModel):
     protoPayload: Annotated[dict, "The protoPayload object."]
 
