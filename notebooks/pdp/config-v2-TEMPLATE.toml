@@ -1,0 +1,52 @@
+institution_id = "INST_ID"
+institution_name = "INST_NAME"
+
+student_id_col = "student_guid"
+target_col = "target"
+split_col = "split"
+sample_weight_col = "sample_weight"
+student_group_cols = ["student_age", "race", "ethnicity", "gender", "first_gen"]
+pred_col = "pred"
+pred_prob_col = "pred_prob"
+pos_label = true
+random_state = 12345
+
+[labeled_dataset.raw]
+file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/FILE_NAME.csv"
+
+[preprocessing]
+splits = { train = 0.6, test = 0.2, validate = 0.2 }
+sample_class_weight = "balanced"
+
+[preprocessing.features]
+min_passing_grade = 1.0
+min_num_credits_full_time = 12
+course_level_pattern = 'asdf'
+key_course_subject_areas = ["24", "51"]
+key_course_ids = ["ENGL101", "MATH101"]
+
+[preprocessing.target.student_criteria]
+enrollment_type = "FIRST-TIME"
+credential_type_sought_year_1 = "Bachelor's Degree"
+
+[labeled_dataset.preprocessed]
+table_path = "CATALOG.SCHEMA.TABLE_NAME"
+
+[modeling.feature_selection]
+incomplete_threshold = 0.5
+low_variance_threshold = 0.0
+collinear_threshold = 10.0
+
+[modeling.training]
+# exclude_frameworks = ["xgboost", "lightgbm"]
+primary_metric = "log_loss"
+timeout_minutes = 10
+
+[trained_model]
+experiment_id = "EXPERIMENT_ID"
+run_id = "RUN_ID"
+# model_type = "sklearn"
+min_prob_pos_label = 0.5
+
+[inference]
+num_top_features = 5
