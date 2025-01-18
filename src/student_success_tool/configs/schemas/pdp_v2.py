@@ -95,19 +95,25 @@ class PreprocessingConfig(pyd.BaseModel):
         return value
 
 
+class FeatureSelectionConfig(pyd.BaseModel):
+    """
+    See Also:
+        - :func:`modeling.feature_selection.select_features()`
+    """
+
+    non_feature_cols: t.Optional[list[str]] = None
+    force_include_cols: t.Optional[list[str]] = None
+    incomplete_threshold: float = 0.5
+    low_variance_threshold: float = 0.0
+    collinear_threshold: t.Optional[float] = 10.0
+
+
 class TrainingConfig(pyd.BaseModel):
     """
     References:
         - https://docs.databricks.com/en/machine-learning/automl/automl-api-reference.html#classify
     """
 
-    student_group_cols: t.Optional[list[str]] = pyd.Field(
-        default=None,
-        description=(
-            "One or more column names in dataset containing student 'groups' "
-            "to use for model bias assessment, but NOT as model features"
-        ),
-    )
     exclude_cols: t.Optional[list[str]] = pyd.Field(
         default=None,
         description="One or more column names in dataset to exclude from training.",
@@ -131,6 +137,11 @@ class TrainingConfig(pyd.BaseModel):
         default=None,
         description="Maximum time to wait for AutoML trials to complete.",
     )
+
+
+class ModelingConfig(pyd.BaseModel):
+    feature_selection: t.Optional[FeatureSelectionConfig] = None
+    training: TrainingConfig
 
 
 class InferenceConfig(pyd.BaseModel):
@@ -177,6 +188,13 @@ class PDPProjectConfigV2(pyd.BaseModel):
     target_col: str = "target"
     split_col: str = "split"
     sample_weight_col: t.Optional[str] = None
+    student_group_cols: t.Optional[list[str]] = pyd.Field(
+        default=None,
+        description=(
+            "One or more column names in datasets containing student 'groups' "
+            "to use for model bias assessment, but NOT as model features"
+        ),
+    )
     pos_label: t.Optional[int | bool | str] = True
     pred_col: str = "pred"
     pred_prob_col: str = "pred_prob"
@@ -187,7 +205,7 @@ class PDPProjectConfigV2(pyd.BaseModel):
     trained_model: t.Optional[TrainedModelConfig] = None
 
     preprocessing: t.Optional[PreprocessingConfig] = None
-    training: t.Optional[TrainingConfig] = None
+    modeling: t.Optional[ModelingConfig] = None
     inference: t.Optional[InferenceConfig] = None
 
     # NOTE: this is for *pydantic* model -- not ML model -- configuration
