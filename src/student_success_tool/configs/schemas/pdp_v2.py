@@ -146,28 +146,35 @@ class ModelingConfig(pyd.BaseModel):
 
 class InferenceConfig(pyd.BaseModel):
     num_top_features: int = pyd.Field(default=5)
+    # TODO: extend this configuration, maybe?
 
 
 class DatasetConfig(pyd.BaseModel):
     table_path: t.Optional[str] = pyd.Field(
-        ...,
+        default=None,
         description=(
             "Path to a table in Unity Catalog where dataset is stored, "
             "including the full three-level namespace: 'CATALOG.SCHEMA.TABLE'"
         ),
     )
     file_path: t.Optional[str] = pyd.Field(
-        ...,
+        default=None,
         description="Full, absolute path to dataset on disk, e.g. a Databricks Volume",
     )
     # TODO: if/when we allow different file formats, add this parameter ...
     # file_format: t.Optional[t.Literal["csv", "parquet"]] = pyd.Field(default=None)
 
+    @pyd.model_validator(mode="after")
+    def check_some_nonnull_inputs(self):
+        if self.table_path is None and self.file_path is None:
+            raise pyd.ValidationError("table_path and/or file_path must be non-null")
+        return self
+
 
 class DatasetsConfig(pyd.BaseModel):
     raw: DatasetConfig
-    preprocessed: t.Optional[DatasetConfig]
-    predictions: t.Optional[DatasetConfig]
+    preprocessed: t.Optional[DatasetConfig] = None
+    predictions: t.Optional[DatasetConfig] = None
 
 
 class TrainedModelConfig(pyd.BaseModel):
@@ -175,6 +182,11 @@ class TrainedModelConfig(pyd.BaseModel):
     run_id: str
     model_type: t.Optional[t.Literal["sklearn", "xgboost", "lightgbm"]] = None
     min_prob_pos_label: t.Optional[float] = 0.5
+
+    @pyd.computed_field  # type: ignore[misc]
+    @property
+    def mlflow_model_uri(self) -> str:
+        return f"runs:/{self.run_id}/model"
 
 
 class PDPProjectConfigV2(pyd.BaseModel):
@@ -192,16 +204,16 @@ class PDPProjectConfigV2(pyd.BaseModel):
         default=None,
         description=(
             "One or more column names in datasets containing student 'groups' "
-            "to use for model bias assessment, but NOT as model features"
+            "to use for model bias assessment, but *not* as model features"
         ),
     )
-    pos_label: t.Optional[int | bool | str] = True
     pred_col: str = "pred"
     pred_prob_col: str = "pred_prob"
+    pos_label: t.Optional[int | bool | str] = True
     # other shared parameters
     random_state: t.Optional[int] = None
 
-    labeled_dataset: DatasetsConfig
+    labeled_dataset: t.Optional[DatasetsConfig] = None
     trained_model: t.Optional[TrainedModelConfig] = None
 
     preprocessing: t.Optional[PreprocessingConfig] = None
