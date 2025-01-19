@@ -11,8 +11,11 @@ pred_prob_col = "pred_prob"
 pos_label = true
 random_state = 12345
 
-[labeled_dataset.raw]
-file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/FILE_NAME.csv"
+[labeled_dataset.raw_course]
+file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/FILE_NAME_COURSE.csv"
+
+[labeled_dataset.raw_cohort]
+file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/FILE_NAME_COHORT.csv"
 
 [preprocessing]
 splits = { train = 0.6, test = 0.2, validate = 0.2 }

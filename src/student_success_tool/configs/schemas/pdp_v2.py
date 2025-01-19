@@ -172,7 +172,8 @@ class DatasetConfig(pyd.BaseModel):
 
 
 class DatasetsConfig(pyd.BaseModel):
-    raw: DatasetConfig
+    raw_course: DatasetConfig
+    raw_cohort: DatasetConfig
     preprocessed: t.Optional[DatasetConfig] = None
     predictions: t.Optional[DatasetConfig] = None
 
