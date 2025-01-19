@@ -201,7 +201,7 @@ class PDPProjectConfigV2(pyd.BaseModel):
     split_col: str = "split"
     sample_weight_col: t.Optional[str] = None
     student_group_cols: t.Optional[list[str]] = pyd.Field(
-        default=None,
+        default=["student_age", "race", "ethnicity", "gender", "first_gen"],
         description=(
             "One or more column names in datasets containing student 'groups' "
             "to use for model bias assessment, but *not* as model features"
