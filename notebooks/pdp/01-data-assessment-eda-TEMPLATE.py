@@ -29,8 +29,6 @@
 # %pip install "student-success-tool == 0.1.0"
 # %pip install "git+https://github.com/datakind/student-success-tool.git@develop"
 
-%pip install "git+https://github.com/datakind/student-success-tool.git@pdp-add-inference-nb-template"
-
 # COMMAND ----------
 
 # MAGIC %restart_python
