@@ -592,6 +592,7 @@ df_cohort["gpa_group_year_1"].describe()
 
 ax = sb.histplot(
     df_course.sort_values(by="academic_year"),
+    # df_course_valid.sort_values(by="academic_year"),
     y="academic_year",
     hue="academic_term",
     multiple="stack",
@@ -663,6 +664,7 @@ _ = ax.set(xlabel="Number of Students")
 ax = sb.histplot(
     pd.merge(
         df_course.groupby("student_guid")
+        # df_course_valid.groupby("student_guid")
         .size()
         .rename("num_courses_enrolled")
         .reset_index(drop=False),
@@ -685,6 +687,9 @@ jg = sb.jointplot(
     df_course.groupby("student_guid").agg(
         {"number_of_credits_attempted": "sum", "number_of_credits_earned": "sum"}
     ),
+    # df_course_valid.groupby("student_guid").agg(
+    #     {"number_of_credits_attempted": "sum", "number_of_credits_earned": "sum"}
+    # ),
     x="number_of_credits_attempted",
     y="number_of_credits_earned",
     kind="hex",
