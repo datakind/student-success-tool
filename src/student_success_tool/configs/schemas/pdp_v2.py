@@ -149,7 +149,7 @@ class InferenceConfig(pyd.BaseModel):
     # TODO: extend this configuration, maybe?
 
 
-class DatasetConfig(pyd.BaseModel):
+class DatasetIOConfig(pyd.BaseModel):
     table_path: t.Optional[str] = pyd.Field(
         default=None,
         description=(
@@ -171,11 +171,16 @@ class DatasetConfig(pyd.BaseModel):
         return self
 
 
+class DatasetConfig(pyd.BaseModel):
+    raw_course: DatasetIOConfig
+    raw_cohort: DatasetIOConfig
+    preprocessed: t.Optional[DatasetIOConfig] = None
+    predictions: t.Optional[DatasetIOConfig] = None
+
+
 class DatasetsConfig(pyd.BaseModel):
-    raw_course: DatasetConfig
-    raw_cohort: DatasetConfig
-    preprocessed: t.Optional[DatasetConfig] = None
-    predictions: t.Optional[DatasetConfig] = None
+    labeled: DatasetConfig
+    unlabeled: t.Optional[DatasetConfig] = None
 
 
 class TrainedModelConfig(pyd.BaseModel):
@@ -214,7 +219,7 @@ class PDPProjectConfigV2(pyd.BaseModel):
     # other shared parameters
     random_state: t.Optional[int] = None
 
-    labeled_dataset: t.Optional[DatasetsConfig] = None
+    datasets: t.Optional[DatasetsConfig] = None
     trained_model: t.Optional[TrainedModelConfig] = None
 
     preprocessing: t.Optional[PreprocessingConfig] = None
