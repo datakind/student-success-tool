@@ -101,7 +101,7 @@ cfg
 # COMMAND ----------
 
 try:
-    raw_course_file_path = cfg.labeled_dataset.raw_course.file_path
+    raw_course_file_path = cfg.datasets.labeled.raw_course.file_path
 except AttributeError:
     # TODO: fill in the actual path to school's raw course file
     raw_course_file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/SCHOOL_COURSE_AR_DEID_DTTM.csv"
@@ -207,7 +207,7 @@ df_course
 # COMMAND ----------
 
 try:
-    raw_cohort_file_path = cfg.labeled_dataset.raw_cohort.file_path
+    raw_cohort_file_path = cfg.datasets.labeled.raw_cohort.file_path
 except AttributeError:
     # TODO: fill in the actual path to school's raw course file
     raw_cohort_file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/SCHOOL_COHORT_AR_DEID_DTTM.csv"
@@ -282,7 +282,7 @@ pdp.dataio.write_data_to_delta_table(
 # MAGIC %md
 # MAGIC ## read validated data?
 # MAGIC
-# MAGIC (so you don't have to execute the validation process more than once)
+# MAGIC (optional, so you don't have to execute the validation process more than once)
 
 # COMMAND ----------
 
@@ -788,7 +788,8 @@ _ = ax.set_xticklabels(
 
 # MAGIC %md
 # MAGIC - [ ] If you haven't already, add school-specific data schemas and/or preprocessing functions into the appropriate directory in the [`student-success-intervention` repository](https://github.com/datakind/student-success-intervention)
-# MAGIC - [ ] Add file paths for the raw course/cohort datasets to the project config file's `labeled_dataset.raw_course` and `labeled_dataset.raw_cohort` blocks
+# MAGIC - [ ] Add file paths for the raw course/cohort datasets to the project config file's `datasets.labeled.raw_course` and `datasets.labeled.raw_cohort` blocks
+# MAGIC - [ ] Submit a PR including this notebook and any school-specific files added in order to run it
 
 # COMMAND ----------
 
