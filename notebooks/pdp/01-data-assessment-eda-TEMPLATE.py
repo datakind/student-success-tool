@@ -51,7 +51,7 @@ from student_success_tool import configs
 
 # COMMAND ----------
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, force=True)
 logging.getLogger("py4j").setLevel(logging.WARNING)  # ignore databricks logger
 
 try:
@@ -209,7 +209,7 @@ df_course
 try:
     raw_cohort_file_path = cfg.datasets.labeled.raw_cohort.file_path
 except AttributeError:
-    # TODO: fill in the actual path to school's raw course file
+    # TODO: fill in the actual path to school's raw cohort file
     raw_cohort_file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/SCHOOL_COHORT_AR_DEID_DTTM.csv"
 
 # COMMAND ----------
