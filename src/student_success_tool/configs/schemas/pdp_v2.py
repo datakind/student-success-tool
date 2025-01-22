@@ -61,6 +61,7 @@ class TargetConfig(pyd.BaseModel):
         ),
     )
     # TODO: refine target functionality and expand on this configuration
+    params: dict[str, object] = pyd.Field(default_factory=dict)
 
 
 class PreprocessingConfig(pyd.BaseModel):
