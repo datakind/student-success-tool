@@ -1,3 +1,4 @@
+import re
 import typing as t
 
 import pydantic as pyd
@@ -168,7 +169,7 @@ class DatasetIOConfig(pyd.BaseModel):
     @pyd.model_validator(mode="after")
     def check_some_nonnull_inputs(self):
         if self.table_path is None and self.file_path is None:
-            raise pyd.ValidationError("table_path and/or file_path must be non-null")
+            raise ValueError("table_path and/or file_path must be non-null")
         return self
 
 
@@ -243,6 +244,6 @@ class PDPProjectConfigV2(pyd.BaseModel):
     @pyd.field_validator("institution_id", mode="after")
     @classmethod
     def check_institution_id_isascii(cls, value: str) -> str:
-        if not value.isascii():
-            raise pyd.ValidationError(f"institution_id='{value}' is not ASCII-only")
+        if not re.search(r"^\w+$", value, flags=re.ASCII):
+            raise ValueError(f"institution_id='{value}' is not ASCII-only")
         return value
