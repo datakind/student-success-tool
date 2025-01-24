@@ -148,6 +148,7 @@ class ModelingConfig(pyd.BaseModel):
 
 class InferenceConfig(pyd.BaseModel):
     num_top_features: int = pyd.Field(default=5)
+    min_prob_pos_label: t.Optional[float] = 0.5
     # TODO: extend this configuration, maybe?
 
 
@@ -182,11 +183,10 @@ class DatasetConfig(pyd.BaseModel):
     # finalized: t.Optional[DatasetIOConfig] = None
 
 
-class TrainedModelConfig(pyd.BaseModel):
+class ModelConfig(pyd.BaseModel):
     experiment_id: str
     run_id: str
     model_type: t.Optional[t.Literal["sklearn", "xgboost", "lightgbm"]] = None
-    min_prob_pos_label: t.Optional[float] = 0.5
 
     @pyd.computed_field  # type: ignore[misc]
     @property
@@ -212,7 +212,7 @@ class PDPProjectConfigV2(pyd.BaseModel):
         ),
     )
 
-    # shared dataset parameters
+    # shared parameters
     student_id_col: str = "student_guid"
     target_col: str = "target"
     split_col: str = "split"
@@ -227,12 +227,24 @@ class PDPProjectConfigV2(pyd.BaseModel):
     pred_col: str = "pred"
     pred_prob_col: str = "pred_prob"
     pos_label: t.Optional[int | bool | str] = True
-    # other shared parameters
     random_state: t.Optional[int] = None
 
     # key artifacts produced by project pipeline
-    datasets: t.Optional[dict[str, DatasetConfig]] = None
-    trained_model: t.Optional[TrainedModelConfig] = None
+    datasets: t.Optional[dict[str, DatasetConfig]] = pyd.Field(
+        None,
+        description=(
+            "Mapping of dataset name, e.g. 'labeled', to file/table paths for each "
+            "derived form produced by steps in the data transformation pipeline, "
+            "used to load the artifacts from storage"
+        ),
+    )
+    models: t.Optional[dict[str, ModelConfig]] = pyd.Field(
+        None,
+        description=(
+            "Mapping of model name, e.g. 'graduation', to MLFlow metadata used to "
+            "load the trained artifact from storage"
+        ),
+    )
     # key steps in project pipeline
     preprocessing: t.Optional[PreprocessingConfig] = None
     modeling: t.Optional[ModelingConfig] = None

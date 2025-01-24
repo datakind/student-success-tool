@@ -57,14 +57,14 @@ def template_cfg_str():
     primary_metric = "log_loss"
     timeout_minutes = 10
 
-    [trained_model]
+    [models.graduation]
     experiment_id = "EXPERIMENT_ID"
     run_id = "RUN_ID"
-    # model_type = "sklearn"
-    min_prob_pos_label = 0.5
+    model_type = "sklearn"
 
     [inference]
     num_top_features = 5
+    min_prob_pos_label = 0.5
     """
 
 
