@@ -1,4 +1,5 @@
 import logging
+import os
 import pathlib
 import typing as t
 from collections.abc import Sequence
@@ -94,11 +95,17 @@ def load_features_table(rel_fpath: str) -> dict[str, dict[str, str]]:
         rel_fpath: Path to features table TOML file relative to package root;
             for example: "assets/pdp/features_table.toml".
     """
-    pkg_root_dir = next(
-        p
-        for p in pathlib.Path(__file__).parents
-        if p.parts[-1] == "student_success_tool"
-    )
+    try:
+        # If __file__ is defined, we're in a regular script or module
+        pkg_root_dir = next(
+            p
+            for p in pathlib.Path(__file__).parents
+            if p.parts[-1] == "student_success_tool"
+        )
+    except NameError:
+        # If __file__ is not available (i.e. Jupyter notebook), use the current working directory
+        pkg_root_dir = pathlib.Path(os.getcwd())
+
     file_path = pkg_root_dir / rel_fpath
     with file_path.open(mode="rb") as f:
         features_table = tomllib.load(f)

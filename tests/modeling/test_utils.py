@@ -82,3 +82,58 @@ def test_compute_sample_weights(df, target_col, class_weight, exp):
     assert isinstance(obs, pd.Series)
     assert len(obs) == len(df)
     assert pd.testing.assert_series_equal(obs, exp, rtol=0.01) is None
+
+@pytest.mark.parametrize(
+    "toml_content, expected_output, expect_exception",
+    [
+        (
+            # Valid TOML content with the required structure
+            """
+            academic_term = { name = "academic term" }
+            term_in_peak_covid = { name = "term occurred in 'peak' COVID" }
+            num_courses = { name = "number of courses taken this term" }
+            """,
+            {
+                "academic_term": {"name": "academic term"},
+                "term_in_peak_covid": {"name": "term occurred in 'peak' COVID"},
+                "num_courses": {"name": "number of courses taken this term"}
+            },
+            None,  
+        ),
+        (
+            # Invalid TOML content (missing closing brace)
+            """
+            academic_term = { name = "academic term" }
+            term_in_peak_covid = { name = "term occurred in 'peak' COVID" }
+            num_courses = { name = "number of courses taken this term"
+            """,
+            None,  
+            tomllib.TOMLDecodeError,
+        ),
+        (
+            # Missing file scenario
+            "",
+            None, 
+            FileNotFoundError,  
+        ),
+    ]
+)
+
+def test_load_features_table(tmpdir, toml_content, expected_output, expect_exception):
+    if toml_content:
+        toml_file = tmpdir.join("features_table.toml")
+        toml_file.write(toml_content)  
+        
+        file_path = str(toml_file)
+    else:
+        file_path = "non_existent_path/features_table.toml"
+    
+    if expect_exception:
+        with pytest.raises(expect_exception):
+            load_features_table(file_path)
+    else:
+        features_table = load_features_table(file_path)
+        assert isinstance(features_table, dict)
+        for key, value in expected_output.items():
+            assert key in features_table
+            assert features_table[key] == value
