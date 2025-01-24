@@ -1,6 +1,11 @@
 import pandas as pd
 import pytest
 
+try:
+    import tomllib  # noqa
+except ImportError:  # => PY3.10
+    import tomli as tomllib  # noqa
+
 from student_success_tool.modeling import utils
 
 
@@ -130,9 +135,9 @@ def test_load_features_table(tmpdir, toml_content, expected_output, expect_excep
     
     if expect_exception:
         with pytest.raises(expect_exception):
-            load_features_table(file_path)
+            utils.load_features_table(file_path)
     else:
-        features_table = load_features_table(file_path)
+        features_table = utils.load_features_table(file_path)
         assert isinstance(features_table, dict)
         for key, value in expected_output.items():
             assert key in features_table
