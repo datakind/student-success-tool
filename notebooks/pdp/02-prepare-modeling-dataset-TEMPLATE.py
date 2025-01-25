@@ -38,11 +38,11 @@ import functools as ft
 import logging
 import sys
 
-import matplotlib.pyplot
-import numpy as np
-import pandas as pd
+import matplotlib.pyplot as plt
+import pandas as pd  # noqa: F401
 import seaborn as sb
 from databricks.connect import DatabricksSession
+from databricks.sdk.runtime import dbutils
 from py4j.protocol import Py4JJavaError
 
 from student_success_tool import configs, modeling
@@ -154,13 +154,7 @@ except AttributeError:
 # COMMAND ----------
 
 df_student_terms = pdp.dataops.make_student_term_dataset(
-    df_cohort,
-    df_course,
-    min_passing_grade=config.prepare_modeling_dataset.min_passing_grade,
-    min_num_credits_full_time=config.prepare_modeling_dataset.min_num_credits_full_time,
-    course_level_pattern=config.prepare_modeling_dataset.course_level_pattern,
-    key_course_subject_areas=config.prepare_modeling_dataset.key_course_subject_areas,
-    key_course_ids=config.prepare_modeling_dataset.key_course_ids,
+    df_cohort, df_course, **feature_params
 )
 df_student_terms
 
