@@ -33,7 +33,6 @@
 # COMMAND ----------
 
 import logging
-import os
 import sys
 
 import matplotlib.pyplot as plt
@@ -44,8 +43,8 @@ import seaborn as sb
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 
-from student_success_tool.analysis import pdp
 from student_success_tool import configs
+from student_success_tool.analysis import pdp
 
 # COMMAND ----------
 
@@ -106,7 +105,7 @@ except AttributeError:
 
 # read without any schema validation, so we can look at the data "raw"
 df_course_raw = pdp.dataio.read_raw_pdp_course_data_from_file(
-    fpath_course, schema=None, dttm_format="%Y%m%d.0"
+    raw_course_file_path, schema=None, dttm_format="%Y%m%d.0"
 )
 print(f"rows x cols = {df_course_raw.shape}")
 df_course_raw.head()
@@ -131,7 +130,9 @@ df_course_raw["course_begin_date"].describe()
 
 # try to read data while validating with the "base" PDP schema
 df_course = pdp.dataio.read_raw_pdp_course_data_from_file(
-    fpath_course, schema=pdp.schemas.RawPDPCourseDataSchema, dttm_format="%Y%m%d.0"
+    raw_course_file_path,
+    schema=pdp.schemas.RawPDPCourseDataSchema,
+    dttm_format="%Y%m%d.0",
 )
 df_course
 
@@ -793,5 +794,3 @@ _ = ax.set_xticklabels(
 # MAGIC - [ ] Submit a PR including this notebook and any school-specific files added in order to run it
 
 # COMMAND ----------
-
-
