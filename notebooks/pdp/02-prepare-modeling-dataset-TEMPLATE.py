@@ -22,8 +22,11 @@
 
 # COMMAND ----------
 
-# install dependencies, most of which should come through our 1st-party SST package
-# %pip install git+https://github.com/datakind/student-success-tool.git@develop
+# install dependencies, most/all of which should come through our 1st-party SST package
+# NOTE: it's okay to use 'develop' or a feature branch while developing this nb
+# but when it's finished, it's best to pin to a specific version of the package
+# %pip install "student-success-tool == 0.1.0"
+# %pip install "git+https://github.com/datakind/student-success-tool.git@develop"
 
 # COMMAND ----------
 
@@ -56,7 +59,7 @@ except Exception:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## `student-success-intervention` hacks
+# MAGIC ## import school-specific code
 
 # COMMAND ----------
 
@@ -65,7 +68,7 @@ except Exception:
 
 # COMMAND ----------
 
-# HACK: insert our 1st-party (school-specific) code into PATH
+# insert our 1st-party (school-specific) code into PATH
 if "../" not in sys.path:
     sys.path.insert(1, "../")
 
@@ -74,24 +77,12 @@ from analysis import *  # noqa: F403
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC ## project config
-
-# COMMAND ----------
-
-# TODO: create a config file in TOML format to school directory
-config = configs.load_config("./config.toml", schema=configs.PDPProjectConfig)
-config
-
-# COMMAND ----------
-
-catalog = "sst_dev"
-
-# configure where data is to be read from / written to
-inst_name = "SCHOOL"  # TODO: fill in school's name in Unity Catalog
-schema = f"{inst_name}_silver"
-catalog_schema = f"{catalog}.{schema}"
-print(f"{catalog_schema=}")
+# project configuration should be stored in a config file in TOML format
+# it'll start out with just basic info: institution_id, institution_name
+# but as each step of the pipeline gets built, more parameters will be moved
+# from hard-coded notebook variables to shareable, persistent config fields
+cfg = configs.load_config("./config-v2-TEMPLATE.toml", configs.PDPProjectConfigV2)
+cfg
 
 # COMMAND ----------
 
@@ -127,6 +118,20 @@ df_cohort.head()
 
 # MAGIC %md
 # MAGIC # transform and join datasets
+
+# COMMAND ----------
+
+try:
+    feature_params = cfg.preprocessing.features.model_dump()
+except AttributeError:
+    feature_params = {
+        "min_passing_grade": pdp.constants.DEFAULT_MIN_PASSING_GRADE,
+        "min_num_credits_full_time": pdp.constants.DEFAULT_MIN_NUM_CREDITS_FULL_TIME,
+        "course_level_pattern": pdp.constants.DEFAULT_COURSE_LEVEL_PATTERN,
+        "peak_covid_terms": pdp.constants.DEFAULT_PEAK_COVID_TERMS,
+        "key_course_subject_areas": None,
+        "key_course_ids": None,
+    }
 
 # COMMAND ----------
 
