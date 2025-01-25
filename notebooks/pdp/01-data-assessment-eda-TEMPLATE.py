@@ -98,7 +98,7 @@ cfg
 # okay to add it to project config now or later, whatever you prefer
 try:
     raw_course_file_path = cfg.datasets["labeled"].raw_course.file_path
-except AttributeError:
+except (AttributeError, TypeError, KeyError):
     raw_course_file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/SCHOOL_COURSE_AR_DEID_DTTM.csv"
 
 # COMMAND ----------
@@ -207,7 +207,7 @@ df_course
 # okay to add it to project config now or later, whatever you prefer
 try:
     raw_cohort_file_path = cfg.datasets["labeled"].raw_cohort.file_path
-except AttributeError:
+except (AttributeError, TypeError, KeyError):
     raw_cohort_file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/SCHOOL_COHORT_AR_DEID_DTTM.csv"
 
 # COMMAND ----------
