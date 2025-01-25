@@ -15,7 +15,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Setup
+# MAGIC # setup
 
 # COMMAND ----------
 
@@ -45,14 +45,15 @@ from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 
 from student_success_tool.analysis import pdp
+from student_success_tool import configs
 
 # COMMAND ----------
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, force=True)
 logging.getLogger("py4j").setLevel(logging.WARNING)  # ignore databricks logger
 
 try:
-    spark_session = DatabricksSession.builder.getOrCreate()
+    spark = DatabricksSession.builder.getOrCreate()
 except Exception:
     logging.warning("unable to create spark session; are you in a Databricks runtime?")
     pass
@@ -60,7 +61,7 @@ except Exception:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## `student-success-intervention` hacks
+# MAGIC ## import school-specific code
 
 # COMMAND ----------
 
@@ -69,38 +70,23 @@ except Exception:
 
 # COMMAND ----------
 
-# HACK: insert our 1st-party (school-specific) code into PATH
+# insert our 1st-party (school-specific) code into PATH
 if "../" not in sys.path:
     sys.path.insert(1, "../")
 
-# TODO: specify school's subpackage
+# TODO: specify school's subpackage here
 from analysis import *  # noqa: F403
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC ## unity catalog config
-
-# COMMAND ----------
-
-catalog = "sst_dev"
-
-# configure where data is to be read from / written to
-inst_name = "SCHOOL"  # TODO: fill in school's name in Unity Catalog
-read_schema = f"{inst_name}_bronze"
-write_schema = f"{inst_name}_silver"
-
-path_volume = os.path.join(
-    "/Volumes", catalog, read_schema, f"{inst_name}_bronze_file_volume"
-)
-path_table = f"{catalog}.{read_schema}"
-print(f"{path_table=}")
-print(f"{path_volume=}")
+# load project configuration from file
+cfg = configs.load_config("./config-v2-TEMPLATE.toml", configs.PDPProjectConfigV2)
+cfg
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Read and Validate Raw Data
+# MAGIC # read and validate raw data
 
 # COMMAND ----------
 
@@ -109,8 +95,12 @@ print(f"{path_volume=}")
 
 # COMMAND ----------
 
-# TODO: fill in school's name; may not be same as in the schemas above
-fpath_course = os.path.join(path_volume, "SCHOOL_COURSE_AR_DEID_DTTM.csv")
+# TODO: fill in the actual path to school's raw course file
+# okay to add it to project config now or later, whatever you prefer
+try:
+    raw_course_file_path = cfg.datasets["labeled"].raw_course.file_path
+except AttributeError:
+    raw_course_file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/SCHOOL_COURSE_AR_DEID_DTTM.csv"
 
 # COMMAND ----------
 
@@ -124,6 +114,10 @@ df_course_raw.head()
 # COMMAND ----------
 
 df_course_raw.dtypes.value_counts()
+
+# COMMAND ----------
+
+df_course_raw["course_begin_date"].describe()
 
 # COMMAND ----------
 
@@ -144,7 +138,7 @@ df_course
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC If the above command works, and `df_course` is indeed a `pd.DataFrame` containing the validated + parsed PDP cohort dataset, then you're all set, and can skip ahead to the next section. If not, and this is instead a json blob of schema errors, then you'll need to iteratively develop school-specific overrides. There are existing examples you can refer to in the `student-success-intervention` repo.
+# MAGIC If the above command works, and `df_course` is indeed a `pd.DataFrame` containing the validated + parsed PDP cohort dataset, then you're all set, and can skip ahead to the next section. If not, and this is instead a json blob of schema errors, then you'll need to inspect those errors and iteratively develop school-specific overrides to handle them. There are existing examples you can refer to in the `student-success-intervention` repo if you're unsure.
 # MAGIC
 # MAGIC This will involve some ad-hoc exploratory work, depending on the schema errors. For example:
 # MAGIC
@@ -199,7 +193,7 @@ df_course
 # MAGIC ```
 # MAGIC
 # MAGIC At this point, `df_course` should be a properly validated and parsed data frame, ready for exploratory data analysis.
-
+# MAGIC
 
 # COMMAND ----------
 
@@ -208,14 +202,19 @@ df_course
 
 # COMMAND ----------
 
-
-# TODO: fill in school's name; may not be same as in the schemas above
-fpath_cohort = os.path.join(path_volume, "SCHOOL_COHORT_AR_DEID_DTTM.csv")
+# TODO: fill in the actual path to school's raw cohort file
+# okay to add it to project config now or later, whatever you prefer
+try:
+    raw_cohort_file_path = cfg.datasets["labeled"].raw_cohort.file_path
+except AttributeError:
+    raw_cohort_file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/SCHOOL_COHORT_AR_DEID_DTTM.csv"
 
 # COMMAND ----------
 
 # read without any schema validation, so we can look at the data "raw"
-df_cohort_raw = pdp.dataio.read_raw_pdp_cohort_data_from_file(fpath_cohort, schema=None)
+df_cohort_raw = pdp.dataio.read_raw_pdp_cohort_data_from_file(
+    raw_cohort_file_path, schema=None
+)
 print(f"rows x cols = {df_cohort_raw.shape}")
 df_cohort_raw.head()
 
@@ -223,7 +222,7 @@ df_cohort_raw.head()
 
 # try to read data while validating with the "base" PDP schema
 df_cohort = pdp.dataio.read_raw_pdp_cohort_data_from_file(
-    fpath_cohort, schema=pdp.schemas.base.RawPDPCohortDataSchema
+    raw_cohort_file_path, schema=pdp.schemas.base.RawPDPCohortDataSchema
 )
 df_cohort
 
@@ -242,44 +241,52 @@ df_cohort
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## save validated data
+# MAGIC ## STOP HERE!
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Before continuing on to EDA, now's a great time to do a couple things:
+# MAGIC
+# MAGIC - Copy any school-specific raw dataset schemas into a `schemas.py` file in the current working directory
+# MAGIC - Copy any school-specific preprocessing functions needed to coerce the raw data into a standardized form into a `dataio.py` file in the current working directory
+# MAGIC - **Optional:** If you want easy access to outputs from every (sub-)step of the data transformation pipeline, save the validated datasets into this school's "silver" schema in Unity Catalog.
 
 # COMMAND ----------
 
 pdp.dataio.write_data_to_delta_table(
     df_course,
-    f"{catalog}.{write_schema}.course_dataset_validated",
-    spark_session=spark_session,
+    "CATALOG.INST_NAME_silver.course_dataset_validated",
+    spark_session=spark,
 )
 
 # COMMAND ----------
 
 pdp.dataio.write_data_to_delta_table(
     df_cohort,
-    f"{catalog}.{write_schema}.cohort_dataset_validated",
-    spark_session=spark_session,
+    "CATALOG.INST_NAME_silver.cohort_dataset_validated",
+    spark_session=spark,
 )
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Exploratory Data Analysis
+# MAGIC # exploratory data analysis
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC %md
 # MAGIC ## read validated data
 # MAGIC
-# MAGIC (so you don't have to execute the validation process more than once)
+# MAGIC (optional, so you don't have to execute the validation process more than once)
 
 # COMMAND ----------
 
 # use base or school-specific schema, as needed
 df_course = pdp.schemas.RawPDPCourseDataSchema(
     pdp.dataio.read_data_from_delta_table(
-        f"{catalog}.{write_schema}.course_dataset_validated",
-        spark_session=spark_session,
+        "CATALOG.INST_NAME_silver.course_dataset_validated",
+        spark_session=spark,
     )
 )
 df_course.shape
@@ -288,8 +295,8 @@ df_course.shape
 
 df_cohort = pdp.schemas.RawCohortDataSchema(
     pdp.dataio.read_data_from_delta_table(
-        f"{catalog}.{write_schema}.cohort_dataset_validated",
-        spark_session=spark_session,
+        "CATALOG.INST_NAME_silver.cohort_dataset_validated",
+        spark_session=spark,
     )
 )
 df_cohort.shape
@@ -307,8 +314,11 @@ dbutils.data.summarize(df_course, precise=False)
 # COMMAND ----------
 
 # specific follow-ups, for example
+# df_course["academic_year"].value_counts(normalize=True, dropna=False)
+# df_course["academic_term"].value_counts(normalize=True, dropna=False)
 # df_course["grade"].value_counts(normalize=True, dropna=False)
 # df_course["delivery_method"].value_counts(normalize=True, dropna=False)
+# df_course["course_name"].value_counts(normalize=True, dropna=False).head(10)
 
 # COMMAND ----------
 
@@ -317,8 +327,8 @@ dbutils.data.summarize(df_cohort, precise=True)
 # COMMAND ----------
 
 # specific follow-ups, for example
-# df_course["cohort"].value_counts(normalize=True, dropna=False)
-# df_course["enrollment_type"].value_counts(normalize=True, dropna=False)
+# df_cohort["cohort"].value_counts(normalize=True, dropna=False)
+# df_cohort["enrollment_type"].value_counts(normalize=True, dropna=False)
 
 # COMMAND ----------
 
@@ -509,6 +519,10 @@ df_pre_cohort[["student_guid", "cohort_id", "term_id", "enrollment_type"]]
 
 # COMMAND ----------
 
+df_pre_cohort["enrollment_type"].value_counts()
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ### filter invalid rows(?)
 
@@ -516,8 +530,8 @@ df_pre_cohort[["student_guid", "cohort_id", "term_id", "enrollment_type"]]
 
 # this is probably a filter you'll want to apply
 # these courses known to be an issue w/ PDP data
-df_course_valid = df_course.loc[df_course["course_number"].notna(), :]
-df_course_valid
+df_course_filtered = df_course.loc[df_course["course_number"].notna(), :]
+df_course_filtered.shape
 
 # COMMAND ----------
 
@@ -527,7 +541,7 @@ df_course_valid
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC **Note:** You'll probably want to use the "valid" dataframes for most of these plots, but not necessarily for all. For simplicity, all these example plots will just use the base data w/o extra data validation filtering applied. It's your call!
+# MAGIC **Note:** You'll probably want to use the filtered dataframes for most of these plots, but not necessarily for all. Sometimes comparing the two can be instructive. For simplicity, all these example plots will just use the base data w/o extra data validation filtering applied. It's your call!
 
 # COMMAND ----------
 
@@ -574,6 +588,7 @@ df_cohort["gpa_group_year_1"].describe()
 
 ax = sb.histplot(
     df_course.sort_values(by="academic_year"),
+    # df_course_filtered.sort_values(by="academic_year"),
     y="academic_year",
     hue="academic_term",
     multiple="stack",
@@ -645,6 +660,7 @@ _ = ax.set(xlabel="Number of Students")
 ax = sb.histplot(
     pd.merge(
         df_course.groupby("student_guid")
+        # df_course_filtered.groupby("student_guid")
         .size()
         .rename("num_courses_enrolled")
         .reset_index(drop=False),
@@ -667,6 +683,9 @@ jg = sb.jointplot(
     df_course.groupby("student_guid").agg(
         {"number_of_credits_attempted": "sum", "number_of_credits_earned": "sum"}
     ),
+    # df_course_filtered.groupby("student_guid").agg(
+    #     {"number_of_credits_attempted": "sum", "number_of_credits_earned": "sum"}
+    # ),
     x="number_of_credits_attempted",
     y="number_of_credits_earned",
     kind="hex",
@@ -764,12 +783,15 @@ _ = ax.set_xticklabels(
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Wrap-up
+# MAGIC # wrap-up
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC - [ ] Add school-specific data schemas and/or preprocessing functions into the appropriate directory in the [`student-success-intervention` repository](https://github.com/datakind/student-success-intervention)
-# MAGIC - ...
+# MAGIC - [ ] If you haven't already, add school-specific data schemas and/or preprocessing functions into the appropriate directory in the [`student-success-intervention` repository](https://github.com/datakind/student-success-intervention)
+# MAGIC - [ ] Add file paths for the raw course/cohort datasets to the project config file's `datasets["labeled"].raw_course` and `datasets["labeled"].raw_cohort` blocks
+# MAGIC - [ ] Submit a PR including this notebook and any school-specific files added in order to run it
 
 # COMMAND ----------
+
+
