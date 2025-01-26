@@ -215,8 +215,8 @@ class PDPProjectConfigV2(pyd.BaseModel):
     # shared parameters
     student_id_col: str = "student_guid"
     target_col: str = "target"
-    split_col: str = "split"
-    sample_weight_col: t.Optional[str] = None
+    split_col: t.Optional[str] = "split"
+    sample_weight_col: t.Optional[str] = "sample_weight"
     student_group_cols: t.Optional[list[str]] = pyd.Field(
         default=["student_age", "race", "ethnicity", "gender", "first_gen"],
         description=(
@@ -252,6 +252,16 @@ class PDPProjectConfigV2(pyd.BaseModel):
 
     # NOTE: this is for *pydantic* model -- not ML model -- configuration
     model_config = pyd.ConfigDict(extra="ignore", strict=True)
+
+    @pyd.computed_field  # type: ignore[misc]
+    @property
+    def non_feature_cols(self) -> list[str]:
+        return (
+            [self.student_id_col, self.target_col]
+            + ([self.split_col] if self.split_col else [])
+            + ([self.sample_weight_col] if self.sample_weight_col else [])
+            + (self.student_group_cols or [])
+        )
 
     @pyd.field_validator("institution_id", mode="after")
     @classmethod
