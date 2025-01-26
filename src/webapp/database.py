@@ -2,6 +2,7 @@ import os
 import sqlalchemy
 import uuid
 import datetime
+import ssl
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.mutable import MutableDict, MutableList
@@ -348,6 +349,7 @@ def connect_tcp_socket(
     pool = sqlalchemy.create_engine(
         # Equivalent URL:
         # postgresql+pg8000://<db_user>:<db_pass>@<db_host>:<db_port>/<db_name>
+        # https://github.com/GoogleCloudPlatform/python-docs-samples/blob/main/cloud-sql/postgres/sqlalchemy/connect_tcp.py
         sqlalchemy.engine.url.URL.create(
             drivername="postgresql+pg8000",
             username=engine_args["DB_USER"],
@@ -382,11 +384,13 @@ def init_connection_pool() -> (
     sqlalchemy.engine.Engine
 ):  # should this be sqlalchemy.engine.base.Engine
     setup_database_vars()
-    ssl_args = {
-        "ssl_ca": ssl_env_vars["DB_ROOT_CERT"],
-        "ssl_cert": ssl_env_vars["DB_CERT"],
-        "ssl_key": ssl_env_vars["DB_KEY"],
-    }
+    # Set up ssl context for the connection args.
+    ssl_args = {}
+    ssl_context = ssl.SSLContext()
+    ssl_context.verify_mode = ssl.CERT_REQUIRED
+    ssl_context.load_verify_locations(ssl_env_vars["DB_ROOT_CERT"])
+    ssl_context.load_cert_chain(ssl_env_vars["DB_CERT"], ssl_env_vars["DB_KEY"])
+    ssl_args["ssl_context"] = ssl_context
     return connect_tcp_socket(engine_vars, ssl_args)
 
 
