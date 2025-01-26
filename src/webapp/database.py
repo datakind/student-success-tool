@@ -236,7 +236,7 @@ class FileTable(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Within a given institution, there should be no duplicated file names.
-    __table_args__ = (UniqueConstraint("name", "inst_id", name="name_inst_uc"),)
+    __table_args__ = (UniqueConstraint("name", "inst_id", name="file_name_inst_uc"),)
 
 
 # The institution batch table
@@ -269,7 +269,7 @@ class BatchTable(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     # Within a given institution, there should be no duplicated batch names.
-    __table_args__ = (UniqueConstraint("name", "inst_id", name="name_inst_uc"),)
+    __table_args__ = (UniqueConstraint("name", "inst_id", name="batch_name_inst_uc"),)
 
 
 """
