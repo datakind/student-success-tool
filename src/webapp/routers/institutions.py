@@ -1,12 +1,14 @@
 """API functions related to institutions.
 """
 
-from typing import Annotated, Any, Union
+import uuid
+import json
+
+from typing import Annotated, Any, Union, Dict
 from fastapi import HTTPException, status, APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
-import uuid
 from google.cloud import storage
 from google.cloud.storage import Client
 
@@ -15,10 +17,13 @@ from ..utilities import (
     has_full_data_access_or_err,
     BaseUser,
     AccessType,
-    get_bucket_name_from_uuid,
+    get_external_bucket_name_from_uuid,
+    get_internal_bucket_name_from_uuid,
     str_to_uuid,
     uuid_to_str,
     get_current_active_user,
+    SchemaType,
+    PDP_SCHEMA_GROUP,
 )
 
 from ..gcsutil import StorageControl
@@ -28,13 +33,14 @@ from ..database import (
     AccountTable,
     AccountHistoryTable,
     local_session,
+    VAR_CHAR_LONGER_LENGTH,
 )
 
 router = APIRouter(
     tags=["institutions"],
 )
 
-# xxx
+# TODO: possibly delete the following
 # The following are the default top-level folders created in a new GCS bucket.
 # softdelete/ is the folder where files in soft-deletion (from user requests or retention time-up) are held prior to deletion.
 # Files in softdelete/ should not be visible to even datakinders unless they are in a debugging group -- they can view these files from the gcs console.
@@ -57,6 +63,12 @@ class InstitutionCreationRequest(BaseModel):
     # The name should be unique amongst all other institutions.
     name: str
     description: str | None = None
+    state: str | None = None
+    allowed_schemas: list[SchemaType]
+    # Emails allowed to register under this institution
+    allowed_emails: Dict[str, AccessType]
+    # The following is a shortcut to specifying the allowed_schemas list and will mean that the allowed_schemas will be augmented with the PDP_SCHEMA_GROUP.
+    is_pdp: bool | None = None
     retention_days: int | None = None
 
 
@@ -118,12 +130,13 @@ def create_institution(
     Args:
         current_user: the user making the request.
     """
+    print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")  # xxx
     if not current_user.is_datakinder():
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authorized to create an institution.",
         )
-    if len(req.description) > 29:
+    if len(req.description) > VAR_CHAR_LONGER_LENGTH:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Description length too long.",
@@ -136,12 +149,17 @@ def create_institution(
     )
     if len(query_result) == 0:
         # If the institution does not exist create it and create a storage bucket for it.
-        # TODO Check presence of storage bucket, if it does not exist, create it.
+        requested_schemas = req.allowed_schemas
+        if req.is_pdp:
+            requested_schemas |= PDP_SCHEMA_GROUP
         local_session.get().add(
             InstTable(
                 name=req.name,
                 retention_days=req.retention_days,
                 description=req.description,
+                # Sets aren't json serializable, so turn them into lists first
+                schemas=list(set(requested_schemas)),
+                allowed_emails=req.allowed_emails,
             )
         )
         local_session.get().commit()
@@ -160,14 +178,16 @@ def create_institution(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Database write of the institution created duplicate entries.",
             )
-        # Create a storage bucket for it. During creation, we have to include the /.
-        bucket_name = get_bucket_name_from_uuid(query_result[0][0].id)
+        # Create an internal and external storage bucket for it. During creation, we have to include the /.
+        bucket_name = get_external_bucket_name_from_uuid(query_result[0][0].id)
+        internal_bucket_name = get_internal_bucket_name_from_uuid(query_result[0][0].id)
         try:
             storage_control.create_bucket(bucket_name)
+            storage_control.create_bucket(internal_bucket_name)
         except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Storage bucket creation failed, storage already exists.",
+                detail="Storage bucket creation failed:" + str(e),
             )
     if len(query_result) > 1:
         raise HTTPException(

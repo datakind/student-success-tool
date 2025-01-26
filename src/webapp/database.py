@@ -1,10 +1,10 @@
 import os
-import pymysql
 import sqlalchemy
 import uuid
 import datetime
 
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.mutable import MutableDict, MutableList
 from contextvars import ContextVar
 from sqlalchemy import (
     Column,
@@ -15,12 +15,13 @@ from sqlalchemy import (
     String,
     UniqueConstraint,
     Text,
+    JSON,
 )
 from typing import Set, List
 from sqlalchemy.orm import sessionmaker, Session, relationship, mapped_column, Mapped
 from sqlalchemy.sql import func
 from sqlalchemy.pool import StaticPool
-
+from sqlalchemy.dialects import postgresql
 from .config import env_vars, engine_vars, ssl_env_vars, setup_database_vars
 from .authn import get_password_hash
 
@@ -32,7 +33,7 @@ db_engine = None
 # GCP MYSQL will throw an error if we don't specify the length for any varchar
 # fields. So we can't use mapped_column in string cases.
 VAR_CHAR_LENGTH = 36
-VAR_CHAR_LONGER_LENGTH = 100
+VAR_CHAR_LONGER_LENGTH = 1000
 # Constants for the local env
 LOCAL_INST_UUID = uuid.UUID("14c81c50-935e-4151-8561-c2fc3bdabc0f")
 LOCAL_USER_UUID = uuid.UUID("f21a3e53-c967-404e-91fd-f657cb922c39")
@@ -105,10 +106,16 @@ class InstTable(Base):
     # If retention unset, the Datakind default is used. File-level retentions overrides
     # this value.
     retention_days: Mapped[int] = mapped_column(nullable=True)
+    # The emails for which self sign up will be allowed for this institution and will automatically be assigned to this institution.
+    # The dict structure is {email: AccessType string}
+    allowed_emails = Column(MutableDict.as_mutable(JSON))
+    # Schemas that are allowed for validation.
+    schemas = Column(MutableList.as_mutable(JSON))
+    state = Column(String(VAR_CHAR_LENGTH), nullable=True)
     # Only populated for PDP schools. Uncomment once logic available.
     # pdp_id: Mapped[int] = mapped_column(nullable=True)
     # A short description or note on this inst.
-    description = Column(String(VAR_CHAR_LENGTH))
+    description = Column(String(VAR_CHAR_LONGER_LENGTH))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -207,7 +214,7 @@ class FileTable(Base):
     # The size to the nearest mb.
     # size_mb: Mapped[int] = mapped_column(nullable=False)
     # A short description or note on this inst.
-    description = Column(String(VAR_CHAR_LENGTH))
+    description = Column(String(VAR_CHAR_LONGER_LENGTH))
     # Who uploaded the file. For SST generated files, this field would be null.
     uploader = Column(Uuid(as_uuid=True), nullable=True)
     # Can be PDP_SFTP, MANUAL_UPLOAD etc. May be empty for generated files.
@@ -250,7 +257,7 @@ class BatchTable(Base):
 
     name = Column(String(VAR_CHAR_LENGTH), nullable=False)
     # A short description or note on this inst.
-    description = Column(String(VAR_CHAR_LENGTH))
+    description = Column(String(VAR_CHAR_LONGER_LENGTH))
     creator = Column(Uuid(as_uuid=True))
     # If null, the following is non-deleted.
     deleted: Mapped[bool] = mapped_column(nullable=True)
@@ -340,44 +347,32 @@ def connect_tcp_socket(
     """Initializes a TCP connection pool for a Cloud SQL instance of MySQL."""
     pool = sqlalchemy.create_engine(
         # Equivalent URL:
-        # mysql+pymysql://<db_user>:<db_pass>@<db_host>:<db_port>/<db_name>
+        # postgresql+pg8000://<db_user>:<db_pass>@<db_host>:<db_port>/<db_name>
         sqlalchemy.engine.url.URL.create(
-            drivername="mysql+pymysql",
+            drivername="postgresql+pg8000",
             username=engine_args["DB_USER"],
             password=engine_args["DB_PASS"],
             host=engine_args["INSTANCE_HOST"],
             port=engine_args["DB_PORT"],
             database=engine_args["DB_NAME"],
         ),
-        # [END cloud_sql_mysql_sqlalchemy_connect_tcp]
         connect_args=connect_args,
-        # [START cloud_sql_mysql_sqlalchemy_connect_tcp]
-        # [START_EXCLUDE]
-        # [START cloud_sql_mysql_sqlalchemy_limit]
         # Pool size is the maximum number of permanent connections to keep.
         pool_size=5,
         # Temporarily exceeds the set pool_size if no connections are available.
         max_overflow=2,
         # The total number of concurrent connections for your application will be
         # a total of pool_size and max_overflow.
-        # [END cloud_sql_mysql_sqlalchemy_limit]
-        # [START cloud_sql_mysql_sqlalchemy_backoff]
         # SQLAlchemy automatically uses delays between failed connection attempts,
         # but provides no arguments for configuration.
-        # [END cloud_sql_mysql_sqlalchemy_backoff]
-        # [START cloud_sql_mysql_sqlalchemy_timeout]
         # 'pool_timeout' is the maximum number of seconds to wait when retrieving a
         # new connection from the pool. After the specified amount of time, an
         # exception will be thrown.
         pool_timeout=30,  # 30 seconds
-        # [END cloud_sql_mysql_sqlalchemy_timeout]
-        # [START cloud_sql_mysql_sqlalchemy_lifetime]
         # 'pool_recycle' is the maximum number of seconds a connection can persist.
         # Connections that live longer than the specified amount of time will be
         # re-established
         pool_recycle=1800,  # 30 minutes
-        # [END cloud_sql_mysql_sqlalchemy_lifetime]
-        # [END_EXCLUDE]
     )
     return pool
 

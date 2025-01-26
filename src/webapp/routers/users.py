@@ -21,6 +21,8 @@ router = APIRouter(
     tags=["users"],
 )
 
+# TODO: update the user creation flow to check allowed_emails first.
+
 
 class UserAccountRequest(BaseModel):
     """The user account creation request object."""

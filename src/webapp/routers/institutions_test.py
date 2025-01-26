@@ -189,11 +189,11 @@ def test_read_inst(client: TestClient):
     assert response.json() == INSTITUTION_OBJ
 
 
-def test_create_inst(client):
+def test_create_inst_unauth(client):
     # Test POST /institutions. For various user access types.
     os.environ["ENV"] = "DEV"
     # Unauthorized.
-    response = client.post("/institutions/", json=INSTITUTION_REQ)
+    response = client.post("/institutions", json=INSTITUTION_REQ)
     assert str(response) == "<Response [401 Unauthorized]>"
     assert response.text == '{"detail":"Not authorized to create an institution."}'
 
@@ -205,7 +205,7 @@ def test_create_inst(datakinder_client):
     MOCK_STORAGE.create_bucket.return_value = None
     MOCK_STORAGE.create_folders.return_value = None
     # Authorized.
-    response = datakinder_client.post("/institutions/", json=INSTITUTION_REQ)
+    response = datakinder_client.post("/institutions", json=INSTITUTION_REQ)
     assert response.status_code == 200
     assert response.json()["name"] == "foobar school"
     assert response.json()["description"] == "description of school"

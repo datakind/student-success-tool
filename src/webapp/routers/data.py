@@ -1,14 +1,17 @@
 """API functions related to data.
 """
 
+import uuid
+import json
+
 from typing import Annotated, Any, Tuple
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import and_, update
-import uuid
 from datetime import datetime, date
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
+from ..validation import validate_file_reader
 
 from ..utilities import (
     has_access_to_inst_or_err,
@@ -19,7 +22,7 @@ from ..utilities import (
     str_to_uuid,
     get_current_active_user,
     DataSource,
-    get_bucket_name,
+    get_external_bucket_name,
 )
 
 from ..database import get_session, local_session, BatchTable, FileTable
@@ -108,6 +111,18 @@ class DataInfo(BaseModel):
     # Whether the file was validated (in the case of input) or approved (in the case of output).
     valid: bool = False
     uploaded_date: datetime
+
+
+class ValidationResult(BaseModel):
+    """The returned validation result."""
+
+    # Must be unique within an institution to avoid confusion.
+    name: str
+    inst_id: str
+    # Whether the file was validated (in the case of input) or approved (in the case of output).
+    valid: bool = False
+    # If not validated, error message.
+    err_msg: str | None
 
 
 class DataOverview(BaseModel):
@@ -264,7 +279,7 @@ def get_all_files_in_bucket(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Debugging endpoint needs to be datakinder.",
         )
-    return storage_control.list_blobs_in_folder(get_bucket_name(inst_id), "")
+    return storage_control.list_blobs_in_folder(get_external_bucket_name(inst_id), "")
 
 
 @router.get("/{inst_id}/output", response_model=DataOverview)
@@ -743,7 +758,7 @@ def download_url_inst_file(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="File not yet approved by Datakind. Cannot be downloaded by non Datakinders.",
         )
-    bucket_name = get_bucket_name(inst_id)
+    bucket_name = get_external_bucket_name(inst_id)
     return storage_control.generate_download_signed_url(bucket_name, file_name)
 
 
@@ -773,23 +788,68 @@ def upload_file(
     }
 
 
-@router.post("/{inst_id}/input/validatefile/{file_name}", response_model=DataInfo)
+@router.post("/{inst_id}/input/validate/{file_name}", response_model=ValidationResult)
 def validate_file(
     inst_id: str,
     file_name: str,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
+    storage_control: Annotated[StorageControl, Depends(StorageControl)],
+    sql_session: Annotated[Session, Depends(get_session)],
 ) -> Any:
-    """Validate a given file.
-
-    Args:
-        current_user: the user making the request.
-    """
+    """Validate a given file. The file_name should not contain slashes."""
     has_access_to_inst_or_err(inst_id, current_user)
-    model_owner_and_higher_or_err(current_user, "model training data")
-    # TODO: make the POST call to the upload url with the file.
-    # Update or create batch.
+
+    if file_name.find("/") != -1:
+        raise HTTPException(
+            status_code=422,
+            detail="File name can't contain '/'.",
+        )
+    bucket = client.bucket(get_external_bucket_name(inst_id))
+    blob = bucket.blob(f"unvalidated/{file_name}")
+    new_blob_name = f"validated/{file_name}"
+    local_session.set(sql_session)
+    inst_query_result = (
+        local_session.get()
+        .execute(select(InstTable).where(InstTable.inst_id == str_to_uuid(inst_id)))
+        .all()
+    )
+    if len(inst_query_result) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Institution not found.",
+        )
+    if len(inst_query_result) > 1:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Institution duplicates found.",
+        )
+    allowed_schemas = json.load(inst_query_result[0][0].schemas)
+    with blob.open("r") as file:
+        try:
+            with blob.open("r") as file:
+                # TODO: remove force array once postgresql migration
+                validate_file_reader(file, allowed_schemas)
+        except Exception as e:
+            storage_control.delete_file(bucket, blob)
+            return {
+                "name": file_name,
+                "inst_id": inst_id,
+                "valid": False,
+                "err_msg": str(e),
+            }
+    storage_control.move_file(bucket, blob, new_blob_name)
+    new_file_record = FileTable(
+        name=file_name,
+        inst_id=str_to_uuid(inst_id),
+        uploader=str_to_uuid(current_user.user_id),
+        source="MANUAL_UPLOAD",
+        valid=True,
+    )
+    local_session.get().add(new_file_record)
     return {
-        "name": "TEST_UPLOAD_NAME",
+        "name": file_name,
+        "inst_id": inst_id,
+        "valid": True,
     }
 
 
@@ -822,5 +882,6 @@ def get_upload_url(
         current_user: the user making the request.
     """
     has_access_to_inst_or_err(inst_id, current_user)
-    bucket_name = get_bucket_name(inst_id)
-    return storage_control.generate_upload_signed_url(bucket_name, file_name)
+    return storage_control.generate_upload_signed_url(
+        get_external_bucket_name(inst_id), file_name
+    )

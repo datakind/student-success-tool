@@ -188,4 +188,30 @@ class StorageControl(BaseModel):
         # any content from Google Cloud Storage. As we don't need additional data,
         # using `Bucket.blob` is preferred here.
         blob = bucket.blob(file_name)
+        if not blob.exists():
+            raise ValueError(file_name + ": File not found.")
         blob.download_to_filename(destination_file_name)
+
+    def move_file(self, bucket_name: str, prev_name: str, new_name: str):
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(bucket_name)
+        if not bucket.exists():
+            raise ValueError("Storage bucket not found.")
+        blob = bucket.blob(prev_name)
+        if not blob.exists():
+            raise ValueError(prev_name + ": File not found.")
+        new_blob = bucket.blob(new_name)
+        if new_blob.exists():
+            raise ValueError(new_name + ": File already exists.")
+        bucket.copy_blob(blob, bucket, new_name)
+        blob.delete()
+
+    def delete_file(self, bucket_name: str, file_name: str):
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(bucket_name)
+        if not bucket.exists():
+            raise ValueError("Storage bucket not found.")
+        blob = bucket.blob(file_name)
+        if not blob.exists():
+            raise ValueError(prev_name + ": File not found.")
+        blob.delete()

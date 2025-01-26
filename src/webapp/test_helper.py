@@ -57,6 +57,8 @@ INSTITUTION_REQ = {
     "name": "foobar school",
     "description": "description of school",
     "retention_days": 1,
+    "allowed_schemas": ["UNKNOWN"],
+    "allowed_emails": {"foo@foobar.edu": "VIEWER"},
 }
 
 EMPTY_INSTITUTION_OBJ = {

@@ -6,22 +6,10 @@ import csv
 import builtins
 
 from collections import Counter
-from enum import IntEnum
 from typing import Final
 from io import TextIOWrapper, TextIOBase
 
-
-class SchemaType(IntEnum):
-    """The schema type a given file adheres to."""
-
-    UNKNOWN = 0
-    # The standard PDP ARF file schemas
-    PDP_COHORT = 1
-    PDP_COURSE = 2
-    # The PDP aligned SST schemas
-    SST_PDP_COHORT = 3
-    SST_PDP_COURSE = 4
-    SST_PDP_FINANCE = 5
+from .utilities import SchemaType
 
 
 # The standard PDP ARF file columns
@@ -280,13 +268,17 @@ def valid_subset_lists(
     return not Counter(missing_vals) - Counter(optional_list)
 
 
-def detect_file_type(col_names: list[str]) -> SchemaType:
-    """Returns schema for a list of col names if match found."""
+def detect_file_type(col_names: list[str]) -> set[SchemaType]:
+    """Returns all schemas that match for a list of col names."""
+    res = set()
     for schema, schema_cols in SCHEMA_TYPE_TO_COLS.items():
         optional_cols = SCHEMA_TYPE_TO_OPTIONAL_COLS[schema]
         if valid_subset_lists(schema_cols, col_names, optional_cols):
-            return schema
-    return SchemaType.UNKNOWN
+            res.add(schema)
+    if not res:
+        # If it doesn't match any, it will match unknown.
+        res.add(SchemaType.UNKNOWN)
+    return res
 
 
 def get_col_names(filename: str) -> list[str]:
@@ -306,10 +298,11 @@ def get_col_names(filename: str) -> list[str]:
         return col_names
 
 
-def validate_file(filename: str) -> bool:
-    if detect_file_type(get_col_names(filename)) == SchemaType.UNKNOWN:
-        raise ValueError("CSV file schema not recognized")
-    return True
+def validate_file(filename: str, allowed_types: set[SchemaType]) -> bool:
+    res = detect_file_type(get_col_names(filename))
+    if any(i in allowed_types for i in res):
+        return True
+    raise ValueError("CSV file schema not recognized")
 
 
 def get_col_names_reader(f) -> None:
@@ -328,7 +321,8 @@ def get_col_names_reader(f) -> None:
     return col_names
 
 
-def validate_file_reader(reader) -> bool:
-    if detect_file_type(get_col_names_reader(reader)) == SchemaType.UNKNOWN:
-        raise ValueError("CSV file schema not recognized")
-    return True
+def validate_file_reader(reader, allowed_types: set[SchemaType]) -> bool:
+    res = detect_file_type(get_col_names(filename))
+    if any(i in allowed_types for i in res):
+        return True
+    raise ValueError("CSV file schema not recognized")

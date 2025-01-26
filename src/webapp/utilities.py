@@ -1,7 +1,7 @@
 """Helper functions that may be used across multiple API router subpackages.
 """
 
-from typing import Annotated
+from typing import Annotated, Final
 
 # the following needed for python pre 3.11
 from strenum import StrEnum
@@ -38,6 +38,29 @@ class DataSource(StrEnum):
     UNNOWN = ""
     PDP_SFTP = "PDP_SFTP"
     MANUAL_UPLOAD = "MANUAL_UPLOAD"
+
+
+class SchemaType(StrEnum):
+    """The schema type a given file adheres to."""
+
+    # If an institution uses UNKNOWN as an allowed schema, it means bypass the validation check.
+    UNKNOWN = "UNKNOWN"
+    # The standard PDP ARF file schemas
+    PDP_COHORT = "PDP_COHORT"
+    PDP_COURSE = "PDP_COURSE"
+    # The PDP aligned SST schemas
+    SST_PDP_COHORT = "SST_PDP_COHORT"
+    SST_PDP_COURSE = "SST_PDP_COURSE"
+    SST_PDP_FINANCE = "SST_PDP_FINANCE"
+
+
+PDP_SCHEMA_GROUP: Final = {
+    SchemaType.PDP_COHORT,
+    SchemaType.PDP_COURSE,
+    SchemaType.SST_PDP_FINANCE,
+    SchemaType.SST_PDP_COHORT,
+    SchemaType.SST_PDP_COURSE,
+}
 
 
 class BaseUser(BaseModel):
@@ -219,9 +242,14 @@ def str_to_uuid(hex_str: str) -> uuid.UUID:
     return uuid.UUID(hex_str)
 
 
-def get_bucket_name_from_uuid(inst_id: uuid.UUID) -> str:
+def get_external_bucket_name_from_uuid(inst_id: uuid.UUID) -> str:
     return prepend_env_prefix(uuid_to_str(inst_id))
 
 
-def get_bucket_name(inst_id: str) -> str:
+def get_internal_bucket_name_from_uuid(inst_id: uuid.UUID) -> str:
+    """Creates an internal bucket <bucket_name>-internal used only for tmp file storage and other files stored by the webapp."""
+    return get_external_bucket_name_from_uuid(inst_id) + "-internal"
+
+
+def get_external_bucket_name(inst_id: str) -> str:
     return prepend_env_prefix(inst_id)

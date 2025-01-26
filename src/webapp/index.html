@@ -3,29 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>SST API</title>
 </head>
 <body>
-    <label for="institution">Select an institution</label>
-    <select id="institution" name="institution" disabled>
-        <option value="local-john-jay-college">John Jay College</option>
-    </select>
-    <label for="upload">Upload a file</label>
-    <input type="file" id="upload" name="upload" accept=".csv">
-    <script type="module">
-        const institution = document.getElementById('institution').value;
-        let uploadUrl = await fetch(`/institutions/${institution}/upload-url`).then(response => response.text());
-        uploadUrl = uploadUrl.replace(/"/g, '');
-        const upload = document.getElementById('upload');
-        upload.addEventListener('change', async (event) => {
-            const file = event.target.files[0];
-            const response = await fetch(uploadUrl, {
-                method: 'PUT',
-                body: file,
-            });
-            const data = await response.json();
-            console.log(data);
-        });
-    </script>
+    This is the API endpoint for Datakind's SST. Please use programmatically
 </body>
 </html>
