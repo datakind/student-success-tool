@@ -186,7 +186,7 @@ class DatasetConfig(pyd.BaseModel):
 class ModelConfig(pyd.BaseModel):
     experiment_id: str
     run_id: str
-    model_type: t.Optional[t.Literal["sklearn", "xgboost", "lightgbm"]] = None
+    framework: t.Optional[t.Literal["sklearn", "xgboost", "lightgbm"]] = None
 
     @pyd.computed_field  # type: ignore[misc]
     @property
