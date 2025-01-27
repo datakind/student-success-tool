@@ -22,7 +22,6 @@ from typing import Set, List
 from sqlalchemy.orm import sessionmaker, Session, relationship, mapped_column, Mapped
 from sqlalchemy.sql import func
 from sqlalchemy.pool import StaticPool
-from sqlalchemy.dialects import postgresql
 from .config import env_vars, engine_vars, ssl_env_vars, setup_database_vars
 from .authn import get_password_hash
 
@@ -348,10 +347,10 @@ def connect_tcp_socket(
     """Initializes a TCP connection pool for a Cloud SQL instance of MySQL."""
     pool = sqlalchemy.create_engine(
         # Equivalent URL:
-        # postgresql+pg8000://<db_user>:<db_pass>@<db_host>:<db_port>/<db_name>
+        # mysql+pymysql://<db_user>:<db_pass>@<db_host>:<db_port>/<db_name>
         # https://github.com/GoogleCloudPlatform/python-docs-samples/blob/main/cloud-sql/postgres/sqlalchemy/connect_tcp.py
         sqlalchemy.engine.url.URL.create(
-            drivername="postgresql+pg8000",
+            drivername="mysql+pymysql",
             username=engine_args["DB_USER"],
             password=engine_args["DB_PASS"],
             host=engine_args["INSTANCE_HOST"],
@@ -385,12 +384,11 @@ def init_connection_pool() -> (
 ):  # should this be sqlalchemy.engine.base.Engine
     setup_database_vars()
     # Set up ssl context for the connection args.
-    ssl_args = {}
-    ssl_context = ssl.SSLContext()
-    ssl_context.verify_mode = ssl.CERT_REQUIRED
-    ssl_context.load_verify_locations(ssl_env_vars["DB_ROOT_CERT"])
-    ssl_context.load_cert_chain(ssl_env_vars["DB_CERT"], ssl_env_vars["DB_KEY"])
-    ssl_args["ssl_context"] = ssl_context
+    ssl_args = {
+        "ssl_ca": ssl_env_vars["DB_ROOT_CERT"],
+        "ssl_cert": ssl_env_vars["DB_CERT"],
+        "ssl_key": ssl_env_vars["DB_KEY"],
+    }
     return connect_tcp_socket(engine_vars, ssl_args)
 
 
