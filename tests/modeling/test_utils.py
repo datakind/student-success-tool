@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+from contextlib import nullcontext as does_not_raise
 
 try:
     import tomllib  # noqa
@@ -92,7 +93,6 @@ def test_compute_sample_weights(df, target_col, class_weight, exp):
     "toml_content, expected_output, expect_exception",
     [
         (
-            # Valid TOML content with the required structure
             """
             academic_term = { name = "academic term" }
             term_in_peak_covid = { name = "term occurred in 'peak' COVID" }
@@ -103,42 +103,42 @@ def test_compute_sample_weights(df, target_col, class_weight, exp):
                 "term_in_peak_covid": {"name": "term occurred in 'peak' COVID"},
                 "num_courses": {"name": "number of courses taken this term"}
             },
-            None,  
+            does_not_raise(),  
         ),
         (
-            # Invalid TOML content (missing closing brace)
             """
             academic_term = { name = "academic term" }
             term_in_peak_covid = { name = "term occurred in 'peak' COVID" }
             num_courses = { name = "number of courses taken this term"
             """,
             None,  
-            tomllib.TOMLDecodeError,
+            tomllib.TOMLDecodeError, 
         ),
         (
-            # Missing file scenario
             "",
             None, 
+            FileNotFoundError, 
+        ),
+        (
+            "",
+            None,
             FileNotFoundError,  
         ),
     ]
 )
-
 def test_load_features_table(tmpdir, toml_content, expected_output, expect_exception):
     if toml_content:
         toml_file = tmpdir.join("features_table.toml")
-        toml_file.write(toml_content)  
+        toml_file.write(toml_content)
         
-        file_path = str(toml_file)
+        file_path = str(toml_file)  
     else:
         file_path = "non_existent_path/features_table.toml"
     
-    if expect_exception:
-        with pytest.raises(expect_exception):
-            utils.load_features_table(file_path)
-    else:
-        features_table = utils.load_features_table(file_path)
-        assert isinstance(features_table, dict)
-        for key, value in expected_output.items():
-            assert key in features_table
-            assert features_table[key] == value
+    with expect_exception:
+        if expected_output:
+            features_table = utils.load_features_table(file_path)
+            assert isinstance(features_table, dict)
+            for key, value in expected_output.items():
+                assert key in features_table
+                assert features_table[key] == value

@@ -86,27 +86,29 @@ def compute_sample_weights(
     )
 
 
-def load_features_table(rel_fpath: str) -> dict[str, dict[str, str]]:
+def load_features_table(fpath: str) -> dict[str, dict[str, str]]:
     """
     Load a features table mapping columns to readable names and (optionally) descriptions
-    from a TOML file located at ``rel_fpath`` within this package.
+    from a TOML file located at ``fpath``, which can either refer to a relative path in this
+    package or an absolute path loaded from local disk.
 
     Args:
-        rel_fpath: Path to features table TOML file relative to package root;
-            for example: "assets/pdp/features_table.toml".
-    """
-    try:
-        # If __file__ is defined, we're in a regular script or module
-        pkg_root_dir = next(
-            p
-            for p in pathlib.Path(__file__).parents
-            if p.parts[-1] == "student_success_tool"
-        )
-    except NameError:
-        # If __file__ is not available (i.e. Jupyter notebook), use the current working directory
-        pkg_root_dir = pathlib.Path(os.getcwd())
+        fpath: Path to features table TOML file relative to package root or absolute;
+            for example: "assets/pdp/features_table.toml" or "/path/to/features_table.toml".
 
-    file_path = pkg_root_dir / rel_fpath
+    Returns:
+    """
+    pkg_root_dir = next(
+        p
+        for p in pathlib.Path(__file__).parents
+        if p.parts[-1] == "student_success_tool"
+    )
+
+    file_path = pathlib.Path(fpath) if pathlib.Path(fpath).is_absolute() else pkg_root_dir / fpath
+
+    if not file_path.exists():
+        raise FileNotFoundError(f"The file at '{file_path}' could not be found.")
+
     with file_path.open(mode="rb") as f:
         features_table = tomllib.load(f)
     LOGGER.info("loaded features table from '%s'", file_path)
