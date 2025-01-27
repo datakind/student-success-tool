@@ -23,8 +23,10 @@
 
 # COMMAND ----------
 
+# WARNING: AutoML/mlflow expect particular packages within certain version constraints
+# overriding existing installs can result in errors and inability to load trained models
 # install (minimal!) extra dependencies not provided by databricks runtime
-# %pip install "student-success-tool==0.1.0"
+# %pip install "student-success-tool==0.1.0" --no-deps
 # %pip install git+https://github.com/datakind/student-success-tool.git@develop --no-deps
 # %pip install pandera
 
@@ -43,17 +45,18 @@ import pandas as pd
 import sklearn.metrics
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
+from py4j.protocol import Py4JJavaError
 
 from student_success_tool import configs, modeling
 from student_success_tool.analysis import pdp
 
 # COMMAND ----------
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, force=True)
 logging.getLogger("py4j").setLevel(logging.WARNING)  # ignore databricks logger
 
 try:
-    spark_session = DatabricksSession.builder.getOrCreate()
+    spark = DatabricksSession.builder.getOrCreate()
 except Exception:
     logging.warning("unable to create spark session; are you in a Databricks runtime?")
     pass
@@ -65,35 +68,45 @@ except Exception:
 
 # COMMAND ----------
 
+# TODO(Burton?): figure out if/how this should be used
 run_parameters = dict(dbutils.notebook.entry_point.getCurrentBindings())
-job_run_id = run_parameters.get("job_run_id", "interactive")
+
+# check if we're running this notebook as a "job" in a "workflow"
+# if not, assume this is a training workflow using labeled data
+try:
+    run_type = dbutils.widgets.get("run_type")
+    dataset_name = dbutils.widgets.get("dataset_name")
+except Py4JJavaError:
+    run_type = "train"
+    dataset_name = "labeled"
+
+logging.info("'%s' run of notebook using '%s' dataset", run_type, dataset_name)
+# just in case!
+if run_type != "train":
+    logging.warning(
+        "this notebook is meant for model training; "
+        "should you be running it in '%s' mode?",
+        run_type,
+    )
 
 # COMMAND ----------
 
-# TODO: prepare school-specific config file in this directory
-config = configs.load_config("./config.toml", schema=configs.PDPProjectConfig)
+# MAGIC %md
+# MAGIC ## import school-specific code
 
 # COMMAND ----------
 
-training_params = {
-    "job_run_id": job_run_id,
-    "institution_id": config.institution_name,
-    "student_id_col": config.train_evaluate_model.student_id_col,
-    "target_col": config.train_evaluate_model.target_col,
-    "split_col": config.train_evaluate_model.split_col,
-    "sample_weight_col": config.train_evaluate_model.sample_weight_col,
-    "pos_label": config.train_evaluate_model.pos_label,
-    "optimization_metric": config.train_evaluate_model.primary_metric,
-    "timeout_minutes": config.train_evaluate_model.timeout_minutes,
-    "exclude_frameworks": config.train_evaluate_model.exclude_frameworks,
-    "exclude_cols": sorted(
-        set(
-            (config.train_evaluate_model.exclude_cols or [])
-            + (config.train_evaluate_model.student_group_cols or [])
-        )
-    ),
-}
-training_params
+# MAGIC %load_ext autoreload
+# MAGIC %autoreload 2
+
+# COMMAND ----------
+
+# project configuration should be stored in a config file in TOML format
+# it'll start out with just basic info: institution_id, institution_name
+# but as each step of the pipeline gets built, more parameters will be moved
+# from hard-coded notebook variables to shareable, persistent config fields
+cfg = configs.load_config("./config.toml", configs.PDPProjectConfigV2)
+cfg
 
 # COMMAND ----------
 
@@ -104,8 +117,8 @@ training_params
 
 df = pdp.schemas.PDPLabeledDataSchema(
     pdp.dataio.read_data_from_delta_table(
-        config.train_evaluate_model.dataset_table_path,
-        spark_session=spark_session,
+        cfg.datasets[dataset_name].preprocessed.table_path,
+        spark_session=spark,
     )
 )
 print(f"rows x cols = {df.shape}")
@@ -113,12 +126,57 @@ df.head()
 
 # COMMAND ----------
 
-df[config.train_evaluate_model.target_col].value_counts(normalize=True)
+print(f"target proportions:\n{df[cfg.target_col].value_counts(normalize=True)}")
 
 # COMMAND ----------
 
-if split_col := config.train_evaluate_model.split_col:
-    print(df[split_col].value_counts(normalize=True))
+if cfg.split_col:
+    print(f"split proportions:\n{df[cfg.split_col].value_counts(normalize=True)}")
+
+# COMMAND ----------
+
+if cfg.sample_weight_col:
+    print(f"sample weights: {df[cfg.sample_weight_col].unique()}")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC # feature selection
+
+# COMMAND ----------
+
+# databricks freaks out during feature selection if autologging isn't disabled :shrug:
+mlflow.autolog(disable=True)
+
+# COMMAND ----------
+
+# TODO: load feature selection params from the project config
+# okay to hard-code it first then add it to the config later
+try:
+    selection_params = cfg.modeling.feature_selection.model_dump()
+    logging.info("selection params = %s", selection_params)
+except AttributeError:
+    selection_params = {
+        "non_feature_cols": cfg.non_feature_cols,
+        "force_include_cols": [],
+        "incomplete_threshold": 0.5,
+        "low_variance_threshold": 0.0,
+        "collinear_threshold": 10.0,
+    }
+
+# COMMAND ----------
+
+df_selected = modeling.feature_selection.select_features(
+    (df.loc[df[cfg.split_col].eq("train"), :] if cfg.split_col else df),
+    **selection_params,
+)
+print(f"rows x cols = {df_selected.shape}")
+df_selected.head()
+
+# COMMAND ----------
+
+# HACK: we want to use selected columns for *all* splits, not just train
+df = df.loc[:, df_selected.columns]
 
 # COMMAND ----------
 
@@ -127,30 +185,47 @@ if split_col := config.train_evaluate_model.split_col:
 
 # COMMAND ----------
 
+# re-enable mlflow's autologging
+mlflow.autolog(disable=False)
+
+# COMMAND ----------
+
+training_params = {
+    "job_run_id": run_parameters.get("job_run_id", "interactive"),
+    "institution_id": cfg.institution_id,
+    "student_id_col": cfg.student_id_col,
+    "target_col": cfg.target_col,
+    "split_col": cfg.split_col,
+    "sample_weight_col": cfg.sample_weight_col,
+    "pos_label": cfg.pos_label,
+}
+# TODO: load feature selection params from the project config
+# okay to hard-code it first then add it to the config later
+try:
+    training_params |= cfg.modeling.training.model_dump()
+except AttributeError:
+    training_params |= {
+        "optimization_metric": "log_loss",
+        "timeout_minutes": 15,
+        "exclude_frameworks": [],
+        "exclude_cols": cfg.student_group_cols or [],
+    }
+logging.info("training params = %s", training_params)
+
+# COMMAND ----------
+
 summary = modeling.training.run_automl_classification(df, **training_params)
 
 experiment_id = summary.experiment.experiment_id
-experiment_run_id = summary.best_trial.mlflow_run_id
+run_id = summary.best_trial.mlflow_run_id
 print(
     f"experiment_id: {experiment_id}"
     f"\n{training_params['optimization_metric']} metric distribution = {summary.metric_distribution}"
-    f"\nbest trial experiment_run_id: {experiment_run_id}"
+    f"\nbest trial run_id: {run_id}"
 )
 
 dbutils.jobs.taskValues.set(key="experiment_id", value=experiment_id)
-dbutils.jobs.taskValues.set(key="experiment_run_id", value=experiment_run_id)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC # evaluate model
-
-# COMMAND ----------
-
-pred_col = "pred"
-pred_prob_col = "pred_prob"
-# AutoML geneerates a split column if not manually specified
-split_col = training_params.get("split_col", "_automl_split_col_0000")
+dbutils.jobs.taskValues.set(key="run_id", value=run_id)
 
 # COMMAND ----------
 
@@ -159,25 +234,48 @@ model
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC # evaluate model
+
+# COMMAND ----------
+
+calibration_dir = "calibration"
+preds_dir = "preds"
+sensitivity_dir = "sensitivity"
+
+# NOTE: AutoML geneerates a split column if not manually specified
+split_col = training_params.get("split_col", "_automl_split_col_0000")
+
+# COMMAND ----------
+
 if evaluate_model_bias := (training_params.get("split_col") is not None):
-    non_feature_cols = [
-        training_params["student_id_col"],
-        training_params["target_col"],
-        split_col,
-    ] + training_params["exclude_cols"]
+    non_feature_cols = sorted(
+        set(
+            [
+                training_params["student_id_col"],
+                training_params["target_col"],
+                split_col,
+            ]
+            + training_params["exclude_cols"]
+        )
+    )
     df_features = df.drop(columns=non_feature_cols)
-# TODO: figure this out
+# TODO(Burton): figure out if this is needed/wanted here
 # else:
-#     train_df = extract_training_data_from_model(experiment_id)
-#     train_df[prediction_col] = model.predict(train_df)
-#     train_df[risk_score_col] = model.predict_proba(train_df)[:, 1]
+#     df_train = modeling.evaluation.extract_training_data_from_model(experiment_id)
+#     df_train = df_train.assign(
+#         **{
+#             cfg.pred_col: model.predict(df_train),
+#             cfg.pred_prob_col: model.predict_proba(df_train)[:, 1],
+#         }
+#     )
 
 # COMMAND ----------
 
 df_pred = df.assign(
     **{
-        pred_col: model.predict(df_features),
-        pred_prob_col: model.predict_proba(df_features)[
+        cfg.pred_col: model.predict(df_features),
+        cfg.pred_prob_col: model.predict_proba(df_features)[
             :, 1
         ],  # NOTE: assumes pos_label=True ?
     }
@@ -187,21 +285,7 @@ df_pred.head()
 
 # COMMAND ----------
 
-pos_label = training_params["pos_label"]
-
-target_col = training_params["target_col"]
-pred_col = "pred"
-pred_prob_col = "pred_prob"
-# AutoML geneerates a split column if not manually specified
-split_col = training_params.get("split_col", "_automl_split_col_0000")
-
-calibration_dir = "calibration"
-preds_dir = "preds"
-sensitivity_dir = "sensitivity"
-
-# COMMAND ----------
-
-with mlflow.start_run(run_id=experiment_run_id) as run:
+with mlflow.start_run(run_id=run_id) as run:
     model_comp_fig = modeling.evaluation.compare_trained_models_plot(
         experiment_id, training_params["optimization_metric"]
     )
@@ -213,7 +297,7 @@ with mlflow.start_run(run_id=experiment_run_id) as run:
         mlflow.log_artifact(local_path=tmp_path, artifact_path=preds_dir)
 
         hist_fig, cal_fig, sla_fig = modeling.evaluation.create_evaluation_plots(
-            split_data, pred_prob_col, target_col, pos_label, split_name
+            split_data, cfg.pred_prob_col, cfg.target_col, cfg.pos_label, split_name
         )
         mlflow.log_figure(
             hist_fig,
@@ -231,10 +315,15 @@ with mlflow.start_run(run_id=experiment_run_id) as run:
         if not evaluate_model_bias:
             continue
 
-        for group in config.train_evaluate_model.student_group_cols:
+        for group in cfg.student_group_cols:
             cal_subgroup_fig, sla_subgroup_fig = (
                 modeling.evaluation.create_evaluation_plots_by_subgroup(
-                    split_data, pred_prob_col, target_col, pos_label, group, split_name
+                    split_data,
+                    cfg.pred_prob_col,
+                    cfg.target_col,
+                    cfg.pos_label,
+                    group,
+                    split_name,
                 )
             )
             mlflow.log_figure(
@@ -253,9 +342,9 @@ with mlflow.start_run(run_id=experiment_run_id) as run:
 
             group_metrics = []
             for subgroup, subgroup_data in split_data.groupby(group):
-                labels = subgroup_data[target_col]
-                preds = subgroup_data[pred_col]
-                pred_probs = subgroup_data[pred_prob_col]
+                labels = subgroup_data[cfg.target_col]
+                preds = subgroup_data[cfg.pred_col]
+                pred_probs = subgroup_data[cfg.pred_prob_col]
 
                 subgroup_metrics = {
                     "subgroup": subgroup,
@@ -264,10 +353,10 @@ with mlflow.start_run(run_id=experiment_run_id) as run:
                     "pred_target_prevalence": preds.mean(),
                     "accuracy": sklearn.metrics.accuracy_score(labels, preds),
                     "precision": sklearn.metrics.precision_score(
-                        labels, preds, pos_label=pos_label, zero_division=np.nan
+                        labels, preds, pos_label=cfg.pos_label, zero_division=np.nan
                     ),
                     "recall": sklearn.metrics.recall_score(
-                        labels, preds, pos_label=pos_label, zero_division=np.nan
+                        labels, preds, pos_label=cfg.pos_label, zero_division=np.nan
                     ),
                     "log_loss": sklearn.metrics.log_loss(
                         labels, preds, labels=[False, True]
@@ -290,5 +379,11 @@ with mlflow.start_run(run_id=experiment_run_id) as run:
                 local_path=metrics_tmp_path, artifact_path="subgroup_metrics"
             )
             print(df_group_metrics)
+
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC TODO: See about adding permutation importance and/or global SHAP feature importance evaluation here
 
 # COMMAND ----------
