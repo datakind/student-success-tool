@@ -122,14 +122,12 @@ class StorageControl(BaseModel):
                 "maxAgeSeconds": 3600,
             }
         ]
+        # For external facing buckets, apply TTL to unvalidated files. This may occur if an API caller uploads but doesn't call validate.
         if not bucket_name.endswith("-internal"):
-        bucket.lifecycle_rules = {
-            "action": {"type": "Delete"},
-            "condition": {
-                "age": 1,
-                "matchesPrefix": ["unvalidated/"]
+            bucket.lifecycle_rules = {
+                "action": {"type": "Delete"},
+                "condition": {"age": 1, "matchesPrefix": ["unvalidated/"]},
             }
-        }
         bucket.patch()
         bucket.storage_class = "STANDARD"
         new_bucket = storage_client.create_bucket(bucket, location="us")
