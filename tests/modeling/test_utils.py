@@ -130,12 +130,9 @@ def test_load_features_table(tmpdir, toml_content, expected_output, expect_excep
     else:
         file_path = "non_existent_path/features_table.toml"
     
-    if expect_exception is does_not_raise(): 
+    with expect_exception:
         features_table = utils.load_features_table(file_path)
         assert isinstance(features_table, dict)
         for key, value in expected_output.items():
             assert key in features_table
             assert features_table[key] == value
-    else:
-        with pytest.raises(expect_exception):
-            utils.load_features_table(file_path)
