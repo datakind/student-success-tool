@@ -25,7 +25,7 @@ from ..utilities import (
     get_external_bucket_name,
 )
 
-from ..database import get_session, local_session, BatchTable, FileTable
+from ..database import get_session, local_session, BatchTable, FileTable, InstTable
 
 from ..gcsutil import StorageControl
 
@@ -804,13 +804,10 @@ def validate_file(
             status_code=422,
             detail="File name can't contain '/'.",
         )
-    bucket = client.bucket(get_external_bucket_name(inst_id))
-    blob = bucket.blob(f"unvalidated/{file_name}")
-    new_blob_name = f"validated/{file_name}"
     local_session.set(sql_session)
     inst_query_result = (
         local_session.get()
-        .execute(select(InstTable).where(InstTable.inst_id == str_to_uuid(inst_id)))
+        .execute(select(InstTable).where(InstTable.id == str_to_uuid(inst_id)))
         .all()
     )
     if len(inst_query_result) == 0:
@@ -824,20 +821,17 @@ def validate_file(
             detail="Institution duplicates found.",
         )
     allowed_schemas = json.load(inst_query_result[0][0].schemas)
-    with blob.open("r") as file:
-        try:
-            with blob.open("r") as file:
-                # TODO: remove force array once postgresql migration
-                validate_file_reader(file, allowed_schemas)
-        except Exception as e:
-            storage_control.delete_file(bucket, blob)
-            return {
-                "name": file_name,
-                "inst_id": inst_id,
-                "valid": False,
-                "err_msg": str(e),
-            }
-    storage_control.move_file(bucket, blob, new_blob_name)
+    try:
+        storage_control.validate_file(
+            get_external_bucket_name(inst_id), file_name, allowed_schemas
+        )
+    except Exception as e:
+        return {
+            "name": file_name,
+            "inst_id": inst_id,
+            "valid": False,
+            "err_msg": str(e),
+        }
     new_file_record = FileTable(
         name=file_name,
         inst_id=str_to_uuid(inst_id),

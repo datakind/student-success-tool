@@ -9,7 +9,7 @@ from google.cloud.storage import Client
 from google.cloud.storage_control_v2 import StorageControlClient
 from typing import Any
 from .config import gcs_vars
-
+from .validation import validate_file_reader, SchemaType
 
 SIGNED_URL_EXPIRY_MIN = 30
 
@@ -214,4 +214,25 @@ class StorageControl(BaseModel):
         blob = bucket.blob(file_name)
         if not blob.exists():
             raise ValueError(prev_name + ": File not found.")
+        blob.delete()
+
+    def validate_file(
+        self, bucket_name: str, file_name: str, allowed_schemas: set[SchemaType]
+    ):
+        bucket = client.bucket(bucket_name)
+        blob = bucket.blob(f"unvalidated/{file_name}")
+        new_blob_name = f"validated/{file_name}"
+        try:
+            with blob.open("r") as file:
+                try:
+                    validate_file_reader(file, allowed_schemas)
+                except Exception as err:
+                    blob.delete()
+                    raise ValueError("Validation failed: " + str(err))
+        except Exception as e:
+            raise ValueError("Validation failed: " + str(e))
+        new_blob = bucket.blob(new_blob_name)
+        if new_blob.exists():
+            raise ValueError(new_name + ": File already exists.")
+        bucket.copy_blob(blob, bucket, new_name)
         blob.delete()

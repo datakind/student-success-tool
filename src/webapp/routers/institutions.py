@@ -130,7 +130,6 @@ def create_institution(
     Args:
         current_user: the user making the request.
     """
-    print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")  # xxx
     if not current_user.is_datakinder():
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -151,7 +150,7 @@ def create_institution(
         # If the institution does not exist create it and create a storage bucket for it.
         requested_schemas = req.allowed_schemas
         if req.is_pdp:
-            requested_schemas |= PDP_SCHEMA_GROUP
+            requested_schemas += PDP_SCHEMA_GROUP
         local_session.get().add(
             InstTable(
                 name=req.name,
