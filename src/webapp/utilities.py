@@ -18,7 +18,7 @@ from sqlalchemy.future import select
 
 from .authn import verify_password, TokenData, oauth2_scheme
 from .database import get_session, AccountTable
-from .config import env_vars
+from .config import env_vars, fe_vars
 
 
 # TODO: Store in a python package to be usable by the frontend.
@@ -146,22 +146,31 @@ def get_user(sess: Session, username: str) -> BaseUser:
     )
 
 
-def authenticate_user(username: str, password: str, sess: Session) -> BaseUser:
-    query_result = sess.execute(
-        select(AccountTable).where(
-            AccountTable.email == username,
+def authenticate_user(
+    username: str, password: str, enduser: str | None, sess: Session
+) -> BaseUser:
+    """For the frontend caller only, there is a specific username/password and end user username passed in."""
+    if username == fe_vars["FE_USER"]:
+        if not verify_password(password, fe_vars["FE_HASHED_PASSWORD"]):
+            return False
+        else:
+            return get_user(sess, enduser)
+    else:
+        query_result = sess.execute(
+            select(AccountTable).where(
+                AccountTable.email == username,
+            )
+        ).all()
+        if len(query_result) == 0 or len(query_result) > 1:
+            return False
+        if not verify_password(password, query_result[0][0].password):
+            return False
+        return BaseUser(
+            usr=uuid_to_str(query_result[0][0].id),
+            inst=uuid_to_str(query_result[0][0].inst_id),
+            access=query_result[0][0].access_type,
+            email=username,
         )
-    ).all()
-    if len(query_result) == 0 or len(query_result) > 1:
-        return False
-    if not verify_password(password, query_result[0][0].password):
-        return False
-    return BaseUser(
-        usr=uuid_to_str(query_result[0][0].id),
-        inst=uuid_to_str(query_result[0][0].inst_id),
-        access=query_result[0][0].access_type,
-        email=username,
-    )
 
 
 async def get_current_user(

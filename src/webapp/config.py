@@ -37,6 +37,13 @@ gcs_vars = {
     "GCP_SERVICE_ACCOUNT_KEY_PATH": "",
 }
 
+# Frontend vars needed for Laravel integration.
+fe_vars = {
+    # SECRET.
+    "FE_USER": "fe-usr",
+    "FE_HASHED_PASSWORD": "",
+}
+
 
 # Setup function to get environment variables. Should be called at startup time.
 def startup_env_vars():
@@ -81,6 +88,16 @@ def startup_env_vars():
                     + " value missing. Required GCP environment variable."
                 )
             gcs_vars[name] = env_var
+        global fe_vars
+        for name in fe_vars:
+            env_var = os.environ.get(name)
+            if not env_var or env_var == "":
+                raise ValueError(
+                    "Missing "
+                    + name
+                    + " value missing. Required Frontend integration environment variable."
+                )
+            fe_vars[name] = env_var
 
 
 # Setup function to get db environment variables. Should be called at db startup time.

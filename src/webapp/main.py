@@ -20,7 +20,12 @@ from .database import (
 from .config import env_vars, startup_env_vars
 
 from sqlalchemy.future import select
-from .utilities import authenticate_user, BaseUser, get_current_active_user, uuid_to_str
+from .utilities import (
+    authenticate_user,
+    BaseUser,
+    get_current_active_user,
+    uuid_to_str,
+)
 from .authn import (
     Token,
     create_access_token,
@@ -84,8 +89,11 @@ async def login_for_access_token(
     sql_session: Annotated[Session, Depends(get_session)],
 ) -> Token:
     local_session.set(sql_session)
+    enduser = None
+    if len(form_data.scopes) == 1 and form_data.scopes[0]:
+        enduser = form_data.scopes[0]
     user = authenticate_user(
-        form_data.username, form_data.password, local_session.get()
+        form_data.username, form_data.password, enduser, local_session.get()
     )
     if not user:
         raise HTTPException(

@@ -8,7 +8,11 @@ from .config import env_vars
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="token",
+    # We are using scope to sideload info on the end user. So "enduser" here is just a placeholder, but the actual username will be passed by the frontend.
+    scopes={"enduser": "end user to act as (a valid username), if frontend"},
+)
 
 
 class Token(BaseModel):

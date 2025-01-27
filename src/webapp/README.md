@@ -45,3 +45,7 @@ Before committing, make sure to run:
 1. `black src/webapp/.`
 1. Test using `coverage run -m pytest  -v -s ./src/webapp/*.py`
 1. Test using `coverage run -m pytest  -v -s ./src/webapp/routers/*.py`
+
+### Notes:
+
+postgresql requires that SSL certs be 0600 or 0640 depending on group/owners. The way we configure the 
