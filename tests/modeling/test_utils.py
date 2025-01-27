@@ -112,12 +112,12 @@ def test_compute_sample_weights(df, target_col, class_weight, exp):
             num_courses = { name = "number of courses taken this term"
             """,
             None,  
-            tomllib.TOMLDecodeError, 
+            pytest.raises(tomllib.TOMLDecodeError), 
         ),
         (
             "",
             None, 
-            FileNotFoundError, 
+            pytest.raises(FileNotFoundError), 
         ),
     ]
 )
@@ -132,7 +132,9 @@ def test_load_features_table(tmpdir, toml_content, expected_output, expect_excep
     
     with expect_exception:
         features_table = utils.load_features_table(file_path)
-        assert isinstance(features_table, dict)
-        for key, value in expected_output.items():
-            assert key in features_table
-            assert features_table[key] == value
+        
+        if expect_exception is does_not_raise():
+            assert isinstance(features_table, dict)
+            for key, value in expected_output.items():
+                assert key in features_table
+                assert features_table[key] == value
