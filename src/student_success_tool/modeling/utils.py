@@ -1,5 +1,4 @@
 import logging
-import os
 import pathlib
 import typing as t
 from collections.abc import Sequence

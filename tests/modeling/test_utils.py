@@ -119,11 +119,6 @@ def test_compute_sample_weights(df, target_col, class_weight, exp):
             None, 
             FileNotFoundError, 
         ),
-        (
-            "",
-            None,
-            FileNotFoundError,  
-        ),
     ]
 )
 def test_load_features_table(tmpdir, toml_content, expected_output, expect_exception):
@@ -131,14 +126,16 @@ def test_load_features_table(tmpdir, toml_content, expected_output, expect_excep
         toml_file = tmpdir.join("features_table.toml")
         toml_file.write(toml_content)
         
-        file_path = str(toml_file)  
+        file_path = str(toml_file) 
     else:
         file_path = "non_existent_path/features_table.toml"
     
-    with expect_exception:
-        if expected_output:
-            features_table = utils.load_features_table(file_path)
-            assert isinstance(features_table, dict)
-            for key, value in expected_output.items():
-                assert key in features_table
-                assert features_table[key] == value
+    if expect_exception is does_not_raise(): 
+        features_table = utils.load_features_table(file_path)
+        assert isinstance(features_table, dict)
+        for key, value in expected_output.items():
+            assert key in features_table
+            assert features_table[key] == value
+    else:
+        with pytest.raises(expect_exception):
+            utils.load_features_table(file_path)
