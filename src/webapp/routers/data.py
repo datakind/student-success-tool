@@ -820,7 +820,7 @@ def validate_file(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Institution duplicates found.",
         )
-    allowed_schemas = json.load(inst_query_result[0][0].schemas)
+    allowed_schemas = set(json.loads(inst_query_result[0][0].schemas))
     try:
         storage_control.validate_file(
             get_external_bucket_name(inst_id), file_name, allowed_schemas
