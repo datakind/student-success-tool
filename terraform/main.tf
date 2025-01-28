@@ -7,70 +7,63 @@ terraform {
       source  = "hashicorp/google"
       version = "6.8.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.6.3"
+    }
   }
 }
 
+# Configure the Google Cloud provider
 provider "google" {
   project = var.project
   region  = var.region
   zone    = var.zone
 }
 
+module "network" {
+  source = "./modules/network"
+
+  environment = var.environment
+  region      = var.region
+}
+
+module "iam" {
+  source = "./modules/iam"
+
+  environment = var.environment
+}
+
+module "database" {
+  source = "./modules/database"
+
+  environment      = var.environment
+  region           = var.region
+  zone             = var.zone
+  database_name    = var.database_name
+  database_version = var.database_version
+
+  cloud_run_service_account_email = module.iam.cloud_run_service_account_email
+  network_id                      = module.network.network_id
+}
+
 locals {
-  institutions = [
-    {
-      name = "Example College"
-      id   = "example-college"
-    },
-    {
-      name = "Example University"
-      id   = "example-university"
-    }
-  ]
+  image = "us-docker.pkg.dev/cloudrun/container/hello"
 }
 
-resource "google_storage_bucket" "upload_buckets" {
-  for_each = { for inst in local.institutions : inst.id => inst }
+module "service" {
+  source = "./modules/service"
 
-  name     = each.value.id
-  location = "US"
+  project       = var.project
+  environment   = var.environment
+  region        = var.region
+  image         = local.image
+  database_name = var.database_name
 
-  cors {
-    origin = ["*"]
-    method = ["POST", "PUT"]
-    response_header = [
-      "Content-Type",
-      "Access-Control-Allow-Origin",
-      "X-Goog-Content-Length-Range"
-    ]
-    max_age_seconds = 3600
-  }
-}
-
-resource "google_service_account" "webapp_service_acccount" {
-  account_id   = "webapp"
-  display_name = "Webapp Service Account"
-  description  = "Service account for the webapp"
-}
-
-resource "google_project_iam_member" "webapp_service_acccount" {
-  project = var.project
-  role    = "roles/storage.objectUser"
-  member  = "serviceAccount:${google_service_account.webapp_service_acccount.email}"
-}
-
-resource "google_project_iam_member" "token_creator" {
-  project = var.project
-  role    = "roles/iam.serviceAccountTokenCreator"
-  member  = "serviceAccount:${google_service_account.webapp_service_acccount.email}"
-}
-
-resource "google_storage_bucket" "default" {
-  name          = "sst-terraform-state"
-  force_destroy = true
-  location      = "US"
-  storage_class = "STANDARD"
-  versioning {
-    enabled = true
-  }
+  database_password_secret_id       = module.database.password_secret_id
+  database_instance_connection_name = module.database.instance_connection_name
+  database_instance_private_ip      = module.database.instance_private_ip
+  network_id                        = module.network.network_id
+  subnetwork_id                     = module.network.subnetwork_id
+  cloud_run_service_account_email   = module.iam.cloud_run_service_account_email
 }
