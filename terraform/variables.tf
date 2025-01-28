@@ -27,3 +27,8 @@ variable "database_name" {
   description = "The database name"
   default     = "all_tables"
 }
+
+variable "domain" {
+  description = "The domain name"
+  type        = string
+}

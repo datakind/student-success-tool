@@ -21,6 +21,7 @@ resource "google_cloud_run_v2_service" "webapp" {
   location            = var.region
   name                = "${var.environment}-webapp"
   launch_stage        = "GA"
+  ingress             = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
   template {
     service_account = var.cloud_run_service_account_email
     containers {
@@ -122,4 +123,11 @@ resource "google_cloud_run_v2_service" "webapp" {
       }
     }
   }
+}
+
+resource "google_cloud_run_v2_service_iam_member" "allow_all" {
+  location = google_cloud_run_v2_service.webapp.location
+  name     = google_cloud_run_v2_service.webapp.name
+  role     = "roles/run.invoker"
+  member   = "allUsers" # Makes the service public
 }

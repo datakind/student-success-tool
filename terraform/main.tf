@@ -67,3 +67,13 @@ module "service" {
   subnetwork_id                     = module.network.subnetwork_id
   cloud_run_service_account_email   = module.iam.cloud_run_service_account_email
 }
+
+module "load_balancer" {
+  source = "./modules/load-balancer"
+
+  project                = var.project
+  environment            = var.environment
+  domain                 = var.domain
+  region                 = var.region
+  cloud_run_service_name = "${var.environment}-webapp"
+}
