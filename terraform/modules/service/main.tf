@@ -55,15 +55,15 @@ resource "google_cloud_run_v2_service" "webapp" {
       }
       volume_mounts {
         mount_path = "/vol_mt/certs/cert"
-        name       = "${var.environment}-db-client-cert-vol"
+        name       = "db-client-cert-vol"
       }
       volume_mounts {
         mount_path = "/vol_mt/certs/key"
-        name       = "${var.environment}-db-client-key-vol"
+        name       = "db-client-key-vol"
       }
       volume_mounts {
         mount_path = "/vol_mt/certs/server"
-        name       = "${var.environment}-db-server-ca-vol"
+        name       = "db-server-ca-vol"
       }
     }
     vpc_access {
@@ -91,7 +91,7 @@ resource "google_cloud_run_v2_service" "webapp" {
       }
     }
     volumes {
-      name = "${var.environment}-db-client-cert-vol"
+      name = "db-client-cert-vol"
       secret {
         items {
           path    = "client-cert.pem"
@@ -102,7 +102,7 @@ resource "google_cloud_run_v2_service" "webapp" {
       }
     }
     volumes {
-      name = "${var.environment}-db-client-key-vol"
+      name = "db-client-key-vol"
       secret {
         items {
           path    = "client-key.pem"
@@ -112,7 +112,7 @@ resource "google_cloud_run_v2_service" "webapp" {
       }
     }
     volumes {
-      name = "${var.environment}-db-server-ca-vol"
+      name = "db-server-ca-vol"
       secret {
         items {
           path    = "server-ca.pem"
