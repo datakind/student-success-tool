@@ -280,6 +280,72 @@ def _compute_intensity_num_terms(
         for intensity, time, unit in intensity_time_lefts
     ]
 
+# THIS IS A NEW / MODIFIED FUNCTION TO GET THE TERM REPRESENTING END OF FIRST YEAR FOR A STUDENT, including pre-cohort cols
+
+def get_first_student_year_term(
+    df: pd.DataFrame,
+    *,
+    student_id_cols: str | list[str] = "student_guid",
+    sort_cols: str | list[str] = "term_rank",
+    include_cols: t.Optional[list[str]] = None,
+) -> pd.DataFrame:
+    """
+    For each student, get the first row in ``df`` (in ascending order of ``sort_cols`` )
+    and a configurable subset of columns.
+
+    Args:
+        df
+        student_id_cols
+        sort_cols
+        include_cols
+    """
+    student_id_cols = utils.to_list(student_id_cols)
+    sort_cols = utils.to_list(sort_cols)
+    cols = (
+        df.columns.tolist()
+        if include_cols is None
+        else list(
+            utils.unique_elements_in_order(student_id_cols + sort_cols + include_cols)
+        )
+    )
+    return (
+        df.loc[:, cols]
+        .sort_values(by=sort_cols, ascending=True)
+        .groupby(by=student_id_cols, sort=False, as_index=False)
+        .nth(1)
+    )
+
+# THIS IS A NEW / MODIFIED FUNCTION TO GET THE TERM REPRESENTING END OF FIRST YEAR FOR A STUDENT, excluding pre-cohort cols
+
+def get_first_student_year_term_within_cohort(
+    df: pd.DataFrame,
+    *,
+    student_id_cols: str | list[str] = "student_guid",
+    term_is_pre_cohort_col: str = "term_is_pre_cohort",
+    sort_cols: str | list[str] = "term_rank",
+    include_cols: t.Optional[list[str]] = None,
+) -> pd.DataFrame:
+    """
+    For each student, get the first row in ``df`` (in ascending order of ``sort_cols`` )
+    for which the term occurred *within* the student's cohort, i.e. not prior to
+    their official start of enrollment.
+
+    Args:
+        df
+        student_id_cols
+        cohort_id_col
+        term_id_col
+        term_rank_col
+        sort_cols
+        include_cols
+    """
+    return get_first_student_year_term(
+        # exclude rows that are "pre-cohort", so "first" meets our criteria here
+        df.loc[df[term_is_pre_cohort_col].eq(False), :],
+        student_id_cols=student_id_cols,
+        sort_cols=sort_cols,
+        include_cols=include_cols,
+    )
 
 def _log_eligible_selection(
     nunique_students_in: int, nunique_students_out: int, case: str
@@ -291,3 +357,4 @@ def _log_eligible_selection(
         round(100 * nunique_students_out / nunique_students_in, 1),
         case,
     )
+
