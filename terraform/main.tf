@@ -52,6 +52,22 @@ locals {
   frontend_image = "gcr.io/dev-sst-439514/github.com/datakind/sst-app-ui@sha256:381e12f87acdbd6cab7371ee41696f958dba59f704df4377a817f8c48a5af9e0"
 }
 
+module "migrate" {
+  source = "./modules/migrate"
+
+  environment   = var.environment
+  region        = var.region
+  image         = local.frontend_image
+  database_name = var.database_name
+
+  database_password_secret_id       = module.database.password_secret_id
+  database_instance_connection_name = module.database.instance_connection_name
+  database_instance_private_ip      = module.database.instance_private_ip
+  network_id                        = module.network.network_id
+  subnetwork_id                     = module.network.subnetwork_id
+  cloud_run_service_account_email   = module.iam.cloud_run_service_account_email
+}
+
 module "webapp" {
   source = "./modules/service"
 
@@ -88,28 +104,36 @@ module "frontend" {
   cloud_run_service_account_email   = module.iam.cloud_run_service_account_email
 }
 
-module "migrate" {
-  source = "./modules/migrate"
+module "lb-http" {
+  source  = "terraform-google-modules/lb-http/google//modules/serverless_negs"
+  version = "~> 12.0"
 
-  environment   = var.environment
-  region        = var.region
-  image         = local.frontend_image
-  database_name = var.database_name
+  project = var.project
+  name    = "tf-cr-lb-1"
 
-  database_password_secret_id       = module.database.password_secret_id
-  database_instance_connection_name = module.database.instance_connection_name
-  database_instance_private_ip      = module.database.instance_private_ip
-  network_id                        = module.network.network_id
-  subnetwork_id                     = module.network.subnetwork_id
-  cloud_run_service_account_email   = module.iam.cloud_run_service_account_email
-}
+  ssl                             = true
+  managed_ssl_certificate_domains = [var.domain]
+  https_redirect                  = true
 
-module "load_balancer" {
-  source = "./modules/load-balancer"
+  backends = {
+    default = {
+      description = "Cloud Run backend"
+      groups      = []
+      serverless_neg_backends = [{
+        region : var.region,
+        type : "cloud-run",
+        service : {
+          name : "${var.environment}-webapp",
+        }
+      }]
+      enable_cdn = false
 
-  project                = var.project
-  environment            = var.environment
-  domain                 = var.domain
-  region                 = var.region
-  cloud_run_service_name = "${var.environment}-webapp"
+      iap_config = {
+        enable = false
+      }
+      log_config = {
+        enable = false
+      }
+    }
+  }
 }
