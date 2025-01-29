@@ -30,12 +30,3 @@ resource "google_service_networking_connection" "vpc_connection" {
   service                 = "servicenetworking.googleapis.com"
   reserved_peering_ranges = [google_compute_global_address.vpc_connector_ip.name]
 }
-
-resource "google_certificate_manager_certificate" "ssl_cert" {
-  name        = "my-ssl-certificate"
-  description = "Managed SSL certificate for my load balancer"
-
-  managed {
-    domains = ["sst.datakind.org"] # Replace with your domains
-  }
-}
