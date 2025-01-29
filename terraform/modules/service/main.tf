@@ -6,7 +6,7 @@ resource "google_project_service" "services" {
 }
 
 resource "google_secret_manager_secret_iam_member" "cloudrun_sa_db_client_cert_access" {
-  secret_id = "projects/${var.project}/secrets/test-api-env-file"
+  secret_id = "projects/${var.project}/secrets/test-${var.name}-env-file"
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${var.cloud_run_service_account_email}"
 }
@@ -14,7 +14,7 @@ resource "google_secret_manager_secret_iam_member" "cloudrun_sa_db_client_cert_a
 resource "google_cloud_run_v2_service" "webapp" {
   deletion_protection = false
   location            = var.region
-  name                = "${var.environment}-webapp"
+  name                = "${var.environment}-${var.name}"
   launch_stage        = "GA"
   ingress             = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
   template {
@@ -88,7 +88,7 @@ resource "google_cloud_run_v2_service" "webapp" {
           version = "latest"
         }
 
-        secret = "${var.environment}-api-env-file"
+        secret = "${var.environment}-${var.name}-env-file"
       }
     }
     volumes {

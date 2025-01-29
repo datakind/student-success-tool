@@ -1,6 +1,6 @@
 variable "project" {
   description = "The project ID"
-  type = string
+  type        = string
 }
 
 variable "region" {
@@ -31,4 +31,14 @@ variable "database_name" {
 variable "domain" {
   description = "The domain name"
   type        = string
+}
+
+variable "webapp_image" {
+  description = "Image for the webapp service"
+  type = string
+}
+
+variable "frontend_image" {
+  description = "Image for the frontend service"
+  type = string
 }

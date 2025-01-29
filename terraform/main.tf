@@ -48,16 +48,36 @@ module "database" {
 }
 
 locals {
-  image = "us-docker.pkg.dev/cloudrun/container/hello"
+  webapp_image   = "us-central1-docker.pkg.dev/dev-sst-439514/cloud-run-source-deploy/student-success-tool/central-dev-app-deploy@sha256:ccc3b670a56fd9c9678805e2b38a7636dcf3c0300a5eff0245b1e51b2f589492"
+  frontend_image = "gcr.io/dev-sst-439514/github.com/datakind/sst-app-ui@sha256:381e12f87acdbd6cab7371ee41696f958dba59f704df4377a817f8c48a5af9e0"
 }
 
-module "service" {
+module "webapp" {
   source = "./modules/service"
 
+  name          = "webapp"
   project       = var.project
   environment   = var.environment
   region        = var.region
-  image         = local.image
+  image         = local.webapp_image
+  database_name = var.database_name
+
+  database_password_secret_id       = module.database.password_secret_id
+  database_instance_connection_name = module.database.instance_connection_name
+  database_instance_private_ip      = module.database.instance_private_ip
+  network_id                        = module.network.network_id
+  subnetwork_id                     = module.network.subnetwork_id
+  cloud_run_service_account_email   = module.iam.cloud_run_service_account_email
+}
+
+module "frontend" {
+  source = "./modules/service"
+
+  name          = "frontend"
+  project       = var.project
+  environment   = var.environment
+  region        = var.region
+  image         = local.frontend_image
   database_name = var.database_name
 
   database_password_secret_id       = module.database.password_secret_id
