@@ -23,7 +23,10 @@
 
 # COMMAND ----------
 
-# install dependencies, most of which should come through our 1st-party SST package
+# install dependencies, most/all of which should come through our 1st-party SST package
+# NOTE: it's okay to use 'develop' or a feature branch while developing this nb
+# but when it's finished, it's best to pin to a specific version of the package
+# %pip install "student-success-tool == 0.1.0"
 # %pip install git+https://github.com/datakind/student-success-tool.git@develop
 
 # COMMAND ----------
@@ -78,7 +81,10 @@ from analysis import *  # noqa: F403
 
 # COMMAND ----------
 
-# load project configuration from file
+# project configuration should be stored in a config file in TOML format
+# it'll start out with just basic info: institution_id, institution_name
+# but as each step of the pipeline gets built, more parameters will be moved
+# from hard-coded notebook variables to shareable, persistent config fields
 cfg = configs.load_config("./config-v2-TEMPLATE.toml", configs.PDPProjectConfigV2)
 cfg
 
@@ -96,10 +102,8 @@ cfg
 
 # TODO: fill in the actual path to school's raw course file
 # okay to add it to project config now or later, whatever you prefer
-try:
-    raw_course_file_path = cfg.datasets["labeled"].raw_course.file_path
-except (AttributeError, TypeError, KeyError):
-    raw_course_file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/SCHOOL_COURSE_AR_DEID_DTTM.csv"
+raw_course_file_path = cfg.datasets["labeled"].raw_course.file_path
+# raw_course_file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/SCHOOL_COURSE_AR_DEID_DTTM.csv"
 
 # COMMAND ----------
 
@@ -205,10 +209,8 @@ df_course
 
 # TODO: fill in the actual path to school's raw cohort file
 # okay to add it to project config now or later, whatever you prefer
-try:
-    raw_cohort_file_path = cfg.datasets["labeled"].raw_cohort.file_path
-except (AttributeError, TypeError, KeyError):
-    raw_cohort_file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/SCHOOL_COHORT_AR_DEID_DTTM.csv"
+raw_cohort_file_path = cfg.datasets["labeled"].raw_cohort.file_path
+# raw_cohort_file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/SCHOOL_COHORT_AR_DEID_DTTM.csv"
 
 # COMMAND ----------
 
