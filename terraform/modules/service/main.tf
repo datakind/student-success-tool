@@ -26,6 +26,10 @@ resource "google_cloud_run_v2_service" "webapp" {
         value = "/vol_mt/env_vars/.env"
       }
       env {
+        name = "APP_SETTINGS_DIR"
+        value = "/vol_mt/env_vars"
+      }
+      env {
         name  = "DB_USER"
         value = "root"
       }
