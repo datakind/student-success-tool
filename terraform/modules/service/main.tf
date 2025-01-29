@@ -11,11 +11,6 @@ resource "google_secret_manager_secret_iam_member" "cloudrun_sa_db_client_cert_a
   member    = "serviceAccount:${var.cloud_run_service_account_email}"
 }
 
-data "google_secret_manager_secret_version" "database_password_secret_version" {
-  secret  = var.database_password_secret_id
-  version = "latest"
-}
-
 resource "google_cloud_run_v2_service" "webapp" {
   deletion_protection = false
   location            = var.region
@@ -36,7 +31,12 @@ resource "google_cloud_run_v2_service" "webapp" {
       }
       env {
         name  = "DB_PASS"
-        value = data.google_secret_manager_secret_version.database_password_secret_version.secret_data
+        value_source {
+          secret_key_ref {
+            secret = var.database_password_secret_id
+            version = "latest"
+          }
+        }
       }
       env {
         name  = "DB_NAME"
