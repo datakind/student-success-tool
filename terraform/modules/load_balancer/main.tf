@@ -44,9 +44,8 @@ module "lb-http" {
 
       enable_cdn = false
 
-      # TODO: Add IAP config set from console
       iap_config = {
-        enable = false
+        enable = true
       }
       log_config = {
         enable = false
@@ -66,7 +65,7 @@ module "lb-http" {
       enable_cdn = false
 
       iap_config = {
-        enable = false
+        enable = true
       }
       log_config = {
         enable = false
@@ -109,4 +108,20 @@ resource "google_compute_backend_bucket" "build" {
   name        = "tf-cr-static-build-1" # Choose a unique name
   bucket_name = "dev-frontend-dev-sst-439514-static"
   enable_cdn  = true  
+}
+
+data "google_iam_policy" "admin" {
+  binding {
+    role = "roles/iap.httpsResourceAccessor"
+    members = [
+      "domain:datakind.org"
+    ]
+  }
+}
+
+# TODO: disable this for the prod environment
+resource "google_iap_web_backend_service_iam_policy" "web_backend_service_iam_policy" {
+  for_each = module.lb-http.backend_services
+  web_backend_service =  each.value.name
+  policy_data = data.google_iam_policy.admin.policy_data
 }
