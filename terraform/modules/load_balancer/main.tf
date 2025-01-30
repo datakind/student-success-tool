@@ -44,6 +44,7 @@ module "lb-http" {
 
       enable_cdn = false
 
+      # TODO: Add IAP config set from console
       iap_config = {
         enable = false
       }
