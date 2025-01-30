@@ -281,31 +281,12 @@ def detect_file_type(col_names: list[str]) -> set[SchemaType]:
     return res
 
 
-def get_col_names(filename: str) -> list[str]:
-    with open(filename) as f:
-        try:
-            # Use the sniffer to detect the columns and dialect.
-            csv_dialect = csv.Sniffer().sniff(f.readline())
-            f.seek(0)
-            if not csv.Sniffer().has_header(f.readline()):
-                raise ValueError("CSV file malformed: Headers not found")
-        except csv.Error as e:
-            raise ValueError(f"CSV file malformed: {e}")
-        # Read the column names and store in col_names.
-        f.seek(0)
-        dict_reader = csv.DictReader(f, dialect=csv_dialect)
-        col_names = dict_reader.fieldnames
-        return col_names
-
-
 def validate_file(filename: str, allowed_types: set[SchemaType]) -> bool:
-    res = detect_file_type(get_col_names(filename))
-    if any(i in allowed_types for i in res):
-        return True
-    raise ValueError("CSV file schema not recognized")
+    with open(filename) as f:
+        return validate_file_reader(f, allowed_types)
 
 
-def get_col_names_reader(f) -> None:
+def get_col_names(f) -> None:
     try:
         # Use the sniffer to detect the columns and dialect.
         csv_dialect = csv.Sniffer().sniff(f.readline())
@@ -322,7 +303,9 @@ def get_col_names_reader(f) -> None:
 
 
 def validate_file_reader(reader, allowed_types: set[SchemaType]) -> bool:
-    res = detect_file_type(get_col_names(filename))
+    if not allowed_types:
+        raise ValueError("CSV file schema not recognized")
+    res = detect_file_type(get_col_names(reader))
     if any(i in allowed_types for i in res):
         return True
     raise ValueError("CSV file schema not recognized")

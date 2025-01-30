@@ -14,8 +14,9 @@ from .validation import (
 
 def test_get_col_names():
     """Testing getting the column names."""
-    cols = get_col_names("src/webapp/test_files/test_upload.csv")
-    assert cols == ["foo_col", "bar_col", "baz_col"]
+    with open("src/webapp/test_files/test_upload.csv") as f:
+        cols = get_col_names(f)
+        assert cols == ["foo_col", "bar_col", "baz_col"]
 
 
 def test_valid_subset_lists():
@@ -33,27 +34,23 @@ def test_valid_subset_lists():
 
 def test_detect_file_type():
     """Testing schema detection."""
-    assert detect_file_type(
-        get_col_names("src/webapp/test_files/financial_sst_pdp.csv")
-    ) == {SchemaType.SST_PDP_FINANCE}
-    assert detect_file_type(
-        get_col_names("src/webapp/test_files/course_sst_pdp.csv")
-    ) == {SchemaType.SST_PDP_COURSE}
-    assert detect_file_type(
-        get_col_names("src/webapp/test_files/cohort_sst_pdp.csv")
-    ) == {SchemaType.SST_PDP_COHORT}
-    assert detect_file_type(get_col_names("src/webapp/test_files/course_pdp.csv")) == {
-        SchemaType.PDP_COURSE
-    }
-    assert detect_file_type(get_col_names("src/webapp/test_files/cohort_pdp.csv")) == {
-        SchemaType.PDP_COHORT
-    }
-    assert detect_file_type(get_col_names("src/webapp/test_files/test_upload.csv")) == {
-        SchemaType.UNKNOWN
-    }
-    with pytest.raises(ValueError) as err:
-        detect_file_type(get_col_names("src/webapp/test_files/malformed.csv"))
-    assert str(err.value) == "CSV file malformed: Could not determine delimiter"
+    with open("src/webapp/test_files/financial_sst_pdp.csv") as f:
+        assert detect_file_type(get_col_names(f)) == {SchemaType.SST_PDP_FINANCE}
+    with open("src/webapp/test_files/course_sst_pdp.csv") as f:
+        assert detect_file_type(get_col_names(f)) == {SchemaType.SST_PDP_COURSE}
+    with open("src/webapp/test_files/cohort_sst_pdp.csv") as f:
+        assert detect_file_type(get_col_names(f)) == {SchemaType.SST_PDP_COHORT}
+    with open("src/webapp/test_files/course_pdp.csv") as f:
+        assert detect_file_type(get_col_names(f)) == {SchemaType.PDP_COURSE}
+
+    with open("src/webapp/test_files/cohort_pdp.csv") as f:
+        assert detect_file_type(get_col_names(f)) == {SchemaType.PDP_COHORT}
+    with open("src/webapp/test_files/test_upload.csv") as f:
+        assert detect_file_type(get_col_names(f)) == {SchemaType.UNKNOWN}
+    with open("src/webapp/test_files/malformed.csv") as f:
+        with pytest.raises(ValueError) as err:
+            detect_file_type(get_col_names(f))
+        assert str(err.value) == "CSV file malformed: Could not determine delimiter"
 
 
 def test_validate_file():

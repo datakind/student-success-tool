@@ -151,6 +151,9 @@ def create_institution(
         requested_schemas = req.allowed_schemas
         if req.is_pdp:
             requested_schemas += PDP_SCHEMA_GROUP
+        # if no schema is set and PDP is not set, we default to custom.
+        if not requested_schemas:
+            requested_schemas = {SchemaType.UNKNOWN}
         local_session.get().add(
             InstTable(
                 name=req.name,
