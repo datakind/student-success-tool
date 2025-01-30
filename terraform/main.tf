@@ -47,17 +47,12 @@ module "database" {
   network_id                      = module.network.network_id
 }
 
-locals {
-  webapp_image   = "us-central1-docker.pkg.dev/dev-sst-439514/cloud-run-source-deploy/student-success-tool/central-dev-app-deploy@sha256:ccc3b670a56fd9c9678805e2b38a7636dcf3c0300a5eff0245b1e51b2f589492"
-  frontend_image = "gcr.io/dev-sst-439514/github.com/datakind/sst-app-ui@sha256:381e12f87acdbd6cab7371ee41696f958dba59f704df4377a817f8c48a5af9e0"
-}
-
 module "migrate" {
   source = "./modules/migrate"
 
   environment   = var.environment
   region        = var.region
-  image         = local.frontend_image
+  image         = var.frontend_image
   database_name = var.database_name
 
   database_password_secret_id       = module.database.password_secret_id
@@ -75,7 +70,7 @@ module "webapp" {
   project       = var.project
   environment   = var.environment
   region        = var.region
-  image         = local.webapp_image
+  image         = var.webapp_image
   database_name = var.database_name
 
   database_password_secret_id       = module.database.password_secret_id
@@ -93,7 +88,7 @@ module "frontend" {
   project       = var.project
   environment   = var.environment
   region        = var.region
-  image         = local.frontend_image
+  image         = var.frontend_image
   database_name = var.database_name
 
   database_password_secret_id       = module.database.password_secret_id
