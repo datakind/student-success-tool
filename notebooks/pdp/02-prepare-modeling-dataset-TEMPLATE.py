@@ -22,8 +22,11 @@
 
 # COMMAND ----------
 
-# install dependencies, most of which should come through our 1st-party SST package
-# %pip install git+https://github.com/datakind/student-success-tool.git@develop
+# install dependencies, most/all of which should come through our 1st-party SST package
+# NOTE: it's okay to use 'develop' or a feature branch while developing this nb
+# but when it's finished, it's best to pin to a specific version of the package
+# %pip install "student-success-tool == 0.1.0"
+# %pip install "git+https://github.com/datakind/student-success-tool.git@develop"
 
 # COMMAND ----------
 
@@ -31,32 +34,48 @@
 
 # COMMAND ----------
 
+import functools as ft
 import logging
 import sys
 
-import numpy as np
-import pandas as pd
+import matplotlib.pyplot as plt
+import pandas as pd  # noqa: F401
 import seaborn as sb
 from databricks.connect import DatabricksSession
+from databricks.sdk.runtime import dbutils
+from py4j.protocol import Py4JJavaError
 
-from student_success_tool import configs
+from student_success_tool import configs, modeling
 from student_success_tool.analysis import pdp
 
 # COMMAND ----------
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, force=True)
 logging.getLogger("py4j").setLevel(logging.WARNING)  # ignore databricks logger
 
 try:
-    spark_session = DatabricksSession.builder.getOrCreate()
+    spark = DatabricksSession.builder.getOrCreate()
 except Exception:
     logging.warning("unable to create spark session; are you in a Databricks runtime?")
     pass
 
 # COMMAND ----------
 
+# check if we're running this notebook as a "job" in a "workflow"
+# if not, assume this is a training workflow using labeled data
+try:
+    run_type = dbutils.widgets.get("run_type")
+    dataset_name = dbutils.widgets.get("dataset_name")
+except Py4JJavaError:
+    run_type = "train"
+    dataset_name = "labeled"
+
+logging.info("'%s' run of notebook using '%s' dataset", run_type, dataset_name)
+
+# COMMAND ----------
+
 # MAGIC %md
-# MAGIC ## `student-success-intervention` hacks
+# MAGIC ## import school-specific code
 
 # COMMAND ----------
 
@@ -65,7 +84,7 @@ except Exception:
 
 # COMMAND ----------
 
-# HACK: insert our 1st-party (school-specific) code into PATH
+# insert our 1st-party (school-specific) code into PATH
 if "../" not in sys.path:
     sys.path.insert(1, "../")
 
@@ -74,51 +93,37 @@ from analysis import *  # noqa: F403
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC ## project config
-
-# COMMAND ----------
-
-# TODO: create a config file in TOML format to school directory
-config = configs.load_config("./config.toml", schema=configs.PDPProjectConfig)
-config
-
-# COMMAND ----------
-
-catalog = "sst_dev"
-
-# configure where data is to be read from / written to
-inst_name = "SCHOOL"  # TODO: fill in school's name in Unity Catalog
-schema = f"{inst_name}_silver"
-catalog_schema = f"{catalog}.{schema}"
-print(f"{catalog_schema=}")
+# project configuration should be stored in a config file in TOML format
+# it'll start out with just basic info: institution_id, institution_name
+# but as each step of the pipeline gets built, more parameters will be moved
+# from hard-coded notebook variables to shareable, persistent config fields
+cfg = configs.load_config("./config-v2-TEMPLATE.toml", configs.PDPProjectConfigV2)
+cfg
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # read validated data
+# MAGIC # load (+validate) raw data
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC **Note:** Whether you need to use the base or school-specific data schema was determined in the previous step, i.e. the data assessment / EDA notebook.
+# MAGIC **Note:** The specifics of this load+validate process were determined previously in this project's "data assessment" notebook, including which schemas are needed to properly parse and validate the raw data. Also, the paths to the raw files should have been added to the project config. Update the next two cells accordingly.
 
 # COMMAND ----------
 
-df_course = pdp.schemas.RawPDPCourseDataSchema(
-    pdp.dataio.read_data_from_delta_table(
-        f"{catalog_schema}.course_dataset_validated", spark_session=spark_session
-    )
+raw_course_file_path = cfg.datasets[dataset_name].raw_course.file_path
+df_course = pdp.dataio.read_raw_pdp_course_data_from_file(
+    raw_course_file_path, schema=pdp.schemas.RawPDPCourseDataSchema, dttm_format="%Y%m%d.0"
 )
 print(f"rows x cols = {df_course.shape}")
 df_course.head()
 
 # COMMAND ----------
 
-df_cohort = pdp.schemas.RawPDPCohortDataSchema(
-    pdp.dataio.read_data_from_delta_table(
-        f"{catalog_schema}.cohort_dataset_validated", spark_session=spark_session
-    )
+raw_cohort_file_path = cfg.datasets[dataset_name].raw_cohort.file_path
+df_cohort = pdp.dataio.read_raw_pdp_cohort_data_from_file(
+    raw_cohort_file_path, schema=pdp.schemas.RawPDPCohortDataSchema
 )
 print(f"rows x cols = {df_cohort.shape}")
 df_cohort.head()
@@ -126,22 +131,30 @@ df_cohort.head()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # transform and join datasets
+# MAGIC # featurize data
 
 # COMMAND ----------
 
-dict(config.prepare_modeling_dataset)
+# TODO: load featurization params from the project config
+# okay to hard-code it first then add it to the config later
+try:
+    feature_params = cfg.preprocessing.features.model_dump()
+except AttributeError:
+    feature_params = {
+        "min_passing_grade": pdp.constants.DEFAULT_MIN_PASSING_GRADE,
+        "min_num_credits_full_time": pdp.constants.DEFAULT_MIN_NUM_CREDITS_FULL_TIME,
+        # NOTE: this pattern in particular may be something you need to change
+        # schools have many different conventions for course numbering!
+        "course_level_pattern": pdp.constants.DEFAULT_COURSE_LEVEL_PATTERN,
+        "peak_covid_terms": pdp.constants.DEFAULT_PEAK_COVID_TERMS,
+        "key_course_subject_areas": None,
+        "key_course_ids": None,
+    }
 
 # COMMAND ----------
 
 df_student_terms = pdp.dataops.make_student_term_dataset(
-    df_cohort,
-    df_course,
-    min_passing_grade=config.prepare_modeling_dataset.min_passing_grade,
-    min_num_credits_full_time=config.prepare_modeling_dataset.min_num_credits_full_time,
-    course_level_pattern=config.prepare_modeling_dataset.course_level_pattern,
-    key_course_subject_areas=config.prepare_modeling_dataset.key_course_subject_areas,
-    key_course_ids=config.prepare_modeling_dataset.key_course_ids,
+    df_cohort, df_course, **feature_params
 )
 df_student_terms
 
@@ -149,12 +162,6 @@ df_student_terms
 
 # take a peek at featurized columns -- it's a lot
 df_student_terms.columns.tolist()
-
-# COMMAND ----------
-
-# save student-term dataset in unity catalog, as needed
-# write_table_path = f"{catalog_schema}.student_term_dataset"
-# pdp.dataio.write_data_to_delta_table(df_student_terms, write_table_path, spark_session)
 
 # COMMAND ----------
 
@@ -192,125 +199,185 @@ df_student_terms.columns.tolist()
 # MAGIC ```
 # MAGIC
 # MAGIC Check out the `pdp.targets` module for options and more info.
+# MAGIC
+# MAGIC **TODO(Burton?):**
+# MAGIC - Separate filtering of student criteria + target variable calculation from the selection of featurized rows from which to make predictions
+# MAGIC - Output labels as a series and join to features separately, rather than adding directly to the featurized data under the hood.
 
 # COMMAND ----------
 
-# TODO: school-specific parameters that configure target variable code
+# TODO: load target params from the project config
+# okay to hard-code it first then add it to the config later
+try:
+    target_params = cfg.preprocessing.target.params
+    logging.info("target params: %s", target_params)
+except AttributeError:
+    target_params = {}
 
 # COMMAND ----------
 
-# TODO: suitable function call for school's use case
-# df_labeled = pdp.targets.*.make_labeled_dataset(...)
-df_labeled = pd.DataFrame()
+# TODO: run target-specific function suitable for school's use case
+if run_type == "train":
+    df_labeled = pdp.targets.TODO.make_labeled_dataset(
+        df_student_terms, **target_params
+    )
+    print(df_labeled[cfg.target_col].value_counts())
+    print(df_labeled[cfg.target_col].value_counts(normalize=True))
+else:
+    logging.info("run_type != 'train', so skipping target variable computation...")
 
 # COMMAND ----------
 
-ax = sb.histplot(
-    df_labeled.sort_values("cohort"),
-    y="cohort",
-    multiple="stack",
-    shrink=0.75,
-    edgecolor="white",
-)
-_ = ax.set(xlabel="Number of Students")
-
-# COMMAND ----------
-
-ax = sb.histplot(
-    df_labeled.sort_values("cohort"),
-    y="cohort",
-    hue="target",
-    multiple="stack",
-    shrink=0.75,
-    edgecolor="white",
-)
-_ = ax.set(xlabel="Number of Students")
+if run_type == "train":
+    ax = sb.histplot(
+        df_labeled.sort_values("cohort"),
+        y="cohort",
+        multiple="stack",
+        shrink=0.75,
+        edgecolor="white",
+    )
+    _ = ax.set(xlabel="Number of Students")
+    plt.show()
+    ax = sb.histplot(
+        df_labeled.sort_values("cohort"),
+        y="cohort",
+        hue=cfg.target_col,
+        multiple="stack",
+        shrink=0.75,
+        edgecolor="white",
+    )
+    _ = ax.set(xlabel="Number of Students")
+    plt.show()
 
 # COMMAND ----------
 
 # drop unwanted columns and mask values by time
-df_labeled = pdp.dataops.clean_up_labeled_dataset_cols_and_vals(df_labeled)
-df_labeled.shape
-
-# COMMAND ----------
-
-# save labeled dataset in unity catalog, as needed
-# write_table_path = f"{catalog}.{schema}.labeled_dataset"
-# pdp.dataio.write_data_to_delta_table(df_labeled, write_table_path, spark_session=spark_session)
+if run_type == "train":
+    df_modeling = pdp.dataops.clean_up_labeled_dataset_cols_and_vals(df_labeled)
+else:
+    df_modeling = pdp.dataops.clean_up_labeled_dataset_cols_and_vals(df_student_terms)
+df_modeling.shape
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # feature selection + splits
+# MAGIC # STOP HERE?
 
 # COMMAND ----------
 
-import mlflow
-
-from student_success_tool.modeling.feature_selection import select_features
-
-# databricks freaks out during feature selection if autologging isn't disabled
-mlflow.autolog(disable=True)
+# MAGIC %md
+# MAGIC Everything after this point is for labeled training data only. In case of a non-"train" run type, we'll just save the modeling dataset here and bail out of the notebook early.
 
 # COMMAND ----------
 
-non_feature_cols = [
-    "student_guid",
-    "target",
-    "student_age",
-    "race",
-    "ethnicity",
-    "gender",
-    "first_gen",
-]
-df_labeled_selected = select_features(
-    df_labeled,
-    non_feature_cols=non_feature_cols,
-    # TODO: configure these params as desired
-    force_include_cols=[],
-    incomplete_threshold=0.5,
-    low_variance_threshold=0.0,
-    collinear_threshold=10.0,
-)
-df_labeled_selected
+# TODO: fill in the actual table path for school's preprocessed dataset
+# okay to add it to project config now or later, whatever you prefer
+# preprocessed_table_path = cfg.datasets[dataset_name].preprocessed.table_path
+preprocessed_table_path = "CATALOG.INST_NAME_silver.modeling_dataset_DESCRIPTIVE_SUFFIX"
 
 # COMMAND ----------
 
-# heads-up: AutoML doesn't preserve Student IDs in the training data!
-# manually assigning splits lets us know which rows were in which partition
-# when evaluating the model across student groups in the validation set
-# default split strategy by AutoML is [0.6, 0.2, 0.2] for train/test/validation
-np.random.seed(1)
-df_labeled_selected = df_labeled_selected.assign(
-    split=lambda df: np.random.choice(
-        ["train", "test", "validate"],
-        size=df.shape[0],
-        p=[0.6, 0.2, 0.2],
+if run_type != "train":
+    pdp.dataio.write_data_to_delta_table(df_modeling, preprocessed_table_path, spark_session=spark)
+    dbutils.notebook.exit(
+        f"'{dataset_name}' modeling dataset saved to {preprocessed_table_path}; "
+        "exiting notebook..."
     )
-)
-df_labeled_selected["split"].value_counts(normalize=True)
-
-# COMMAND ----------
-
-# save final modeling dataset in unity catalog, as needed
-# write_table_path = f"{catalog}.{schema}.modeling_dataset"
-# pdp.dataio.write_data_to_delta_table(df_labeled_selected, write_table_path, spark_session=spark_session)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # feature-target associations
+# MAGIC # splits and sample weights
+
+# COMMAND ----------
+
+try:
+    splits = cfg.preprocessing.splits
+    split_col = cfg.split_col
+    sample_class_weight = cfg.preprocessing.sample_class_weight
+    sample_weight_col = cfg.sample_weight_col
+except AttributeError:
+    splits = {"train": 0.6, "test": 0.2, "validate": 0.2}
+    split_col = "split"
+    sample_class_weight = "balanced"
+    sample_weight_col = "sample_weight"
+
+# COMMAND ----------
+
+if splits:
+    df_modeling = df_modeling.assign(
+        **{
+            split_col: ft.partial(
+                modeling.utils.compute_dataset_splits,
+                seed=cfg.random_state
+            )
+        }
+    )
+    print(df_modeling[split_col].value_counts(normalize=True))
+
+# COMMAND ----------
+
+if sample_class_weight:
+    df_modeling = df_modeling.assign(
+        **{
+            sample_weight_col: ft.partial(
+                modeling.utils.compute_sample_weights,
+                target_col=cfg.target_col,
+                class_weight=sample_class_weight,
+            )
+        }
+    )
+    print(df_modeling[sample_weight_col].value_counts(normalize=True))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC # feature-target relationships
+
+# COMMAND ----------
+
+non_feature_cols = (
+    [cfg.student_id_col]
+    + (cfg.student_group_cols or [])
+    + ([cfg.split_col] if cfg.split_col else [])
+    + ([cfg.sample_weight_col] if cfg.sample_weight_col else [])
+)
+
+# COMMAND ----------
+
+target_corrs = (
+    df_modeling.drop(columns=non_feature_cols + [cfg.target_col])
+    .corrwith(df_modeling[cfg.target_col], method="spearman", numeric_only=True)
+)
+print(target_corrs.sort_values(ascending=False).head(10))
+print("...")
+print(target_corrs.sort_values(ascending=False, na_position="first").tail(10))
 
 # COMMAND ----------
 
 target_assocs = pdp.eda.compute_pairwise_associations(
-    df_labeled_selected, ref_col="target"
+    df_modeling, ref_col=cfg.target_col, exclude_cols=non_feature_cols
 )
-target_assocs
+print(target_assocs.sort_values(by="target", ascending=False).head(10))
+print("...")
+print(target_assocs.sort_values(by="target", ascending=False, na_position="first").tail(10))
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Wrap-up
-# MAGIC
-# MAGIC TODO
+# MAGIC # wrap-up
+
+# COMMAND ----------
+
+# save preprocessed dataset
+pdp.dataio.write_data_to_delta_table(df_modeling, preprocessed_table_path, spark_session=spark)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC - [ ] Update project config with paremters for the preprocessed dataset (`datasets[dataset_name].preprocessed`), feature and target definitions (`preprocessing.features`, `preprocessing.target.params`), as well as any splits / sample weight parameters (`preprocessing.splits`, `preprocessing.sample_class_weight`)
+# MAGIC - [ ] Submit a PR including this notebook and any changes in project config
+
+# COMMAND ----------
+
+
