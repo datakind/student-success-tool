@@ -5,6 +5,10 @@ variable "required_services" {
   ]
 }
 
+variable "project" {
+  type = string
+}
+
 variable "environment" {
   type = string
 }
@@ -19,6 +23,13 @@ resource "google_project_service" "services" {
 resource "google_service_account" "cloudrun_sa" {
   account_id   = "${var.environment}-cloudrun-sa"
   display_name = "${var.environment} Cloud Run Service Account"
+}
+
+# Add the cloud run invoker role to the service account
+resource "google_project_iam_member" "cloudrun_sa_invoker" {
+  project = var.project
+  role    = "roles/run.invoker"
+  member  = "serviceAccount:${google_service_account.cloudrun_sa.email}"
 }
 
 output "cloud_run_service_account_email" {

@@ -31,6 +31,7 @@ module "network" {
 module "iam" {
   source = "./modules/iam"
 
+  project     = var.project
   environment = var.environment
 }
 
