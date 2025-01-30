@@ -107,10 +107,10 @@ module "frontend" {
 module "load_balancer" {
   source = "./modules/load_balancer"
 
-  project = var.project
+  project     = var.project
   environment = var.environment
   region      = var.region
-  domain = var.domain
+  domain      = var.domain
 
   # webapp_service_name   = module.webapp.service_name
   # frontend_service_name = module.frontend.service_name
