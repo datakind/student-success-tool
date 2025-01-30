@@ -60,7 +60,7 @@ def template_cfg_str():
     [models.graduation]
     experiment_id = "EXPERIMENT_ID"
     run_id = "RUN_ID"
-    model_type = "sklearn"
+    framework = "sklearn"
 
     [inference]
     num_top_features = 5
