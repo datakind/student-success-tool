@@ -788,6 +788,7 @@ def upload_file(
     }
 
 
+# TODO: add tests for this
 @router.post("/{inst_id}/input/validate/{file_name}", response_model=ValidationResult)
 def validate_file(
     inst_id: str,
@@ -798,7 +799,6 @@ def validate_file(
 ) -> Any:
     """Validate a given file. The file_name should not contain slashes."""
     has_access_to_inst_or_err(inst_id, current_user)
-
     if file_name.find("/") != -1:
         raise HTTPException(
             status_code=422,
@@ -820,7 +820,9 @@ def validate_file(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Institution duplicates found.",
         )
-    allowed_schemas = set(json.loads(inst_query_result[0][0].schemas))
+    allowed_schemas = set()
+    if inst_query_result[0][0].schemas:
+        allowed_schemas = set(json.loads(inst_query_result[0][0].schemas))
     try:
         storage_control.validate_file(
             get_external_bucket_name(inst_id), file_name, allowed_schemas
@@ -875,6 +877,7 @@ def get_upload_url(
     Args:
         current_user: the user making the request.
     """
+    # raise error at this level instead bc otherwise it's getting wrapped as a 200
     has_access_to_inst_or_err(inst_id, current_user)
     return storage_control.generate_upload_signed_url(
         get_external_bucket_name(inst_id), file_name
