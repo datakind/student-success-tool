@@ -104,36 +104,14 @@ module "frontend" {
   cloud_run_service_account_email   = module.iam.cloud_run_service_account_email
 }
 
-module "lb-http" {
-  source  = "terraform-google-modules/lb-http/google//modules/serverless_negs"
-  version = "~> 12.0"
+module "load_balancer" {
+  source = "./modules/load_balancer"
 
   project = var.project
-  name    = "tf-cr-lb-1"
+  environment = var.environment
+  region      = var.region
+  domain = var.domain
 
-  ssl                             = true
-  managed_ssl_certificate_domains = [var.domain]
-  https_redirect                  = true
-
-  backends = {
-    default = {
-      description = "Cloud Run backend"
-      groups      = []
-      serverless_neg_backends = [{
-        region : var.region,
-        type : "cloud-run",
-        service : {
-          name : "${var.environment}-webapp",
-        }
-      }]
-      enable_cdn = false
-
-      iap_config = {
-        enable = false
-      }
-      log_config = {
-        enable = false
-      }
-    }
-  }
+  # webapp_service_name   = module.webapp.service_name
+  # frontend_service_name = module.frontend.service_name
 }
