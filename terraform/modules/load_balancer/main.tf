@@ -25,7 +25,7 @@ module "lb-http" {
   project = var.project
   name    = "tf-cr-lb-1"
 
-  address = "35.227.226.31"
+  address                         = "35.227.226.31"
   ssl                             = true
   managed_ssl_certificate_domains = [var.domain]
   https_redirect                  = true
@@ -73,21 +73,21 @@ module "lb-http" {
     }
   }
   create_url_map = false
-  url_map = google_compute_url_map.url_map.self_link
+  url_map        = google_compute_url_map.url_map.self_link
 }
 
 resource "google_compute_url_map" "url_map" {
-  name            = "tf-cr-url-map-1" # Choose a unique name
+  name            = "tf-cr-url-map-1"
   default_service = module.lb-http.backend_services["frontend"].self_link
 
   host_rule {
-    hosts = ["*"]
+    hosts        = ["*"]
     path_matcher = "allpaths"
   }
 
   path_matcher {
-    name               = "allpaths"
-    default_service    = module.lb-http.backend_services["frontend"].self_link
+    name            = "allpaths"
+    default_service = module.lb-http.backend_services["frontend"].self_link
 
     path_rule {
       paths   = ["/api", "/api/*"]
@@ -105,9 +105,9 @@ resource "google_compute_url_map" "url_map" {
 }
 
 resource "google_compute_backend_bucket" "build" {
-  name        = "tf-cr-static-build-1" # Choose a unique name
+  name        = "tf-cr-static-build-1"
   bucket_name = "dev-frontend-dev-sst-439514-static"
-  enable_cdn  = true  
+  enable_cdn  = true
 }
 
 data "google_iam_policy" "admin" {
@@ -121,7 +121,7 @@ data "google_iam_policy" "admin" {
 
 # TODO: disable this for the prod environment
 resource "google_iap_web_backend_service_iam_policy" "web_backend_service_iam_policy" {
-  for_each = module.lb-http.backend_services
-  web_backend_service =  each.value.name
-  policy_data = data.google_iam_policy.admin.policy_data
+  for_each            = module.lb-http.backend_services
+  web_backend_service = each.value.name
+  policy_data         = data.google_iam_policy.admin.policy_data
 }
