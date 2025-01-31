@@ -220,8 +220,8 @@ experiment_id = summary.experiment.experiment_id
 run_id = summary.best_trial.mlflow_run_id
 print(
     f"experiment_id: {experiment_id}"
-    f"\n{training_params['optimization_metric']} metric distribution = {summary.metric_distribution}"
     f"\nbest trial run_id: {run_id}"
+    f"\n{training_params['optimization_metric']} metric distribution = {summary.metric_distribution}"
 )
 
 dbutils.jobs.taskValues.set(key="experiment_id", value=experiment_id)
@@ -248,6 +248,8 @@ split_col = training_params.get("split_col", "_automl_split_col_0000")
 
 # COMMAND ----------
 
+# only possible to do bias evaluation if you specify a split col for train/test/validate
+# AutoML doesn't preserve student ids the training set, which we need for [reasons]
 if evaluate_model_bias := (training_params.get("split_col") is not None):
     non_feature_cols = sorted(
         set(
@@ -260,15 +262,8 @@ if evaluate_model_bias := (training_params.get("split_col") is not None):
         )
     )
     df_features = df.drop(columns=non_feature_cols)
-# TODO(Burton): figure out if this is needed/wanted here
-# else:
-#     df_train = modeling.evaluation.extract_training_data_from_model(experiment_id)
-#     df_train = df_train.assign(
-#         **{
-#             cfg.pred_col: model.predict(df_train),
-#             cfg.pred_prob_col: model.predict_proba(df_train)[:, 1],
-#         }
-#     )
+else:
+    df_features = modeling.evaluation.extract_training_data_from_model(experiment_id)
 
 # COMMAND ----------
 
