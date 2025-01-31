@@ -64,9 +64,9 @@ class InstitutionCreationRequest(BaseModel):
     name: str
     description: str | None = None
     state: str | None = None
-    allowed_schemas: list[SchemaType]
+    allowed_schemas: list[SchemaType] | None
     # Emails allowed to register under this institution
-    allowed_emails: Dict[str, AccessType]
+    allowed_emails: Dict[str, AccessType] | None
     # The following is a shortcut to specifying the allowed_schemas list and will mean that the allowed_schemas will be augmented with the PDP_SCHEMA_GROUP.
     is_pdp: bool | None = None
     retention_days: int | None = None
@@ -148,7 +148,9 @@ def create_institution(
     )
     if len(query_result) == 0:
         # If the institution does not exist create it and create a storage bucket for it.
-        requested_schemas = req.allowed_schemas
+        requested_schemas = []
+        if req.allowed_schemas:
+            requested_schemas = req.allowed_schemas
         if req.is_pdp:
             requested_schemas += PDP_SCHEMA_GROUP
         # if no schema is set and PDP is not set, we default to custom.
