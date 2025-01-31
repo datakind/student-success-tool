@@ -832,6 +832,7 @@ def validate_file(
             detail="File type is not valid and/or not accepted by this institution: "
             + str(e),
         )
+    """
     new_file_record = FileTable(
         name=file_name,
         inst_id=str_to_uuid(inst_id),
@@ -840,6 +841,7 @@ def validate_file(
         valid=True,
     )
     local_session.get().add(new_file_record)
+    """
     # TODO propagate inferred_schemas into the output
     return {
         "name": file_name,
