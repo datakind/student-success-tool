@@ -14,6 +14,7 @@ from unittest import mock
 from . import institutions
 from ..test_helper import (
     INSTITUTION_REQ,
+    INSTITUTION_REQ_BAREBONES,
     INSTITUTION_OBJ,
     USR,
     DATAKINDER,
@@ -211,3 +212,7 @@ def test_create_inst(datakinder_client):
     assert response.json()["description"] == "description of school"
     assert response.json()["retention_days"] == 1
     assert response.json()["inst_id"] != None
+
+    response = datakinder_client.post("/institutions", json=INSTITUTION_REQ_BAREBONES)
+    assert response.status_code == 200
+    assert response.json()["name"] == "testing school"

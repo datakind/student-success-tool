@@ -64,9 +64,9 @@ class InstitutionCreationRequest(BaseModel):
     name: str
     description: str | None = None
     state: str | None = None
-    allowed_schemas: list[SchemaType] | None
+    allowed_schemas: list[SchemaType] | None = None
     # Emails allowed to register under this institution
-    allowed_emails: Dict[str, AccessType] | None
+    allowed_emails: Dict[str, AccessType] | None = None
     # The following is a shortcut to specifying the allowed_schemas list and will mean that the allowed_schemas will be augmented with the PDP_SCHEMA_GROUP.
     is_pdp: bool | None = None
     retention_days: int | None = None
@@ -135,7 +135,7 @@ def create_institution(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authorized to create an institution.",
         )
-    if len(req.description) > VAR_CHAR_LONGER_LENGTH:
+    if req.description and len(req.description) > VAR_CHAR_LONGER_LENGTH:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Description length too long.",

@@ -61,6 +61,10 @@ INSTITUTION_REQ = {
     "allowed_emails": {"foo@foobar.edu": "VIEWER"},
 }
 
+INSTITUTION_REQ_BAREBONES = {
+    "name": "testing school",
+}
+
 EMPTY_INSTITUTION_OBJ = {
     "inst_id": "",
     "name": "",
