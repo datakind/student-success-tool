@@ -247,5 +247,5 @@ class StorageControl(BaseModel):
         new_blob = bucket.blob(new_blob_name)
         if new_blob.exists():
             raise ValueError(new_blob_name + ": File already exists.")
-        bucket.copy_blob(blob, bucket, new_blob)
+        bucket.copy_blob(blob, bucket, new_blob_name)
         blob.delete()
