@@ -822,7 +822,7 @@ def validate_file(
         )
     allowed_schemas = set()
     if inst_query_result[0][0].schemas:
-        allowed_schemas = set(json.loads(inst_query_result[0][0].schemas))
+        allowed_schemas = set(inst_query_result[0][0].schemas)
     try:
         storage_control.validate_file(
             get_external_bucket_name(inst_id), file_name, allowed_schemas
