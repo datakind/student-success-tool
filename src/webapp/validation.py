@@ -281,7 +281,7 @@ def detect_file_type(col_names: list[str]) -> set[SchemaType]:
     return res
 
 
-def validate_file(filename: str, allowed_types: set[SchemaType]) -> bool:
+def validate_file(filename: str, allowed_types: set[SchemaType]) -> set[SchemaType]:
     with open(filename) as f:
         return validate_file_reader(f, allowed_types)
 
@@ -302,10 +302,11 @@ def get_col_names(f) -> None:
     return col_names
 
 
-def validate_file_reader(reader, allowed_types: set[SchemaType]) -> bool:
+# This returns only if a valid format was found, otherwise it raises an error
+def validate_file_reader(reader, allowed_types: set[SchemaType]) -> set[SchemaType]:
     if not allowed_types:
         raise ValueError("CSV file schema not recognized")
     res = detect_file_type(get_col_names(reader))
     if any(i in allowed_types for i in res):
-        return True
+        return res
     raise ValueError("CSV file schema not recognized")

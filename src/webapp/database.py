@@ -233,6 +233,8 @@ class FileTable(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    # TODO add schema type
+
     # Within a given institution, there should be no duplicated file names.
     __table_args__ = (UniqueConstraint("name", "inst_id", name="file_name_inst_uc"),)
 

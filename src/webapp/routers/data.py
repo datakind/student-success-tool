@@ -23,6 +23,7 @@ from ..utilities import (
     get_current_active_user,
     DataSource,
     get_external_bucket_name,
+    SchemaType,
 )
 
 from ..database import get_session, local_session, BatchTable, FileTable, InstTable
@@ -119,10 +120,7 @@ class ValidationResult(BaseModel):
     # Must be unique within an institution to avoid confusion.
     name: str
     inst_id: str
-    # Whether the file was validated (in the case of input) or approved (in the case of output).
-    valid: bool = False
-    # If not validated, error message.
-    err_msg: str | None
+    file_type: SchemaType = SchemaType.UNKNOWN
 
 
 class DataOverview(BaseModel):
@@ -823,8 +821,9 @@ def validate_file(
     allowed_schemas = set()
     if inst_query_result[0][0].schemas:
         allowed_schemas = set(inst_query_result[0][0].schemas)
+    inferred_schemas = set()
     try:
-        storage_control.validate_file(
+        inferred_schemas = storage_control.validate_file(
             get_external_bucket_name(inst_id), file_name, allowed_schemas
         )
     except Exception as e:
@@ -841,10 +840,11 @@ def validate_file(
         valid=True,
     )
     local_session.get().add(new_file_record)
+    # TODO propagate inferred_schemas into the output
     return {
         "name": file_name,
         "inst_id": inst_id,
-        "valid": True,
+        "file_type": SchemaType.UNKNOWN,
     }
 
 
