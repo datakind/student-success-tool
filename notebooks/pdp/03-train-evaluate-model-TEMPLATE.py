@@ -42,6 +42,7 @@ import os
 import mlflow
 import numpy as np
 import pandas as pd
+import sklearn.inspection
 import sklearn.metrics
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
@@ -378,7 +379,26 @@ with mlflow.start_run(run_id=run_id) as run:
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC TODO: See about adding permutation importance and/or global SHAP feature importance evaluation here
+# TODO TODO TODO
+result = sklearn.inspection.permutation_importance(
+    model,
+    df_features.drop(columns=cfg.target_col),
+    df_features[cfg.target_col],
+    scoring=sklearn.metrics.make_scorer(
+        sklearn.metrics.log_loss, greater_is_better=False
+    ),
+    n_repeats=10,
+)
+
+sorted_importances_idx = result.importances_mean.argsort()
+importances = pd.DataFrame(
+    result.importances[sorted_importances_idx].T,
+    columns=df_features.columns[sorted_importances_idx],
+)
+ax = importances.plot.box(vert=False, whis=10, figsize=(10, 10))
+ax.set_title("Permutation Importances (test set)")
+ax.axvline(x=0, color="k", linestyle="--")
+ax.set_xlabel("Decrease in accuracy score")
+ax.figure.tight_layout()
 
 # COMMAND ----------
