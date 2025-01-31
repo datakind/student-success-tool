@@ -10,7 +10,7 @@ from google.cloud.storage_control_v2 import StorageControlClient
 from typing import Any
 from .config import gcs_vars
 from .validation import validate_file_reader, SchemaType
-from ..utilities import (
+from .utilities import (
     SchemaType,
 )
 
