@@ -114,20 +114,25 @@ class StorageControl(BaseModel):
         bucket = storage_client.bucket(bucket_name)
         if bucket.exists():
             raise ValueError(bucket_name + " already exists. Creation failed.")
+        # Update with URL?
+        # fmt: off
         bucket.cors = [
             {
-                "origin": ["*"],  # TODO: update with url?
+                "origin": ["*"],
                 "responseHeader": ["*"],
                 "method": ["GET", "OPTIONS", "PUT", "POST"],
-                "maxAgeSeconds": 3600,
+                "maxAgeSeconds": 3600
             }
         ]
+        # fmt: on
         # For external facing buckets, apply TTL to unvalidated files. This may occur if an API caller uploads but doesn't call validate.
         if not bucket_name.endswith("-internal"):
+            # fmt: off
             bucket.lifecycle_rules = {
                 "action": {"type": "Delete"},
-                "condition": {"age": 1, "matchesPrefix": ["unvalidated/"]},
+                "condition": {"age": 1, "matchesPrefix": ["unvalidated/"]}
             }
+            # fmt: on
         bucket.patch()
         bucket.storage_class = "STANDARD"
         new_bucket = storage_client.create_bucket(bucket, location="us")
