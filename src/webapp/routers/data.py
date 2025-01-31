@@ -828,12 +828,11 @@ def validate_file(
             get_external_bucket_name(inst_id), file_name, allowed_schemas
         )
     except Exception as e:
-        return {
-            "name": file_name,
-            "inst_id": inst_id,
-            "valid": False,
-            "err_msg": str(e),
-        }
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File type is not valid and/or not accepted by this institution: "
+            + str(e),
+        )
     new_file_record = FileTable(
         name=file_name,
         inst_id=str_to_uuid(inst_id),
