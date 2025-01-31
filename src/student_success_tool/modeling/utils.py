@@ -94,20 +94,17 @@ def load_features_table(fpath: str) -> dict[str, dict[str, str]]:
     Args:
         fpath: Path to features table TOML file relative to package root or absolute;
             for example: "assets/pdp/features_table.toml" or "/path/to/features_table.toml".
-
-    Returns:
     """
     pkg_root_dir = next(
         p
         for p in pathlib.Path(__file__).parents
         if p.parts[-1] == "student_success_tool"
     )
-
-    file_path = pathlib.Path(fpath) if pathlib.Path(fpath).is_absolute() else pkg_root_dir / fpath
-
-    if not file_path.exists():
-        raise FileNotFoundError(f"The file at '{file_path}' could not be found.")
-
+    file_path = (
+        pathlib.Path(fpath)
+        if pathlib.Path(fpath).is_absolute()
+        else pkg_root_dir / fpath
+    )
     with file_path.open(mode="rb") as f:
         features_table = tomllib.load(f)
     LOGGER.info("loaded features table from '%s'", file_path)
