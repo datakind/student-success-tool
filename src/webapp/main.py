@@ -16,6 +16,7 @@ from .database import (
     get_session,
     local_session,
     AccountTable,
+    DatakinderTable,
 )
 from .config import env_vars, startup_env_vars
 
@@ -25,6 +26,7 @@ from .utilities import (
     BaseUser,
     get_current_active_user,
     uuid_to_str,
+    str_to_uuid,
 )
 from .authn import (
     Token,
@@ -146,3 +148,52 @@ async def read_cross_inst_users(
             }
         )
     return res
+
+
+# Add Datakinder allowlisted emails.
+@app.post("/datakinders")
+async def set_allowed_datakinders(
+    emails: list[str],
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
+    sql_session: Annotated[Session, Depends(get_session)],
+):
+    if not current_user.is_datakinder():
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Only Datakinders can set other Datakinders",
+        )
+    local_session.set(sql_session)
+    for e in emails:
+        local_session.get().add(
+            DatakinderTable(
+                email=e,
+                creator=str_to_uuid(current_user.user_id),
+            )
+        )
+    return "ok"
+
+
+@app.get("/check-datakinder/{user_email}")
+async def check_email_datakinder(
+    user_email: str,
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
+    sql_session: Annotated[Session, Depends(get_session)],
+):
+    if not current_user.is_datakinder():
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Only Datakinders can check status of other Datakinders",
+        )
+    local_session.set(sql_session)
+    query_result = (
+        local_session.get()
+        .execute(
+            select(DatakinderTable).where(
+                DatakinderTable.email == user_email,
+            )
+        )
+        .all()
+    )
+    if not query_result or len(query_result) == 0:
+        return False
+    return True

@@ -270,6 +270,15 @@ class BatchTable(Base):
     __table_args__ = (UniqueConstraint("name", "inst_id", name="batch_name_inst_uc"),)
 
 
+# A list of emails that are allowed to have Datakinder roles. When any email on this list signs up, they will automatically be granted Datakinder access. Removing an email from this table will have no effect on existing roles. Those have to be managed in the User table.
+class DatakinderTable(Base):
+    __tablename__ = "datakinders"
+    email = Column(String(VAR_CHAR_LENGTH), primary_key=True)
+    creator = Column(Uuid(as_uuid=True))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
 """
 def get_one_record(sess_context_var: ContextVar, sess: Session, select_query: ) -> Any:
     local_session.set(sql_session)
