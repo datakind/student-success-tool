@@ -42,8 +42,6 @@ import mlflow
 import numpy as np
 import pandas as pd
 import shap
-import sklearn.inspection
-import sklearn.metrics
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 from py4j.protocol import Py4JJavaError
@@ -129,13 +127,8 @@ df.head()
 
 # COMMAND ----------
 
+
 # TODO: get this functionality into public repo's modeling.inference?
-import typing as t
-
-import numpy as np
-import pandas as pd
-
-
 def predict_proba(
     X,
     model,
@@ -143,8 +136,7 @@ def predict_proba(
     feature_names: t.Optional[list[str]] = None,
     pos_label: t.Optional[bool | str] = None,
 ) -> np.ndarray:
-    """
-    """
+    """ """
     if feature_names is None:
         feature_names = model.named_steps["column_selector"].get_params()["cols"]
     if not isinstance(X, pd.DataFrame):
@@ -156,6 +148,7 @@ def predict_proba(
         return pred_probs[:, model.classes_.tolist().index(pos_label)]
     else:
         return pred_probs
+
 
 # COMMAND ----------
 
@@ -254,7 +247,10 @@ df_ref.shape
 
 explainer = shap.explainers.KernelExplainer(
     ft.partial(
-        predict_proba, model=model, feature_names=model_feature_names, pos_label=cfg.pos_label
+        predict_proba,
+        model=model,
+        feature_names=model_feature_names,
+        pos_label=cfg.pos_label,
     ),
     df_ref,
     link="identity",
@@ -269,7 +265,9 @@ shap_schema = StructType(
 )
 
 df_shap_values = (
-    spark.createDataFrame(df_test.reindex(columns=model_feature_names + [cfg.student_id_col]))  # noqa: F821
+    spark.createDataFrame(
+        df_test.reindex(columns=model_feature_names + [cfg.student_id_col])
+    )  # noqa: F821
     .repartition(sc.defaultParallelism)  # noqa: F821
     .mapInPandas(
         ft.partial(
@@ -301,8 +299,7 @@ shap_fig = plt.gcf()
 # save shap summary plot via mlflow into experiment artifacts folder
 with mlflow.start_run(run_id=cfg.models[model_name].run_id) as run:
     mlflow.log_figure(
-        shap_fig,
-        f"shap_summary_{dataset_name}_dataset_{df_ref.shape[0]}_ref_rows.png"
+        shap_fig, f"shap_summary_{dataset_name}_dataset_{df_ref.shape[0]}_ref_rows.png"
     )
 
 # COMMAND ----------
@@ -333,5 +330,3 @@ result
 # MAGIC - do we want to save predictions separately / additionally from the "display" format?
 
 # COMMAND ----------
-
-
