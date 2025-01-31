@@ -111,3 +111,16 @@ module "load_balancer" {
   # webapp_service_name   = module.webapp.service_name
   # frontend_service_name = module.frontend.service_name
 }
+
+module "cloudbuild" {
+  source = "./modules/cloudbuild"
+
+  project        = var.project
+  domain         = var.domain
+  environment    = var.environment
+  region         = var.region
+  webapp_image   = var.webapp_image
+  frontend_image = var.frontend_image
+
+  cloudbuild_service_account_id = module.iam.cloudbuild_service_account_id
+}

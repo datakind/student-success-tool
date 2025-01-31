@@ -5,7 +5,7 @@ resource "google_project_service" "services" {
   disable_on_destroy = false
 }
 
-resource "google_secret_manager_secret_iam_member" "cloudrun_sa_db_client_cert_access" {
+resource "google_secret_manager_secret_iam_member" "cloudrun_sa_env_file_access" {
   secret_id = "projects/${var.project}/secrets/test-${var.name}-env-file"
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${var.cloud_run_service_account_email}"
@@ -26,7 +26,7 @@ resource "google_cloud_run_v2_service" "webapp" {
         value = "/vol_mt/env_vars/.env"
       }
       env {
-        name = "APP_SETTINGS_DIR"
+        name  = "APP_SETTINGS_DIR"
         value = "/vol_mt/env_vars"
       }
       env {
@@ -34,10 +34,10 @@ resource "google_cloud_run_v2_service" "webapp" {
         value = "root"
       }
       env {
-        name  = "DB_PASS"
+        name = "DB_PASS"
         value_source {
           secret_key_ref {
-            secret = var.database_password_secret_id
+            secret  = var.database_password_secret_id
             version = "latest"
           }
         }
