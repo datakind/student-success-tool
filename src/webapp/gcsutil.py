@@ -125,6 +125,7 @@ class StorageControl(BaseModel):
             }
         ]
         # fmt: on
+        # xxx failure with bucket creation during inst creation
         # For external facing buckets, apply TTL to unvalidated files. This may occur if an API caller uploads but doesn't call validate.
         if not bucket_name.endswith("-internal"):
             # fmt: off
@@ -230,6 +231,7 @@ class StorageControl(BaseModel):
     def validate_file(
         self, bucket_name: str, file_name: str, allowed_schemas: set[SchemaType]
     ):
+        client = storage.Client()
         bucket = client.bucket(bucket_name)
         blob = bucket.blob(f"unvalidated/{file_name}")
         new_blob_name = f"validated/{file_name}"
