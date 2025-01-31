@@ -135,6 +135,4 @@ def test_load_features_table(tmpdir, toml_content, expected_output, expect_excep
         
         if expect_exception is does_not_raise():
             assert isinstance(features_table, dict)
-            for key, value in expected_output.items():
-                assert key in features_table
-                assert features_table[key] == value
+            assert features_table == expected_output
