@@ -128,14 +128,15 @@ class StorageControl(BaseModel):
             }
         ]
         # fmt: on
-        # xxx failure with bucket creation during inst creation
         # For external facing buckets, apply TTL to unvalidated files. This may occur if an API caller uploads but doesn't call validate.
         if not bucket_name.endswith("-internal"):
             # fmt: off
-            bucket.lifecycle_rules = {
+            bucket.lifecycle_rules = [
+                {
                 "action": {"type": "Delete"},
                 "condition": {"age": 1, "matchesPrefix": ["unvalidated/"]}
-            }
+                }
+            ]
             # fmt: on
         bucket.patch()
         bucket.storage_class = "STANDARD"
@@ -241,13 +242,10 @@ class StorageControl(BaseModel):
         schems = set()
         try:
             with blob.open("r") as file:
-                try:
-                    schems = validate_file_reader(file, allowed_schemas)
-                except Exception as err:
-                    blob.delete()
-                    raise ValueError("Validation failed: " + str(err))
+                schems = validate_file_reader(file, allowed_schemas)
         except Exception as e:
-            raise ValueError("Validation failed: " + str(e))
+            blob.delete()
+            raise e
         new_blob = bucket.blob(new_blob_name)
         if new_blob.exists():
             raise ValueError(new_blob_name + ": File already exists.")

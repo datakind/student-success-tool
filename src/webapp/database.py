@@ -175,14 +175,15 @@ class AccountHistoryTable(Base):
     )
     account: Mapped["AccountTable"] = relationship(back_populates="account_histories")
 
+    # This field is nullable if the action was taken by a Datakinder.
     inst_id = Column(
         Uuid(as_uuid=True),
         ForeignKey("inst.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
     )
     inst: Mapped["InstTable"] = relationship(back_populates="account_histories")
 
-    action = Column(String(VAR_CHAR_LENGTH), nullable=False)
+    action = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False)
     resource_id = Column(Uuid(as_uuid=True), nullable=False)
 
 
@@ -218,6 +219,8 @@ class FileTable(Base):
     uploader = Column(Uuid(as_uuid=True), nullable=True)
     # Can be PDP_SFTP, MANUAL_UPLOAD etc. May be empty for generated files.
     source = Column(String(VAR_CHAR_LENGTH), nullable=True)
+    # The schema type(s) of this file.
+    schemas = Column(MutableList.as_mutable(JSON), nullable=False)
     # If null, the following is non-deleted.
     # The deleted field indicates whether there is a pending deletion request on the data.
     # The data may stil be available to Datakind debug role in a soft-delete state but for all
@@ -232,8 +235,6 @@ class FileTable(Base):
     valid: Mapped[bool] = mapped_column(nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
-    # TODO add schema type
 
     # Within a given institution, there should be no duplicated file names.
     __table_args__ = (UniqueConstraint("name", "inst_id", name="file_name_inst_uc"),)
@@ -270,15 +271,6 @@ class BatchTable(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     # Within a given institution, there should be no duplicated batch names.
     __table_args__ = (UniqueConstraint("name", "inst_id", name="batch_name_inst_uc"),)
-
-
-# A list of emails that are allowed to have Datakinder roles. When any email on this list signs up, they will automatically be granted Datakinder access. Removing an email from this table will have no effect on existing roles. Those have to be managed in the User table.
-class DatakinderTable(Base):
-    __tablename__ = "datakinders"
-    email = Column(String(VAR_CHAR_LENGTH), primary_key=True)
-    creator = Column(Uuid(as_uuid=True))
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 
 """

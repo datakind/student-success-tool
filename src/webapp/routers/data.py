@@ -120,7 +120,7 @@ class ValidationResult(BaseModel):
     # Must be unique within an institution to avoid confusion.
     name: str
     inst_id: str
-    file_type: SchemaType = SchemaType.UNKNOWN
+    file_types: set[SchemaType]
 
 
 class DataOverview(BaseModel):
@@ -832,21 +832,19 @@ def validate_file(
             detail="File type is not valid and/or not accepted by this institution: "
             + str(e),
         )
-    """
     new_file_record = FileTable(
         name=file_name,
         inst_id=str_to_uuid(inst_id),
         uploader=str_to_uuid(current_user.user_id),
         source="MANUAL_UPLOAD",
+        schemas=list(inferred_schemas),
         valid=True,
     )
     local_session.get().add(new_file_record)
-    """
-    # TODO propagate inferred_schemas into the output
     return {
         "name": file_name,
         "inst_id": inst_id,
-        "file_type": SchemaType.UNKNOWN,
+        "file_types": inferred_schemas,
     }
 
 

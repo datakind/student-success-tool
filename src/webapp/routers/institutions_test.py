@@ -32,7 +32,7 @@ USER_UUID = uuid.UUID("5301a352-c03d-4a39-beec-16c5668c4700")
 USER_VALID_INST_UUID = uuid.UUID("1d7c75c3-3eda-4294-9c66-75ea8af97b55")
 INVALID_UUID = uuid.UUID("27316b89-5e04-474a-9ea4-97beaf72c9af")
 
-MOCK_STORAGE = mock.AsyncMock()
+MOCK_STORAGE = mock.Mock()
 
 
 @pytest.fixture(name="session")

@@ -27,12 +27,12 @@ from ..database import (
     get_session,
     local_session,
 )
-from ..utilities import uuid_to_str, get_current_active_user
+from ..utilities import uuid_to_str, get_current_active_user, SchemaType
 from .data import router, DataOverview, DataInfo, BatchCreationRequest
 from collections import Counter
 from ..gcsutil import StorageControl
 
-MOCK_STORAGE = mock.AsyncMock()
+MOCK_STORAGE = mock.Mock()
 
 UUID_2 = uuid.UUID("9bcbc782-2e71-4441-afa2-7a311024a5ec")
 FILE_UUID_1 = uuid.UUID("f0bb3a20-6d92-4254-afed-6a72f43c562a")
@@ -130,6 +130,7 @@ def session_fixture():
         updated_at=DATETIME_TESTING,
         sst_generated=False,
         valid=True,
+        schemas=[SchemaType.UNKNOWN],
     )
     file_3 = FileTable(
         id=FILE_UUID_3,
@@ -140,6 +141,7 @@ def session_fixture():
         updated_at=DATETIME_TESTING,
         sst_generated=True,
         valid=True,
+        schemas=[SchemaType.PDP_COHORT],
     )
     try:
         with sqlalchemy.orm.Session(engine) as session:
@@ -162,6 +164,7 @@ def session_fixture():
                         updated_at=DATETIME_TESTING,
                         sst_generated=False,
                         valid=False,
+                        schemas=[SchemaType.PDP_COURSE],
                     ),
                     file_3,
                 ]
@@ -499,6 +502,44 @@ def test_update_batch(client: TestClient):
     assert response.json()["deletion_request_time"] == None
     assert response.json()["inst_id"] == uuid_to_str(USER_VALID_INST_UUID)
     assert response.json()["file_ids"] == [uuid_to_str(FILE_UUID_2)]
+
+
+def test_validate_success_batch(client: TestClient):
+    """Test PATCH /institutions/<uuid>/batch."""
+    MOCK_STORAGE.validate_file.return_value = {SchemaType.UNKNOWN}
+    response = client.post(
+        "/institutions/" + uuid_to_str(UUID_INVALID) + "/input/validate/file_name.csv",
+    )
+    assert str(response) == "<Response [401 Unauthorized]>"
+    assert (
+        response.text
+        == '{"detail":"Not authorized to read this institution\'s resources."}'
+    )
+    # Authorized.
+    response = client.post(
+        "/institutions/"
+        + uuid_to_str(USER_VALID_INST_UUID)
+        + "/input/validate/file_name.csv",
+    )
+    assert response.status_code == 200
+    assert response.json()["name"] == "file_name.csv"
+    assert response.json()["file_types"] == ["UNKNOWN"]
+    assert response.json()["inst_id"] == uuid_to_str(USER_VALID_INST_UUID)
+
+
+def test_validate_failure_batch(client: TestClient):
+    """Test PATCH /institutions/<uuid>/batch."""
+    MOCK_STORAGE.validate_file.return_value = {SchemaType.PDP_COHORT}
+    # Authorized.
+    response = client.post(
+        "/institutions/"
+        + uuid_to_str(USER_VALID_INST_UUID)
+        + "/input/validate/file_name.csv",
+    )
+    assert response.status_code == 200
+    assert response.json()["name"] == "file_name.csv"
+    assert response.json()["file_types"] == ["PDP_COHORT"]
+    assert response.json()["inst_id"] == uuid_to_str(USER_VALID_INST_UUID)
 
 
 def test_pull_pdp_sftp(client: TestClient):

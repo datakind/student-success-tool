@@ -16,6 +16,7 @@ from .test_helper import (
     DATETIME_TESTING,
     USER_UUID,
     USER_1_UUID,
+    UUID_INVALID,
 )
 from .utilities import get_current_active_user
 
@@ -52,6 +53,17 @@ def session_fixture():
         created_at=DATETIME_TESTING,
         updated_at=DATETIME_TESTING,
     )
+    user_3 = AccountTable(
+        id=UUID_INVALID,  # This says UUID_INVALID, but it is just using for convenience this UUID.
+        inst_id=None,
+        name="New Datakinder",
+        email="new_dk@example.com",
+        email_verified_at=None,
+        password=get_password_hash("abc"),
+        access_type=None,
+        created_at=DATETIME_TESTING,
+        updated_at=DATETIME_TESTING,
+    )
     try:
         with sqlalchemy.orm.Session(engine) as session:
             session.add_all(
@@ -64,6 +76,7 @@ def session_fixture():
                     ),
                     user_1,
                     user_2,
+                    user_3,
                 ]
             )
             session.commit()
@@ -116,4 +129,18 @@ def test_get_cross_isnt_users(client: TestClient):
             "name": "Jane Doe",
             "user_id": "27316b895e04474a9ea497beaf72c9af",
         },
+        {
+            "access_type": None,
+            "email": "new_dk@example.com",
+            "inst_id": "",
+            "name": "New Datakinder",
+            "user_id": "64dbce41111b46fe8e84c38757477ef2",
+        },
     ]
+
+
+def test_set_datakinders(client: TestClient):
+    """Test POST /non_inst_users."""
+    response = client.post("/datakinders", json=["new_dk@example.com"])
+    assert response.status_code == 200
+    assert response.json() == ["new_dk@example.com"]
