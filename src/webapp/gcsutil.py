@@ -246,6 +246,6 @@ class StorageControl(BaseModel):
             raise ValueError("Validation failed: " + str(e))
         new_blob = bucket.blob(new_blob_name)
         if new_blob.exists():
-            raise ValueError(new_name + ": File already exists.")
-        bucket.copy_blob(blob, bucket, new_name)
+            raise ValueError(new_blob_name + ": File already exists.")
+        bucket.copy_blob(blob, bucket, new_blob)
         blob.delete()
