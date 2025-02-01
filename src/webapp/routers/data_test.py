@@ -455,7 +455,12 @@ def test_create_batch(client: TestClient):
     # Authorized.
     response = client.post(
         "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + "/batch",
-        json=BATCH_REQUEST,
+        json={
+            "name": "batch_foobar",
+            "description": "",
+            "batch_disabled": "False",
+            "file_ids": [uuid_to_str(FILE_UUID_1)],
+        },
     )
     assert response.status_code == 200
     assert response.json()["name"] == "batch_foobar"
@@ -465,6 +470,7 @@ def test_create_batch(client: TestClient):
     assert response.json()["completed"] == False
     assert response.json()["deletion_request_time"] == None
     assert response.json()["inst_id"] == uuid_to_str(USER_VALID_INST_UUID)
+    assert response.json()["file_ids"] == [uuid_to_str(FILE_UUID_1)]
 
 
 def test_update_batch(client: TestClient):

@@ -101,7 +101,7 @@ class InstTable(Base):
         back_populates="inst"
     )
 
-    name = Column(String(VAR_CHAR_LENGTH), nullable=False, unique=True)
+    name = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False, unique=True)
     # If retention unset, the Datakind default is used. File-level retentions overrides
     # this value.
     retention_days: Mapped[int] = mapped_column(nullable=True)
@@ -139,7 +139,7 @@ class AccountTable(Base):
     inst: Mapped["InstTable"] = relationship(back_populates="accounts")
 
     name = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False)
-    email = Column(String(VAR_CHAR_LENGTH), nullable=False, unique=True)
+    email = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False, unique=True)
     google_id = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=True)
     azure_id = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=True)
 
@@ -199,7 +199,7 @@ association_table = Table(
 # The institution file table
 class FileTable(Base):
     __tablename__ = "file"
-    name = Column(String(VAR_CHAR_LENGTH), nullable=False)
+    name = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False)
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     batches: Mapped[Set["BatchTable"]] = relationship(
         secondary=association_table, back_populates="files"
@@ -257,7 +257,7 @@ class BatchTable(Base):
         secondary=association_table, back_populates="batches"
     )
 
-    name = Column(String(VAR_CHAR_LENGTH), nullable=False)
+    name = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False)
     # A short description or note on this inst.
     description = Column(String(VAR_CHAR_LONGER_LENGTH))
     creator = Column(Uuid(as_uuid=True))
