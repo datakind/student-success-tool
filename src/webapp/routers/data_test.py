@@ -460,6 +460,7 @@ def test_create_batch(client: TestClient):
             "description": "",
             "batch_disabled": "False",
             "file_ids": [uuid_to_str(FILE_UUID_1)],
+            "file_names": ["file_input_one", "file_input_two"],
         },
     )
     assert response.status_code == 200
@@ -470,7 +471,11 @@ def test_create_batch(client: TestClient):
     assert response.json()["completed"] == False
     assert response.json()["deletion_request_time"] == None
     assert response.json()["inst_id"] == uuid_to_str(USER_VALID_INST_UUID)
-    assert response.json()["file_ids"] == [uuid_to_str(FILE_UUID_1)]
+    assert uuid_to_str(FILE_UUID_2) in response.json()["file_ids"]
+    assert uuid_to_str(FILE_UUID_1) in response.json()["file_ids"]
+    assert len(response.json()["file_ids"]) == 2
+
+
 
 
 def test_update_batch(client: TestClient):

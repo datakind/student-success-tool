@@ -272,6 +272,7 @@ class BatchTable(Base):
     # Within a given institution, there should be no duplicated batch names.
     __table_args__ = (UniqueConstraint("name", "inst_id", name="batch_name_inst_uc"),)
 
+# TODO: create model table and model job table?
 
 """
 def get_one_record(sess_context_var: ContextVar, sess: Session, select_query: ) -> Any:

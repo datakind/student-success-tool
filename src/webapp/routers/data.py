@@ -53,7 +53,9 @@ class BatchCreationRequest(BaseModel):
     description: str | None = None
     # Disabled data means it is no longer in use or not available for use.
     batch_disabled: bool = False
+    # You can specify files to include as ids or names.
     file_ids: set[str] | None = None
+    file_names: set[str] | None = None
 
 
 class BatchInfo(BaseModel):
@@ -401,7 +403,14 @@ def create_batch(
     local_session.set(sql_session)
     query_result = (
         local_session.get()
-        .execute(select(BatchTable).where(BatchTable.name == req.name))
+        .execute(
+            select(BatchTable).where(
+                and_(
+                    BatchTable.name == req.name,
+                    BatchTable.inst_id == str_to_uuid(inst_id),
+                )
+            )
+        )
         .all()
     )
     if len(query_result) == 0:
@@ -417,7 +426,14 @@ def create_batch(
                 # Check that the files requested for this batch exists
                 query_result_file = (
                     local_session.get()
-                    .execute(select(FileTable).where(FileTable.id == f))
+                    .execute(
+                        select(FileTable).where(
+                            and_(
+                                FileTable.id == f,
+                                FileTable.inst_id == str_to_uuid(inst_id),
+                            )
+                        )
+                    )
                     .all()
                 )
                 if not query_result_file or len(query_result_file) == 0:
@@ -432,11 +448,46 @@ def create_batch(
                     )
                 batch.files.add(query_result_file[0][0])
 
+                # XXX ADD INSTITUTION ID AND QUALIFIERS ON ALL DB CHECKS
+        if req.file_names:
+            # Query all the files and add them to this batch.
+            for f in req.file_names:
+                # Check that the files requested for this batch exists
+                query_result_file = (
+                    local_session.get()
+                    .execute(
+                        select(FileTable).where(
+                            and_(
+                                FileTable.name == f,
+                                FileTable.inst_id == str_to_uuid(inst_id),
+                            )
+                        )
+                    )
+                    .all()
+                )
+                if not query_result_file or len(query_result_file) == 0:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="file in request not found.",
+                    )
+                elif len(query_result_file) > 1:
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail="Multiple files in request with same unique id found.",
+                    )
+                batch.files.add(query_result_file[0][0])
         local_session.get().add(batch)
         local_session.get().commit()
         query_result = (
             local_session.get()
-            .execute(select(BatchTable).where(BatchTable.name == req.name))
+            .execute(
+                select(BatchTable).where(
+                    and_(
+                        BatchTable.name == req.name,
+                        BatchTable.inst_id == str_to_uuid(inst_id),
+                    )
+                )
+            )
             .all()
         )
         if not query_result:
@@ -509,7 +560,14 @@ def update_batch(
     # Check that the batch exists.
     query_result = (
         local_session.get()
-        .execute(select(BatchTable).where(BatchTable.id == str_to_uuid(batch_id)))
+        .execute(
+            select(BatchTable).where(
+                and_(
+                    BatchTable.id == str_to_uuid(batch_id),
+                    BatchTable.inst_id == str_to_uuid(inst_id),
+                )
+            )
+        )
         .all()
     )
     if not query_result or len(query_result) == 0:
@@ -534,7 +592,14 @@ def update_batch(
             # Check that the files requested for this batch exists
             query_result_file = (
                 local_session.get()
-                .execute(select(FileTable).where(FileTable.id == f))
+                .execute(
+                    select(FileTable).where(
+                        and_(
+                            FileTable.id == f,
+                            FileTable.inst_id == str_to_uuid(inst_id),
+                        )
+                    )
+                )
                 .all()
             )
             if not query_result_file or len(query_result_file) == 0:
@@ -549,35 +614,28 @@ def update_batch(
                 )
             existing_batch.files.add(query_result_file[0][0])
     # The below is unfortunate but it doesn't seem to work if we programmatically construct the query using values.
+
     if "name" in update_data:
-        local_session.get().execute(
-            update(BatchTable)
-            .where(BatchTable.id == str_to_uuid(batch_id))
-            .values(name=update_data["name"])
-        )
+        existing_batch.name = update_data["name"]
     if "description" in update_data:
-        local_session.get().execute(
-            update(BatchTable)
-            .where(BatchTable.id == str_to_uuid(batch_id))
-            .values(description=update_data["description"])
-        )
+        existing_batch.description = update_data["description"]
     if "deleted" in update_data and update_data["deleted"]:
         # if the user tries to set deleted to false, that is a noop. Deletions can't be undone.
-        local_session.get().execute(
-            update(BatchTable)
-            .where(BatchTable.id == str_to_uuid(batch_id))
-            .values(deleted=update_data["deleted"])
-            .values(deleted_at=func.now())
-        )
+        existing_batch.deleted = True
+        existing_batch.deleted_at = func.now()
     if "completed" in update_data:
-        local_session.get().execute(
-            update(BatchTable)
-            .where(BatchTable.id == str_to_uuid(batch_id))
-            .values(completed=update_data["completed"])
-        )
+        existing_batch.completed = update_data["completed"]
+    local_session.get().commit()
     res = (
         local_session.get()
-        .execute(select(BatchTable).where(BatchTable.id == str_to_uuid(batch_id)))
+        .execute(
+            select(BatchTable).where(
+                and_(
+                    BatchTable.id == str_to_uuid(batch_id),
+                    BatchTable.inst_id == str_to_uuid(inst_id),
+                )
+            )
+        )
         .all()
     )
     return {
@@ -808,7 +866,6 @@ def upload_file(
     }
 
 
-# TODO: add tests for this
 @router.post("/{inst_id}/input/validate/{file_name}", response_model=ValidationResult)
 def validate_file(
     inst_id: str,
