@@ -118,6 +118,9 @@ class InstTable(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    # Within the institutions, the set of name + state should be unique
+    __table_args__ = (UniqueConstraint("name", "state", name="inst_name_state_uc"),)
+
 
 # NOTE: only users created by the frontend are accessible through the fronted. Users created by API calls can only directly call API calls. Frontend will not work.
 # The user accounts table
@@ -271,6 +274,7 @@ class BatchTable(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     # Within a given institution, there should be no duplicated batch names.
     __table_args__ = (UniqueConstraint("name", "inst_id", name="batch_name_inst_uc"),)
+
 
 # TODO: create model table and model job table?
 

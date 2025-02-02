@@ -9,6 +9,7 @@ from fastapi import HTTPException, status, APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
+from sqlalchemy import and_
 from google.cloud import storage
 from google.cloud.storage import Client
 
@@ -24,6 +25,7 @@ from ..utilities import (
     get_current_active_user,
     SchemaType,
     PDP_SCHEMA_GROUP,
+    UsState,
 )
 
 from ..gcsutil import StorageControl
@@ -63,7 +65,7 @@ class InstitutionCreationRequest(BaseModel):
     # The name should be unique amongst all other institutions.
     name: str
     description: str | None = None
-    state: str | None = None
+    state: UsState | None = None
     allowed_schemas: list[SchemaType] | None = None
     # Emails allowed to register under this institution
     allowed_emails: Dict[str, AccessType] | None = None
@@ -77,6 +79,7 @@ class Institution(BaseModel):
 
     inst_id: str
     name: str
+    state: UsState | None = None
     description: str | None = None
     # The following are characteristics of an institution set at institution creation time.
     # If zero, it follows DK defaults (deletion after completion).
@@ -110,6 +113,7 @@ def read_all_inst(
                 "name": elem[0].name,
                 "description": elem[0].description,
                 "retention_days": elem[0].retention_days,
+                "state": elem[0].state,
                 # TODO add datetime for creation times
             }
         )
@@ -143,7 +147,11 @@ def create_institution(
     local_session.set(sql_session)
     query_result = (
         local_session.get()
-        .execute(select(InstTable).where(InstTable.name == req.name))
+        .execute(
+            select(InstTable).where(
+                and_(InstTable.name == req.name, InstTable.state == req.state)
+            )
+        )
         .all()
     )
     if len(query_result) == 0:
@@ -164,6 +172,7 @@ def create_institution(
                 # Sets aren't json serializable, so turn them into lists first
                 schemas=list(set(requested_schemas)),
                 allowed_emails=req.allowed_emails,
+                state=req.state,
             )
         )
         local_session.get().commit()
@@ -201,6 +210,7 @@ def create_institution(
     return {
         "inst_id": uuid_to_str(query_result[0][0].id),
         "name": query_result[0][0].name,
+        "state": query_result[0][0].state,
         "description": query_result[0][0].description,
         "retention_days": query_result[0][0].retention_days,
     }
@@ -243,6 +253,7 @@ def read_inst_name(
         "name": query_result[0][0].name,
         "description": query_result[0][0].description,
         "retention_days": query_result[0][0].retention_days,
+        "state": query_result[0][0].state,
     }
 
 
@@ -281,4 +292,5 @@ def read_inst_id(
         "name": query_result[0][0].name,
         "description": query_result[0][0].description,
         "retention_days": query_result[0][0].retention_days,
+        "state": query_result[0][0].state,
     }

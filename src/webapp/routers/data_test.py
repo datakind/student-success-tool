@@ -476,8 +476,6 @@ def test_create_batch(client: TestClient):
     assert len(response.json()["file_ids"]) == 2
 
 
-
-
 def test_update_batch(client: TestClient):
     """Test PATCH /institutions/<uuid>/batch."""
     response = client.patch(

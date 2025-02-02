@@ -56,6 +56,7 @@ USER_ACCT = {
 INSTITUTION_REQ = {
     "name": "foobar school",
     "description": "description of school",
+    "state": "NY",
     "retention_days": 1,
     "allowed_schemas": ["UNKNOWN"],
     "allowed_emails": {"foo@foobar.edu": "VIEWER"},
@@ -69,12 +70,14 @@ EMPTY_INSTITUTION_OBJ = {
     "inst_id": "",
     "name": "",
     "description": "",
+    "state": "",
     "retention_days": 0,
 }
 
 INSTITUTION_OBJ = {
     "inst_id": uuid_to_str(USER_VALID_INST_UUID),
     "name": "valid_school",
+    "state": "NY",
     "description": None,
     "retention_days": None,
 }

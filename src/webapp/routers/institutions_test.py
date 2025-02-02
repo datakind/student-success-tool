@@ -52,6 +52,7 @@ def session_fixture():
                     InstTable(
                         id=UUID_1,
                         name="school_1",
+                        state="GA",
                         created_at=DATETIME_TESTING,
                         updated_at=DATETIME_TESTING,
                     ),
@@ -64,6 +65,7 @@ def session_fixture():
                     InstTable(
                         id=USER_VALID_INST_UUID,
                         name="valid_school",
+                        state="NY",
                         created_at=DATETIME_TESTING,
                         updated_at=DATETIME_TESTING,
                     ),
@@ -140,18 +142,21 @@ def test_read_all_inst_datakinder(datakinder_client: TestClient):
             "inst_id": uuid_to_str(UUID_1),
             "name": "school_1",
             "retention_days": None,
+            "state": "GA",
         },
         {
             "description": None,
             "inst_id": uuid_to_str(UUID_2),
             "name": "school_2",
             "retention_days": None,
+            "state": None,
         },
         {
             "description": None,
             "inst_id": uuid_to_str(USER_VALID_INST_UUID),
             "name": "valid_school",
             "retention_days": None,
+            "state": "NY",
         },
     ]
 
@@ -210,6 +215,7 @@ def test_create_inst(datakinder_client):
     assert response.status_code == 200
     assert response.json()["name"] == "foobar school"
     assert response.json()["description"] == "description of school"
+    assert response.json()["state"] == "NY"
     assert response.json()["retention_days"] == 1
     assert response.json()["inst_id"] != None
 
