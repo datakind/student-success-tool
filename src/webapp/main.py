@@ -7,6 +7,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from datetime import timedelta
+from pydantic import BaseModel
 
 from .routers import models, users, data, institutions
 from .database import (
@@ -17,6 +18,7 @@ from .database import (
     local_session,
     AccountTable,
     AccountHistoryTable,
+    InstTable,
 )
 from .config import env_vars, startup_env_vars
 
@@ -28,6 +30,7 @@ from .utilities import (
     get_current_active_user,
     uuid_to_str,
     str_to_uuid,
+    AccessType,
 )
 from .authn import (
     Token,
@@ -63,6 +66,16 @@ app.include_router(institutions.router)
 app.include_router(models.router)
 app.include_router(users.router)
 app.include_router(data.router)
+
+
+class SelfInfo(BaseModel):
+    """The user account creation request object."""
+
+    access_type: AccessType | None = None
+    # The email value must be unique across all accounts and provided.
+    user_id: str
+    inst_id: str | None = None
+    email: str
 
 
 @app.on_event("startup")
@@ -191,3 +204,57 @@ async def set_datakinders(
         res.append(elem[0].email)
         local_session.get().add(new_action_record)
     return res
+
+
+@app.get("/check_self", response_model=SelfInfo)
+def read_self_info(
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
+    sql_session: Annotated[Session, Depends(get_session)],
+) -> Any:
+    """Gets the institution and access type of the current_user if set anywhere in allowed_emails. Allowed for any user to check themself.
+
+    Args:
+        current_user: the user making the request.
+    """
+    if current_user.is_datakinder():
+        return {
+            "access_type": "DATAKINDER",
+            "user_id": current_user.user_id,
+            "email": current_user.email,
+            "inst_id": "",
+        }
+    local_session.set(sql_session)
+    query_result = (
+        local_session.get()
+        .execute(
+            select(InstTable).where(
+                InstTable.allowed_emails != None,
+            )
+        )
+        .all()
+    )
+    if not query_result or len(query_result) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No allowable emails found.",
+        )
+    found = False
+    response = {
+        "access_type": "",
+        "user_id": current_user.user_id,
+        "email": current_user.email,
+        "inst_id": "",
+    }
+    for e in query_result:
+        emails_dict = e[0].allowed_emails
+        if current_user.email in emails_dict:
+            if found:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Email found as allowable in multiple instiuttions. Emails should noly be allowable in a single institution. Datakinders should not be set as allowable in any institution.",
+                )
+            response["access_type"] = emails_dict[current_user.email]
+            response["inst_id"] = uuid_to_str(e[0].id)
+            found = True
+    # return result in format of
+    return response

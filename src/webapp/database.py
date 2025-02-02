@@ -16,6 +16,7 @@ from sqlalchemy import (
     UniqueConstraint,
     Text,
     JSON,
+    Integer,
 )
 from typing import Set, List
 from sqlalchemy.orm import sessionmaker, Session, relationship, mapped_column, Mapped
@@ -166,8 +167,9 @@ class AccountTable(Base):
 # The user history table
 class AccountHistoryTable(Base):
     __tablename__ = "account_history"
+    id = Column(Integer, primary_key=True)  # Auto-increment should be default
     timestamp = Column(
-        DateTime(timezone=True), server_default=func.now(), primary_key=True
+        DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
     # Set the parent foreign key to link to the users table.

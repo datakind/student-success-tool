@@ -2,7 +2,6 @@
 """
 
 import uuid
-import json
 
 from typing import Annotated, Any, Tuple
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -448,7 +447,7 @@ def create_batch(
                     )
                 batch.files.add(query_result_file[0][0])
 
-                # XXX ADD INSTITUTION ID AND QUALIFIERS ON ALL DB CHECKS
+                # TODO XXX ADD INSTITUTION ID AND QUALIFIERS ON ALL DB CHECKS
         if req.file_names:
             # Query all the files and add them to this batch.
             for f in req.file_names:
@@ -841,29 +840,9 @@ def download_url_inst_file(
 
 
 # the process to upload a file would involve three API calls:
-# 1. Get the upload URL
-# 2. Post to the upload URL
+# 1. Get the GCS upload URL
+# 2. Post to the GCS upload URL
 # 3. Validate the file
-
-
-# TODO delete following?
-@router.post("/{inst_id}/input/uploadfile", response_model=DataInfo)
-def upload_file(
-    inst_id: str, current_user: Annotated[BaseUser, Depends(get_current_active_user)]
-) -> Any:
-    """Add new data from local filesystem.
-
-    Args:
-        current_user: the user making the request.
-    """
-    has_access_to_inst_or_err(inst_id, current_user)
-    model_owner_and_higher_or_err(current_user, "model training data")
-    # generate_upload_signed_url(str(inst_id), f"training_data/FOO.csv")
-    # TODO: make the POST call to the upload url with the file.
-    # Update or create batch.
-    return {
-        "name": "TEST_UPLOAD_NAME",
-    }
 
 
 @router.post("/{inst_id}/input/validate/{file_name}", response_model=ValidationResult)
@@ -926,22 +905,6 @@ def validate_file(
         "inst_id": inst_id,
         "file_types": inferred_schemas,
     }
-
-
-@router.post("/{inst_id}/input/pdp_sftp")
-def pull_pdp_sftp(
-    inst_id: str, current_user: Annotated[BaseUser, Depends(get_current_active_user)]
-) -> Any:
-    """Add new data from PDP directly.
-
-    This post function triggers a file request to PDP's SFTP server.
-
-    Args:
-        current_user: the user making the request.
-    """
-    has_access_to_inst_or_err(inst_id, current_user)
-    model_owner_and_higher_or_err(current_user, "data")
-    # TODO: call function that handles PDP SFTP request here.
 
 
 @router.get("/{inst_id}/upload_url/{file_name}", response_model=str)

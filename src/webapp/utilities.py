@@ -128,7 +128,7 @@ class BaseUser(BaseModel):
     # The actual types of the ids will be UUIDs.
     user_id: str | None = None
     email: str | None = None
-    # For Datakinders, institution is None which means "no inst specified".
+    # For Datakinders and people who have not been added to an institution, this is None which means "no inst specified".
     institution: str | None = None
     access_type: AccessType | None = None
     disabled: bool | None = None

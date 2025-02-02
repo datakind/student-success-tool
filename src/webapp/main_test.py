@@ -2,6 +2,7 @@
 """
 
 import pytest
+import json
 
 from fastapi.testclient import TestClient
 from .main import app
@@ -17,6 +18,7 @@ from .test_helper import (
     USER_UUID,
     USER_1_UUID,
     UUID_INVALID,
+    UNASSIGNED_USER,
 )
 from .utilities import get_current_active_user
 
@@ -71,6 +73,7 @@ def session_fixture():
                     InstTable(
                         id=USER_VALID_INST_UUID,
                         name="school_1",
+                        allowed_emails=json.loads('{"jamie@example.com" : "VIEWER"}'),
                         created_at=DATETIME_TESTING,
                         updated_at=DATETIME_TESTING,
                     ),
@@ -101,6 +104,22 @@ def client_fixture(session: sqlalchemy.orm.Session):
     app.dependency_overrides.clear()
 
 
+@pytest.fixture(name="user_client")
+def user_client_fixture(session: sqlalchemy.orm.Session):
+    def get_session_override():
+        return session
+
+    def get_current_active_user_override():
+        return UNASSIGNED_USER
+
+    app.dependency_overrides[get_session] = get_session_override
+    app.dependency_overrides[get_current_active_user] = get_current_active_user_override
+
+    client = TestClient(app, root_path="/api/v1")
+    yield client
+    app.dependency_overrides.clear()
+
+
 def test_get_root(client: TestClient):
     """Test GET /."""
     response = client.get("/")
@@ -118,7 +137,7 @@ def test_retrieve_token(client: TestClient):
 
 
 def test_get_cross_isnt_users(client: TestClient):
-    """Test POST /non_inst_users."""
+    """Test GET /non_inst_users."""
     response = client.get("/non_inst_users")
     assert response.status_code == 200
     assert response.json() == [
@@ -140,7 +159,31 @@ def test_get_cross_isnt_users(client: TestClient):
 
 
 def test_set_datakinders(client: TestClient):
-    """Test POST /non_inst_users."""
+    """Test POST /datakinders."""
     response = client.post("/datakinders", json=["new_dk@example.com"])
     assert response.status_code == 200
     assert response.json() == ["new_dk@example.com"]
+
+
+def test_check_self_datakinder(client: TestClient):
+    """Test GET /check_self."""
+    response = client.get("/check_self")
+    assert response.status_code == 200
+    assert response.json() == {
+        "access_type": "DATAKINDER",
+        "email": "taylor@example.com",
+        "inst_id": "",
+        "user_id": "5301a352c03d4a39beec16c5668c4700",
+    }
+
+
+def test_check_self(user_client: TestClient):
+    """Test GET /check_self."""
+    response = user_client.get("/check_self")
+    assert response.status_code == 200
+    assert response.json() == {
+        "access_type": "VIEWER",
+        "email": "jamie@example.com",
+        "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
+        "user_id": "e4862c62829440d8ab4c9c298f02f619",
+    }
