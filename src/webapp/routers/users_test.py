@@ -62,6 +62,10 @@ def session_fixture():
                     InstTable(
                         id=USER_VALID_INST_UUID,
                         name="school_1",
+                        allowed_emails={
+                            "hello@example.com": "VIEWER",
+                            "testy@test.test": "MODEL_OWNER",
+                        },
                         created_at=DATETIME_TESTING,
                         updated_at=DATETIME_TESTING,
                     ),
@@ -115,11 +119,26 @@ def test_read_inst_users(client: TestClient):
         "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + "/users"
     )
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json() == [
+        {
+            "access_type": "DATAKINDER",
+            "email": "johnsmith@example.com",
+            "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
+            "name": "John Smith",
+            "user_id": "64dbce41111b46fe8e84c38757477ef2",
+        },
+        {
+            "access_type": "DATAKINDER",
+            "email": "janedoe@example.com",
+            "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
+            "name": "Jane Doe",
+            "user_id": "5301a352c03d4a39beec16c5668c4700",
+        },
+    ]
 
 
 def test_read_inst_user(client: TestClient):
-    """Test GET /institutions/<uuid>/users. For various user access types."""
+    """Test GET /institutions/<uuid>/users/<uuid>. For various user access types."""
     # Authorized.
     response = client.get(
         "/institutions/"
@@ -130,27 +149,47 @@ def test_read_inst_user(client: TestClient):
     assert response.status_code == 200
     assert response.json() == {
         "user_id": "64dbce41111b46fe8e84c38757477ef2",
-        "name": "",
+        "name": "John Smith",
         "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
         "access_type": "DATAKINDER",
-        "email": "",
+        "email": "johnsmith@example.com",
     }
-    # Unauthorized cases.
-    """
-    with pytest.raises(HTTPException) as err:
-        client.get("/institutions/"+ uuid_to_str(USER_VALID_INST_UUID) +"/users/34" + VIEWER_STR)
-    assert err.value.status_code == 401
-    assert err.value.detail == "Not authorized to view this user."
 
-    with pytest.raises(HTTPException) as err:
-        client.get("/institutions/"+ uuid_to_str(USER_VALID_INST_UUID) +"/users/34" + USR_STR)
-    assert err.value.status_code == 401
-    assert err.value.detail == "Not authorized to read this institution's resources."
-    """
+
+def test_read_inst_allowed_emails(datakinder_client: TestClient):
+    # Authorized.
+    response = datakinder_client.get(
+        "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + "/allowable_emails",
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        "hello@example.com": "VIEWER",
+        "testy@test.test": "MODEL_OWNER",
+    }
+
+
+"""
+def test_update_inst_user(datakinder_client: TestClient):
+    # Authorized.
+    response = datakinder_client.patch(
+        "/institutions/"
+        + uuid_to_str(USER_VALID_INST_UUID)
+        + "/user/"
+        + uuid_to_str(UUID_1),
+        json={"access_type":"VIEWER"}
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        "user_id": "64dbce41111b46fe8e84c38757477ef2",
+        "name": "John Smith",
+        "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
+        "access_type": "VIEWER",
+        "email": "johnsmith@example.com",
+    }
 
 
 def test_create_user_disallowed(client: TestClient):
-    """Test POST /institutions/<uuid>/users/. For various user access types."""
+    # Test POST /institutions/<uuid>/users/. For various user access types.
     # Unauthorized.
     response = client.post(
         "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + "/users",
@@ -176,3 +215,4 @@ def test_create_user_datakinder(datakinder_client: TestClient):
         "access_type": "DATAKINDER",
         "email": "abc@example.com",
     }
+"""

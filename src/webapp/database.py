@@ -101,6 +101,9 @@ class InstTable(Base):
     account_histories: Mapped[List["AccountHistoryTable"]] = relationship(
         back_populates="inst"
     )
+    # models: Mapped[List["ModelTable"]] = relationship(
+    #    back_populates="inst"
+    # )
 
     name = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False, unique=True)
     # If retention unset, the Datakind default is used. File-level retentions overrides
@@ -278,8 +281,57 @@ class BatchTable(Base):
     __table_args__ = (UniqueConstraint("name", "inst_id", name="batch_name_inst_uc"),)
 
 
-# TODO: create model table and model job table?
+"""
+class ModelTable(Base):
+    __tablename__ = "model"
+    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
+    # Set the parent foreign key to link to the institution table.
+    inst_id = Column(
+        Uuid(as_uuid=True),
+        ForeignKey("inst.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    inst: Mapped["InstTable"] = relationship(back_populates="models")
+
+    name = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False)
+    # A short description or note on this inst.
+    description = Column(String(VAR_CHAR_LONGER_LENGTH))
+    # What configuration of schemas are allowed (e.g. 1 PDP Course + 1 PDP Cohort)
+    schema_configs = Column(MutableList.as_mutable(JSON))
+    creator = Column(Uuid(as_uuid=True))
+    # If null, the following is non-deleted.
+    deleted: Mapped[bool] = mapped_column(nullable=True)
+    # If true, the model is ready for use.
+    active: Mapped[bool] = mapped_column(nullable=True)
+    # The time the deletion request was set.
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    # Within a given institution, there should be no duplicated model names.
+    __table_args__ = (UniqueConstraint("name", "inst_id", name="model_name_inst_uc"),)
+
+class ModelRunsTable(Base):
+    __tablename__ = "model_runs"
+    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # Set the parent foreign key to link to the institution table.
+    inst_id = Column(
+        Uuid(as_uuid=True),
+        ForeignKey("inst.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    inst: Mapped["InstTable"] = relationship(back_populates="batches")
+
+    # Set the parent foreign key to link to the institution table.
+    inst_id = Column(
+        Uuid(as_uuid=True),
+        ForeignKey("inst.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    inst: Mapped["InstTable"] = relationship(back_populates="batches")
+
+"""
 """
 def get_one_record(sess_context_var: ContextVar, sess: Session, select_query: ) -> Any:
     local_session.set(sql_session)

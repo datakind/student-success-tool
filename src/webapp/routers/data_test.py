@@ -440,7 +440,7 @@ def test_read_file_id_info(client: TestClient):
         },
     )
 
-
+# TODO: xxx add more test cases including sst generated = true etc.
 def test_create_batch(client: TestClient):
     """Test POST /institutions/<uuid>/batch."""
     response = client.post(

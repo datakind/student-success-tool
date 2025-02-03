@@ -422,7 +422,8 @@ def create_batch(
         if req.file_ids:
             # Query all the files and add them to this batch.
             for f in strs_to_uuids(req.file_ids):
-                # Check that the files requested for this batch exists
+                # Check that the files requested for this batch exists.
+                # Only valid non-sst generated files can be added to a batch at creation time.
                 query_result_file = (
                     local_session.get()
                     .execute(
@@ -430,6 +431,8 @@ def create_batch(
                             and_(
                                 FileTable.id == f,
                                 FileTable.inst_id == str_to_uuid(inst_id),
+                                FileTable.valid == True,
+                                FileTable.sst_generated == False,
                             )
                         )
                     )

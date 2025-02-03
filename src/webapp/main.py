@@ -246,15 +246,15 @@ def read_self_info(
         "inst_id": "",
     }
     for e in query_result:
-        emails_dict = e[0].allowed_emails
-        if current_user.email in emails_dict:
-            if found:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Email found as allowable in multiple instiuttions. Emails should noly be allowable in a single institution. Datakinders should not be set as allowable in any institution.",
-                )
-            response["access_type"] = emails_dict[current_user.email]
-            response["inst_id"] = uuid_to_str(e[0].id)
-            found = True
-    # return result in format of
+        if e[0].allowed_emails:
+            emails_dict = e[0].allowed_emails
+            if current_user.email in emails_dict:
+                if found:
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail="Email found as allowable in multiple instiuttions. Emails should noly be allowable in a single institution. Datakinders should not be set as allowable in any institution.",
+                    )
+                response["access_type"] = emails_dict[current_user.email]
+                response["inst_id"] = uuid_to_str(e[0].id)
+                found = True
     return response
