@@ -68,7 +68,11 @@ resource "google_cloudbuild_trigger" "webapp" {
     }
     step {
       name = "gcr.io/cloud-builders/docker"
-      args = ["push", "-a", "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp"]
+      args = ["push", "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:$COMMIT_SHA"]
+    }
+    step {
+      name = "gcr.io/cloud-builders/docker"
+      args = ["push", "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:latest"]
     }
     step {
       name = "gcr.io/cloud-builders/gcloud"
@@ -148,7 +152,11 @@ resource "google_cloudbuild_trigger" "frontend" {
     }
     step {
       name = "gcr.io/cloud-builders/docker"
-      args = ["push", "-a", "${var.region}-docker.pkg.dev/${var.project}/sst-app-ui/frontend"]
+      args = ["push", "${var.region}-docker.pkg.dev/${var.project}/sst-app-ui/frontend:$COMMIT_SHA"]
+    }
+    step {
+      name = "gcr.io/cloud-builders/docker"
+      args = ["push", "${var.region}-docker.pkg.dev/${var.project}/sst-app-ui/frontend:latest"]
     }
     step {
       id         = "DEPLOY and RUN migration job"
