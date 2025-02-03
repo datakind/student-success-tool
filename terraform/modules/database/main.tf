@@ -109,23 +109,47 @@ resource "google_secret_manager_secret_version" "db_server_ca_version" {
 resource "google_secret_manager_secret_iam_member" "cloudrun_sa_db_password_access" {
   secret_id = google_secret_manager_secret.db_password_secret.id
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${var.cloud_run_service_account_email}"
+  member    = "serviceAccount:${var.cloudrun_service_account_email}"
 }
 
 resource "google_secret_manager_secret_iam_member" "cloudrun_sa_db_client_cert_access" {
   secret_id = google_secret_manager_secret.db_client_cert.id
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${var.cloud_run_service_account_email}"
+  member    = "serviceAccount:${var.cloudrun_service_account_email}"
 }
 
 resource "google_secret_manager_secret_iam_member" "cloudrun_sa_db_client_key_access" {
   secret_id = google_secret_manager_secret.db_client_key.id
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${var.cloud_run_service_account_email}"
+  member    = "serviceAccount:${var.cloudrun_service_account_email}"
 }
 
 resource "google_secret_manager_secret_iam_member" "cloudrun_sa_db_server_ca_access" {
   secret_id = google_secret_manager_secret.db_server_ca.id
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${var.cloud_run_service_account_email}"
+  member    = "serviceAccount:${var.cloudrun_service_account_email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "cloudbuild_sa_db_password_access" {
+  secret_id = google_secret_manager_secret.db_password_secret.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${var.cloudbuild_service_account_email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "cloudbuild_sa_db_client_cert_access" {
+  secret_id = google_secret_manager_secret.db_client_cert.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${var.cloudbuild_service_account_email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "cloudbuild_sa_db_client_key_access" {
+  secret_id = google_secret_manager_secret.db_client_key.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${var.cloudbuild_service_account_email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "cloudbuild_sa_db_server_ca_access" {
+  secret_id = google_secret_manager_secret.db_server_ca.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${var.cloudbuild_service_account_email}"
 }

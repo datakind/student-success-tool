@@ -8,7 +8,7 @@ resource "google_project_service" "services" {
 resource "google_secret_manager_secret_iam_member" "cloudrun_sa_env_file_access" {
   secret_id = "projects/${var.project}/secrets/test-${var.name}-env-file"
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${var.cloud_run_service_account_email}"
+  member    = "serviceAccount:${var.cloudrun_service_account_email}"
 }
 
 resource "google_cloud_run_v2_service" "webapp" {
@@ -18,7 +18,7 @@ resource "google_cloud_run_v2_service" "webapp" {
   launch_stage        = "GA"
   ingress             = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
   template {
-    service_account = var.cloud_run_service_account_email
+    service_account = var.cloudrun_service_account_email
     containers {
       image = var.image
       env {

@@ -44,8 +44,9 @@ module "database" {
   database_name    = var.database_name
   database_version = var.database_version
 
-  cloud_run_service_account_email = module.iam.cloud_run_service_account_email
-  network_id                      = module.network.network_id
+  cloudrun_service_account_email   = module.iam.cloudrun_service_account_email
+  cloudbuild_service_account_email = module.iam.cloudbuild_service_account_email
+  network_id                       = module.network.network_id
 }
 
 module "migrate" {
@@ -61,7 +62,7 @@ module "migrate" {
   database_instance_private_ip      = module.database.instance_private_ip
   network_id                        = module.network.network_id
   subnetwork_id                     = module.network.subnetwork_id
-  cloud_run_service_account_email   = module.iam.cloud_run_service_account_email
+  cloudrun_service_account_email    = module.iam.cloudrun_service_account_email
 }
 
 module "webapp" {
@@ -79,7 +80,7 @@ module "webapp" {
   database_instance_private_ip      = module.database.instance_private_ip
   network_id                        = module.network.network_id
   subnetwork_id                     = module.network.subnetwork_id
-  cloud_run_service_account_email   = module.iam.cloud_run_service_account_email
+  cloudrun_service_account_email    = module.iam.cloudrun_service_account_email
 }
 
 module "frontend" {
@@ -97,7 +98,7 @@ module "frontend" {
   database_instance_private_ip      = module.database.instance_private_ip
   network_id                        = module.network.network_id
   subnetwork_id                     = module.network.subnetwork_id
-  cloud_run_service_account_email   = module.iam.cloud_run_service_account_email
+  cloudrun_service_account_email    = module.iam.cloudrun_service_account_email
 }
 
 module "load_balancer" {
@@ -107,9 +108,6 @@ module "load_balancer" {
   environment = var.environment
   region      = var.region
   domain      = var.domain
-
-  # webapp_service_name   = module.webapp.service_name
-  # frontend_service_name = module.frontend.service_name
 }
 
 module "cloudbuild" {

@@ -61,20 +61,14 @@ resource "google_cloudbuild_trigger" "webapp" {
         "build",
         "-t",
         "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:$COMMIT_SHA",
+        "-t",
+        "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:latest",
         "."
       ]
     }
     step {
       name = "gcr.io/cloud-builders/docker"
-      args = [
-        "tag",
-        "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:$COMMIT_SHA",
-        "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:latest"
-      ]
-    }
-    step {
-      name = "gcr.io/cloud-builders/docker"
-      args = ["push", "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:latest"]
+      args = ["push", "-a", "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp"]
     }
     step {
       name = "gcr.io/cloud-builders/gcloud"
@@ -154,7 +148,7 @@ resource "google_cloudbuild_trigger" "frontend" {
     }
     step {
       name = "gcr.io/cloud-builders/docker"
-      args = ["push", "${var.region}-docker.pkg.dev/${var.project}/sst-app-ui/frontend:latest"]
+      args = ["push", "-a", "${var.region}-docker.pkg.dev/${var.project}/sst-app-ui/frontend"]
     }
     step {
       id         = "DEPLOY and RUN migration job"
@@ -191,53 +185,51 @@ resource "google_cloudbuild_trigger" "frontend" {
   }
 }
 
-# resource "google_cloudbuild_trigger" "terraform" {
-#   name            = "student-success-tool-terraform"
-#   service_account = var.cloudbuild_service_account_id
-#   substitutions = {
-#     "_PROJECT"        = var.project
-#     "_REGION"         = var.region
-#     "_ENVIRONMENT"    = var.environment
-#     "_DOMAIN"         = var.domain
-#     "_WEBAPP_IMAGE"   = "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:latest"
-#     "_FRONTEND_IMAGE" = "${var.region}-docker.pkg.dev/${var.project}/sst-app-ui/frontend:latest"
-#   }
-#   github {
-#     owner = "datakind"
-#     name  = "student-success-tool"
-#     push {
-#       branch = "fellows-experimental"
-#     }
-#   }
-#   build {
-#     step {
-#       name = "hashicorp/terraform:1.10.1"
-#       dir  = "terraform"
-#       args = ["init"]
-#     }
-#     step {
-#       name = "hashicorp/terraform:1.10.1"
-#       dir  = "terraform"
-#       args = [
-#         "apply",
-#         "-auto-approve",
-#         "-var",
-#         "project=$_PROJECT",
-#         "-var",
-#         "region=$_REGION",
-#         "-var",
-#         "environment=$_ENVIRONMENT",
-#         "-var",
-#         "webapp_image=$_WEBAPP_IMAGE",
-#         "-var",
-#         "frontend_image=$_FRONTEND_IMAGE",
-#         "-var",
-#         "domain=$_DOMAIN",
-#       ]
-#     }
-#     options {
-#       logging               = "CLOUD_LOGGING_ONLY"
-#       dynamic_substitutions = true
-#     }
-#   }
-# }
+resource "google_cloudbuild_trigger" "terraform" {
+  name            = "student-success-tool-terraform"
+  service_account = var.cloudbuild_service_account_id
+  substitutions = {
+    "_PROJECT"        = var.project
+    "_REGION"         = var.region
+    "_ENVIRONMENT"    = var.environment
+    "_DOMAIN"         = var.domain
+    "_WEBAPP_IMAGE"   = "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:latest"
+    "_FRONTEND_IMAGE" = "${var.region}-docker.pkg.dev/${var.project}/sst-app-ui/frontend:latest"
+  }
+  source_to_build {
+    ref = "refs/heads/fellows-experimental"
+    repo_type = "GITHUB"
+    uri = "https://github.com/datakind/student-success-tool"
+  }
+  build {
+    step {
+      name = "hashicorp/terraform:1.10.1"
+      dir  = "terraform"
+      args = ["init"]
+    }
+    step {
+      name = "hashicorp/terraform:1.10.1"
+      dir  = "terraform"
+      args = [
+        "apply",
+        "-auto-approve",
+        "-var",
+        "project=$_PROJECT",
+        "-var",
+        "region=$_REGION",
+        "-var",
+        "environment=$_ENVIRONMENT",
+        "-var",
+        "webapp_image=$_WEBAPP_IMAGE",
+        "-var",
+        "frontend_image=$_FRONTEND_IMAGE",
+        "-var",
+        "domain=$_DOMAIN",
+      ]
+    }
+    options {
+      logging               = "CLOUD_LOGGING_ONLY"
+      dynamic_substitutions = true
+    }
+  }
+}

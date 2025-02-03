@@ -35,7 +35,7 @@ variable "subnetwork_id" {
   type = string
 }
 
-variable "cloud_run_service_account_email" {
+variable "cloudrun_service_account_email" {
   type = string
 }
 
@@ -134,7 +134,7 @@ resource "google_cloud_run_v2_job" "migrate" {
 
       execution_environment = "EXECUTION_ENVIRONMENT_GEN2"
       max_retries           = 3
-      service_account       = var.cloud_run_service_account_email
+      service_account       = var.cloudrun_service_account_email
       timeout               = "600s"
 
       volumes {

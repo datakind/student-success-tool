@@ -1,18 +1,3 @@
-variable "required_services" {
-  type = list(string)
-  default = [
-    "iam.googleapis.com",
-  ]
-}
-
-variable "project" {
-  type = string
-}
-
-variable "environment" {
-  type = string
-}
-
 resource "google_project_service" "services" {
   for_each = toset(var.required_services)
 
@@ -30,10 +15,6 @@ resource "google_project_iam_member" "cloudrun_sa_invoker" {
   project = var.project
   role    = "roles/run.invoker"
   member  = "serviceAccount:${google_service_account.cloudrun_sa.email}"
-}
-
-output "cloud_run_service_account_email" {
-  value = google_service_account.cloudrun_sa.email
 }
 
 # TODO: Narrow down the permissions for the Cloud Build service account
@@ -107,6 +88,21 @@ resource "google_project_iam_member" "cloudbuild_sa_secret_accessor" {
   member  = "serviceAccount:${google_service_account.cloudbuild_sa.email}"
 }
 
-output "cloudbuild_service_account_id" {
-  value = google_service_account.cloudbuild_sa.id
+resource "google_project_iam_member" "cloudbuild_sa_security_admin" {
+  project = var.project
+  role    = "roles/iam.securityAdmin"
+  member  = "serviceAccount:${google_service_account.cloudbuild_sa.email}"
 }
+
+resource "google_project_iam_member" "cloudbuild_sa_artifact_admin" {
+  project = var.project
+  role    = "roles/artifactregistry.admin"
+  member  = "serviceAccount:${google_service_account.cloudbuild_sa.email}"
+}
+
+resource "google_project_iam_member" "cloudbuild_sa_storage_admin" {
+  project = var.project
+  role    = "roles/storage.admin"
+  member  = "serviceAccount:${google_service_account.cloudbuild_sa.email}"
+}
+

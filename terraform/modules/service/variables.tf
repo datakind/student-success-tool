@@ -52,6 +52,6 @@ variable "subnetwork_id" {
   type = string
 }
 
-variable "cloud_run_service_account_email" {
+variable "cloudrun_service_account_email" {
   type = string
 }
