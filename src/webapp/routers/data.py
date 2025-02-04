@@ -3,7 +3,7 @@
 
 import uuid
 
-from typing import Annotated, Any, Tuple
+from typing import Annotated, Any, Tuple, Dict
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import and_, update
@@ -34,15 +34,6 @@ router = APIRouter(
     tags=["data"],
 )
 
-# the following fields are not allowed to be changed by any user or caller. They are programmatically set.
-IMMUTABLE_BATCH_FIELDS = [
-    "batch_id",
-    "inst_id",
-    "creator",
-    "created_date",
-    "deletion_request_time",
-]
-
 
 class BatchCreationRequest(BaseModel):
     """The Batch creation request."""
@@ -55,6 +46,9 @@ class BatchCreationRequest(BaseModel):
     # You can specify files to include as ids or names.
     file_ids: set[str] | None = None
     file_names: set[str] | None = None
+    completed: bool | None = None
+    # Set this to set this batch for deletion.
+    deleted: bool = False
 
 
 class BatchInfo(BaseModel):
@@ -63,7 +57,7 @@ class BatchInfo(BaseModel):
     # In order to allow PATCH commands, each field must be marked as nullable.
     batch_id: str | None = None
     inst_id: str | None = None
-    file_ids: set[str] = {}
+    file_names_to_ids: Dict[str, str] = {}
     # Must be unique within an institution to avoid confusion
     name: str | None = None
     description: str | None = None
@@ -219,7 +213,7 @@ def get_all_batches(
                 "inst_id": uuid_to_str(elem.inst_id),
                 "name": elem.name,
                 "description": elem.description,
-                "file_ids": uuids_to_strs(elem.files),
+                "file_names_to_ids": {x.name: uuid_to_str(x.id) for x in elem.files},
                 "creator": uuid_to_str(elem.creator),
                 "deleted": False if elem.deleted is None else elem.deleted,
                 "completed": False if elem.completed is None else elem.completed,
@@ -355,7 +349,7 @@ def read_batch_info(
         "inst_id": uuid_to_str(res.inst_id),
         "name": res.name,
         "description": res.description,
-        "file_ids": uuids_to_strs(res.files),
+        "file_names_to_ids": {x.name: uuid_to_str(x.id) for x in res.files},
         "creator": uuid_to_str(res.creator),
         "deleted": False if res.deleted is None else res.deleted,
         "completed": False if res.completed is None else res.completed,
@@ -512,7 +506,9 @@ def create_batch(
         "inst_id": uuid_to_str(query_result[0][0].inst_id),
         "name": query_result[0][0].name,
         "description": query_result[0][0].description,
-        "file_ids": uuids_to_strs(query_result[0][0].files),
+        "file_names_to_ids": {
+            x.name: uuid_to_str(x.id) for x in query_result[0][0].files
+        },
         "creator": uuid_to_str(query_result[0][0].creator),
         "deleted": False,
         "completed": False,
@@ -540,7 +536,7 @@ def construct_modify_query(modify_vals: dict, batch_id: str) -> Any:
 def update_batch(
     inst_id: str,
     batch_id: str,
-    request: BatchInfo,
+    request: BatchCreationRequest,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
 ) -> Any:
@@ -553,11 +549,7 @@ def update_batch(
     model_owner_and_higher_or_err(current_user, "modify batch")
 
     update_data = request.model_dump(exclude_unset=True)
-    if [key for key in IMMUTABLE_BATCH_FIELDS if key in update_data] != []:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Immutable fields included in modify request.",
-        )
+    print("aaaaaaaaaaaaaaaaaaaaaaaa:" + str(update_data))
     local_session.set(sql_session)
     # Check that the batch exists.
     query_result = (
@@ -588,8 +580,10 @@ def update_batch(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Batch is set for deletion, no modifications allowed.",
         )
-    if "file_ids" in update_data:
+    if "file_ids" in update_data or "file_names" in update_data:
         existing_batch.files.clear()
+
+    if "file_ids" in update_data:
         for f in strs_to_uuids(update_data["file_ids"]):
             # Check that the files requested for this batch exists
             query_result_file = (
@@ -615,7 +609,32 @@ def update_batch(
                     detail="Multiple files in request with same unique id found.",
                 )
             existing_batch.files.add(query_result_file[0][0])
-    # The below is unfortunate but it doesn't seem to work if we programmatically construct the query using values.
+    if "file_names" in update_data:
+        for f in update_data["file_names"]:
+            # Check that the files requested for this batch exists
+            query_result_file = (
+                local_session.get()
+                .execute(
+                    select(FileTable).where(
+                        and_(
+                            FileTable.name == f,
+                            FileTable.inst_id == str_to_uuid(inst_id),
+                        )
+                    )
+                )
+                .all()
+            )
+            if not query_result_file or len(query_result_file) == 0:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="file in request not found.",
+                )
+            elif len(query_result_file) > 1:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Multiple files in request with same unique id found.",
+                )
+            existing_batch.files.add(query_result_file[0][0])
 
     if "name" in update_data:
         existing_batch.name = update_data["name"]
@@ -645,7 +664,7 @@ def update_batch(
         "inst_id": uuid_to_str(res[0][0].inst_id),
         "name": res[0][0].name,
         "description": res[0][0].description,
-        "file_ids": uuids_to_strs(res[0][0].files),
+        "file_names_to_ids": {x.name: uuid_to_str(x.id) for x in res[0][0].files},
         "creator": uuid_to_str(res[0][0].creator),
         "deleted": res[0][0].deleted,
         "completed": res[0][0].completed,

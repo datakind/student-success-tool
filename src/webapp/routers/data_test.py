@@ -77,7 +77,7 @@ def same_orderless(a: DataOverview, b: DataOverview):
             found = True
             if (
                 a_elem["inst_id"] != b_elem["inst_id"]
-                or counter_repr(a_elem["file_ids"]) != counter_repr(b_elem["file_ids"])
+                or a_elem["file_names_to_ids"] == b_elem["file_names_to_ids"]
                 or a_elem["name"] != b_elem["name"]
                 or a_elem["description"] != b_elem["description"]
                 or a_elem["creator"] != b_elem["creator"]
@@ -217,9 +217,9 @@ def test_read_inst_all_input_files(client: TestClient):
                 {
                     "batch_id": "5b2420f3103546ab90eb74d5df97de43",
                     "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
-                    "file_ids": [
-                        "f0bb3a206d924254afed6a72f43c562a",
-                        "fbe67a2e50e040c7b7b807043cb813a5",
+                    "file_names_to_ids": [
+                        {"file_input_one": "f0bb3a206d924254afed6a72f43c562a"},
+                        {"file_output_one": "fbe67a2e50e040c7b7b807043cb813a5"},
                     ],
                     "name": "batch_foo",
                     "description": None,
@@ -287,9 +287,9 @@ def test_read_inst_all_output_files(client: TestClient):
                 {
                     "batch_id": "5b2420f3103546ab90eb74d5df97de43",
                     "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
-                    "file_ids": [
-                        "fbe67a2e50e040c7b7b807043cb813a5",
-                        "f0bb3a206d924254afed6a72f43c562a",
+                    "file_names_to_ids": [
+                        {"file_input_one": "f0bb3a206d924254afed6a72f43c562a"},
+                        {"file_output_one": "fbe67a2e50e040c7b7b807043cb813a5"},
                     ],
                     "name": "batch_foo",
                     "description": None,
@@ -350,9 +350,9 @@ def test_read_batch_info(client: TestClient):
                 {
                     "batch_id": "5b2420f3103546ab90eb74d5df97de43",
                     "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
-                    "file_ids": [
-                        "f0bb3a206d924254afed6a72f43c562a",
-                        "fbe67a2e50e040c7b7b807043cb813a5",
+                    "file_names_to_ids": [
+                        {"file_input_one": "f0bb3a206d924254afed6a72f43c562a"},
+                        {"file_output_one": "fbe67a2e50e040c7b7b807043cb813a5"},
                     ],
                     "name": "batch_foo",
                     "description": None,
@@ -440,6 +440,7 @@ def test_read_file_id_info(client: TestClient):
         },
     )
 
+
 # TODO: xxx add more test cases including sst generated = true etc.
 def test_create_batch(client: TestClient):
     """Test POST /institutions/<uuid>/batch."""
@@ -471,9 +472,17 @@ def test_create_batch(client: TestClient):
     assert response.json()["completed"] == False
     assert response.json()["deletion_request_time"] == None
     assert response.json()["inst_id"] == uuid_to_str(USER_VALID_INST_UUID)
-    assert uuid_to_str(FILE_UUID_2) in response.json()["file_ids"]
-    assert uuid_to_str(FILE_UUID_1) in response.json()["file_ids"]
-    assert len(response.json()["file_ids"]) == 2
+    assert "file_input_two" in response.json()["file_names_to_ids"]
+    assert (
+        uuid_to_str(FILE_UUID_2)
+        in response.json()["file_names_to_ids"]["file_input_two"]
+    )
+    assert "file_input_one" in response.json()["file_names_to_ids"]
+    assert (
+        uuid_to_str(FILE_UUID_1)
+        in response.json()["file_names_to_ids"]["file_input_one"]
+    )
+    assert len(response.json()["file_names_to_ids"]) == 2
 
 
 def test_update_batch(client: TestClient):
@@ -498,7 +507,7 @@ def test_update_batch(client: TestClient):
         + uuid_to_str(BATCH_UUID),
         json={
             "name": "batch_name_updated_foo",
-            "completed": "True",
+            "completed": True,
             "file_ids": [uuid_to_str(FILE_UUID_2)],
         },
     )
@@ -510,7 +519,9 @@ def test_update_batch(client: TestClient):
     assert response.json()["completed"] == True
     assert response.json()["deletion_request_time"] == None
     assert response.json()["inst_id"] == uuid_to_str(USER_VALID_INST_UUID)
-    assert response.json()["file_ids"] == [uuid_to_str(FILE_UUID_2)]
+    assert response.json()["file_names_to_ids"] == {
+        "file_input_two": uuid_to_str(FILE_UUID_2)
+    }
 
 
 def test_validate_success_batch(client: TestClient):
