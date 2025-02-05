@@ -6,7 +6,7 @@ This directory contains the Terraform configuration for the Student Success Tool
 
 Each environment has its own directory under `environments/`. For example, the `dev` environment configuration is located in `environments/dev/`.
 
-## Initial Application of the Configuration
+## Application of the Configuration
 
 To apply the Terraform configuration, navigate to the desired environment directory and run `terraform apply`. For example, to apply the configuration for the `dev` environment:
 
@@ -25,6 +25,16 @@ Or to supply variables on the command line:
 
 ```sh
 terraform apply -var="project=my-project" -var="region=us-central1"
+```
+
+### Initial Environment Setup
+
+For the initial environment setup, use placeholder images like the "Hello World" example for Cloud Run, as the images for the web application and frontend UI will not exist yet. These placeholder images will take the place of the `webapp_image` and `frontend_image` variables.
+
+Example placeholder images:
+
+```sh
+terraform apply -var="webapp_image=gcr.io/cloudrun/hello" -var="frontend_image=gcr.io/cloudrun/hello"
 ```
 
 ## Applying Updates
