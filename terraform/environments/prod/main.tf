@@ -1,7 +1,7 @@
 terraform {
   backend "gcs" {
     bucket = "sst-terraform-state"
-    prefix = "dev"
+    prefix = "prod"
   }
   required_providers {
     google = {
@@ -15,7 +15,6 @@ terraform {
   }
 }
 
-# Configure the Google Cloud provider
 provider "google" {
   project = var.project
   region  = var.region
@@ -23,7 +22,7 @@ provider "google" {
 }
 
 module "deployment" {
-  source = "./modules/deployment"
+  source = "../../modules/deployment"
 
   project          = var.project
   region           = var.region
@@ -34,17 +33,4 @@ module "deployment" {
   domain           = var.domain
   webapp_image     = var.webapp_image
   frontend_image   = var.frontend_image
-}
-
-module "cloudbuild" {
-  source = "./modules/cloudbuild"
-
-  project        = var.project
-  domain         = var.domain
-  environment    = var.environment
-  region         = var.region
-  webapp_image   = var.webapp_image
-  frontend_image = var.frontend_image
-
-  cloudbuild_service_account_id = module.deployment.iam.cloudbuild_service_account_id
 }

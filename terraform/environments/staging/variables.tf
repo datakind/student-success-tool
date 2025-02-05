@@ -10,7 +10,7 @@ variable "region" {
 
 variable "environment" {
   description = "The environment to deploy resources"
-  default     = "test"
+  default     = "staging"
 }
 
 variable "zone" {
