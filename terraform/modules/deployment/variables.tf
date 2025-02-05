@@ -5,27 +5,27 @@ variable "project" {
 
 variable "region" {
   description = "The region to deploy resources"
-  default     = "us-central1"
+  type        = string
 }
 
 variable "environment" {
   description = "The environment to deploy resources"
-  default     = "test"
+  type        = string
 }
 
 variable "zone" {
   description = "The zone to deploy resources"
-  default     = "us-central1-c"
+  type        = string
 }
 
 variable "database_version" {
   description = "The database version"
-  default     = "MYSQL_8_0"
+  type        = string
 }
 
 variable "database_name" {
   description = "The database name"
-  default     = "all_tables"
+  type        = string
 }
 
 variable "domain" {

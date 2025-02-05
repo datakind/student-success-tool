@@ -1,6 +1,7 @@
 terraform {
   backend "gcs" {
     bucket = "sst-terraform-state"
+    prefix = "dev"
   }
   required_providers {
     google = {
@@ -21,93 +22,18 @@ provider "google" {
   zone    = var.zone
 }
 
-module "network" {
-  source = "./modules/network"
+module "deployment" {
+  source = "./modules/deployment"
 
-  environment = var.environment
-  region      = var.region
-}
-
-module "iam" {
-  source = "./modules/iam"
-
-  project     = var.project
-  environment = var.environment
-}
-
-module "database" {
-  source = "./modules/database"
-
-  environment      = var.environment
+  project          = var.project
   region           = var.region
+  environment      = var.environment
   zone             = var.zone
-  database_name    = var.database_name
   database_version = var.database_version
-
-  cloudrun_service_account_email   = module.iam.cloudrun_service_account_email
-  cloudbuild_service_account_email = module.iam.cloudbuild_service_account_email
-  network_id                       = module.network.network_id
-}
-
-module "migrate" {
-  source = "./modules/migrate"
-
-  environment   = var.environment
-  region        = var.region
-  image         = var.frontend_image
-  database_name = var.database_name
-
-  database_password_secret_id       = module.database.password_secret_id
-  database_instance_connection_name = module.database.instance_connection_name
-  database_instance_private_ip      = module.database.instance_private_ip
-  network_id                        = module.network.network_id
-  subnetwork_id                     = module.network.subnetwork_id
-  cloudrun_service_account_email    = module.iam.cloudrun_service_account_email
-}
-
-module "webapp" {
-  source = "./modules/service"
-
-  name          = "webapp"
-  project       = var.project
-  environment   = var.environment
-  region        = var.region
-  image         = var.webapp_image
-  database_name = var.database_name
-
-  database_password_secret_id       = module.database.password_secret_id
-  database_instance_connection_name = module.database.instance_connection_name
-  database_instance_private_ip      = module.database.instance_private_ip
-  network_id                        = module.network.network_id
-  subnetwork_id                     = module.network.subnetwork_id
-  cloudrun_service_account_email    = module.iam.cloudrun_service_account_email
-}
-
-module "frontend" {
-  source = "./modules/service"
-
-  name          = "frontend"
-  project       = var.project
-  environment   = var.environment
-  region        = var.region
-  image         = var.frontend_image
-  database_name = var.database_name
-
-  database_password_secret_id       = module.database.password_secret_id
-  database_instance_connection_name = module.database.instance_connection_name
-  database_instance_private_ip      = module.database.instance_private_ip
-  network_id                        = module.network.network_id
-  subnetwork_id                     = module.network.subnetwork_id
-  cloudrun_service_account_email    = module.iam.cloudrun_service_account_email
-}
-
-module "load_balancer" {
-  source = "./modules/load_balancer"
-
-  project     = var.project
-  environment = var.environment
-  region      = var.region
-  domain      = var.domain
+  database_name    = var.database_name
+  domain           = var.domain
+  webapp_image     = var.webapp_image
+  frontend_image   = var.frontend_image
 }
 
 module "cloudbuild" {
@@ -120,5 +46,5 @@ module "cloudbuild" {
   webapp_image   = var.webapp_image
   frontend_image = var.frontend_image
 
-  cloudbuild_service_account_id = module.iam.cloudbuild_service_account_id
+  cloudbuild_service_account_id = module.deployment.iam.cloudbuild_service_account_id
 }

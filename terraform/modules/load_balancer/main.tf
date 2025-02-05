@@ -18,6 +18,11 @@ variable "environment" {
   type        = string
 }
 
+resource "google_compute_global_address" "lb_ip" {
+  name         = "tf-cr-lb-1-address"
+  address_type = "EXTERNAL"
+}
+
 module "lb-http" {
   source  = "terraform-google-modules/lb-http/google//modules/serverless_negs"
   version = "~> 12.0"
@@ -25,7 +30,7 @@ module "lb-http" {
   project = var.project
   name    = "tf-cr-lb-1"
 
-  address                         = "35.227.226.31"
+  address                         = google_compute_global_address.lb_ip.address
   ssl                             = true
   managed_ssl_certificate_domains = [var.domain]
   https_redirect                  = true
