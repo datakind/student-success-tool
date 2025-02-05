@@ -67,7 +67,7 @@ def read_raw_pdp_course_data_from_file(
             }
         )
     )
-    LOGGER.info("read course data from %s", fpath)
+    LOGGER.info("loaded rows x cols = %s of course data from '%s'", df.shape, fpath)
     assert isinstance(df, pd.DataFrame)  # type guard
     if preprocess_func is not None:
         LOGGER.info("applying %s preprocessor to raw dataset", preprocess_func)
@@ -151,7 +151,7 @@ def read_raw_pdp_cohort_data_from_file(
             }
         )
     )
-    LOGGER.info("read cohort data from %s", fpath)
+    LOGGER.info("loaded rows x cols = %s of cohort data from '%s'", df.shape, fpath)
     assert isinstance(df, pd.DataFrame)  # type guard
     if preprocess_func is not None:
         LOGGER.info("applying %s preprocessor to raw dataset", preprocess_func)
@@ -216,6 +216,7 @@ def read_data_from_delta_table(
     """
     df = spark_session.read.format("delta").table(table_path).toPandas()
     assert isinstance(df, pd.DataFrame)  # type guard
+    LOGGER.info("loaded rows x cols = %s of data from '%s'", df.shape, table_path)
     return df
 
 
