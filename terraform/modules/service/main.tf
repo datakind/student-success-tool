@@ -5,8 +5,20 @@ resource "google_project_service" "services" {
   disable_on_destroy = false
 }
 
+resource "google_secret_manager_secret" "env_file" {
+  secret_id = "${var.environment}-${var.name}-env-file"
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "env_file_secret_version" {
+  secret      = google_secret_manager_secret.env_file.id
+  secret_data = "APP_NAME=SST"
+}
+
 resource "google_secret_manager_secret_iam_member" "cloudrun_sa_env_file_access" {
-  secret_id = "projects/${var.project}/secrets/test-${var.name}-env-file"
+  secret_id = google_secret_manager_secret.env_file.secret_id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${var.cloudrun_service_account_email}"
 }

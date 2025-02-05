@@ -1,5 +1,5 @@
 resource "google_compute_global_address" "lb_ip" {
-  name         = "tf-cr-lb-1-address"
+  name         = "${var.environment}-tf-cr-lb-1-address"
   address_type = "EXTERNAL"
 }
 
@@ -8,15 +8,16 @@ module "lb-http" {
   version = "~> 12.0"
 
   project = var.project
-  name    = "tf-cr-lb-1"
+  name    = "${var.environment}-tf-cr-lb-1"
 
   address                         = google_compute_global_address.lb_ip.address
+  create_address                  = false
   ssl                             = true
   managed_ssl_certificate_domains = [var.domain]
   https_redirect                  = true
 
   backends = {
-    frontend = {
+    "${var.environment}-frontend" = {
       description = "Cloud Run frontend"
       groups      = []
       serverless_neg_backends = [{
@@ -36,7 +37,7 @@ module "lb-http" {
         enable = false
       }
     }
-    webapp = {
+    "${var.environment}-webapp" = {
       description = "Cloud Run webapp"
       groups      = []
       serverless_neg_backends = [{
@@ -62,8 +63,8 @@ module "lb-http" {
 }
 
 resource "google_compute_url_map" "url_map" {
-  name            = "tf-cr-url-map-1"
-  default_service = module.lb-http.backend_services["frontend"].self_link
+  name            = "${var.environment}-tf-cr-url-map-1"
+  default_service = module.lb-http.backend_services["${var.environment}-frontend"].self_link
 
   host_rule {
     hosts        = ["*"]
@@ -72,11 +73,11 @@ resource "google_compute_url_map" "url_map" {
 
   path_matcher {
     name            = "allpaths"
-    default_service = module.lb-http.backend_services["frontend"].self_link
+    default_service = module.lb-http.backend_services["${var.environment}-frontend"].self_link
 
     path_rule {
       paths   = ["/api", "/api/*"]
-      service = module.lb-http.backend_services["webapp"].self_link
+      service = module.lb-http.backend_services["${var.environment}-webapp"].self_link
     }
 
     path_rule {
@@ -89,9 +90,28 @@ resource "google_compute_url_map" "url_map" {
   }
 }
 
+
+resource "google_storage_bucket" "static_assets" {
+  name          = "${var.project}-${var.environment}-static"
+  location      = var.region
+  force_destroy = true
+
+  uniform_bucket_level_access = true
+}
+
+resource "google_storage_bucket_iam_binding" "public_rule" {
+  bucket = google_storage_bucket.static_assets.name
+
+  role = "roles/storage.objectViewer"
+
+  members = [
+    "allUsers",
+  ]
+}
+
 resource "google_compute_backend_bucket" "build" {
-  name        = "tf-cr-static-build-1"
-  bucket_name = "dev-frontend-dev-sst-439514-static"
+  name        = "${var.environment}-tf-cr-static-build-1"
+  bucket_name = google_storage_bucket.static_assets.name
   enable_cdn  = true
 }
 

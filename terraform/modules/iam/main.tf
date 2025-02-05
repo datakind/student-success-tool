@@ -19,7 +19,8 @@ resource "google_project_iam_member" "cloudrun_sa_invoker" {
 
 # TODO: Narrow down the permissions for the Cloud Build service account
 resource "google_service_account" "cloudbuild_sa" {
-  account_id = "cloudbuild-sa"
+  account_id = "${var.environment}-cloudbuild-sa"
+  display_name = "${var.environment} Cloud Build Service Account"
 }
 
 resource "google_project_iam_member" "act_as" {
@@ -67,19 +68,19 @@ resource "google_project_iam_member" "cloudbuild_run_invoker" {
 resource "google_project_iam_member" "cloudbuild_sa_viewer" {
   project = var.project
   role    = "roles/viewer"
-  member  = "serviceAccount:cloudbuild-sa@dev-sst-439514.iam.gserviceaccount.com"
+  member  = "serviceAccount:${google_service_account.cloudbuild_sa.email}"
 }
 
 resource "google_project_iam_member" "cloudbuild_sa_compute_network_admin" {
   project = var.project
   role    = "roles/compute.networkAdmin"
-  member  = "serviceAccount:cloudbuild-sa@dev-sst-439514.iam.gserviceaccount.com"
+  member  = "serviceAccount:${google_service_account.cloudbuild_sa.email}"
 }
 
 resource "google_project_iam_member" "cloudbuild_sa_compute_storage_admin" {
   project = var.project
   role    = "roles/compute.storageAdmin"
-  member  = "serviceAccount:cloudbuild-sa@dev-sst-439514.iam.gserviceaccount.com"
+  member  = "serviceAccount:${google_service_account.cloudbuild_sa.email}"
 }
 
 resource "google_project_iam_member" "cloudbuild_sa_secret_accessor" {

@@ -93,7 +93,7 @@ resource "google_cloudbuild_trigger" "frontend" {
       name       = "gcr.io/cloud-builders/gsutil"
       entrypoint = "bash"
       # TODO the storage bucket should be a variable
-      args = ["-c", "gsutil -m cp -r public/* gs://dev-frontend-dev-sst-439514-static"]
+      args = ["-c", "gsutil -m cp -r public/* gs://${var.project}-${var.environment}-static"]
     }
     step {
       id         = "BUILD and PUSH with cloudpacks"
