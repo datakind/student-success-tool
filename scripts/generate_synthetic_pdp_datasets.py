@@ -21,11 +21,14 @@ def main():
 
     # institution_id must be the same for all records.
     institution_id = FAKER.numerify("#####!")
+    student_guids = [FAKER.unique.student_guid() for _ in range(args.num_students)]
     cohort_records = [
         FAKER.raw_cohort_record(
-            normalize_col_names=args.normalize_col_names, institution_id=institution_id
+            normalize_col_names=args.normalize_col_names,
+            institution_id=institution_id,
+            student_guid=student_guids[i],
         )
-        for _ in range(args.num_students)
+        for i in range(args.num_students)
     ]
     course_records = [
         FAKER.raw_course_record(
