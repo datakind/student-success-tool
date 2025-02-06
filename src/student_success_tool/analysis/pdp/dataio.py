@@ -402,7 +402,7 @@ def read_data_from_csv_file(
         - https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrameReader.csv.html
     """
     if spark_session is None:
-        df = pd.read_csv(file_path, dtype="string", **kwargs)  # type: ignore
+        df = pd.read_csv(file_path, dtype="string", header="infer", **kwargs)  # type: ignore
     else:
         df = spark_session.read.csv(
             file_path,
