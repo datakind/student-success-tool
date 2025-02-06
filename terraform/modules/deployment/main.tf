@@ -103,7 +103,7 @@ module "worker_lb" {
   address                         = google_compute_global_address.worker_lb_ip.address
   create_address                  = false
   ssl                             = true
-  managed_ssl_certificate_domains = [var.domain]
+  managed_ssl_certificate_domains = [var.admin_domain]
   https_redirect                  = true
 
   backends = {

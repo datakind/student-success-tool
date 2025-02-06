@@ -174,9 +174,9 @@ resource "google_cloudbuild_trigger" "terraform" {
     "_FRONTEND_IMAGE" = "${var.region}-docker.pkg.dev/${var.project}/sst-app-ui/frontend:latest"
   }
   source_to_build {
-    ref = "refs/heads/fellows-experimental"
+    ref       = "refs/heads/fellows-experimental"
     repo_type = "GITHUB"
-    uri = "https://github.com/datakind/student-success-tool"
+    uri       = "https://github.com/datakind/student-success-tool"
   }
   build {
     step {

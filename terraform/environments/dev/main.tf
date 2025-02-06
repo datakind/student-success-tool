@@ -31,6 +31,7 @@ module "deployment" {
   database_version = var.database_version
   database_name    = var.database_name
   domain           = var.domain
+  admin_domain     = var.admin_domain
   webapp_image     = var.webapp_image
   frontend_image   = var.frontend_image
 }

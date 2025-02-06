@@ -33,6 +33,11 @@ variable "domain" {
   type        = string
 }
 
+variable "admin_domain" {
+  description = "The domain name for the admin interface"
+  type        = string
+}
+
 variable "webapp_image" {
   description = "Image for the webapp service"
   type        = string

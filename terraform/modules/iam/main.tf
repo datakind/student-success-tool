@@ -19,7 +19,7 @@ resource "google_project_iam_member" "cloudrun_sa_invoker" {
 
 # TODO: Narrow down the permissions for the Cloud Build service account
 resource "google_service_account" "cloudbuild_sa" {
-  account_id = "${var.environment}-cloudbuild-sa"
+  account_id   = "${var.environment}-cloudbuild-sa"
   display_name = "${var.environment} Cloud Build Service Account"
 }
 
