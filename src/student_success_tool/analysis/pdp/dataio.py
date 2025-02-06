@@ -405,8 +405,11 @@ def read_data_from_csv_file(
         df = pd.read_csv(file_path, dtype="string", **kwargs)  # type: ignore
     else:
         df = spark_session.read.csv(
-            file_path, inferSchema=False, header=True, **kwargs
-        ).toPandas()  # type: ignore
+            file_path,
+            inferSchema=False,
+            header=True,
+            **kwargs,  # type: ignore
+        ).toPandas()
     assert isinstance(df, pd.DataFrame)  # type guard
     LOGGER.info("loaded rows x cols = %s from '%s'", df.shape, file_path)
     return df
