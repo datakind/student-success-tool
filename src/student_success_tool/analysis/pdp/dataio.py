@@ -404,7 +404,9 @@ def read_data_from_csv_file(
     if spark_session is None:
         df = pd.read_csv(file_path, dtype="string", **kwargs)  # type: ignore
     else:
-        df = spark_session.read.csv(file_path, inferSchema=False, **kwargs).toPandas()  # type: ignore
+        df = spark_session.read.csv(
+            file_path, inferSchema=False, header=True, **kwargs
+        ).toPandas()  # type: ignore
     assert isinstance(df, pd.DataFrame)  # type guard
     LOGGER.info("loaded rows x cols = %s from '%s'", df.shape, file_path)
     return df
