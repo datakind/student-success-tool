@@ -280,24 +280,24 @@ def _compute_intensity_num_terms(
         for intensity, time, unit in intensity_time_lefts
     ]
 
-# THIS IS A NEW / MODIFIED FUNCTION TO GET THE TERM REPRESENTING END OF FIRST YEAR FOR A STUDENT, including pre-cohort cols
-
-def get_first_student_year_term(
+def get_nth_student_term(
     df: pd.DataFrame,
     *,
     student_id_cols: str | list[str] = "student_guid",
     sort_cols: str | list[str] = "term_rank",
+    n: int = 1,
     include_cols: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:
     """
-    For each student, get the first row in ``df`` (in ascending order of ``sort_cols`` )
-    and a configurable subset of columns.
+    For each student, get the nth row in ``df`` (in ascending order of ``sort_cols`` )
+    and a configurable subset of columns. 
 
     Args:
         df
         student_id_cols
         sort_cols
         include_cols
+        n
     """
     student_id_cols = utils.to_list(student_id_cols)
     sort_cols = utils.to_list(sort_cols)
@@ -312,21 +312,21 @@ def get_first_student_year_term(
         df.loc[:, cols]
         .sort_values(by=sort_cols, ascending=True)
         .groupby(by=student_id_cols, sort=False, as_index=False)
-        .nth(1)
+        .nth(n)
     )
 
-# THIS IS A NEW / MODIFIED FUNCTION TO GET THE TERM REPRESENTING END OF FIRST YEAR FOR A STUDENT, excluding pre-cohort cols
 
-def get_first_student_year_term_within_cohort(
+def get_nth_student_year_term_within_cohort(
     df: pd.DataFrame,
     *,
     student_id_cols: str | list[str] = "student_guid",
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
+    n: int = 1,
 ) -> pd.DataFrame:
     """
-    For each student, get the first row in ``df`` (in ascending order of ``sort_cols`` )
+    For each student, get the nth row in ``df`` (in ascending order of ``sort_cols`` )
     for which the term occurred *within* the student's cohort, i.e. not prior to
     their official start of enrollment.
 
@@ -338,13 +338,15 @@ def get_first_student_year_term_within_cohort(
         term_rank_col
         sort_cols
         include_cols
+        n
     """
-    return get_first_student_year_term(
+    return get_nth_student_year_term(
         # exclude rows that are "pre-cohort", so "first" meets our criteria here
         df.loc[df[term_is_pre_cohort_col].eq(False), :],
         student_id_cols=student_id_cols,
         sort_cols=sort_cols,
         include_cols=include_cols,
+        n=n, 
     )
 
 def _log_eligible_selection(
