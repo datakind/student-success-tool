@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 0.1.1 (2025-02)
+
+- Added "project config" files for consolidating and storing most of the necessary parameters for tailoring general functionality to individual schools' needs (PR #44 #50 #56 #57)
+- Extended PDP template notebooks to cover model training and inference (PR #42 #46 #48 #59 #60 #61 #64)
+- Improved structure and accessibility of client-facing data output files (PR #43 #53 #58)
+- Improved modeling dataset standardization and cleanup with cleaner dtypes, consistent column names, and fewer opportunities for accidental data leakage (PR #38 #45 #49)
+- Extended data schemas to cover post-raw transformations of the datasets (PR #36)
+- Added new features, including "pre-cohort" and "num courses in study area" (PR #39)
+- Added functionality for modeling-adjacent tasks, such as splitting datasets and computing sample weights (PR #41)
+- Fixed various bugs and weirdness in PDP synthetic data generation (PR #47 #52)
+- Updated key dependencies and added support for PY3.12 (PR #40)
+
 ## 0.1.0 (2024-11)
 
 - Ported school-agnostic code from private repo, with some refactoring of structure and modest code quality improvements (PR #1 #2 #3 #6 #10)
