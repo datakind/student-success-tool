@@ -285,7 +285,7 @@ def get_nth_student_term(
     *,
     student_id_cols: str | list[str] = "student_guid",
     sort_cols: str | list[str] = "term_rank",
-    n: int = 1,
+    n: int,
     include_cols: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:
     """
@@ -296,8 +296,8 @@ def get_nth_student_term(
         df
         student_id_cols
         sort_cols
-        include_cols
         n
+        include_cols
     """
     student_id_cols = utils.to_list(student_id_cols)
     sort_cols = utils.to_list(sort_cols)
@@ -323,7 +323,7 @@ def get_nth_student_year_term_within_cohort(
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
-    n: int = 1,
+    n: int,
 ) -> pd.DataFrame:
     """
     For each student, get the nth row in ``df`` (in ascending order of ``sort_cols`` )

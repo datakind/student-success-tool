@@ -15,7 +15,7 @@ def make_labeled_dataset(
     student_id_cols: str | list[str] = "student_guid",
     exclude_pre_cohort_terms: bool = True,
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
-    years_to_degree_col: str = "first_year_to_bachelors_at_cohort_inst",
+    years_to_degree_col: str,
     intensity_time_lefts: list[tuple[str, float, t.Literal["year", "term"]]],
     max_term_rank: int,
     num_terms_in_year: int = 4,
@@ -76,7 +76,7 @@ def compute_target_variable(
     df: pd.DataFrame,  
     *,  
     student_id_cols: str | list[str] = "student_guid",  
-    years_to_degree_col: years_to_degree_col,  
+    years_to_degree_col: str,  
     intensity_time_lefts: list[tuple[str, float, t.Literal["year", "term"]]], 
 ) -> pd.Series: 
     """
@@ -84,6 +84,7 @@ def compute_target_variable(
         df
         student_id_cols
         years_to_degree_col
+        intensity_time_lefts
     """ 
     student_id_cols = utils.to_list(student_id_cols) 
     intensity_num_terms = [(intensity, time if unit == "year" else time / num_terms_in_year)
