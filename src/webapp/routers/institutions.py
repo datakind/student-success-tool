@@ -70,6 +70,7 @@ class InstitutionCreationRequest(BaseModel):
     allowed_emails: Dict[str, AccessType] | None = None
     # The following is a shortcut to specifying the allowed_schemas list and will mean that the allowed_schemas will be augmented with the PDP_SCHEMA_GROUP.
     is_pdp: bool | None = None
+    pdp_id: int | None = None
     retention_days: int | None = None
 
 
@@ -83,6 +84,7 @@ class Institution(BaseModel):
     # The following are characteristics of an institution set at institution creation time.
     # If zero, it follows DK defaults (deletion after completion).
     retention_days: int | None = None  # In Days
+    pdp_id: int | None = None
 
 
 @router.get("/institutions", response_model=list[Institution])
@@ -143,6 +145,12 @@ def create_institution(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Description length too long.",
         )
+    if (req.is_pdp and not req.pdp_id) or (req.pdp_id and not req.is_pdp):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Please set the PDP's Institution ID for PDP schools and check PDP as a schema type.",
+        )
+
     local_session.set(sql_session)
     query_result = (
         local_session.get()
@@ -168,6 +176,7 @@ def create_institution(
                 name=req.name,
                 retention_days=req.retention_days,
                 description=req.description,
+                pdp_id=req.pdp_id,
                 # Sets aren't json serializable, so turn them into lists first
                 schemas=list(set(requested_schemas)),
                 allowed_emails=req.allowed_emails,
@@ -210,6 +219,7 @@ def create_institution(
         "inst_id": uuid_to_str(query_result[0][0].id),
         "name": query_result[0][0].name,
         "state": query_result[0][0].state,
+        "pdp_id": query_result[0][0].pdp_id,
         "description": query_result[0][0].description,
         "retention_days": query_result[0][0].retention_days,
     }
@@ -253,6 +263,48 @@ def read_inst_name(
         "description": query_result[0][0].description,
         "retention_days": query_result[0][0].retention_days,
         "state": query_result[0][0].state,
+        "pdp_id": query_result[0][0].pdp_id,
+    }
+
+
+# All other API transactions require the UUID as an identifier, this allows the UUID lookup by PDP ID.
+@router.get("/institutions/pdp-id/{pdp_id}", response_model=Institution)
+def read_inst_pdp_id(
+    pdp_id: int,
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
+    sql_session: Annotated[Session, Depends(get_session)],
+) -> Any:
+    """Returns overview data on a specific institution.
+
+    The root-level API view. Only visible to users of that institution or Datakinder access types.
+
+    Args:
+        current_user: the user making the request.
+    """
+    local_session.set(sql_session)
+    query_result = (
+        local_session.get()
+        .execute(select(InstTable).where(InstTable.pdp_id == pdp_id))
+        .all()
+    )
+    if len(query_result) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Institution not found.",
+        )
+    if len(query_result) > 1:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Institution duplicates found.",
+        )
+    has_access_to_inst_or_err(uuid_to_str(query_result[0][0].id), current_user)
+    return {
+        "inst_id": uuid_to_str(query_result[0][0].id),
+        "name": query_result[0][0].name,
+        "description": query_result[0][0].description,
+        "retention_days": query_result[0][0].retention_days,
+        "state": query_result[0][0].state,
+        "pdp_id": query_result[0][0].pdp_id,
     }
 
 
@@ -292,4 +344,5 @@ def read_inst_id(
         "description": query_result[0][0].description,
         "retention_days": query_result[0][0].retention_days,
         "state": query_result[0][0].state,
+        "pdp_id": query_result[0][0].pdp_id,
     }

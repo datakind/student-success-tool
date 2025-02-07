@@ -117,6 +117,7 @@ class ValidationResult(BaseModel):
     name: str
     inst_id: str
     file_types: set[SchemaType]
+    source: str
 
 
 class DataOverview(BaseModel):
@@ -261,7 +262,7 @@ def read_inst_all_input_files(
     }
 
 
-@router.get("/{inst_id}/input_debugging", response_model=list[str])
+@router.get("/{inst_id}/input-debugging", response_model=list[str])
 def get_all_files_in_bucket(
     inst_id: str,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
@@ -549,7 +550,6 @@ def update_batch(
     model_owner_and_higher_or_err(current_user, "modify batch")
 
     update_data = request.model_dump(exclude_unset=True)
-    print("aaaaaaaaaaaaaaaaaaaaaaaa:" + str(update_data))
     local_session.set(sql_session)
     # Check that the batch exists.
     query_result = (
@@ -676,7 +676,7 @@ def update_batch(
 # TODO: check expiration of files and batches
 
 
-@router.get("/{inst_id}/file_id/{file_id}", response_model=DataInfo)
+@router.get("/{inst_id}/file-id/{file_id}", response_model=DataInfo)
 def read_file_id_info(
     inst_id: str,
     file_id: str,
@@ -796,7 +796,7 @@ def read_file_info(
 
 
 # TODO: ADD TESTS for the below
-@router.get("/{inst_id}/download_url/{file_name}", response_model=str)
+@router.get("/{inst_id}/download-url/{file_name}", response_model=str)
 def download_url_inst_file(
     inst_id: str,
     file_name: str,
@@ -867,15 +867,14 @@ def download_url_inst_file(
 # 3. Validate the file
 
 
-@router.post("/{inst_id}/input/validate/{file_name}", response_model=ValidationResult)
-def validate_file(
+def validation_helper(
+    source_str: str,
     inst_id: str,
     file_name: str,
-    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
-    storage_control: Annotated[StorageControl, Depends(StorageControl)],
-    sql_session: Annotated[Session, Depends(get_session)],
+    current_user: BaseUser,
+    storage_control: StorageControl,
+    sql_session: Session,
 ) -> Any:
-    """Validate a given file. The file_name should not contain slashes."""
     has_access_to_inst_or_err(inst_id, current_user)
     if file_name.find("/") != -1:
         raise HTTPException(
@@ -916,7 +915,7 @@ def validate_file(
         name=file_name,
         inst_id=str_to_uuid(inst_id),
         uploader=str_to_uuid(current_user.user_id),
-        source="MANUAL_UPLOAD",
+        source=source_str,
         sst_generated=False,
         schemas=list(inferred_schemas),
         valid=True,
@@ -926,10 +925,48 @@ def validate_file(
         "name": file_name,
         "inst_id": inst_id,
         "file_types": inferred_schemas,
+        "source": source_str,
     }
 
 
-@router.get("/{inst_id}/upload_url/{file_name}", response_model=str)
+@router.post(
+    "/{inst_id}/input/validate-sftp/{file_name}", response_model=ValidationResult
+)
+def validate_file_sftp(
+    inst_id: str,
+    file_name: str,
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
+    storage_control: Annotated[StorageControl, Depends(StorageControl)],
+    sql_session: Annotated[Session, Depends(get_session)],
+) -> Any:
+    """Validate a given file pulled from SFTP. The file_name should not contain slashes."""
+    if not current_user.is_datakinder:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="SFTP validation needs to be done by a datakinder.",
+        )
+    return validation_helper(
+        "PDP_SFTP", inst_id, file_name, current_user, storage_control, sql_session
+    )
+
+
+@router.post(
+    "/{inst_id}/input/validate-upload/{file_name}", response_model=ValidationResult
+)
+def validate_file_manual_upload(
+    inst_id: str,
+    file_name: str,
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
+    storage_control: Annotated[StorageControl, Depends(StorageControl)],
+    sql_session: Annotated[Session, Depends(get_session)],
+) -> Any:
+    """Validate a given file. The file_name should not contain slashes."""
+    return validation_helper(
+        "MANUAL_UPLOAD", inst_id, file_name, current_user, storage_control, sql_session
+    )
+
+
+@router.get("/{inst_id}/upload-url/{file_name}", response_model=str)
 def get_upload_url(
     inst_id: str,
     file_name: str,

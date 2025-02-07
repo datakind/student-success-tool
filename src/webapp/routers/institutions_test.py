@@ -53,6 +53,7 @@ def session_fixture():
                         id=UUID_1,
                         name="school_1",
                         state="GA",
+                        pdp_id=456,
                         created_at=DATETIME_TESTING,
                         updated_at=DATETIME_TESTING,
                     ),
@@ -65,6 +66,7 @@ def session_fixture():
                     InstTable(
                         id=USER_VALID_INST_UUID,
                         name="valid_school",
+                        pdp_id=12345,
                         state="NY",
                         created_at=DATETIME_TESTING,
                         updated_at=DATETIME_TESTING,
@@ -141,6 +143,7 @@ def test_read_all_inst_datakinder(datakinder_client: TestClient):
             "description": None,
             "inst_id": uuid_to_str(UUID_1),
             "name": "school_1",
+            "pdp_id": None,
             "retention_days": None,
             "state": "GA",
         },
@@ -148,6 +151,7 @@ def test_read_all_inst_datakinder(datakinder_client: TestClient):
             "description": None,
             "inst_id": uuid_to_str(UUID_2),
             "name": "school_2",
+            "pdp_id": None,
             "retention_days": None,
             "state": None,
         },
@@ -155,6 +159,7 @@ def test_read_all_inst_datakinder(datakinder_client: TestClient):
             "description": None,
             "inst_id": uuid_to_str(USER_VALID_INST_UUID),
             "name": "valid_school",
+            "pdp_id": None,
             "retention_days": None,
             "state": "NY",
         },
@@ -174,6 +179,23 @@ def test_read_inst_by_name(client: TestClient):
 
     # Authorized.
     response = client.get("/institutions/name/valid_school")
+    assert response.status_code == 200
+    assert response.json() == INSTITUTION_OBJ
+
+
+def test_read_inst_by_pdp_id(client: TestClient):
+    # Test GET /institutions/<uuid>. For various user access types.
+    # Unauthorized.
+    response = client.get("/institutions/pdp-id/456")
+
+    assert str(response) == "<Response [401 Unauthorized]>"
+    assert (
+        response.text
+        == '{"detail":"Not authorized to read this institution\'s resources."}'
+    )
+
+    # Authorized.
+    response = client.get("/institutions/pdp-id/12345")
     assert response.status_code == 200
     assert response.json() == INSTITUTION_OBJ
 
@@ -216,6 +238,7 @@ def test_create_inst(datakinder_client):
     assert response.json()["name"] == "foobar school"
     assert response.json()["description"] == "description of school"
     assert response.json()["state"] == "NY"
+    assert response.json()["pdp_id"] == 12345
     assert response.json()["retention_days"] == 1
     assert response.json()["inst_id"] != None
 

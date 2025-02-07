@@ -151,7 +151,7 @@ def read_inst_user(
     }
 
 
-@router.get("/{inst_id}/allowable_emails", response_model=Dict[str, str])
+@router.get("/{inst_id}/allowable-emails", response_model=Dict[str, str])
 def read_inst_allowed_emails(
     inst_id: str,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],

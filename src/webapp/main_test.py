@@ -138,7 +138,7 @@ def test_retrieve_token(client: TestClient):
 
 def test_get_cross_isnt_users(client: TestClient):
     """Test GET /non_inst_users."""
-    response = client.get("/non_inst_users")
+    response = client.get("/non-inst-users")
     assert response.status_code == 200
     assert response.json() == [
         {
@@ -167,7 +167,7 @@ def test_set_datakinders(client: TestClient):
 
 def test_check_self_datakinder(client: TestClient):
     """Test GET /check_self."""
-    response = client.get("/check_self")
+    response = client.get("/check-self")
     assert response.status_code == 200
     assert response.json() == {
         "access_type": "DATAKINDER",
@@ -179,7 +179,7 @@ def test_check_self_datakinder(client: TestClient):
 
 def test_check_self(user_client: TestClient):
     """Test GET /check_self."""
-    response = user_client.get("/check_self")
+    response = user_client.get("/check-self")
     assert response.status_code == 200
     assert response.json() == {
         "access_type": "VIEWER",

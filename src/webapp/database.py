@@ -116,7 +116,7 @@ class InstTable(Base):
     schemas = Column(MutableList.as_mutable(JSON))
     state = Column(String(VAR_CHAR_LENGTH), nullable=True)
     # Only populated for PDP schools. Uncomment once logic available.
-    # pdp_id: Mapped[int] = mapped_column(nullable=True)
+    pdp_id: Mapped[int] = mapped_column(nullable=True)
     # A short description or note on this inst.
     description = Column(String(VAR_CHAR_LONGER_LENGTH))
     created_at = Column(DateTime(timezone=True), server_default=func.now())

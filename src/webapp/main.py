@@ -127,7 +127,7 @@ async def login_for_access_token(
 
 
 # Get users that don't have institution specifications. (either datakinders or people who haven't set their institution yet)
-@app.get("/non_inst_users", response_model=list[users.UserAccount])
+@app.get("/non-inst-users", response_model=list[users.UserAccount])
 async def read_cross_inst_users(
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
@@ -206,7 +206,7 @@ async def set_datakinders(
     return res
 
 
-@app.get("/check_self", response_model=SelfInfo)
+@app.get("/check-self", response_model=SelfInfo)
 def read_self_info(
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],

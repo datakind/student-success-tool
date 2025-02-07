@@ -404,7 +404,7 @@ def test_read_file_id_info(client: TestClient):
     response = client.get(
         "/institutions/"
         + uuid_to_str(UUID_INVALID)
-        + "/file_id/"
+        + "/file-id/"
         + uuid_to_str(FILE_UUID_1)
     )
 
@@ -417,7 +417,7 @@ def test_read_file_id_info(client: TestClient):
     response = client.get(
         "/institutions/"
         + uuid_to_str(USER_VALID_INST_UUID)
-        + "/file_id/"
+        + "/file-id/"
         + uuid_to_str(FILE_UUID_1)
     )
     assert response.status_code == 200
@@ -527,39 +527,81 @@ def test_update_batch(client: TestClient):
 def test_validate_success_batch(client: TestClient):
     """Test PATCH /institutions/<uuid>/batch."""
     MOCK_STORAGE.validate_file.return_value = {SchemaType.UNKNOWN}
-    response = client.post(
-        "/institutions/" + uuid_to_str(UUID_INVALID) + "/input/validate/file_name.csv",
+
+    # Use validate for manual upload
+    response_upload = client.post(
+        "/institutions/"
+        + uuid_to_str(UUID_INVALID)
+        + "/input/validate-upload/file_name.csv",
     )
-    assert str(response) == "<Response [401 Unauthorized]>"
+    assert str(response_upload) == "<Response [401 Unauthorized]>"
     assert (
-        response.text
+        response_upload.text
         == '{"detail":"Not authorized to read this institution\'s resources."}'
     )
     # Authorized.
-    response = client.post(
+    response_upload = client.post(
         "/institutions/"
         + uuid_to_str(USER_VALID_INST_UUID)
-        + "/input/validate/file_name.csv",
+        + "/input/validate-upload/file_name.csv",
     )
-    assert response.status_code == 200
-    assert response.json()["name"] == "file_name.csv"
-    assert response.json()["file_types"] == ["UNKNOWN"]
-    assert response.json()["inst_id"] == uuid_to_str(USER_VALID_INST_UUID)
+    assert response_upload.status_code == 200
+    assert response_upload.json()["name"] == "file_name.csv"
+    assert response_upload.json()["file_types"] == ["UNKNOWN"]
+    assert response_upload.json()["inst_id"] == uuid_to_str(USER_VALID_INST_UUID)
+    assert response_upload.json()["source"] == "MANUAL_UPLOAD"
+
+    # Use validate for SFTP
+    response_sftp = client.post(
+        "/institutions/"
+        + uuid_to_str(UUID_INVALID)
+        + "/input/validate-sftp/file_name.csv",
+    )
+    assert str(response_sftp) == "<Response [401 Unauthorized]>"
+    assert (
+        response_sftp.text
+        == '{"detail":"Not authorized to read this institution\'s resources."}'
+    )
+    # Authorized.
+    response_sftp = client.post(
+        "/institutions/"
+        + uuid_to_str(USER_VALID_INST_UUID)
+        + "/input/validate-sftp/file_name.csv",
+    )
+    assert response_sftp.status_code == 200
+    assert response_sftp.json()["name"] == "file_name.csv"
+    assert response_sftp.json()["file_types"] == ["UNKNOWN"]
+    assert response_sftp.json()["inst_id"] == uuid_to_str(USER_VALID_INST_UUID)
+    assert response_sftp.json()["source"] == "PDP_SFTP"
 
 
 def test_validate_failure_batch(client: TestClient):
     """Test PATCH /institutions/<uuid>/batch."""
     MOCK_STORAGE.validate_file.return_value = {SchemaType.PDP_COHORT}
     # Authorized.
-    response = client.post(
+    # Use validate upload
+    response_upload = client.post(
         "/institutions/"
         + uuid_to_str(USER_VALID_INST_UUID)
-        + "/input/validate/file_name.csv",
+        + "/input/validate-upload/file_name.csv",
     )
-    assert response.status_code == 200
-    assert response.json()["name"] == "file_name.csv"
-    assert response.json()["file_types"] == ["PDP_COHORT"]
-    assert response.json()["inst_id"] == uuid_to_str(USER_VALID_INST_UUID)
+    assert response_upload.status_code == 200
+    assert response_upload.json()["name"] == "file_name.csv"
+    assert response_upload.json()["file_types"] == ["PDP_COHORT"]
+    assert response_upload.json()["inst_id"] == uuid_to_str(USER_VALID_INST_UUID)
+    assert response_upload.json()["source"] == "MANUAL_UPLOAD"
+
+    # Use valiate sftp
+    response_sftp = client.post(
+        "/institutions/"
+        + uuid_to_str(USER_VALID_INST_UUID)
+        + "/input/validate-upload/file_name.csv",
+    )
+    assert response_sftp.status_code == 200
+    assert response_sftp.json()["name"] == "file_name.csv"
+    assert response_sftp.json()["file_types"] == ["PDP_COHORT"]
+    assert response_sftp.json()["inst_id"] == uuid_to_str(USER_VALID_INST_UUID)
+    assert response_sftp.json()["source"] == "MANUAL_UPLOAD"
 
 
 def test_pull_pdp_sftp(client: TestClient):
