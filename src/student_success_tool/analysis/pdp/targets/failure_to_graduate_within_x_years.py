@@ -99,7 +99,7 @@ def compute_target_variable(
             .astype({"target": "bool"})  
             .set_index(student_id_cols)  
             .loc[:, "target"]  
-)  
+            )  
 
 def select_eligible_students(  
     df: pd.DataFrame,
