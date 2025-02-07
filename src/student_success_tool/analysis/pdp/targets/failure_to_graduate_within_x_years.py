@@ -15,7 +15,7 @@ def make_labeled_dataset(
     student_id_cols: str | list[str] = "student_guid",
     exclude_pre_cohort_terms: bool = True,
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
-    years_to_degree_col: str,
+    years_to_degree_col: str = "first_year_to_bachelors_at_cohort_inst",
     intensity_time_lefts: list[tuple[str, float, t.Literal["year", "term"]]],
     max_term_rank: int,
     num_terms_in_year: int = 4,
@@ -77,7 +77,7 @@ def compute_target_variable(
     df: pd.DataFrame,  
     *,  
     student_id_cols: str | list[str] = "student_guid",  
-    years_to_degree_col: str,  
+    years_to_degree_col: str = "first_year_to_bachelors_at_cohort_inst",  
     intensity_time_lefts: list[tuple[str, float, t.Literal["year", "term"]]], 
 ) -> pd.Series: 
     """
