@@ -9,7 +9,7 @@
 - Extended data schemas to cover post-raw transformations of the datasets (PR #36)
 - Added new features, including "pre-cohort" and "num courses in study area" (PR #39)
 - Added functionality for modeling-adjacent tasks, such as splitting datasets and computing sample weights (PR #41)
-- Fixed various bugs and weirdness in PDP synthetic data generation (PR #47 #52)
+- Fixed various bugs and weirdness in PDP synthetic data generation (PR #47 #52 #68)
 - Updated key dependencies and added support for PY3.12 (PR #40)
 
 ## 0.1.0 (2024-11)
