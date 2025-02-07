@@ -68,6 +68,7 @@ def make_labeled_dataset(
         student_id_cols=student_id_cols,
         years_to_degree_col=years_to_degree_col,
         intensity_time_lefts=intensity_time_lefts,
+        num_terms_in_year=num_terms_in_year,
     )
     df_labeled = pd.merge(df_features, df_targets, on=student_id_cols, how="inner")
     return df_labeled
@@ -79,6 +80,7 @@ def compute_target_variable(
     student_id_cols: str | list[str] = "student_guid",  
     years_to_degree_col: str = "first_year_to_bachelors_at_cohort_inst",  
     intensity_time_lefts: list[tuple[str, float, t.Literal["year", "term"]]], 
+    num_terms_in_year: int = 4,
 ) -> pd.Series: 
     """
     Args:
@@ -86,6 +88,7 @@ def compute_target_variable(
         student_id_cols
         years_to_degree_col
         intensity_time_lefts
+        num_terms_in_year
     """ 
     student_id_cols = utils.to_list(student_id_cols) 
     intensity_num_terms = [(intensity, time if unit == "year" else time / num_terms_in_year)
