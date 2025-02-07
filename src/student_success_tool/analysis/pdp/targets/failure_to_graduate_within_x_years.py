@@ -21,7 +21,7 @@ def make_labeled_dataset(
     num_terms_in_year: int = 4,
     enrollment_intensity_col: str = "enrollment_intensity_first_term",
     term_rank_col: str = "term_rank",
-    n: int = 1, 
+    n: int, 
 ) -> pd.DataFrame:
     """
     Make a labeled dataset for modeling, where each row consists of features
@@ -47,7 +47,7 @@ def make_labeled_dataset(
         df, df_eligible_students, on=student_id_cols, how="inner"
     )
     if exclude_pre_cohort_terms is True:
-        df_features = shared.get_nth_student_year_term_within_cohort(
+        df_features = shared.get_nth_student_terms_within_cohort(
             df_eligible_student_terms,
             student_id_cols=student_id_cols,
             term_is_pre_cohort_col=term_is_pre_cohort_col,
@@ -56,7 +56,7 @@ def make_labeled_dataset(
             include_cols=None,
         )
     else:
-        df_features = shared.get_nth_student_year_term(
+        df_features = shared.get_nth_student_terms(
             df_eligible_student_terms,
             student_id_cols=student_id_cols,
             sort_cols=term_rank_col,

@@ -280,7 +280,7 @@ def _compute_intensity_num_terms(
         for intensity, time, unit in intensity_time_lefts
     ]
 
-def get_nth_student_term(
+def get_nth_student_terms(
     df: pd.DataFrame,
     *,
     student_id_cols: str | list[str] = "student_guid",
@@ -316,7 +316,7 @@ def get_nth_student_term(
     )
 
 
-def get_nth_student_year_term_within_cohort(
+def get_nth_student_terms_within_cohort(
     df: pd.DataFrame,
     *,
     student_id_cols: str | list[str] = "student_guid",
@@ -340,7 +340,7 @@ def get_nth_student_year_term_within_cohort(
         include_cols
         n
     """
-    return get_nth_student_year_term(
+    return get_nth_student_terms(
         # exclude rows that are "pre-cohort", so "first" meets our criteria here
         df.loc[df[term_is_pre_cohort_col].eq(False), :],
         student_id_cols=student_id_cols,
