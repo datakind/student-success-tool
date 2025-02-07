@@ -1,6 +1,6 @@
 resource "google_cloud_run_v2_job" "migrate" {
   location            = var.region
-  name                = "${var.environment}-migrate"
+  name                = "${var.environment}-${var.name}"
   deletion_protection = false
 
   template {
@@ -8,8 +8,8 @@ resource "google_cloud_run_v2_job" "migrate" {
 
     template {
       containers {
-        args    = ["php artisan migrate --force"]
-        command = ["launcher"]
+        command = var.command
+        args    = var.args
 
         env {
           name  = "DB_USERNAME"

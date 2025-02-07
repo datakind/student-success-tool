@@ -23,7 +23,7 @@ resource "google_secret_manager_secret_iam_member" "cloudrun_sa_env_file_access"
   member    = "serviceAccount:${var.cloudrun_service_account_email}"
 }
 
-resource "google_cloud_run_v2_service" "webapp" {
+resource "google_cloud_run_v2_service" "cloudrun_service" {
   deletion_protection = false
   location            = var.region
   name                = "${var.environment}-${var.name}"
@@ -104,7 +104,7 @@ resource "google_cloud_run_v2_service" "webapp" {
           version = "latest"
         }
 
-        secret = "${var.environment}-${var.name}-env-file"
+        secret = google_secret_manager_secret.env_file.secret_id
       }
     }
     volumes {
@@ -142,8 +142,8 @@ resource "google_cloud_run_v2_service" "webapp" {
 }
 
 resource "google_cloud_run_v2_service_iam_member" "allow_all" {
-  location = google_cloud_run_v2_service.webapp.location
-  name     = google_cloud_run_v2_service.webapp.name
+  location = google_cloud_run_v2_service.cloudrun_service.location
+  name     = google_cloud_run_v2_service.cloudrun_service.name
   role     = "roles/run.invoker"
   member   = "allUsers" # Makes the service public
 }

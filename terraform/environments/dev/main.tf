@@ -31,20 +31,6 @@ module "deployment" {
   database_version = var.database_version
   database_name    = var.database_name
   domain           = var.domain
-  admin_domain     = var.admin_domain
   webapp_image     = var.webapp_image
   frontend_image   = var.frontend_image
-}
-
-module "cloudbuild" {
-  source = "../../modules/cloudbuild"
-
-  project        = var.project
-  domain         = var.domain
-  environment    = var.environment
-  region         = var.region
-  webapp_image   = var.webapp_image
-  frontend_image = var.frontend_image
-
-  cloudbuild_service_account_id = module.deployment.iam.cloudbuild_service_account_id
 }

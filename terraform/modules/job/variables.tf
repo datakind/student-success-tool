@@ -6,6 +6,18 @@ variable "region" {
   type = string
 }
 
+variable "name" {
+  type = string
+}
+
+variable "command" {
+  type = list(string)
+}
+
+variable "args" {
+  type = list(string)
+}
+
 variable "image" {
   type = string
 }

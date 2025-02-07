@@ -55,6 +55,27 @@ resource "google_cloudbuild_trigger" "webapp" {
         "${var.region}",
       ]
     }
+    step {
+      name = "gcr.io/cloud-builders/gcloud"
+      args = [
+        "run",
+        "deploy",
+        "$_ENVIRONMENT-webapp",
+        "--image",
+        "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:$COMMIT_SHA",
+        "--region",
+        "${var.region}",
+        "--command",
+        "fastapi",
+        "--args",
+        "run",
+        "src/worker",
+        "--port",
+        "8080",
+        "--host",
+        "0.0.0.0"
+      ]
+    }
     options {
       logging               = "CLOUD_LOGGING_ONLY"
       dynamic_substitutions = true
@@ -92,8 +113,7 @@ resource "google_cloudbuild_trigger" "frontend" {
       id         = "COPY to gcs bucket"
       name       = "gcr.io/cloud-builders/gsutil"
       entrypoint = "bash"
-      # TODO the storage bucket should be a variable
-      args = ["-c", "gsutil -m cp -r public/* gs://${var.project}-${var.environment}-static"]
+      args       = ["-c", "gsutil -m cp -r public/* gs://${var.static_assets_bucket_name}"]
     }
     step {
       id         = "BUILD and PUSH with cloudpacks"

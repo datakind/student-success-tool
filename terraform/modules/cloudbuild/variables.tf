@@ -1,30 +1,31 @@
 variable "project" {
-  description = "The project ID"
+  type = string
 }
 
 variable "environment" {
-  description = "The environment"
+  type = string
 }
 
 variable "region" {
-  description = "The region"
+  type = string
 }
 
 variable "cloudbuild_service_account_id" {
-  description = "The Cloud Build service account ID"
-  type        = string
+  type = string
 }
 
 variable "webapp_image" {
-  description = "The webapp Docker image"
-  type        = string
+  type = string
 }
 
 variable "frontend_image" {
-  description = "The frontend Docker image"
-  type        = string
+  type = string
 }
 
 variable "domain" {
+  type = string
+}
+
+variable "static_assets_bucket_name" {
   type = string
 }
