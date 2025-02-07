@@ -67,6 +67,7 @@ def make_labeled_dataset(
         df_eligible_student_terms,
         student_id_cols=student_id_cols,
         years_to_degree_col=years_to_degree_col,
+        intensity_time_lefts=intensity_time_lefts,
     )
     df_labeled = pd.merge(df_features, df_targets, on=student_id_cols, how="inner")
     return df_labeled
