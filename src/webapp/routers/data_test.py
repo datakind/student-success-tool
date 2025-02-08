@@ -472,17 +472,14 @@ def test_create_batch(client: TestClient):
     assert response.json()["completed"] == False
     assert response.json()["deletion_request_time"] == None
     assert response.json()["inst_id"] == uuid_to_str(USER_VALID_INST_UUID)
-    assert "file_input_two" in response.json()["file_names_to_ids"]
-    assert (
-        uuid_to_str(FILE_UUID_2)
-        in response.json()["file_names_to_ids"]["file_input_two"]
-    )
+    # file_input_two isn't valid so it shouldn't be addable to a batch.
+    assert "file_input_two" not in response.json()["file_names_to_ids"]
     assert "file_input_one" in response.json()["file_names_to_ids"]
     assert (
         uuid_to_str(FILE_UUID_1)
         in response.json()["file_names_to_ids"]["file_input_one"]
     )
-    assert len(response.json()["file_names_to_ids"]) == 2
+    assert len(response.json()["file_names_to_ids"]) == 1
 
 
 def test_update_batch(client: TestClient):

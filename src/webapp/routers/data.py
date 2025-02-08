@@ -6,7 +6,7 @@ import uuid
 from typing import Annotated, Any, Tuple, Dict
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy import and_, update
+from sqlalchemy import and_, or_, update
 from datetime import datetime, date
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
@@ -380,6 +380,9 @@ def read_batch_info(
     return {"batches": [batch_info], "files": data_infos}
 
 
+# TODO XXX ADD INSTITUTION ID AND QUALIFIERS ON ALL DB CHECKS
+
+
 @router.post("/{inst_id}/batch", response_model=BatchInfo)
 def create_batch(
     inst_id: str,
@@ -414,65 +417,38 @@ def create_batch(
             description=req.description,
             creator=str_to_uuid(current_user.user_id),
         )
-        if req.file_ids:
-            # Query all the files and add them to this batch.
-            for f in strs_to_uuids(req.file_ids):
-                # Check that the files requested for this batch exists.
-                # Only valid non-sst generated files can be added to a batch at creation time.
-                query_result_file = (
-                    local_session.get()
-                    .execute(
-                        select(FileTable).where(
-                            and_(
-                                FileTable.id == f,
-                                FileTable.inst_id == str_to_uuid(inst_id),
-                                FileTable.valid == True,
-                                FileTable.sst_generated == False,
-                            )
-                        )
+        f_names = [] if not req.file_names else req.file_names
+        f_ids = [] if not req.file_ids else strs_to_uuids(req.file_ids)
+        # Check that the files requested for this batch exists.
+        # Only valid non-sst generated files can be added to a batch at creation time.
+        query_result_file = (
+            local_session.get()
+            .execute(
+                select(FileTable).where(
+                    and_(
+                        or_(
+                            FileTable.id.in_(f_ids),
+                            FileTable.name.in_(f_names),
+                        ),
+                        FileTable.inst_id == str_to_uuid(inst_id),
+                        FileTable.valid == True,
+                        FileTable.sst_generated == False,
                     )
-                    .all()
                 )
-                if not query_result_file or len(query_result_file) == 0:
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail="file in request not found.",
-                    )
-                elif len(query_result_file) > 1:
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail="Multiple files in request with same unique id found.",
-                    )
-                batch.files.add(query_result_file[0][0])
-
-                # TODO XXX ADD INSTITUTION ID AND QUALIFIERS ON ALL DB CHECKS
-        if req.file_names:
-            # Query all the files and add them to this batch.
-            for f in req.file_names:
-                # Check that the files requested for this batch exists
-                query_result_file = (
-                    local_session.get()
-                    .execute(
-                        select(FileTable).where(
-                            and_(
-                                FileTable.name == f,
-                                FileTable.inst_id == str_to_uuid(inst_id),
-                            )
-                        )
-                    )
-                    .all()
-                )
-                if not query_result_file or len(query_result_file) == 0:
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail="file in request not found.",
-                    )
-                elif len(query_result_file) > 1:
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail="Multiple files in request with same unique id found.",
-                    )
-                batch.files.add(query_result_file[0][0])
+            )
+            .all()
+        )
+        if not query_result_file or len(query_result_file) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="file in request not found.",
+            )
+        elif len(query_result_file) > 1:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Multiple files in request with same unique id found.",
+            )
+        batch.files.add(query_result_file[0][0])
         local_session.get().add(batch)
         local_session.get().commit()
         query_result = (

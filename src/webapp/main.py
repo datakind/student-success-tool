@@ -3,12 +3,12 @@
 
 import logging
 from typing import Any, Annotated
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Security
 from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from datetime import timedelta
 from pydantic import BaseModel
-
+import secrets
 from .routers import models, users, data, institutions
 from .database import (
     setup_db,
@@ -19,6 +19,7 @@ from .database import (
     AccountTable,
     AccountHistoryTable,
     InstTable,
+    ApiKeyTable,
 )
 from .config import env_vars, startup_env_vars
 
@@ -31,10 +32,15 @@ from .utilities import (
     uuid_to_str,
     str_to_uuid,
     AccessType,
+    authenticate_api_key,
+    ApiKeyRequest,
+    ApiKeyResponse,
+    get_api_key_hash,
 )
 from .authn import (
     Token,
     create_access_token,
+    get_api_key,
 )
 
 # Set the logging
@@ -126,6 +132,28 @@ async def login_for_access_token(
     return Token(access_token=access_token, token_type="bearer")
 
 
+@app.post("/token-from-api-key")
+async def access_token_from_api_key(
+    sql_session: Annotated[Session, Depends(get_session)],
+    api_key_enduser_tuple: str = Security(get_api_key),
+) -> Token:
+    local_session.set(sql_session)
+    user = authenticate_api_key(api_key_enduser_tuple, local_session.get())
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="API key not valid",
+            headers={"WWW-Authenticate": "X-API-KEY"},
+        )
+    access_token_expires = timedelta(
+        minutes=int(env_vars["ACCESS_TOKEN_EXPIRE_MINUTES"])
+    )
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type="bearer")
+
+
 # Get users that don't have institution specifications. (either datakinders or people who haven't set their institution yet)
 @app.get("/non-inst-users", response_model=list[users.UserAccount])
 async def read_cross_inst_users(
@@ -204,6 +232,60 @@ async def set_datakinders(
         res.append(elem[0].email)
         local_session.get().add(new_action_record)
     return res
+
+
+# THE USER MUST MAKE SURE TO REMEMBER THE API KEY. The database will only store a hash.
+@app.post("/generate-api-key")
+async def generate_api_key(
+    req: ApiKeyRequest,
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
+    sql_session: Annotated[Session, Depends(get_session)],
+) -> ApiKeyResponse:
+    if not current_user.is_datakinder():
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Only Datakinders can generate api keys",
+        )
+    local_session.set(sql_session)
+    generated_key_value = secrets.token_urlsafe(36)
+    hashed_val = get_api_key_hash(generated_key_value)
+    local_session.get().add(
+        ApiKeyTable(
+            access_type=req.access_type,
+            hashed_key_value=hashed_val,
+            inst_id=None if not req.inst_id else str_to_uuid(req.inst_id),
+            created_by=str_to_uuid(current_user.user_id),
+            allows_enduser=req.allows_enduser,
+            valid=req.valid,
+            notes=req.notes,
+        )
+    )
+    local_session.get().commit()
+    query_result = (
+        local_session.get()
+        .execute(select(ApiKeyTable).where(ApiKeyTable.hashed_key_value == hashed_val))
+        .all()
+    )
+    if not query_result:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database write of the institution creation failed.",
+        )
+    elif len(query_result) > 1:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database write of the institution created duplicate entries.",
+        )
+    return {
+        "access_type": query_result[0][0].access_type,
+        "key": secrets.token_urlsafe(36),
+        "inst_id": (
+            None
+            if not query_result[0][0].inst_id
+            else uuid_to_str(query_result[0][0].inst_id)
+        ),
+        "allows_enduser": query_result[0][0].allows_enduser,
+    }
 
 
 @app.get("/check-self", response_model=SelfInfo)

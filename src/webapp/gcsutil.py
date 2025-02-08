@@ -129,7 +129,7 @@ class StorageControl(BaseModel):
         ]
         # fmt: on
         # For external facing buckets, apply TTL to unvalidated files. This may occur if an API caller uploads but doesn't call validate.
-        if not bucket_name.endswith("-internal"):
+        if not bucket_name.endswith("_internal"):
             # fmt: off
             bucket.lifecycle_rules = [
                 {
@@ -138,7 +138,6 @@ class StorageControl(BaseModel):
                 }
             ]
             # fmt: on
-        bucket.patch()
         bucket.storage_class = "STANDARD"
         new_bucket = storage_client.create_bucket(bucket, location="us")
 

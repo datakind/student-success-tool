@@ -16,12 +16,18 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.future import select
 
-from .authn import verify_password, TokenData, oauth2_scheme
-from .database import get_session, AccountTable
+from .authn import (
+    verify_password,
+    TokenData,
+    oauth2_scheme,
+    get_api_key_hash,
+    verify_api_key,
+    oauth2_apikey_scheme,
+)
+from .database import get_session, AccountTable, ApiKeyTable
 from .config import env_vars, fe_vars
 
 
-# TODO: Store in a python package to be usable by the frontend.
 class AccessType(StrEnum):
     """Access types available."""
 
@@ -38,6 +44,25 @@ class DataSource(StrEnum):
     UNNOWN = ""
     PDP_SFTP = "PDP_SFTP"
     MANUAL_UPLOAD = "MANUAL_UPLOAD"
+
+
+class ApiKeyResponse(BaseModel):
+    """The API key object."""
+
+    access_type: AccessType | None = None
+    key: str
+    inst_id: str | None = None
+    allows_enduser: bool | None = None
+
+
+class ApiKeyRequest(BaseModel):
+    """The API key creation object."""
+
+    access_type: AccessType
+    inst_id: str | None = None
+    allows_enduser: bool | None = None
+    valid: bool | None = None
+    notes: str | None = None
 
 
 class UsState(StrEnum):
@@ -187,26 +212,42 @@ class BaseUser(BaseModel):
 
 
 def get_user(sess: Session, username: str) -> BaseUser:
-    query_result = sess.execute(
-        select(AccountTable).where(
-            AccountTable.email == username,
+    if username.startswith("api_key_"):
+        api_key_uuid = username.removeprefix("api_key_")
+        query_result = sess.execute(
+            select(ApiKeyTable).where(
+                ApiKeyTable.id == str_to_uuid(api_key_uuid),
+            )
+        ).all()
+        if len(query_result) == 0 or len(query_result) > 1:
+            return None
+        return BaseUser(
+            usr=uuid_to_str(query_result[0][0].id),
+            inst=uuid_to_str(query_result[0][0].inst_id),
+            access=query_result[0][0].access_type,
+            email=username,
         )
-    ).all()
-    if len(query_result) == 0 or len(query_result) > 1:
-        return None
-    return BaseUser(
-        usr=uuid_to_str(query_result[0][0].id),
-        inst=uuid_to_str(query_result[0][0].inst_id),
-        access=query_result[0][0].access_type,
-        email=username,
-    )
+    else:
+        query_result = sess.execute(
+            select(AccountTable).where(
+                AccountTable.email == username,
+            )
+        ).all()
+        if len(query_result) == 0 or len(query_result) > 1:
+            return None
+        return BaseUser(
+            usr=uuid_to_str(query_result[0][0].id),
+            inst=uuid_to_str(query_result[0][0].inst_id),
+            access=query_result[0][0].access_type,
+            email=username,
+        )
 
 
 def authenticate_user(
     username: str, password: str, enduser: str | None, sess: Session
 ) -> BaseUser:
     """For the frontend caller only, there is a specific username/password and end user username passed in."""
-    if username == fe_vars["FE_USER"]:
+    if fe_vars and fe_vars["FE_USER"] and username == fe_vars["FE_USER"]:
         if not verify_password(password, fe_vars["FE_HASHED_PASSWORD"]):
             return False
         else:
@@ -229,26 +270,63 @@ def authenticate_user(
         )
 
 
+def authenticate_api_key(api_key_enduser_tuple: str, sess: Session) -> BaseUser:
+    (key, inst, enduser) = api_key_enduser_tuple
+    query_result = sess.execute(
+        select(ApiKeyTable).where(
+            ApiKeyTable.inst_id == inst,
+        )
+    ).all()
+    if len(query_result) == 0:
+        return False
+    for elem in query_result:
+        if (
+            verify_api_key(key, elem[0].hashed_key_value)
+            and elem[0].valid
+            and not elem[0].deleted
+        ):
+            if enduser and query_result[0][0].impersonation_allowed:
+                return get_user(sess, api_key_enduser_tuple[1])
+            return BaseUser(
+                usr=uuid_to_str(elem[0].id),
+                inst=uuid_to_str(elem[0].inst_id),
+                access=elem[0].access_type,
+                email="api_key_" + uuid_to_str(elem[0].id),
+            )
+    return False
+
+
 async def get_current_user(
     sess: Annotated[Session, Depends(get_session)],
     token: Annotated[str, Depends(oauth2_scheme)],
+    token_from_key: Annotated[str, Depends(oauth2_apikey_scheme)],
 ) -> BaseUser:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    usrname = None
     try:
-        payload = jwt.decode(
-            token, env_vars["SECRET_KEY"], algorithms=env_vars["ALGORITHM"]
-        )
-        username: str = payload.get("sub")
-        if username is None:
+        token_local = None
+        if token and token_from_key:
+            # Weird to have both, but prioritize non-key token.
+            token_local = token
+        elif token_from_key:
+            token_local = token_from_key
+        elif token:
+            token_local = token
+        else:
             raise credentials_exception
-        token_data = TokenData(username=username)
+        payload = jwt.decode(
+            token_local, env_vars["SECRET_KEY"], algorithms=env_vars["ALGORITHM"]
+        )
+        usrname = payload.get("sub")
+        if usrname is None:
+            raise credentials_exception
     except InvalidTokenError:
         raise credentials_exception
-    user = get_user(sess, username=token_data.username)
+    user = get_user(sess, username=usrname)
     if user is None:
         raise credentials_exception
     return user
@@ -294,7 +372,7 @@ def model_owner_and_higher_or_err(user: BaseUser, resource_type: str):
 
 # At this point the value should not be empty as we checked on app startup.
 def prepend_env_prefix(name: str) -> str:
-    return env_vars["ENV"].lower() + "-" + name
+    return env_vars["ENV"].lower() + "_" + name
 
 
 def uuid_to_str(uuid_val: uuid.UUID) -> str:
@@ -313,7 +391,7 @@ def get_external_bucket_name_from_uuid(inst_id: uuid.UUID) -> str:
 
 def get_internal_bucket_name_from_uuid(inst_id: uuid.UUID) -> str:
     """Creates an internal bucket <bucket_name>-internal used only for tmp file storage and other files stored by the webapp."""
-    return get_external_bucket_name_from_uuid(inst_id) + "-internal"
+    return get_external_bucket_name_from_uuid(inst_id) + "_internal"
 
 
 def get_external_bucket_name(inst_id: str) -> str:

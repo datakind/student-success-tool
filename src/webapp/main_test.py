@@ -9,8 +9,15 @@ from .main import app
 import sqlalchemy
 from sqlalchemy.pool import StaticPool
 import uuid
-from .database import AccountTable, InstTable, Base, get_session, local_session
-from .authn import get_password_hash
+from .database import (
+    AccountTable,
+    InstTable,
+    Base,
+    get_session,
+    local_session,
+    ApiKeyTable,
+)
+from .authn import get_password_hash, get_api_key_hash, verify_api_key
 from .test_helper import (
     DATAKINDER,
     USER_VALID_INST_UUID,
@@ -19,8 +26,9 @@ from .test_helper import (
     USER_1_UUID,
     UUID_INVALID,
     UNASSIGNED_USER,
+    SAMPLE_UUID,
 )
-from .utilities import get_current_active_user
+from .utilities import get_current_active_user, uuid_to_str
 
 
 @pytest.fixture(name="session")
@@ -80,6 +88,15 @@ def session_fixture():
                     user_1,
                     user_2,
                     user_3,
+                    ApiKeyTable(
+                        id=SAMPLE_UUID,
+                        hashed_key_value=get_api_key_hash("key_1"),
+                        created_by=USER_UUID,
+                        access_type="DATAKINDER",
+                        valid=True,
+                        created_at=DATETIME_TESTING,
+                        updated_at=DATETIME_TESTING,
+                    ),
                 ]
             )
             session.commit()
@@ -134,6 +151,43 @@ def test_retrieve_token(client: TestClient):
         headers={"content-type": "application/x-www-form-urlencoded"},
     )
     assert response.status_code == 200
+
+
+def test_retrieve_token_gen_from_api_key(client: TestClient):
+    """Test POST /token-from-api-key."""
+    response = client.post(
+        "/token-from-api-key",
+        headers={"X-API-KEY": "key_1"},
+    )
+    assert response.status_code == 200
+    assert response.json()["token_type"] == "bearer"
+
+
+def test_generate_api_key(client: TestClient):
+    """Test POST /generate-api-key."""
+    response = client.post(
+        "/generate-api-key", json={"access_type": "DATAKINDER", "valid": True}
+    )
+    assert response.status_code == 200
+    assert response.json()["access_type"] == "DATAKINDER"
+    assert response.json()["allows_enduser"] == None
+    assert response.json()["inst_id"] == None
+    assert response.json()["key"] is not None
+
+    response_viewer = client.post(
+        "/generate-api-key",
+        json={
+            "access_type": "VIEWER",
+            "inst_id": uuid_to_str(USER_VALID_INST_UUID),
+            "allows_enduser": False,
+            "valid": True,
+        },
+    )
+    assert response_viewer.status_code == 200
+    assert response.json()["access_type"] == "DATAKINDER"
+    assert response.json()["allows_enduser"] == None
+    assert response.json()["inst_id"] == None
+    assert response.json()["key"] is not None
 
 
 def test_get_cross_isnt_users(client: TestClient):

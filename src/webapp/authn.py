@@ -1,17 +1,39 @@
 import jwt
 
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi import Security, HTTPException, status
+from fastapi.security import (
+    OAuth2PasswordBearer,
+    OAuth2PasswordRequestForm,
+    APIKeyHeader,
+)
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from datetime import timedelta, datetime, timezone
 from .config import env_vars
 
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(
+    scheme_name="user_scheme",
     tokenUrl="token",
     # We are using scope to sideload info on the end user. So "enduser" here is just a placeholder, but the actual username will be passed by the frontend.
     scopes={"enduser": "end user to act as (a valid username), if frontend"},
+)
+
+oauth2_apikey_scheme = OAuth2PasswordBearer(
+    scheme_name="api_key_scheme",
+    tokenUrl="token-from-api-key",
+)
+
+api_key_header = APIKeyHeader(name="X-API-KEY", scheme_name="api-key", auto_error=False)
+# The INST value may be empty for Datakinder or cross-institution access.
+api_key_inst_header = APIKeyHeader(
+    name="INST", scheme_name="api-inst", auto_error=False
+)
+# The following is for use by the frontend enduser only.
+api_key_enduser_header = APIKeyHeader(
+    name="ENDUSER", scheme_name="api-enduser", auto_error=False
 )
 
 
@@ -24,9 +46,40 @@ class TokenData(BaseModel):
     username: str | None = None
 
 
-def verify_password(plain_password: str, hashed_password: str):
+def get_api_key(
+    api_key_header: str = Security(api_key_header),
+    api_key_inst_header: str = Security(api_key_inst_header),
+    api_key_enduser_header: str = Security(api_key_enduser_header),
+) -> str:
+    """Retrieve the api key and enduser header key if present.
+
+    Args:
+        api_key_header: The API key passed in the HTTP header.
+
+    Returns:
+        A tuple with the api key and enduser header if present. Authentication happens elsewhere.
+    Raises:
+        HTTPException: If the API key is invalid or missing.
+    """
+    if api_key_header:
+        return (api_key_header, api_key_inst_header, api_key_enduser_header)
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or missing API Key",
+    )
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
     revert_hash = hashed_password.replace("$2y", "$2b", 1)
     return pwd_context.verify(plain_password, revert_hash)
+
+
+def verify_api_key(plain_api_key: str, hashed_key: str) -> bool:
+    return pwd_context.verify(plain_api_key, hashed_key)
+
+
+def get_api_key_hash(api_key: str):
+    return pwd_context.hash(api_key)
 
 
 def get_password_hash(password: str):

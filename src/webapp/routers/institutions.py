@@ -181,6 +181,7 @@ def create_institution(
                 schemas=list(set(requested_schemas)),
                 allowed_emails=req.allowed_emails,
                 state=req.state,
+                created_by=str_to_uuid(current_user.user_id),
             )
         )
         local_session.get().commit()
