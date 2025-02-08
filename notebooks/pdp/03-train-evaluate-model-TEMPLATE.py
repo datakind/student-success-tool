@@ -355,7 +355,7 @@ with mlflow.start_run(run_id=run_id) as run:
                         labels, preds, pos_label=cfg.pos_label, zero_division=np.nan
                     ),
                     "log_loss": sklearn.metrics.log_loss(
-                        labels, preds, labels=[False, True]
+                        labels, pred_probs, labels=[False, True]
                     ),
                 }
                 group_metrics.append(subgroup_metrics)
