@@ -31,8 +31,6 @@ def unique_elements_in_order(eles: Iterable) -> Iterable:
             yield ele
 
 
-
-
 def convert_to_snake_case(col: str) -> str:
     """Convert column name into snake case, without punctuation."""
     col = RE_VARIOUS_PUNCTS.sub(" ", col)

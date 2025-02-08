@@ -19,8 +19,12 @@ def main():
     FAKER.add_provider(pdp.raw_cohort.Provider)
     FAKER.add_provider(pdp.raw_course.Provider)
 
+    # institution_id must be the same for all records.
+    institution_id = FAKER.numerify("#####!")
     cohort_records = [
-        FAKER.raw_cohort_record(normalize_col_names=args.normalize_col_names)
+        FAKER.raw_cohort_record(
+            normalize_col_names=args.normalize_col_names, institution_id=institution_id
+        )
         for _ in range(args.num_students)
     ]
     course_records = [

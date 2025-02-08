@@ -74,7 +74,9 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
         dtype_kwargs={"categories": ["FIRST-TIME", "RE-ADMIT", "TRANSFER-IN"]},
     )
     # NOTE: categories set in a parser, which forces "UK" / "UNKNOWN" values to null
-    enrollment_intensity_first_term: pt.Series[pd.CategoricalDtype] = pda.Field()
+    enrollment_intensity_first_term: pt.Series[pd.CategoricalDtype] = pda.Field(
+        nullable=True
+    )
     # NOTE: categories set in a parser, which forces "UK" values to null
     math_placement: pt.Series[pd.CategoricalDtype] = pda.Field(nullable=True)
     # NOTE: categories set in a parser, which forces "UK" values to null

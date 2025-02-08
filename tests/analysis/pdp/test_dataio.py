@@ -18,6 +18,53 @@ FIXTURES_PATH = "tests/fixtures"
         ("raw_pdp_course_data.csv", schemas.RawPDPCourseDataSchema, {"nrows": 1}),
     ],
 )
+def test_read_raw_pdp_course_data(file_name, schema, kwargs):
+    file_path = os.path.join(FIXTURES_PATH, file_name)
+    result = dataio.read_raw_pdp_course_data(
+        file_path=file_path, schema=schema, dttm_format="%Y%m%d", **(kwargs or {})
+    )
+    assert isinstance(result, pd.DataFrame)
+    assert not result.empty
+
+
+@pytest.mark.parametrize(
+    ["file_name", "schema", "converter_func", "exp_ctx"],
+    [
+        (
+            "raw_pdp_course_data_invalid.csv",
+            schemas.RawPDPCourseDataSchema,
+            None,
+            pytest.raises(SchemaErrors),
+        ),
+        (
+            "raw_pdp_course_data_invalid.csv",
+            schemas.RawPDPCourseDataSchema,
+            lambda df: df.drop_duplicates(subset=["institution_id", "student_guid"]),
+            does_not_raise(),
+        ),
+    ],
+)
+def test_read_raw_pdp_course_data_convert(file_name, schema, converter_func, exp_ctx):
+    file_path = os.path.join(FIXTURES_PATH, file_name)
+    with exp_ctx:
+        result = dataio.read_raw_pdp_course_data(
+            file_path=file_path,
+            schema=schema,
+            dttm_format="%Y%m%d",
+            converter_func=converter_func,
+        )
+        assert isinstance(result, pd.DataFrame)
+        assert not result.empty
+
+
+@pytest.mark.parametrize(
+    ["file_name", "schema", "kwargs"],
+    [
+        ("raw_pdp_course_data.csv", None, None),
+        ("raw_pdp_course_data.csv", schemas.RawPDPCourseDataSchema, None),
+        ("raw_pdp_course_data.csv", schemas.RawPDPCourseDataSchema, {"nrows": 1}),
+    ],
+)
 def test_read_raw_pdp_course_data_from_file(file_name, schema, kwargs):
     file_path = os.path.join(FIXTURES_PATH, file_name)
     result = dataio.read_raw_pdp_course_data_from_file(
@@ -64,6 +111,27 @@ def test_read_raw_pdp_course_data_from_file_preprocessing(
     [
         ("raw_pdp_cohort_data.csv", None, None),
         ("raw_pdp_cohort_data.csv", schemas.RawPDPCohortDataSchema, None),
+        # Yes and No replace 1 and 0.
+        ("raw_pdp_cohort_data_ys.csv", schemas.RawPDPCohortDataSchema, None),
+        ("raw_pdp_cohort_data.csv", schemas.RawPDPCohortDataSchema, {"nrows": 1}),
+    ],
+)
+def test_read_raw_pdp_cohort_data(file_name, schema, kwargs):
+    file_path = os.path.join(FIXTURES_PATH, file_name)
+    result = dataio.read_raw_pdp_cohort_data(
+        file_path=file_path, schema=schema, **(kwargs or {})
+    )
+    assert isinstance(result, pd.DataFrame)
+    assert not result.empty
+
+
+@pytest.mark.parametrize(
+    ["file_name", "schema", "kwargs"],
+    [
+        ("raw_pdp_cohort_data.csv", None, None),
+        ("raw_pdp_cohort_data.csv", schemas.RawPDPCohortDataSchema, None),
+        # Yes and No replace 1 and 0.
+        ("raw_pdp_cohort_data_ys.csv", schemas.RawPDPCohortDataSchema, None),
         ("raw_pdp_cohort_data.csv", schemas.RawPDPCohortDataSchema, {"nrows": 1}),
     ],
 )
@@ -157,6 +225,11 @@ def test_replace_values_with_null(df, col, to_replace, exp):
             pd.DataFrame({"col2": ["1", "0", None]}, dtype="string"),
             "col2",
             pd.Series([True, False, None], dtype="boolean"),
+        ),
+        (
+            pd.DataFrame({"col3": ["True", "False"]}, dtype="string"),
+            "col3",
+            pd.Series([True, False], dtype="boolean"),
         ),
     ],
 )

@@ -1,0 +1,22 @@
+institution_name = "SCHOOL_NAME"
+
+[prepare_modeling_dataset]
+min_passing_grade = 1.0
+min_num_credits_full_time = 12.0
+course_level_pattern = '^(?:[A-Z]+)?(?P<course_level>\d)\d{2}-?(?:[A-Z]+)?$'
+# key_course_subject_areas = ["2DIGIT_CIP_CODE"]
+# key_course_ids = ["COURSE_ID"]
+# target_student_criteria = { ATTRIBUTE = "VALUE" }
+
+[train_evaluate_model]
+dataset_table_path = "CATALOG.SCHEMA.TBL_NAME"
+student_id_col = "student_guid"
+target_col = "target"
+split_col = "split"
+sample_weight_col = "sample_weight"
+student_group_cols = ["student_age", "race", "ethnicity", "gender", "first_gen"]
+# exclude_cols = ["COL_NAME"]
+pos_label = true
+# exclude_frameworks = ["lightgbm", "xgboost"]
+primary_metric = "log_loss"
+timeout_minutes = 5
