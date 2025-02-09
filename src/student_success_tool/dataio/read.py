@@ -1,8 +1,14 @@
 import logging
+import pathlib
 import typing as t
 
 import pandas as pd
 import pyspark.sql
+
+try:
+    import tomllib  # noqa
+except ImportError:  # => PY3.10
+    import tomli as tomllib  # noqa
 
 LOGGER = logging.getLogger(__name__)
 
@@ -58,3 +64,18 @@ def from_delta_table(
     assert isinstance(df, pd.DataFrame)  # type guard
     LOGGER.info("loaded rows x cols = %s of data from '%s'", df.shape, table_path)
     return df
+
+
+def from_toml_file(file_path: str) -> dict[str, object]:
+    """
+    Load config from ``file_path`` and return it as a dict.
+
+    Args:
+        file_path: Path to file on disk from which config will be read.
+    """
+    fpath = pathlib.Path(file_path).resolve()
+    with fpath.open(mode="rb") as f:
+        data = tomllib.load(f)
+    LOGGER.info("loaded config from '%s'", fpath)
+    assert isinstance(data, dict)  # type guard
+    return data
