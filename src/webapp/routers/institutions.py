@@ -34,7 +34,7 @@ from ..database import (
     AccountTable,
     AccountHistoryTable,
     local_session,
-    VAR_CHAR_LONGER_LENGTH,
+    VAR_CHAR_STANDARD_LENGTH,
 )
 
 router = APIRouter(
@@ -63,7 +63,6 @@ class InstitutionCreationRequest(BaseModel):
 
     # The name should be unique amongst all other institutions.
     name: str
-    description: str | None = None
     state: UsState | None = None
     allowed_schemas: list[SchemaType] | None = None
     # Emails allowed to register under this institution
@@ -80,7 +79,6 @@ class Institution(BaseModel):
     inst_id: str
     name: str
     state: UsState | None = None
-    description: str | None = None
     # The following are characteristics of an institution set at institution creation time.
     # If zero, it follows DK defaults (deletion after completion).
     retention_days: int | None = None  # In Days
@@ -112,7 +110,6 @@ def read_all_inst(
             {
                 "inst_id": uuid_to_str(elem[0].id),
                 "name": elem[0].name,
-                "description": elem[0].description,
                 "retention_days": elem[0].retention_days,
                 "state": elem[0].state,
                 # TODO add datetime for creation times
@@ -139,11 +136,6 @@ def create_institution(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authorized to create an institution.",
-        )
-    if req.description and len(req.description) > VAR_CHAR_LONGER_LENGTH:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Description length too long.",
         )
     if (req.is_pdp and not req.pdp_id) or (req.pdp_id and not req.is_pdp):
         raise HTTPException(
@@ -175,7 +167,6 @@ def create_institution(
             InstTable(
                 name=req.name,
                 retention_days=req.retention_days,
-                description=req.description,
                 pdp_id=req.pdp_id,
                 # Sets aren't json serializable, so turn them into lists first
                 schemas=list(set(requested_schemas)),
@@ -221,7 +212,6 @@ def create_institution(
         "name": query_result[0][0].name,
         "state": query_result[0][0].state,
         "pdp_id": query_result[0][0].pdp_id,
-        "description": query_result[0][0].description,
         "retention_days": query_result[0][0].retention_days,
     }
 
@@ -261,7 +251,6 @@ def read_inst_name(
     return {
         "inst_id": uuid_to_str(query_result[0][0].id),
         "name": query_result[0][0].name,
-        "description": query_result[0][0].description,
         "retention_days": query_result[0][0].retention_days,
         "state": query_result[0][0].state,
         "pdp_id": query_result[0][0].pdp_id,
@@ -302,7 +291,6 @@ def read_inst_pdp_id(
     return {
         "inst_id": uuid_to_str(query_result[0][0].id),
         "name": query_result[0][0].name,
-        "description": query_result[0][0].description,
         "retention_days": query_result[0][0].retention_days,
         "state": query_result[0][0].state,
         "pdp_id": query_result[0][0].pdp_id,
@@ -342,7 +330,6 @@ def read_inst_id(
     return {
         "inst_id": uuid_to_str(query_result[0][0].id),
         "name": query_result[0][0].name,
-        "description": query_result[0][0].description,
         "retention_days": query_result[0][0].retention_days,
         "state": query_result[0][0].state,
         "pdp_id": query_result[0][0].pdp_id,

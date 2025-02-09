@@ -43,7 +43,6 @@ UNASSIGNED_USER = BaseUser(
 
 BATCH_REQUEST = {
     "name": "batch_foobar",
-    "description": "",
     "batch_disabled": False,
 }
 
@@ -63,7 +62,6 @@ USER_ACCT = {
 
 INSTITUTION_REQ = {
     "name": "foobar school",
-    "description": "description of school",
     "state": "NY",
     "retention_days": 1,
     "pdp_id": 12345,
@@ -79,7 +77,6 @@ INSTITUTION_REQ_BAREBONES = {
 EMPTY_INSTITUTION_OBJ = {
     "inst_id": "",
     "name": "",
-    "description": "",
     "state": "",
     "pdp_id": None,
     "retention_days": 0,
@@ -90,13 +87,11 @@ INSTITUTION_OBJ = {
     "name": "valid_school",
     "state": "NY",
     "pdp_id": 12345,
-    "description": None,
     "retention_days": None,
 }
 
 MODEL_OBJ = {
     "deleted": None,
-    "description": None,
     "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
     "m_id": "e4862c62829440d8ab4c9c298f02f619",
     "name": "sample_model_for_school_1",
@@ -110,7 +105,6 @@ DATA_OBJ = {
     "record_count": 100,
     "retention_days": None,
     "size": 1,
-    "description": "some model for foo",
     "uploader": 123,
     "source": "MANUAL_UPLOAD",
     "data_disabled": False,

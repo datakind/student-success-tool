@@ -40,7 +40,6 @@ class BatchCreationRequest(BaseModel):
 
     # Must be unique within an institution to avoid confusion
     name: str
-    description: str | None = None
     # Disabled data means it is no longer in use or not available for use.
     batch_disabled: bool = False
     # You can specify files to include as ids or names.
@@ -60,7 +59,6 @@ class BatchInfo(BaseModel):
     file_names_to_ids: Dict[str, str] = {}
     # Must be unique within an institution to avoid confusion
     name: str | None = None
-    description: str | None = None
     # User id of uploader or person who triggered this data ingestion.
     created_by: str | None = None
     # Deleted data means this batch has a pending deletion request and can no longer be used.
@@ -87,7 +85,6 @@ class DataInfo(BaseModel):
     inst_id: str
     # Size to the nearest MB.
     # size_mb: int
-    description: str | None = None
     # User id of uploader or person who triggered this data ingestion. For SST generated files, this field would be null.
     uploader: str | None = None
     # Can be PDP_SFTP, MANUAL_UPLOAD etc.
@@ -175,7 +172,6 @@ def get_all_files(
                 "batch_ids": uuids_to_strs(elem.batches),
                 "inst_id": uuid_to_str(elem.inst_id),
                 # "size_mb": elem.size_mb,
-                "description": elem.description,
                 "uploader": uuid_to_str(elem.uploader),
                 "source": elem.source,
                 "deleted": False if elem.deleted is None else elem.deleted,
@@ -213,7 +209,6 @@ def get_all_batches(
                 "batch_id": uuid_to_str(elem.id),
                 "inst_id": uuid_to_str(elem.inst_id),
                 "name": elem.name,
-                "description": elem.description,
                 "file_names_to_ids": {x.name: uuid_to_str(x.id) for x in elem.files},
                 "created_by": uuid_to_str(elem.created_by),
                 "deleted": False if elem.deleted is None else elem.deleted,
@@ -349,7 +344,6 @@ def read_batch_info(
         "batch_id": uuid_to_str(res.id),
         "inst_id": uuid_to_str(res.inst_id),
         "name": res.name,
-        "description": res.description,
         "file_names_to_ids": {x.name: uuid_to_str(x.id) for x in res.files},
         "created_by": uuid_to_str(res.created_by),
         "deleted": False if res.deleted is None else res.deleted,
@@ -366,7 +360,6 @@ def read_batch_info(
                 "batch_ids": uuids_to_strs(elem.batches),
                 "inst_id": uuid_to_str(elem.inst_id),
                 # "size_mb": elem.size_mb,
-                "description": elem.description,
                 "uploader": uuid_to_str(elem.uploader),
                 "source": elem.source,
                 "deleted": False if elem.deleted is None else elem.deleted,
@@ -414,7 +407,6 @@ def create_batch(
         batch = BatchTable(
             name=req.name,
             inst_id=str_to_uuid(inst_id),
-            description=req.description,
             created_by=str_to_uuid(current_user.user_id),
         )
         f_names = [] if not req.file_names else req.file_names
@@ -478,7 +470,6 @@ def create_batch(
         "batch_id": uuid_to_str(query_result[0][0].id),
         "inst_id": uuid_to_str(query_result[0][0].inst_id),
         "name": query_result[0][0].name,
-        "description": query_result[0][0].description,
         "file_names_to_ids": {
             x.name: uuid_to_str(x.id) for x in query_result[0][0].files
         },
@@ -494,8 +485,6 @@ def construct_modify_query(modify_vals: dict, batch_id: str) -> Any:
     query = update(BatchTable).where(BatchTable.id == str_to_uuid(batch_id))
     if "name" in modify_vals:
         query.values(name=modify_vals["name"])
-    if "description" in modify_vals:
-        query.values(description=modify_vals["description"])
     if "deleted" in modify_vals:
         if modify_vals["deleted"]:
             query.values(deleted_at=func.now())
@@ -610,8 +599,6 @@ def update_batch(
 
     if "name" in update_data:
         existing_batch.name = update_data["name"]
-    if "description" in update_data:
-        existing_batch.description = update_data["description"]
     if "deleted" in update_data and update_data["deleted"]:
         # if the user tries to set deleted to false, that is a noop. Deletions can't be undone.
         existing_batch.deleted = True
@@ -635,7 +622,6 @@ def update_batch(
         "batch_id": uuid_to_str(res[0][0].id),
         "inst_id": uuid_to_str(res[0][0].inst_id),
         "name": res[0][0].name,
-        "description": res[0][0].description,
         "file_names_to_ids": {x.name: uuid_to_str(x.id) for x in res[0][0].files},
         "created_by": uuid_to_str(res[0][0].created_by),
         "deleted": res[0][0].deleted,
@@ -695,7 +681,6 @@ def read_file_id_info(
         "batch_ids": uuids_to_strs(res.batches),
         "inst_id": uuid_to_str(res.inst_id),
         # "size_mb": res.size_mb,
-        "description": res.description,
         "uploader": uuid_to_str(res.uploader),
         "source": res.source,
         "deleted": False if res.deleted is None else res.deleted,
@@ -755,7 +740,6 @@ def read_file_info(
         "batch_ids": uuids_to_strs(res.batches),
         "inst_id": uuid_to_str(res.inst_id),
         # "size_mb": res.size_mb,
-        "description": res.description,
         "uploader": uuid_to_str(res.uploader),
         "source": res.source,
         "deleted": False if res.deleted is None else res.deleted,

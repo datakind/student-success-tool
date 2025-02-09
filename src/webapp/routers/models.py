@@ -40,14 +40,20 @@ router = APIRouter(
 )
 
 
+class SchemaConfigObj(BaseModel):
+    schema_type: SchemaType
+    count: int
+    optional: bool = False
+    multiple_allowed: bool = False
+
+
 class ModelCreationRequest(BaseModel):
     name: str
     # The default is version zero.
     vers_id: int = 0
-    description: str | None = None
     # valid = False, means the model is not ready for use.
     valid: bool = False
-    schema_configs: str
+    schema_configs: list[list[SchemaConfigObj]]
 
 
 class ModelInfo(BaseModel):
@@ -58,7 +64,6 @@ class ModelInfo(BaseModel):
     inst_id: str
     # The default is version zero.
     vers_id: int = 0
-    description: str | None = None
     # User id of created_by.
     created_by: str | None = None
     valid: bool = False
@@ -114,7 +119,6 @@ def read_inst_models(
                 "m_id": uuid_to_str(elem[0].id),
                 "inst_id": uuid_to_str(elem[0].inst_id),
                 "name": elem[0].name,
-                "description": elem[0].description,
                 "created_by": uuid_to_str(elem[0].created_by),
                 "deleted": elem[0].deleted,
                 "valid": elem[0].valid,
@@ -158,11 +162,9 @@ def create_model(
         model = ModelTable(
             name=req.name,
             inst_id=str_to_uuid(inst_id),
-            description=req.description,
             created_by=str_to_uuid(current_user.user_id),
             valid=req.valid,
             version=req.vers_id,
-            # TODO xxx plumb through schema configscs
             # schema_configs=req.schema_configs,
         )
         local_session.get().add(model)
@@ -198,7 +200,6 @@ def create_model(
         "m_id": uuid_to_str(query_result[0][0].id),
         "inst_id": uuid_to_str(query_result[0][0].inst_id),
         "name": query_result[0][0].name,
-        "description": query_result[0][0].description,
         "created_by": uuid_to_str(query_result[0][0].created_by),
         "deleted": query_result[0][0].deleted,
         "valid": query_result[0][0].valid,
@@ -247,7 +248,6 @@ def read_inst_model(
                 "m_id": uuid_to_str(elem[0].id),
                 "inst_id": uuid_to_str(elem[0].inst_id),
                 "name": elem[0].name,
-                "description": elem[0].description,
                 "created_by": uuid_to_str(elem[0].created_by),
                 "deleted": elem[0].deleted,
                 "valid": elem[0].valid,
@@ -302,7 +302,6 @@ def read_inst_model_version(
         "m_id": uuid_to_str(elem[0].id),
         "inst_id": uuid_to_str(elem[0].inst_id),
         "name": elem[0].name,
-        "description": elem[0].description,
         "created_by": uuid_to_str(elem[0].created_by),
         "deleted": elem[0].deleted,
         "valid": elem[0].valid,
@@ -415,7 +414,6 @@ def read_inst_model_output(
     if query_result[0][0].run_ids:
         # TODO xxx: check the run id is present, then make a query to Databricks
         return {
-            # xxxx
             "run_id": "placeholder",
             "inst_id": uuid_to_str(query_result[0][0].inst_id),
             "m_id": uuid_to_str(query_result[0][0].id),

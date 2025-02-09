@@ -33,7 +33,7 @@ db_engine = None
 # GCP MYSQL will throw an error if we don't specify the length for any varchar
 # fields. So we can't use mapped_column in string cases.
 VAR_CHAR_LENGTH = 36
-VAR_CHAR_LONGER_LENGTH = 1000
+VAR_CHAR_STANDARD_LENGTH = 255
 # Constants for the local env
 LOCAL_INST_UUID = uuid.UUID("14c81c50-935e-4151-8561-c2fc3bdabc0f")
 LOCAL_USER_UUID = uuid.UUID("f21a3e53-c967-404e-91fd-f657cb922c39")
@@ -116,7 +116,7 @@ class InstTable(Base):
     )
     models: Mapped[Set["ModelTable"]] = relationship(back_populates="inst")
 
-    name = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False, unique=True)
+    name = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=False, unique=True)
     # If retention unset, the Datakind default is used. File-level retentions overrides
     # this value.
     retention_days: Mapped[int] = mapped_column(nullable=True)
@@ -126,10 +126,8 @@ class InstTable(Base):
     # Schemas that are allowed for validation.
     schemas = Column(MutableList.as_mutable(JSON))
     state = Column(String(VAR_CHAR_LENGTH), nullable=True)
-    # Only populated for PDP schools. Uncomment once logic available.
-    pdp_id: Mapped[int] = mapped_column(nullable=True)
-    # A short description or note on this inst.
-    description = Column(String(VAR_CHAR_LONGER_LENGTH))
+    # Only populated for PDP schools.
+    pdp_id = Column(Integer, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     created_by = Column(Uuid(as_uuid=True), nullable=True)
@@ -144,7 +142,7 @@ class ApiKeyTable(Base):
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # A hash of the key_value, so the user must store the generated key_value secretly.
     hashed_key_value = Column(
-        String(VAR_CHAR_LONGER_LENGTH), nullable=False, unique=True
+        String(VAR_CHAR_STANDARD_LENGTH), nullable=False, unique=True
     )
 
     # Set the foreign key to link to the institution table.
@@ -155,7 +153,7 @@ class ApiKeyTable(Base):
     )
     inst: Mapped["InstTable"] = relationship(back_populates="apikeys")
     created_by = Column(Uuid(as_uuid=True), nullable=False)
-    notes = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=True)
+    notes = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=True)
     # Whether this key allows changing the enduser. ONLY SET FOR THE FRONTEND KEY.
     allows_enduser: Mapped[bool] = mapped_column(nullable=True)
 
@@ -191,18 +189,18 @@ class AccountTable(Base):
     )
     inst: Mapped["InstTable"] = relationship(back_populates="accounts")
 
-    name = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False)
-    email = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False, unique=True)
-    google_id = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=True)
-    azure_id = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=True)
+    name = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=False)
+    email = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=False, unique=True)
+    google_id = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=True)
+    azure_id = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=True)
 
     email_verified_at = Column(DateTime(timezone=True), nullable=True)
-    password = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False)
+    password = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=False)
     two_factor_secret = Column(Text, nullable=True)
     two_factor_recovery_codes = Column(Text, nullable=True)
     two_factor_confirmed_at = Column(DateTime(timezone=True), nullable=True)
 
-    remember_token = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=True)
+    remember_token = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=True)
     # Required for team integration with laravel
     current_team_id = Column(Uuid(as_uuid=True), nullable=True)
     access_type = Column(String(VAR_CHAR_LENGTH), nullable=True)
@@ -235,7 +233,7 @@ class AccountHistoryTable(Base):
     )
     inst: Mapped["InstTable"] = relationship(back_populates="account_histories")
 
-    action = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False)
+    action = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=False)
     resource_id = Column(Uuid(as_uuid=True), nullable=False)
 
 
@@ -251,7 +249,7 @@ association_table = Table(
 # The institution file table
 class FileTable(Base):
     __tablename__ = "file"
-    name = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False)
+    name = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=False)
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     batches: Mapped[Set["BatchTable"]] = relationship(
         secondary=association_table, back_populates="files"
@@ -265,8 +263,6 @@ class FileTable(Base):
     inst: Mapped["InstTable"] = relationship(back_populates="files")
     # The size to the nearest mb.
     # size_mb: Mapped[int] = mapped_column(nullable=False)
-    # A short description or note on this inst.
-    description = Column(String(VAR_CHAR_LONGER_LENGTH))
     # Who uploaded the file. For SST generated files, this field would be null.
     uploader = Column(Uuid(as_uuid=True), nullable=True)
     # Can be PDP_SFTP, MANUAL_UPLOAD etc. May be empty for generated files.
@@ -309,9 +305,7 @@ class BatchTable(Base):
         secondary=association_table, back_populates="batches"
     )
 
-    name = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False)
-    # A short description or note on this inst.
-    description = Column(String(VAR_CHAR_LONGER_LENGTH))
+    name = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=False)
     created_by = Column(Uuid(as_uuid=True))
     # If null, the following is non-deleted.
     deleted: Mapped[bool] = mapped_column(nullable=True)
@@ -337,9 +331,7 @@ class ModelTable(Base):
     )
     inst: Mapped["InstTable"] = relationship(back_populates="models")
 
-    name = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False)
-    # A short description or note on this model.
-    description = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=True)
+    name = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=False)
     # What configuration of schemas are allowed (list of maps e.g. [PDP Course : 1 + PDP Cohort : 1, X_schema :1 + Y_schema: 2])
     schema_configs = Column(MutableList.as_mutable(JSON), nullable=True)
     # A list of all the runs executed using this model. These ids will correspond to Databricks ids so that we can retrieve things like
@@ -378,7 +370,6 @@ def get_one_record(sess_context_var: ContextVar, sess: Session, select_query: ) 
             BatchTable(
                 name=req.name,
                 inst_id=inst_id,
-                description=req.description,
                 created_by=current_user.user_id,
             )
         )

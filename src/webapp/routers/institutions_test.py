@@ -140,7 +140,6 @@ def test_read_all_inst_datakinder(datakinder_client: TestClient):
     assert response.status_code == 200
     assert response.json() == [
         {
-            "description": None,
             "inst_id": uuid_to_str(UUID_1),
             "name": "school_1",
             "pdp_id": None,
@@ -148,7 +147,6 @@ def test_read_all_inst_datakinder(datakinder_client: TestClient):
             "state": "GA",
         },
         {
-            "description": None,
             "inst_id": uuid_to_str(UUID_2),
             "name": "school_2",
             "pdp_id": None,
@@ -156,7 +154,6 @@ def test_read_all_inst_datakinder(datakinder_client: TestClient):
             "state": None,
         },
         {
-            "description": None,
             "inst_id": uuid_to_str(USER_VALID_INST_UUID),
             "name": "valid_school",
             "pdp_id": None,
@@ -236,7 +233,6 @@ def test_create_inst(datakinder_client):
     response = datakinder_client.post("/institutions", json=INSTITUTION_REQ)
     assert response.status_code == 200
     assert response.json()["name"] == "foobar school"
-    assert response.json()["description"] == "description of school"
     assert response.json()["state"] == "NY"
     assert response.json()["pdp_id"] == 12345
     assert response.json()["retention_days"] == 1

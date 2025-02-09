@@ -1,6 +1,7 @@
 """Test file for the models.py file and constituent API functions.
 """
 
+import json
 from fastapi.testclient import TestClient
 from fastapi import HTTPException
 import pytest
@@ -53,7 +54,6 @@ def same_model_orderless(a_elem: ModelInfo, b_elem: ModelInfo):
         or a_elem["m_id"] != b_elem["m_id"]
         or a_elem["vers_id"] != b_elem["vers_id"]
         or a_elem["valid"] != b_elem["valid"]
-        or a_elem["description"] != b_elem["description"]
         or a_elem["deleted"] != b_elem["deleted"]
     ):
         return False
@@ -67,7 +67,6 @@ def same_run_info_orderless(a_elem: ModelInfo, b_elem: ModelInfo):
         or a_elem["m_id"] != b_elem["m_id"]
         or a_elem["vers_id"] != b_elem["vers_id"]
         or a_elem["valid"] != b_elem["valid"]
-        or a_elem["description"] != b_elem["description"]
         or a_elem["deleted"] != b_elem["deleted"]
     ):
         return False
@@ -186,7 +185,6 @@ def test_read_inst_models(client: TestClient):
         {
             "created_by": "",
             "deleted": None,
-            "description": None,
             "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
             "m_id": "e4862c62829440d8ab4c9c298f02f619",
             "name": "sample_model_for_school_1",
@@ -257,9 +255,25 @@ def test_read_inst_model_output(client: TestClient):
 
 def test_create_model(client: TestClient):
     """Depending on timeline, fellows may not get to this."""
+    schema_config_1 = {
+        "schema_type": SchemaType.PDP_COURSE,
+        "count": 1,
+    }
+    schema_config_2 = {
+        "schema_type": SchemaType.PDP_COHORT,
+        "count": 1,
+    }
+    schema_config_3 = {
+        "schema_type": SchemaType.SST_PDP_FINANCE,
+        "count": 1,
+        "optional": True,
+    }
     response = client.post(
         "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + "/models/",
-        json={"name": "my_model", "schema_configs": "tmp"},
+        json={
+            "name": "my_model",
+            "schema_configs": [[schema_config_1, schema_config_2, schema_config_3]],
+        },
     )
 
     assert response.status_code == 200

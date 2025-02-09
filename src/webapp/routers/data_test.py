@@ -54,7 +54,6 @@ def same_file_orderless(a_elem: DataInfo, b_elem: DataInfo):
         a_elem["inst_id"] != b_elem["inst_id"]
         or counter_repr(a_elem["batch_ids"]) != counter_repr(b_elem["batch_ids"])
         or a_elem["name"] != b_elem["name"]
-        or a_elem["description"] != b_elem["description"]
         or a_elem["uploader"] != b_elem["uploader"]
         or a_elem["deleted"] != b_elem["deleted"]
         or a_elem["source"] != b_elem["source"]
@@ -80,7 +79,6 @@ def same_orderless(a: DataOverview, b: DataOverview):
                 a_elem["inst_id"] != b_elem["inst_id"]
                 or a_elem["file_names_to_ids"] == b_elem["file_names_to_ids"]
                 or a_elem["name"] != b_elem["name"]
-                or a_elem["description"] != b_elem["description"]
                 or a_elem["created_by"] != b_elem["created_by"]
                 or a_elem["deleted"] != b_elem["deleted"]
                 or a_elem["completed"] != b_elem["completed"]
@@ -234,7 +232,6 @@ def test_read_inst_all_input_files(client: TestClient):
                         {"file_output_one": "fbe67a2e50e040c7b7b807043cb813a5"},
                     ],
                     "name": "batch_foo",
-                    "description": None,
                     "created_by": "0ad8b77c49fb459a84b18d2c05722c4a",
                     "deleted": False,
                     "completed": False,
@@ -248,7 +245,6 @@ def test_read_inst_all_input_files(client: TestClient):
                     "data_id": "f0bb3a206d924254afed6a72f43c562a",
                     "batch_ids": ["5b2420f3103546ab90eb74d5df97de43"],
                     "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
-                    "description": None,
                     "uploader": "",
                     "source": "MANUAL_UPLOAD",
                     "deleted": False,
@@ -263,7 +259,6 @@ def test_read_inst_all_input_files(client: TestClient):
                     "data_id": "cb02d06c2a59486a9bddd394a4fcb833",
                     "batch_ids": [],
                     "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
-                    "description": None,
                     "uploader": "",
                     "source": "PDP_SFTP",
                     "deleted": False,
@@ -304,7 +299,6 @@ def test_read_inst_all_output_files(client: TestClient):
                         {"file_output_three": "fbe67a2e50e040c7b7b807043cb813a5"},
                     ],
                     "name": "batch_foo",
-                    "description": None,
                     "created_by": "0ad8b77c49fb459a84b18d2c05722c4a",
                     "deleted": False,
                     "completed": False,
@@ -318,7 +312,6 @@ def test_read_inst_all_output_files(client: TestClient):
                     "data_id": "fbe67a2e50e040c7b7b807043cb813a5",
                     "batch_ids": ["5b2420f3103546ab90eb74d5df97de43"],
                     "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
-                    "description": None,
                     "uploader": "",
                     "source": None,
                     "deleted": False,
@@ -333,7 +326,6 @@ def test_read_inst_all_output_files(client: TestClient):
                     "data_id": "e4862c62829440d8ab4c9c298f02f619",
                     "batch_ids": [],
                     "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
-                    "description": None,
                     "uploader": "",
                     "source": None,
                     "deleted": False,
@@ -382,7 +374,6 @@ def test_read_batch_info(client: TestClient):
                         {"file_output_three": "fbe67a2e50e040c7b7b807043cb813a5"},
                     ],
                     "name": "batch_foo",
-                    "description": None,
                     "created_by": "0ad8b77c49fb459a84b18d2c05722c4a",
                     "deleted": False,
                     "completed": False,
@@ -396,7 +387,6 @@ def test_read_batch_info(client: TestClient):
                     "data_id": "fbe67a2e50e040c7b7b807043cb813a5",
                     "batch_ids": ["5b2420f3103546ab90eb74d5df97de43"],
                     "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
-                    "description": None,
                     "uploader": "",
                     "source": None,
                     "deleted": False,
@@ -411,7 +401,6 @@ def test_read_batch_info(client: TestClient):
                     "data_id": "f0bb3a206d924254afed6a72f43c562a",
                     "batch_ids": ["5b2420f3103546ab90eb74d5df97de43"],
                     "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
-                    "description": None,
                     "uploader": "",
                     "source": "MANUAL_UPLOAD",
                     "deleted": False,
@@ -455,7 +444,6 @@ def test_read_file_id_info(client: TestClient):
             "data_id": "f0bb3a206d924254afed6a72f43c562a",
             "batch_ids": ["5b2420f3103546ab90eb74d5df97de43"],
             "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
-            "description": None,
             "uploader": "",
             "source": "MANUAL_UPLOAD",
             "deleted": False,
@@ -485,7 +473,6 @@ def test_create_batch(client: TestClient):
         "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + "/batch",
         json={
             "name": "batch_foobar",
-            "description": "",
             "batch_disabled": "False",
             "file_ids": [uuid_to_str(FILE_UUID_1)],
             "file_names": ["file_input_one", "file_input_two", "file_input_four"],
@@ -493,7 +480,6 @@ def test_create_batch(client: TestClient):
     )
     assert response.status_code == 200
     assert response.json()["name"] == "batch_foobar"
-    assert response.json()["description"] == ""
     assert response.json()["created_by"] == uuid_to_str(USER_UUID)
     assert response.json()["deleted"] == False
     assert response.json()["completed"] == False
@@ -537,7 +523,6 @@ def test_update_batch(client: TestClient):
     )
     assert response.status_code == 200
     assert response.json()["name"] == "batch_name_updated_foo"
-    assert response.json()["description"] == None
     assert response.json()["created_by"] == uuid_to_str(CREATOR_UUID)
     assert response.json()["deleted"] == None
     assert response.json()["completed"] == True
