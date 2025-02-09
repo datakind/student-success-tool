@@ -159,7 +159,7 @@ def test_read_inst_user(client: TestClient):
 def test_read_inst_allowed_emails(datakinder_client: TestClient):
     # Authorized.
     response = datakinder_client.get(
-        "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + "/allowable_emails",
+        "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + "/allowable-emails",
     )
     assert response.status_code == 200
     assert response.json() == {

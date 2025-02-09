@@ -114,9 +114,7 @@ class InstTable(Base):
     account_histories: Mapped[List["AccountHistoryTable"]] = relationship(
         back_populates="inst"
     )
-    # models: Mapped[List["ModelTable"]] = relationship(
-    #    back_populates="inst"
-    # )
+    models: Mapped[Set["ModelTable"]] = relationship(back_populates="inst")
 
     name = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False, unique=True)
     # If retention unset, the Datakind default is used. File-level retentions overrides
@@ -208,7 +206,7 @@ class AccountTable(Base):
     # Required for team integration with laravel
     current_team_id = Column(Uuid(as_uuid=True), nullable=True)
     access_type = Column(String(VAR_CHAR_LENGTH), nullable=True)
-    profile_photo_path = Column(String(VAR_CHAR_LENGTH), nullable=True)
+    # profile_photo_path = Column(String(VAR_CHAR_LENGTH), nullable=True)
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -314,7 +312,7 @@ class BatchTable(Base):
     name = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False)
     # A short description or note on this inst.
     description = Column(String(VAR_CHAR_LONGER_LENGTH))
-    creator = Column(Uuid(as_uuid=True))
+    created_by = Column(Uuid(as_uuid=True))
     # If null, the following is non-deleted.
     deleted: Mapped[bool] = mapped_column(nullable=True)
     # If true, the batch is ready for use.
@@ -327,7 +325,6 @@ class BatchTable(Base):
     __table_args__ = (UniqueConstraint("name", "inst_id", name="batch_name_inst_uc"),)
 
 
-"""
 class ModelTable(Base):
     __tablename__ = "model"
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -341,43 +338,31 @@ class ModelTable(Base):
     inst: Mapped["InstTable"] = relationship(back_populates="models")
 
     name = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=False)
-    # A short description or note on this inst.
-    description = Column(String(VAR_CHAR_LONGER_LENGTH))
-    # What configuration of schemas are allowed (e.g. 1 PDP Course + 1 PDP Cohort)
-    schema_configs = Column(MutableList.as_mutable(JSON))
-    creator = Column(Uuid(as_uuid=True))
+    # A short description or note on this model.
+    description = Column(String(VAR_CHAR_LONGER_LENGTH), nullable=True)
+    # What configuration of schemas are allowed (list of maps e.g. [PDP Course : 1 + PDP Cohort : 1, X_schema :1 + Y_schema: 2])
+    schema_configs = Column(MutableList.as_mutable(JSON), nullable=True)
+    # A list of all the runs executed using this model. These ids will correspond to Databricks ids so that we can retrieve things like
+    # status and correlate output using Databricks.
+    run_ids = Column(MutableList.as_mutable(JSON), nullable=True)
+    created_by = Column(Uuid(as_uuid=True), nullable=True)
     # If null, the following is non-deleted.
     deleted: Mapped[bool] = mapped_column(nullable=True)
-    # If true, the model is ready for use.
-    active: Mapped[bool] = mapped_column(nullable=True)
+    # If true, the model has been approved and is ready for use.
+    valid: Mapped[bool] = mapped_column(nullable=True)
     # The time the deletion request was set.
     deleted_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    # Within a given institution, there should be no duplicated model names.
-    __table_args__ = (UniqueConstraint("name", "inst_id", name="model_name_inst_uc"),)
+    # Each new version of a model can have the same name, but note the uuid will be different.
+    version = Column(Integer, default=0)
 
-class ModelRunsTable(Base):
-    __tablename__ = "model_runs"
-    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
-
-    # Set the parent foreign key to link to the institution table.
-    inst_id = Column(
-        Uuid(as_uuid=True),
-        ForeignKey("inst.id", ondelete="CASCADE"),
-        nullable=False,
+    # Within a given institution, there should be no duplicated model names + versions.
+    __table_args__ = (
+        UniqueConstraint("name", "inst_id", "version", name="model_name_inst_uc"),
     )
-    inst: Mapped["InstTable"] = relationship(back_populates="batches")
 
-    # Set the parent foreign key to link to the institution table.
-    inst_id = Column(
-        Uuid(as_uuid=True),
-        ForeignKey("inst.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    inst: Mapped["InstTable"] = relationship(back_populates="batches")
 
-"""
 """
 def get_one_record(sess_context_var: ContextVar, sess: Session, select_query: ) -> Any:
     local_session.set(sql_session)
@@ -394,7 +379,7 @@ def get_one_record(sess_context_var: ContextVar, sess: Session, select_query: ) 
                 name=req.name,
                 inst_id=inst_id,
                 description=req.description,
-                creator=current_user.user_id,
+                created_by=current_user.user_id,
             )
         )
         local_session.get().commit()

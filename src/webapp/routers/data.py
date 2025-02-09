@@ -62,7 +62,7 @@ class BatchInfo(BaseModel):
     name: str | None = None
     description: str | None = None
     # User id of uploader or person who triggered this data ingestion.
-    creator: str | None = None
+    created_by: str | None = None
     # Deleted data means this batch has a pending deletion request and can no longer be used.
     deleted: bool | None = None
     # Completed batches means this batch is ready for use. Completed batches will
@@ -215,7 +215,7 @@ def get_all_batches(
                 "name": elem.name,
                 "description": elem.description,
                 "file_names_to_ids": {x.name: uuid_to_str(x.id) for x in elem.files},
-                "creator": uuid_to_str(elem.creator),
+                "created_by": uuid_to_str(elem.created_by),
                 "deleted": False if elem.deleted is None else elem.deleted,
                 "completed": False if elem.completed is None else elem.completed,
                 "deletion_request_time": elem.deleted_at,
@@ -351,7 +351,7 @@ def read_batch_info(
         "name": res.name,
         "description": res.description,
         "file_names_to_ids": {x.name: uuid_to_str(x.id) for x in res.files},
-        "creator": uuid_to_str(res.creator),
+        "created_by": uuid_to_str(res.created_by),
         "deleted": False if res.deleted is None else res.deleted,
         "completed": False if res.completed is None else res.completed,
         "deletion_request_time": res.deleted_at,
@@ -415,13 +415,13 @@ def create_batch(
             name=req.name,
             inst_id=str_to_uuid(inst_id),
             description=req.description,
-            creator=str_to_uuid(current_user.user_id),
+            created_by=str_to_uuid(current_user.user_id),
         )
         f_names = [] if not req.file_names else req.file_names
         f_ids = [] if not req.file_ids else strs_to_uuids(req.file_ids)
         # Check that the files requested for this batch exists.
         # Only valid non-sst generated files can be added to a batch at creation time.
-        query_result_file = (
+        query_result_files = (
             local_session.get()
             .execute(
                 select(FileTable).where(
@@ -438,17 +438,13 @@ def create_batch(
             )
             .all()
         )
-        if not query_result_file or len(query_result_file) == 0:
+        if not query_result_files or len(query_result_files) == 0:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="file in request not found.",
             )
-        elif len(query_result_file) > 1:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Multiple files in request with same unique id found.",
-            )
-        batch.files.add(query_result_file[0][0])
+        for elem in query_result_files:
+            batch.files.add(elem[0])
         local_session.get().add(batch)
         local_session.get().commit()
         query_result = (
@@ -486,7 +482,7 @@ def create_batch(
         "file_names_to_ids": {
             x.name: uuid_to_str(x.id) for x in query_result[0][0].files
         },
-        "creator": uuid_to_str(query_result[0][0].creator),
+        "created_by": uuid_to_str(query_result[0][0].created_by),
         "deleted": False,
         "completed": False,
         "deletion_request_time": None,
@@ -641,7 +637,7 @@ def update_batch(
         "name": res[0][0].name,
         "description": res[0][0].description,
         "file_names_to_ids": {x.name: uuid_to_str(x.id) for x in res[0][0].files},
-        "creator": uuid_to_str(res[0][0].creator),
+        "created_by": uuid_to_str(res[0][0].created_by),
         "deleted": res[0][0].deleted,
         "completed": res[0][0].completed,
         "deletion_request_time": res[0][0].deleted_at,

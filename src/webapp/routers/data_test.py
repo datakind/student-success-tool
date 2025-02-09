@@ -17,6 +17,7 @@ from ..test_helper import (
     USER_UUID,
     UUID_INVALID,
     DATETIME_TESTING,
+    SAMPLE_UUID,
 )
 from ..main import app
 from ..database import (
@@ -80,7 +81,7 @@ def same_orderless(a: DataOverview, b: DataOverview):
                 or a_elem["file_names_to_ids"] == b_elem["file_names_to_ids"]
                 or a_elem["name"] != b_elem["name"]
                 or a_elem["description"] != b_elem["description"]
-                or a_elem["creator"] != b_elem["creator"]
+                or a_elem["created_by"] != b_elem["created_by"]
                 or a_elem["deleted"] != b_elem["deleted"]
                 or a_elem["completed"] != b_elem["completed"]
                 or a_elem["deletion_request_time"] != b_elem["deletion_request_time"]
@@ -116,7 +117,7 @@ def session_fixture():
         id=BATCH_UUID,
         inst_id=USER_VALID_INST_UUID,
         name="batch_foo",
-        creator=CREATOR_UUID,
+        created_by=CREATOR_UUID,
         created_at=DATETIME_TESTING,
         updated_at=DATETIME_TESTING,
     )
@@ -135,8 +136,18 @@ def session_fixture():
     file_3 = FileTable(
         id=FILE_UUID_3,
         inst_id=USER_VALID_INST_UUID,
-        name="file_output_one",
+        name="file_output_three",
         batches={batch_1},
+        created_at=DATETIME_TESTING,
+        updated_at=DATETIME_TESTING,
+        sst_generated=True,
+        valid=True,
+        schemas=[SchemaType.PDP_COHORT],
+    )
+    file_4 = FileTable(
+        id=SAMPLE_UUID,
+        inst_id=USER_VALID_INST_UUID,
+        name="file_output_four",
         created_at=DATETIME_TESTING,
         updated_at=DATETIME_TESTING,
         sst_generated=True,
@@ -167,6 +178,7 @@ def session_fixture():
                         schemas=[SchemaType.PDP_COURSE],
                     ),
                     file_3,
+                    file_4,
                 ]
             )
             session.commit()
@@ -223,7 +235,7 @@ def test_read_inst_all_input_files(client: TestClient):
                     ],
                     "name": "batch_foo",
                     "description": None,
-                    "creator": "0ad8b77c49fb459a84b18d2c05722c4a",
+                    "created_by": "0ad8b77c49fb459a84b18d2c05722c4a",
                     "deleted": False,
                     "completed": False,
                     "deletion_request_time": None,
@@ -289,11 +301,11 @@ def test_read_inst_all_output_files(client: TestClient):
                     "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
                     "file_names_to_ids": [
                         {"file_input_one": "f0bb3a206d924254afed6a72f43c562a"},
-                        {"file_output_one": "fbe67a2e50e040c7b7b807043cb813a5"},
+                        {"file_output_three": "fbe67a2e50e040c7b7b807043cb813a5"},
                     ],
                     "name": "batch_foo",
                     "description": None,
-                    "creator": "0ad8b77c49fb459a84b18d2c05722c4a",
+                    "created_by": "0ad8b77c49fb459a84b18d2c05722c4a",
                     "deleted": False,
                     "completed": False,
                     "deletion_request_time": None,
@@ -302,7 +314,7 @@ def test_read_inst_all_output_files(client: TestClient):
             ],
             "files": [
                 {
-                    "name": "file_output_one",
+                    "name": "file_output_three",
                     "data_id": "fbe67a2e50e040c7b7b807043cb813a5",
                     "batch_ids": ["5b2420f3103546ab90eb74d5df97de43"],
                     "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
@@ -315,7 +327,22 @@ def test_read_inst_all_output_files(client: TestClient):
                     "sst_generated": True,
                     "valid": True,
                     "uploaded_date": "2024-12-24T20:22:20.132022",
-                }
+                },
+                {
+                    "name": "file_output_four",
+                    "data_id": "e4862c62829440d8ab4c9c298f02f619",
+                    "batch_ids": [],
+                    "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
+                    "description": None,
+                    "uploader": "",
+                    "source": None,
+                    "deleted": False,
+                    "deletion_request_time": None,
+                    "retention_days": None,
+                    "sst_generated": True,
+                    "valid": True,
+                    "uploaded_date": "2024-12-24T20:22:20.132022",
+                },
             ],
         },
     )
@@ -352,11 +379,11 @@ def test_read_batch_info(client: TestClient):
                     "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
                     "file_names_to_ids": [
                         {"file_input_one": "f0bb3a206d924254afed6a72f43c562a"},
-                        {"file_output_one": "fbe67a2e50e040c7b7b807043cb813a5"},
+                        {"file_output_three": "fbe67a2e50e040c7b7b807043cb813a5"},
                     ],
                     "name": "batch_foo",
                     "description": None,
-                    "creator": "0ad8b77c49fb459a84b18d2c05722c4a",
+                    "created_by": "0ad8b77c49fb459a84b18d2c05722c4a",
                     "deleted": False,
                     "completed": False,
                     "deletion_request_time": None,
@@ -365,7 +392,7 @@ def test_read_batch_info(client: TestClient):
             ],
             "files": [
                 {
-                    "name": "file_output_one",
+                    "name": "file_output_three",
                     "data_id": "fbe67a2e50e040c7b7b807043cb813a5",
                     "batch_ids": ["5b2420f3103546ab90eb74d5df97de43"],
                     "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
@@ -461,13 +488,13 @@ def test_create_batch(client: TestClient):
             "description": "",
             "batch_disabled": "False",
             "file_ids": [uuid_to_str(FILE_UUID_1)],
-            "file_names": ["file_input_one", "file_input_two"],
+            "file_names": ["file_input_one", "file_input_two", "file_input_four"],
         },
     )
     assert response.status_code == 200
     assert response.json()["name"] == "batch_foobar"
     assert response.json()["description"] == ""
-    assert response.json()["creator"] == uuid_to_str(USER_UUID)
+    assert response.json()["created_by"] == uuid_to_str(USER_UUID)
     assert response.json()["deleted"] == False
     assert response.json()["completed"] == False
     assert response.json()["deletion_request_time"] == None
@@ -511,7 +538,7 @@ def test_update_batch(client: TestClient):
     assert response.status_code == 200
     assert response.json()["name"] == "batch_name_updated_foo"
     assert response.json()["description"] == None
-    assert response.json()["creator"] == uuid_to_str(CREATOR_UUID)
+    assert response.json()["created_by"] == uuid_to_str(CREATOR_UUID)
     assert response.json()["deleted"] == None
     assert response.json()["completed"] == True
     assert response.json()["deletion_request_time"] == None

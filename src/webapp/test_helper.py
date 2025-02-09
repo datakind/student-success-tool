@@ -95,13 +95,13 @@ INSTITUTION_OBJ = {
 }
 
 MODEL_OBJ = {
-    "m_id": 10,
-    "name": "foo-model",
+    "deleted": None,
+    "description": None,
+    "inst_id": "1d7c75c33eda42949c6675ea8af97b55",
+    "m_id": "e4862c62829440d8ab4c9c298f02f619",
+    "name": "sample_model_for_school_1",
+    "valid": True,
     "vers_id": 0,
-    "description": "some model for foo",
-    "creator": 123,
-    "disabled": False,
-    "deletion_request": None,
 }
 
 DATA_OBJ = {
