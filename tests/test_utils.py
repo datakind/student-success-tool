@@ -2,7 +2,7 @@ from collections.abc import Iterable
 
 import pytest
 
-from student_success_tool.analysis.pdp import utils
+from student_success_tool import utils
 
 
 @pytest.mark.parametrize(

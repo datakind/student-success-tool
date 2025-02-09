@@ -6,7 +6,7 @@ except ImportError:  # => PY3.10
 import pydantic as pyd
 import pytest
 
-from student_success_tool import configs
+from student_success_tool.schemas.pdp import project
 
 
 # NOTE: if template config file changes, you should update it here as well
@@ -70,7 +70,7 @@ def template_cfg_str():
 
 def test_template_pdp_v2_cfgs(template_cfg_str):
     cfg = tomllib.loads(template_cfg_str)
-    result = configs.PDPProjectConfigV2.model_validate(cfg)
+    result = project.PDPProjectConfigV2.model_validate(cfg)
     assert isinstance(result, pyd.BaseModel)
 
 
@@ -103,5 +103,5 @@ def test_template_pdp_v2_cfgs(template_cfg_str):
 def test_bad_pdp_v2_cfgs(cfg_str, context):
     cfg = tomllib.loads(cfg_str)
     with context:
-        result = configs.PDPProjectConfigV2.model_validate(cfg)
+        result = project.PDPProjectConfigV2.model_validate(cfg)
         assert isinstance(result, pyd.BaseModel)

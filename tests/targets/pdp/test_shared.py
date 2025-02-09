@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from student_success_tool.analysis.pdp.targets import shared
+from student_success_tool.targets.pdp import shared
 
 
 @pytest.fixture(scope="module")

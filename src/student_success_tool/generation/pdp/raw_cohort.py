@@ -3,7 +3,7 @@ from datetime import date
 
 from faker.providers import BaseProvider
 
-from ...analysis.pdp import utils
+from ... import utils
 
 
 class Provider(BaseProvider):

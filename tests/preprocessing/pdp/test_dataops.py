@@ -1,9 +1,10 @@
 import os
+
 import numpy as np
 import pandas as pd
 import pytest
 
-from student_success_tool.analysis.pdp import dataops, dataio, schemas
+from student_success_tool import dataio, preprocessing, schemas
 
 SYNTHETIC_DATA_PATH = "synthetic-data/pdp"
 
@@ -28,7 +29,7 @@ SYNTHETIC_DATA_PATH = "synthetic-data/pdp"
     ],
 )
 def test_infer_first_term_of_year(series, exp):
-    obs = dataops.infer_first_term_of_year(series)
+    obs = preprocessing.pdp.dataops.infer_first_term_of_year(series)
     assert obs == exp
 
 
@@ -40,7 +41,7 @@ def test_infer_first_term_of_year(series, exp):
     ],
 )
 def test_infer_num_terms_in_year(series, exp):
-    obs = dataops.infer_num_terms_in_year(series)
+    obs = preprocessing.pdp.dataops.infer_num_terms_in_year(series)
     assert obs == exp
 
 
@@ -77,7 +78,7 @@ def test_infer_num_terms_in_year(series, exp):
     ],
 )
 def test_standardize_cohort_dataset(df, exp):
-    obs = dataops.standardize_cohort_dataset(df)
+    obs = preprocessing.pdp.dataops.standardize_cohort_dataset(df)
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
 
@@ -137,7 +138,7 @@ def test_standardize_cohort_dataset(df, exp):
     ],
 )
 def test_standardize_course_dataset(df, exp):
-    obs = dataops.standardize_course_dataset(df)
+    obs = preprocessing.pdp.dataops.standardize_course_dataset(df)
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
 
@@ -230,7 +231,7 @@ def test_standardize_course_dataset(df, exp):
     ],
 )
 def test_clean_up_labeled_dataset_cols_and_vals(df, exp):
-    obs = dataops.clean_up_labeled_dataset_cols_and_vals(df)
+    obs = preprocessing.pdp.dataops.clean_up_labeled_dataset_cols_and_vals(df)
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
 
@@ -248,20 +249,20 @@ def test_make_student_term_dataset_against_checked_in_sample(
     cohort_file_name, course_file_name
 ):
     full_cohort_file_path = os.path.join(SYNTHETIC_DATA_PATH, cohort_file_name)
-    cohort = dataio.read_raw_pdp_cohort_data_from_file(
-        full_cohort_file_path, schema=schemas.RawPDPCohortDataSchema
+    cohort = dataio.pdp.read_raw_cohort_data(
+        file_path=full_cohort_file_path, schema=schemas.pdp.RawPDPCohortDataSchema
     )
     assert isinstance(cohort, pd.DataFrame)
     assert not cohort.empty
 
     full_course_file_path = os.path.join(SYNTHETIC_DATA_PATH, course_file_name)
-    course = dataio.read_raw_pdp_course_data_from_file(
-        full_course_file_path,
-        schema=schemas.RawPDPCourseDataSchema,
+    course = dataio.pdp.read_raw_course_data(
+        file_path=full_course_file_path,
+        schema=schemas.pdp.RawPDPCourseDataSchema,
         dttm_format="%Y-%m-%d",
     )
     assert isinstance(course, pd.DataFrame)
     assert not course.empty
-    df = dataops.make_student_term_dataset(cohort, course)
+    df = preprocessing.pdp.dataops.make_student_term_dataset(cohort, course)
     assert isinstance(df, pd.DataFrame)
     assert not df.empty

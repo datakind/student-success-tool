@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from student_success_tool.analysis.pdp.features import section
+from student_success_tool.features.pdp import section
 
 
 @pytest.mark.parametrize(

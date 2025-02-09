@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from pandera.errors import SchemaErrors
 
-from student_success_tool.analysis.pdp import dataio, schemas
+from student_success_tool import dataio, schemas
 
 FIXTURES_PATH = "tests/fixtures"
 
@@ -14,13 +14,13 @@ FIXTURES_PATH = "tests/fixtures"
     ["file_name", "schema", "kwargs"],
     [
         ("raw_pdp_course_data.csv", None, None),
-        ("raw_pdp_course_data.csv", schemas.RawPDPCourseDataSchema, None),
-        ("raw_pdp_course_data.csv", schemas.RawPDPCourseDataSchema, {"nrows": 1}),
+        ("raw_pdp_course_data.csv", schemas.pdp.RawPDPCourseDataSchema, None),
+        ("raw_pdp_course_data.csv", schemas.pdp.RawPDPCourseDataSchema, {"nrows": 1}),
     ],
 )
 def test_read_raw_pdp_course_data(file_name, schema, kwargs):
     file_path = os.path.join(FIXTURES_PATH, file_name)
-    result = dataio.read_raw_pdp_course_data(
+    result = dataio.pdp.read_raw_course_data(
         file_path=file_path, schema=schema, dttm_format="%Y%m%d", **(kwargs or {})
     )
     assert isinstance(result, pd.DataFrame)
@@ -32,13 +32,13 @@ def test_read_raw_pdp_course_data(file_name, schema, kwargs):
     [
         (
             "raw_pdp_course_data_invalid.csv",
-            schemas.RawPDPCourseDataSchema,
+            schemas.pdp.RawPDPCourseDataSchema,
             None,
             pytest.raises(SchemaErrors),
         ),
         (
             "raw_pdp_course_data_invalid.csv",
-            schemas.RawPDPCourseDataSchema,
+            schemas.pdp.RawPDPCourseDataSchema,
             lambda df: df.drop_duplicates(subset=["institution_id", "student_guid"]),
             does_not_raise(),
         ),
@@ -47,7 +47,7 @@ def test_read_raw_pdp_course_data(file_name, schema, kwargs):
 def test_read_raw_pdp_course_data_convert(file_name, schema, converter_func, exp_ctx):
     file_path = os.path.join(FIXTURES_PATH, file_name)
     with exp_ctx:
-        result = dataio.read_raw_pdp_course_data(
+        result = dataio.pdp.read_raw_course_data(
             file_path=file_path,
             schema=schema,
             dttm_format="%Y%m%d",
@@ -61,46 +61,46 @@ def test_read_raw_pdp_course_data_convert(file_name, schema, converter_func, exp
     ["file_name", "schema", "kwargs"],
     [
         ("raw_pdp_course_data.csv", None, None),
-        ("raw_pdp_course_data.csv", schemas.RawPDPCourseDataSchema, None),
-        ("raw_pdp_course_data.csv", schemas.RawPDPCourseDataSchema, {"nrows": 1}),
+        ("raw_pdp_course_data.csv", schemas.pdp.RawPDPCourseDataSchema, None),
+        ("raw_pdp_course_data.csv", schemas.pdp.RawPDPCourseDataSchema, {"nrows": 1}),
     ],
 )
 def test_read_raw_pdp_course_data_from_file(file_name, schema, kwargs):
     file_path = os.path.join(FIXTURES_PATH, file_name)
-    result = dataio.read_raw_pdp_course_data_from_file(
-        file_path, schema=schema, dttm_format="%Y%m%d", **(kwargs or {})
+    result = dataio.pdp.read_raw_course_data(
+        file_path=file_path, schema=schema, dttm_format="%Y%m%d", **(kwargs or {})
     )
     assert isinstance(result, pd.DataFrame)
     assert not result.empty
 
 
 @pytest.mark.parametrize(
-    ["file_name", "schema", "preprocess_func", "exp_ctx"],
+    ["file_name", "schema", "converter_func", "exp_ctx"],
     [
         (
             "raw_pdp_course_data_invalid.csv",
-            schemas.RawPDPCourseDataSchema,
+            schemas.pdp.RawPDPCourseDataSchema,
             None,
             pytest.raises(SchemaErrors),
         ),
         (
             "raw_pdp_course_data_invalid.csv",
-            schemas.RawPDPCourseDataSchema,
+            schemas.pdp.RawPDPCourseDataSchema,
             lambda df: df.drop_duplicates(subset=["institution_id", "student_guid"]),
             does_not_raise(),
         ),
     ],
 )
 def test_read_raw_pdp_course_data_from_file_preprocessing(
-    file_name, schema, preprocess_func, exp_ctx
+    file_name, schema, converter_func, exp_ctx
 ):
     file_path = os.path.join(FIXTURES_PATH, file_name)
     with exp_ctx:
-        result = dataio.read_raw_pdp_course_data_from_file(
-            file_path,
+        result = dataio.pdp.read_raw_course_data(
+            file_path=file_path,
             schema=schema,
             dttm_format="%Y%m%d",
-            preprocess_func=preprocess_func,
+            converter_func=converter_func,
         )
         assert isinstance(result, pd.DataFrame)
         assert not result.empty
@@ -110,15 +110,15 @@ def test_read_raw_pdp_course_data_from_file_preprocessing(
     ["file_name", "schema", "kwargs"],
     [
         ("raw_pdp_cohort_data.csv", None, None),
-        ("raw_pdp_cohort_data.csv", schemas.RawPDPCohortDataSchema, None),
+        ("raw_pdp_cohort_data.csv", schemas.pdp.RawPDPCohortDataSchema, None),
         # Yes and No replace 1 and 0.
-        ("raw_pdp_cohort_data_ys.csv", schemas.RawPDPCohortDataSchema, None),
-        ("raw_pdp_cohort_data.csv", schemas.RawPDPCohortDataSchema, {"nrows": 1}),
+        ("raw_pdp_cohort_data_ys.csv", schemas.pdp.RawPDPCohortDataSchema, None),
+        ("raw_pdp_cohort_data.csv", schemas.pdp.RawPDPCohortDataSchema, {"nrows": 1}),
     ],
 )
 def test_read_raw_pdp_cohort_data(file_name, schema, kwargs):
     file_path = os.path.join(FIXTURES_PATH, file_name)
-    result = dataio.read_raw_pdp_cohort_data(
+    result = dataio.pdp.read_raw_cohort_data(
         file_path=file_path, schema=schema, **(kwargs or {})
     )
     assert isinstance(result, pd.DataFrame)
@@ -129,16 +129,16 @@ def test_read_raw_pdp_cohort_data(file_name, schema, kwargs):
     ["file_name", "schema", "kwargs"],
     [
         ("raw_pdp_cohort_data.csv", None, None),
-        ("raw_pdp_cohort_data.csv", schemas.RawPDPCohortDataSchema, None),
+        ("raw_pdp_cohort_data.csv", schemas.pdp.RawPDPCohortDataSchema, None),
         # Yes and No replace 1 and 0.
-        ("raw_pdp_cohort_data_ys.csv", schemas.RawPDPCohortDataSchema, None),
-        ("raw_pdp_cohort_data.csv", schemas.RawPDPCohortDataSchema, {"nrows": 1}),
+        ("raw_pdp_cohort_data_ys.csv", schemas.pdp.RawPDPCohortDataSchema, None),
+        ("raw_pdp_cohort_data.csv", schemas.pdp.RawPDPCohortDataSchema, {"nrows": 1}),
     ],
 )
 def test_read_raw_pdp_cohort_data_from_file(file_name, schema, kwargs):
     file_path = os.path.join(FIXTURES_PATH, file_name)
-    result = dataio.read_raw_pdp_cohort_data_from_file(
-        file_path, schema=schema, **(kwargs or {})
+    result = dataio.pdp.read_raw_cohort_data(
+        file_path=file_path, schema=schema, **(kwargs or {})
     )
     assert isinstance(result, pd.DataFrame)
     assert not result.empty
@@ -162,7 +162,7 @@ def test_read_raw_pdp_cohort_data_from_file(file_name, schema, kwargs):
     ],
 )
 def test_parse_dttm_values(df, col, fmt, exp):
-    obs = dataio._parse_dttm_values(df, col=col, fmt=fmt)
+    obs = dataio.pdp.raw_data._parse_dttm_values(df, col=col, fmt=fmt)
     assert obs.equals(exp)
 
 
@@ -187,7 +187,7 @@ def test_parse_dttm_values(df, col, fmt, exp):
     ],
 )
 def test_uppercase_string_values(df, col, exp):
-    obs = dataio._uppercase_string_values(df, col=col)
+    obs = dataio.pdp.raw_data._uppercase_string_values(df, col=col)
     assert obs.equals(exp)
 
 
@@ -209,7 +209,9 @@ def test_uppercase_string_values(df, col, exp):
     ],
 )
 def test_replace_values_with_null(df, col, to_replace, exp):
-    obs = dataio._replace_values_with_null(df, col=col, to_replace=to_replace)
+    obs = dataio.pdp.raw_data._replace_values_with_null(
+        df, col=col, to_replace=to_replace
+    )
     assert obs.equals(exp)
 
 
@@ -234,5 +236,5 @@ def test_replace_values_with_null(df, col, to_replace, exp):
     ],
 )
 def test_cast_to_bool_via_int(df, col, exp):
-    obs = dataio._cast_to_bool_via_int(df, col=col)
+    obs = dataio.pdp.raw_data._cast_to_bool_via_int(df, col=col)
     assert obs.equals(exp)

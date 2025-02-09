@@ -1,8 +1,7 @@
 import pandas as pd
 import pytest
 
-from student_success_tool.analysis.pdp import constants
-from student_success_tool.analysis.pdp.features import course
+from student_success_tool.features.pdp import constants, course
 
 
 @pytest.mark.parametrize(
