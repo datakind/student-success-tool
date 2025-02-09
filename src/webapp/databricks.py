@@ -26,9 +26,7 @@ class DatabricksControl(BaseModel):
         """Sets up Databricks resources for a new institution."""
         cat_name = databricks_vars["CATALOG_NAME"]
         for medallion in medallion_levels:
-            w.schemas.create(
-                name=f"{inst_id}_{medallion}", catalog_name=cat_name
-            )
+            w.schemas.create(name=f"{inst_id}_{medallion}", catalog_name=cat_name)
 
         # Create a managed volume in the bronze schema for internal pipeline data.
         created_volume = w.volumes.create(
