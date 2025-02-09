@@ -310,7 +310,7 @@ def read_inst_model_version(
 
 
 @router.get(
-    "/{inst_id}/models/{model_name}/vers/{vers_id}/run", response_model=list[RunInfo]
+    "/{inst_id}/models/{model_name}/vers/{vers_id}/runs", response_model=list[RunInfo]
 )
 def read_inst_model_outputs(
     inst_id: str,

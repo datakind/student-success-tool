@@ -42,6 +42,7 @@ dependencies = [
     "strenum>=0.4.15",
     "functions-framework>=3.8.2",
     "alembic>=1.13.3",
+    "databricks-sdk>=0.35.0",
 ]
 
 [project.urls]

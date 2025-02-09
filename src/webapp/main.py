@@ -57,7 +57,6 @@ app = FastAPI(
     root_path="/api/v1",
 )
 
-
 """
 app.add_middleware(
     CORSMiddleware,

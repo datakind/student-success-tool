@@ -238,7 +238,7 @@ def test_read_inst_model_outputs(client: TestClient):
     response = client.get(
         "/institutions/"
         + uuid_to_str(USER_VALID_INST_UUID)
-        + "/models/sample_model_for_school_1/vers/0/run"
+        + "/models/sample_model_for_school_1/vers/0/runs"
     )
     assert response.status_code == 200
     assert response.json() == []

@@ -44,6 +44,14 @@ fe_vars = {
     "FE_HASHED_PASSWORD": "",
 }
 
+# databricks vars needed for databricks integration
+# TODO: enforce presence at app start time.
+databricks_vars = {
+    # SECRET.
+    "CATALOG_NAME": "",
+    "": "",
+}
+
 
 # Setup function to get environment variables. Should be called at startup time.
 def startup_env_vars():
