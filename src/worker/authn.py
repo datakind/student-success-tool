@@ -11,7 +11,7 @@ from datetime import timedelta, datetime, timezone
 from .config import env_vars
 from typing import Annotated
 from fastapi import Depends, HTTPException, status
-
+from jwt.exceptions import InvalidTokenError
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="token",
