@@ -1,0 +1,6 @@
+[MAIN]
+
+disable=
+    # Currently the "not callable" error throws false positive warnings
+    # See https://github.com/PyCQA/pylint/issues/1493
+    not-callable,

@@ -11,6 +11,7 @@ from datetime import datetime, date
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from ..validation import validate_file_reader
+from sqlalchemy.sql import func
 
 from ..utilities import (
     has_access_to_inst_or_err,

@@ -81,6 +81,12 @@ class RunInfo(BaseModel):
     created_by: str | None = None
 
 
+class InferenceRunRequest(BaseModel):
+    """Parameters for an inference run."""
+
+    batch_id: str
+
+
 # Model related operations. Or model specific data.
 
 
@@ -295,7 +301,7 @@ def read_inst_model_version(
     if len(query_result) > 1:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Multiple modesl of the same version found, this should not have happened.",
+            detail="Multiple models of the same version found, this should not have happened.",
         )
     elem = query_result[0]
     return {
@@ -348,7 +354,7 @@ def read_inst_model_outputs(
     if len(query_result) > 1:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Multiple modesl of the same version found, this should not have happened.",
+            detail="Multiple models of the same version found, this should not have happened.",
         )
     res = []
     if query_result[0][0].run_ids:
@@ -424,6 +430,60 @@ def read_inst_model_output(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="Run not found.",
     )
+
+
+@router.post(
+    "/{inst_id}/models/{model_name}/vers/{vers_id}/run-inference",
+    response_model=RunInfo,
+)
+def trigger_inference_run(
+    inst_id: str,
+    model_name: str,
+    vers_id: int,
+    req: InferenceRunRequest,
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
+    sql_session: Annotated[Session, Depends(get_session)],
+) -> Any:
+    """Returns top-level info around all executions of a given model.
+
+    Only visible to users of that institution or Datakinder access types.
+
+    Args:
+        current_user: the user making the request.
+    """
+    has_access_to_inst_or_err(inst_id, current_user)
+    local_session.set(sql_session)
+    query_result = (
+        local_session.get()
+        .execute(
+            select(ModelTable).where(
+                and_(
+                    ModelTable.name == model_name,
+                    ModelTable.inst_id == str_to_uuid(inst_id),
+                    ModelTable.version == vers_id,
+                )
+            )
+        )
+        .all()
+    )
+    if len(query_result) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Model not found.",
+        )
+    if len(query_result) > 1:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Multiple models of the same version found, this should not have happened.",
+        )
+    # TODO issue Databricks call
+    return {  # xxxx
+        "run_id": "placeholder",
+        "inst_id": uuid_to_str(query_result[0][0].inst_id),
+        "m_id": uuid_to_str(query_result[0][0].id),
+        "created_by": "placeholder",
+        "vers_id": vers_id,
+    }
 
 
 # TODO: DK to implement

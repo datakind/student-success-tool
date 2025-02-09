@@ -228,7 +228,7 @@ class StorageControl(BaseModel):
             raise ValueError("Storage bucket not found.")
         blob = bucket.blob(file_name)
         if not blob.exists():
-            raise ValueError(prev_name + ": File not found.")
+            raise ValueError(file_name + ": File not found.")
         blob.delete()
 
     def validate_file(

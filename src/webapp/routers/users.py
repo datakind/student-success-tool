@@ -165,7 +165,7 @@ def read_inst_allowed_emails(
         current_user: the user making the request.
     """
     has_access_to_inst_or_err(inst_id, current_user)
-    if not current_user.has_full_data_access() and current_user.user_id != user_id:
+    if not current_user.has_full_data_access():
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authorized to view user info.",

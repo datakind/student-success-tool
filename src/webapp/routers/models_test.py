@@ -279,6 +279,20 @@ def test_create_model(client: TestClient):
     assert response.status_code == 200
 
 
+def test_trigger_inference_run(client: TestClient):
+    """Depending on timeline, fellows may not get to this."""
+    response = client.post(
+        "/institutions/"
+        + uuid_to_str(USER_VALID_INST_UUID)
+        + "/models/sample_model_for_school_1/vers/0/run-inference",
+        json={
+            "batch_id": "abc",
+        },
+    )
+
+    assert response.status_code == 200
+
+
 # Retrain a new model.
 def test_retrain_model(client: TestClient):
     """Depending on timeline, fellows may not get to this."""

@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.jobs import Task, NotebookTask, Source
+from databricks.sdk.service import catalog
 
 from .config import databricks_vars
 
@@ -26,7 +27,7 @@ class DatabricksControl(BaseModel):
         cat_name = databricks_vars["CATALOG_NAME"]
         for medallion in medallion_levels:
             w.schemas.create(
-                name=f"{institution_id}_{medallion}", catalog_name=cat_name
+                name=f"{inst_id}_{medallion}", catalog_name=cat_name
             )
 
         # Create a managed volume in the bronze schema for internal pipeline data.
