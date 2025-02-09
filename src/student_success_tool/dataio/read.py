@@ -68,10 +68,10 @@ def from_delta_table(
 
 def from_toml_file(file_path: str) -> dict[str, object]:
     """
-    Load config from ``file_path`` and return it as a dict.
+    Read data from ``file_path`` and return it as a dict.
 
     Args:
-        file_path: Path to file on disk from which config will be read.
+        file_path: Path to file on disk from which data will be read.
     """
     fpath = pathlib.Path(file_path).resolve()
     with fpath.open(mode="rb") as f:
