@@ -2652,7 +2652,7 @@ wheels = [
 
 [[package]]
 name = "student-success-tool"
-version = "0.2.0.dev1"
+version = "0.2.0.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "databricks-connect" },
