@@ -60,55 +60,6 @@ def test_read_raw_pdp_course_data_convert(file_name, schema, converter_func, exp
 @pytest.mark.parametrize(
     ["file_name", "schema", "kwargs"],
     [
-        ("raw_pdp_course_data.csv", None, None),
-        ("raw_pdp_course_data.csv", schemas.pdp.RawPDPCourseDataSchema, None),
-        ("raw_pdp_course_data.csv", schemas.pdp.RawPDPCourseDataSchema, {"nrows": 1}),
-    ],
-)
-def test_read_raw_pdp_course_data_from_file(file_name, schema, kwargs):
-    file_path = os.path.join(FIXTURES_PATH, file_name)
-    result = dataio.pdp.read_raw_course_data(
-        file_path=file_path, schema=schema, dttm_format="%Y%m%d", **(kwargs or {})
-    )
-    assert isinstance(result, pd.DataFrame)
-    assert not result.empty
-
-
-@pytest.mark.parametrize(
-    ["file_name", "schema", "converter_func", "exp_ctx"],
-    [
-        (
-            "raw_pdp_course_data_invalid.csv",
-            schemas.pdp.RawPDPCourseDataSchema,
-            None,
-            pytest.raises(SchemaErrors),
-        ),
-        (
-            "raw_pdp_course_data_invalid.csv",
-            schemas.pdp.RawPDPCourseDataSchema,
-            lambda df: df.drop_duplicates(subset=["institution_id", "student_guid"]),
-            does_not_raise(),
-        ),
-    ],
-)
-def test_read_raw_pdp_course_data_from_file_preprocessing(
-    file_name, schema, converter_func, exp_ctx
-):
-    file_path = os.path.join(FIXTURES_PATH, file_name)
-    with exp_ctx:
-        result = dataio.pdp.read_raw_course_data(
-            file_path=file_path,
-            schema=schema,
-            dttm_format="%Y%m%d",
-            converter_func=converter_func,
-        )
-        assert isinstance(result, pd.DataFrame)
-        assert not result.empty
-
-
-@pytest.mark.parametrize(
-    ["file_name", "schema", "kwargs"],
-    [
         ("raw_pdp_cohort_data.csv", None, None),
         ("raw_pdp_cohort_data.csv", schemas.pdp.RawPDPCohortDataSchema, None),
         # Yes and No replace 1 and 0.
@@ -117,25 +68,6 @@ def test_read_raw_pdp_course_data_from_file_preprocessing(
     ],
 )
 def test_read_raw_pdp_cohort_data(file_name, schema, kwargs):
-    file_path = os.path.join(FIXTURES_PATH, file_name)
-    result = dataio.pdp.read_raw_cohort_data(
-        file_path=file_path, schema=schema, **(kwargs or {})
-    )
-    assert isinstance(result, pd.DataFrame)
-    assert not result.empty
-
-
-@pytest.mark.parametrize(
-    ["file_name", "schema", "kwargs"],
-    [
-        ("raw_pdp_cohort_data.csv", None, None),
-        ("raw_pdp_cohort_data.csv", schemas.pdp.RawPDPCohortDataSchema, None),
-        # Yes and No replace 1 and 0.
-        ("raw_pdp_cohort_data_ys.csv", schemas.pdp.RawPDPCohortDataSchema, None),
-        ("raw_pdp_cohort_data.csv", schemas.pdp.RawPDPCohortDataSchema, {"nrows": 1}),
-    ],
-)
-def test_read_raw_pdp_cohort_data_from_file(file_name, schema, kwargs):
     file_path = os.path.join(FIXTURES_PATH, file_name)
     result = dataio.pdp.read_raw_cohort_data(
         file_path=file_path, schema=schema, **(kwargs or {})
