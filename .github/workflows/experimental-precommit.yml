@@ -27,18 +27,33 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install the project 
         run: uv sync --all-extras --dev 
-      - name: Run Black.
+      - name: Run Black (sst).
         uses: psf/black@stable
         with:
           options: "--check --verbose"
           src: "./src/webapp"
           version: "~= 22.0"
-      - name: Using pylint
+      - name: Using pylint (sst)
         run: |
           uv run pylint $(git ls-files './src/webapp/*.py') --errors-only
-      - name: Test with pytest
+      - name: Test with pytest (sst)
         run: |
           uv run coverage run -m pytest  -v -s ./src/webapp/
-      - name: Generate Coverage Report
+      - name: Generate Coverage Report (sst)
+        run: |
+          uv run coverage report -m
+      - name: Run Black (worker).
+        uses: psf/black@stable
+        with:
+          options: "--check --verbose"
+          src: "./src/worker"
+          version: "~= 22.0"
+      - name: Using pylint (worker)
+        run: |
+          uv run pylint $(git ls-files './src/worker/*.py') --errors-only
+      - name: Test with pytest (worker)
+        run: |
+          uv run coverage run -m pytest  -v -s ./src/worker/
+      - name: Generate Coverage Report (worker)
         run: |
           uv run coverage report -m
