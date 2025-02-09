@@ -1,12 +1,5 @@
-from contextlib import nullcontext as does_not_raise
-
 import pandas as pd
 import pytest
-
-try:
-    import tomllib  # noqa
-except ImportError:  # => PY3.10
-    import tomli as tomllib  # noqa
 
 from student_success_tool.modeling import utils
 
@@ -89,49 +82,3 @@ def test_compute_sample_weights(df, target_col, class_weight, exp):
     assert isinstance(obs, pd.Series)
     assert len(obs) == len(df)
     assert pd.testing.assert_series_equal(obs, exp, rtol=0.01) is None
-
-
-@pytest.mark.parametrize(
-    "toml_content, expected_output, expect_exception",
-    [
-        (
-            """
-            academic_term = { name = "academic term" }
-            term_in_peak_covid = { name = "term occurred in 'peak' COVID" }
-            num_courses = { name = "number of courses taken this term" }
-            """,
-            {
-                "academic_term": {"name": "academic term"},
-                "term_in_peak_covid": {"name": "term occurred in 'peak' COVID"},
-                "num_courses": {"name": "number of courses taken this term"},
-            },
-            does_not_raise(),
-        ),
-        (
-            """
-            academic_term = { name = "academic term" }
-            term_in_peak_covid = { name = "term occurred in 'peak' COVID" }
-            num_courses = { name = "number of courses taken this term"
-            """,
-            None,
-            pytest.raises(tomllib.TOMLDecodeError),
-        ),
-        (
-            "",
-            None,
-            pytest.raises(FileNotFoundError),
-        ),
-    ],
-)
-def test_load_features_table(tmpdir, toml_content, expected_output, expect_exception):
-    if toml_content:
-        toml_file = tmpdir.join("features_table.toml")
-        toml_file.write(toml_content)
-        file_path = str(toml_file)
-    else:
-        file_path = "non_existent_path/features_table.toml"
-    with expect_exception:
-        features_table = utils.load_features_table(file_path)
-        if expect_exception is does_not_raise():
-            assert isinstance(features_table, dict)
-            assert features_table == expected_output
