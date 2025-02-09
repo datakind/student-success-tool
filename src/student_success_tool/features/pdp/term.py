@@ -4,8 +4,8 @@ import typing as t
 
 import pandas as pd
 
-from .. import constants, types
-from . import shared
+from ... import types
+from . import constants, shared
 
 LOGGER = logging.getLogger(__name__)
 

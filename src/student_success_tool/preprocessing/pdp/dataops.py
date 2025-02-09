@@ -5,7 +5,8 @@ import typing as t
 
 import pandas as pd
 
-from . import constants, features, types, utils
+from ... import features, types, utils
+from ...features.pdp import constants
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,27 +46,27 @@ def make_student_term_dataset(
     first_term_of_year = infer_first_term_of_year(df_course["academic_term"])
     df_students = (
         df_cohort.pipe(standardize_cohort_dataset)
-        .pipe(features.student.add_features, first_term_of_year=first_term_of_year)
+        .pipe(features.pdp.student.add_features, first_term_of_year=first_term_of_year)
     )  # fmt: skip
     df_courses_plus = (
         df_course.pipe(standardize_course_dataset)
         .pipe(
-            features.course.add_features,
+            features.pdp.course.add_features,
             min_passing_grade=min_passing_grade,
             course_level_pattern=course_level_pattern,
         )
         .pipe(
-            features.term.add_features,
+            features.pdp.term.add_features,
             first_term_of_year=first_term_of_year,
             peak_covid_terms=peak_covid_terms,
         )
         .pipe(
-            features.section.add_features,
+            features.pdp.section.add_features,
             section_id_cols=["term_id", "course_id", "section_id"],
         )
     )
     df_student_terms = (
-        features.student_term.aggregate_from_course_level_features(
+        features.pdp.student_term.aggregate_from_course_level_features(
             df_courses_plus,
             student_term_id_cols=["student_guid", "term_id"],
             min_passing_grade=min_passing_grade,
@@ -74,12 +75,12 @@ def make_student_term_dataset(
         )
         .merge(df_students, how="inner", on=["institution_id", "student_guid"])
         .pipe(
-            features.student_term.add_features,
+            features.pdp.student_term.add_features,
             min_num_credits_full_time=min_num_credits_full_time,
         )
     )
     df_student_terms_plus = (
-        features.cumulative.add_features(
+        features.pdp.cumulative.add_features(
             df_student_terms,
             student_id_cols=["institution_id", "student_guid"],
             sort_cols=["academic_year", "academic_term"],

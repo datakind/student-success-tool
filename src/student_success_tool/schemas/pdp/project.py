@@ -3,7 +3,7 @@ import typing as t
 
 import pydantic as pyd
 
-from ...analysis.pdp import constants
+from ...features.pdp import constants
 
 
 class FeaturesConfig(pyd.BaseModel):

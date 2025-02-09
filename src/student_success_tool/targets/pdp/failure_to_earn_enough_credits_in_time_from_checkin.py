@@ -5,7 +5,8 @@ from collections.abc import Collection
 import numpy as np
 import pandas as pd
 
-from .. import dataops, utils
+from ... import utils
+from ...preprocessing.pdp import dataops
 from . import shared
 
 LOGGER = logging.getLogger(__name__)
