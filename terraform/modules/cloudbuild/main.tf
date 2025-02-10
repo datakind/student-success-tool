@@ -11,7 +11,7 @@ resource "google_artifact_registry_repository" "sst_app_ui" {
 }
 
 resource "google_cloudbuild_trigger" "webapp" {
-  name            = "student-success-tool-webapp"
+  name            = "${var.environment}-student-success-tool-webapp"
   service_account = var.cloudbuild_service_account_id
   substitutions = {
     "_ENVIRONMENT" = var.environment,
@@ -84,7 +84,7 @@ resource "google_cloudbuild_trigger" "webapp" {
 }
 
 resource "google_cloudbuild_trigger" "frontend" {
-  name            = "sst-app-ui-frontend"
+  name            = "${var.environment}-sst-app-ui-frontend"
   service_account = var.cloudbuild_service_account_id
   substitutions = {
     "_ENVIRONMENT" = var.environment,
@@ -183,8 +183,8 @@ resource "google_cloudbuild_trigger" "frontend" {
 }
 
 resource "google_cloudbuild_trigger" "terraform" {
-  name            = "student-success-tool-terraform"
-  service_account = var.cloudbuild_service_account_id
+  name            = "${var.environment}-student-success-tool-terraform"
+  service_account = var.terraform_service_account_id
   substitutions = {
     "_PROJECT"        = var.project
     "_REGION"         = var.region
@@ -201,12 +201,12 @@ resource "google_cloudbuild_trigger" "terraform" {
   build {
     step {
       name = "hashicorp/terraform:1.10.1"
-      dir  = "terraform"
+      dir  = "terraform/environments/${var.environment}"
       args = ["init"]
     }
     step {
       name = "hashicorp/terraform:1.10.1"
-      dir  = "terraform"
+      dir  = "terraform/environments/${var.environment}"
       args = [
         "apply",
         "-auto-approve",

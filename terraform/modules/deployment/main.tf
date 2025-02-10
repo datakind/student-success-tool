@@ -199,6 +199,7 @@ resource "google_compute_backend_bucket" "build" {
   enable_cdn  = true
 }
 
+# TODO disable this for the prod deployment
 data "google_iam_policy" "admin" {
   binding {
     role = "roles/iap.httpsResourceAccessor"
@@ -208,7 +209,6 @@ data "google_iam_policy" "admin" {
   }
 }
 
-# TODO: disable this for the prod environment
 resource "google_iap_web_backend_service_iam_policy" "web_backend_service_iam_policy" {
   for_each            = module.lb-http.backend_services
   web_backend_service = each.value.name
@@ -226,6 +226,7 @@ module "cloudbuild" {
   frontend_image = var.frontend_image
 
   cloudbuild_service_account_id = module.iam.cloudbuild_service_account_id
+  terraform_service_account_id  = module.iam.terraform_service_account_id
   static_assets_bucket_name     = google_storage_bucket.static_assets.name
 
   depends_on = [module.services]
