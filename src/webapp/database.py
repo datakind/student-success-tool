@@ -17,6 +17,7 @@ from sqlalchemy import (
     Text,
     JSON,
     Integer,
+    BigInteger,
 )
 from typing import Set, List
 from sqlalchemy.orm import sessionmaker, Session, relationship, mapped_column, Mapped
@@ -331,12 +332,11 @@ class ModelTable(Base):
     )
     inst: Mapped["InstTable"] = relationship(back_populates="models")
 
+    jobs: Mapped[Set["JobTable"]] = relationship(back_populates="model")
+
     name = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=False)
     # What configuration of schemas are allowed (list of maps e.g. [PDP Course : 1 + PDP Cohort : 1, X_schema :1 + Y_schema: 2])
     schema_configs = Column(MutableList.as_mutable(JSON), nullable=True)
-    # A list of all the runs executed using this model. These ids will correspond to Databricks ids so that we can retrieve things like
-    # status and correlate output using Databricks.
-    run_ids = Column(MutableList.as_mutable(JSON), nullable=True)
     created_by = Column(Uuid(as_uuid=True), nullable=True)
     # If null, the following is non-deleted.
     deleted: Mapped[bool] = mapped_column(nullable=True)
@@ -353,6 +353,28 @@ class ModelTable(Base):
     __table_args__ = (
         UniqueConstraint("name", "inst_id", "version", name="model_name_inst_uc"),
     )
+
+
+class JobTable(Base):
+    __tablename__ = "job"
+    id = Column(BigInteger, primary_key=True)
+
+    # Set the parent foreign key to link to the institution table.
+    model_id = Column(
+        Uuid(as_uuid=True),
+        ForeignKey("model.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    model: Mapped["ModelTable"] = relationship(back_populates="jobs")
+
+    created_by = Column(Uuid(as_uuid=True), nullable=False)
+    # The time the deletion request was set.
+    triggered_at = Column(DateTime(timezone=True), nullable=False)
+    batch_name = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=False)
+    # The following will be empty if not completed or if job errored out. Getting additional details will require a call to the Databricks table.
+    output_filename = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=True)
+    err_msg = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=True)
+    completed: Mapped[bool] = mapped_column(nullable=True)
 
 
 """

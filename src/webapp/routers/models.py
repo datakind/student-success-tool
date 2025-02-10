@@ -2,7 +2,6 @@
 """
 
 import uuid
-
 from typing import Annotated, Any, Tuple, Dict
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
@@ -30,6 +29,7 @@ from ..database import (
     FileTable,
     InstTable,
     ModelTable,
+    JobTable,
 )
 
 from ..gcsutil import StorageControl
@@ -59,6 +59,7 @@ class ModelCreationRequest(BaseModel):
 class ModelInfo(BaseModel):
     """The model object that's returned."""
 
+    # The model id is unique for every instance of the model (e.g. model name + version id pair)
     m_id: str
     name: str
     inst_id: str
@@ -76,15 +77,23 @@ class RunInfo(BaseModel):
     run_id: str
     vers_id: int = 0
     inst_id: str
-    m_id: str
+    m_name: str
     # user id of the person who executed this run.
     created_by: str | None = None
+    # Time the run info was triggered if it was triggered in the webapp
+    triggered_at: datetime | None = None
+    # Batch used for the run
+    batch_name: str | None = None
+    # output file name
+    output_filename: str | None = None
+    completed: bool | None = None
+    err_msg: str | None = None
 
 
 class InferenceRunRequest(BaseModel):
     """Parameters for an inference run."""
 
-    batch_id: str
+    batch_name: str
 
 
 # Model related operations. Or model specific data.
@@ -357,18 +366,21 @@ def read_inst_model_outputs(
             detail="Multiple models of the same version found, this should not have happened.",
         )
     res = []
-    if query_result[0][0].run_ids:
-        for elem in query_result[0][0].run_ids:
-            res.append(
-                {
-                    # xxxx
-                    "run_id": "placeholder",
-                    "inst_id": uuid_to_str(query_result[0][0].inst_id),
-                    "m_id": uuid_to_str(query_result[0][0].id),
-                    "created_by": "placeholder",
-                    "vers_id": vers_id,
-                }
-            )
+    for elem in query_result[0][0].jobs or []:
+        # if not elem.output_filename:
+        # TODO make a query to databricks to retrieve status.
+        res.append(
+            {
+                "vers_id": vers_id,
+                "inst_id": uuid_to_str(query_result[0][0].inst_id),
+                "m_name": query_result[0][0].name,
+                "run_id": elem.id,
+                "created_by": uuid_to_str(elem.created_by),
+                "triggered_at": elem.triggered_at,
+                "batch_name": elem.batch_name,
+                "output_filename": elem.output_filename,
+            }
+        )
     return res
 
 
@@ -417,21 +429,27 @@ def read_inst_model_output(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Multiple models of the same version found, this should not have happened.",
         )
-    if query_result[0][0].run_ids:
-        # TODO xxx: check the run id is present, then make a query to Databricks
-        return {
-            "run_id": "placeholder",
-            "inst_id": uuid_to_str(query_result[0][0].inst_id),
-            "m_id": uuid_to_str(query_result[0][0].id),
-            "created_by": "placeholder",
-            "vers_id": vers_id,
-        }
+
+    for elem in query_result[0][0].jobs or []:
+        if elem.id == run_id:
+            # TODO xxx: if the output_filename is empty make a query to Databricks
+            return {
+                "vers_id": vers_id,
+                "inst_id": uuid_to_str(query_result[0][0].inst_id),
+                "m_name": query_result[0][0].name,
+                "run_id": elem.id,
+                "created_by": uuid_to_str(elem.created_by),
+                "triggered_at": elem.triggered_at,
+                "batch_name": elem.batch_name,
+                "output_filename": elem.output_filename,
+            }
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="Run not found.",
     )
 
 
+# TODO: xxx update the run info returned items.
 @router.post(
     "/{inst_id}/models/{model_name}/vers/{vers_id}/run-inference",
     response_model=RunInfo,
@@ -476,13 +494,28 @@ def trigger_inference_run(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Multiple models of the same version found, this should not have happened.",
         )
-    # TODO issue Databricks call
-    return {  # xxxx
-        "run_id": "placeholder",
-        "inst_id": uuid_to_str(query_result[0][0].inst_id),
-        "m_id": uuid_to_str(query_result[0][0].id),
-        "created_by": "placeholder",
+    # TODO issue Databricks call then use the result to populate the below
+
+    triggered_timestamp = datetime.now()
+    # Add an entry to the jobs table with the job id
+    """
+    job = JobTable(
+            id=12345,
+            triggered_at=triggered_timestamp,
+            created_by=str_to_uuid(current_user.user_id),
+            batch_name=req.batch_name,
+            model_id=query_result[0][0].id,
+        )
+    local_session.get().add(job)
+    """
+    return {
         "vers_id": vers_id,
+        "inst_id": uuid_to_str(query_result[0][0].inst_id),
+        "m_name": query_result[0][0].name,
+        "run_id": "placeholder",
+        "created_by": current_user.user_id,
+        "triggered_at": triggered_timestamp,
+        "batch_name": req.batch_name,
     }
 
 

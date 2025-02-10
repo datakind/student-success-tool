@@ -286,7 +286,7 @@ def test_trigger_inference_run(client: TestClient):
         + uuid_to_str(USER_VALID_INST_UUID)
         + "/models/sample_model_for_school_1/vers/0/run-inference",
         json={
-            "batch_id": "abc",
+            "batch_name": "abc",
         },
     )
 

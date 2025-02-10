@@ -203,6 +203,7 @@ async def set_datakinders(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Only Datakinders can set other Datakinders",
         )
+    # TODO xxx check the user doesn't have an inst first
     local_session.set(sql_session)
     local_session.get().execute(
         update(AccountTable)
