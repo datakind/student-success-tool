@@ -396,3 +396,28 @@ def get_internal_bucket_name_from_uuid(inst_id: uuid.UUID) -> str:
 
 def get_external_bucket_name(inst_id: str) -> str:
     return prepend_env_prefix(inst_id)
+
+
+def databricksify_inst_name(inst_name: str) -> str:
+    """
+    Follow DK standardized rules for naming conventions
+    """
+    name = inst_name.lower()
+    # This needs to be in order from most verbose and encompassing other replacement keys to least.
+    dk_replacements = {
+        "community technical college": "ctc",
+        "community college": "cc",
+        "of science and technology": "st",
+        "university": "uni",
+        "college": "col",
+    }
+
+    for old, new in dk_replacements.items():
+        name = name.replace(old, new)
+    special_char_replacements = {" & ": " ", "&": " ", "-": " "}
+
+    for old, new in special_char_replacements.items():
+        name = name.replace(old, new)
+
+    # Databricks uses underscores, so we'll do that here.
+    return name.replace(" ", "_")
