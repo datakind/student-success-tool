@@ -14,7 +14,7 @@ resource "google_secret_manager_secret" "env_file" {
 
 resource "google_secret_manager_secret_version" "env_file_secret_version" {
   secret      = google_secret_manager_secret.env_file.id
-  secret_data = "APP_NAME=SST"
+  secret_data = "ENV=${var.environment}"
 }
 
 resource "google_secret_manager_secret_iam_member" "cloudrun_sa_env_file_access" {
