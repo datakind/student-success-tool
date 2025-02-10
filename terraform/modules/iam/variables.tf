@@ -17,13 +17,13 @@ variable "cloudbuild_sa_roles" {
   type        = list(string)
   description = "List of IAM roles to grant to the Cloud Build service account."
   default = [
-    "roles/cloudbuild.serviceAgent",
-    "roles/iam.serviceAccountUser",
-    "roles/storage.objectCreator",
-    "roles/compute.networkUser",
-    "roles/compute.instanceAdmin.v1",
-    "roles/secretmanager.secretAccessor",
     "roles/artifactregistry.writer",
+    "roles/cloudbuild.serviceAgent",
+    "roles/compute.instanceAdmin.v1",
+    "roles/compute.networkUser",
+    "roles/iam.serviceAccountUser",
+    "roles/secretmanager.secretAccessor",
+    "roles/storage.objectCreator",
   ]
 }
 
@@ -39,16 +39,15 @@ variable "terraform_sa_roles" {
   type        = list(string)
   description = "List of IAM roles to grant to the Terraform service account."
   default = [
-    "roles/iam.serviceAccountUser",
-    "roles/logging.logWriter",
-    "roles/storage.admin",
-    "roles/artifactregistry.admin",
-    "roles/run.sourceDeveloper",
-    "roles/run.developer",
-    "roles/run.invoker",
     "roles/compute.networkAdmin",
     "roles/compute.storageAdmin",
+    "roles/compute.securityAdmin",
+    "roles/iam.securityAdmin",
+    "roles/iam.serviceAccountUser",
+    "roles/logging.logWriter",
+    "roles/run.developer",
+    "roles/run.invoker",
     "roles/secretmanager.secretAccessor",
-    "roles/iam.serviceAccountAdmin",
+    "roles/storage.admin",
   ]
 }
