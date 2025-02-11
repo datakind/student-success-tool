@@ -153,6 +153,12 @@ def select_eligible_students(
             n=n,
             include_cols=None,
         ).loc[:, utils.to_list(student_id_cols)]
+        df_ref = shared.get_first_student_terms_within_cohort(
+            df,
+            student_id_cols=student_id_cols,
+            sort_cols=term_rank_col,
+            include_cols=[enrollment_intensity_col],
+        )
     else:
         df_students_by_checkin = shared.get_nth_student_terms(
             df,
@@ -161,15 +167,26 @@ def select_eligible_students(
             n=n,
             include_cols=None,
         ).loc[:, utils.to_list(student_id_cols)]
+        df_ref = shared.get_first_student_terms(
+            df,
+            student_id_cols=student_id_cols,
+            sort_cols=term_rank_col,
+            include_cols=[enrollment_intensity_col],
+        )
     nuq_students_checkin = len(df_students_by_checkin)
     shared._log_eligible_selection(
         nuq_students_in, nuq_students_checkin, "check-in point"
-    )
-    df_ref = shared.get_first_student_terms(
-        df,
-        student_id_cols=student_id_cols,
-        sort_cols=term_rank_col,
-        include_cols=[enrollment_intensity_col],
+        )
+    df_students_by_time_left = (
+        shared.select_students_by_time_left(
+            df_ref,
+            student_id_cols=student_id_cols,
+            intensity_time_lefts=intensity_time_lefts,
+            max_term_rank=max_term_rank,
+            num_terms_in_year=num_terms_in_year,
+            enrollment_intensity_col=enrollment_intensity_col,
+            term_rank_col=term_rank_col
+        )
     )
     df_students_by_time_left = (
         shared.select_students_by_time_left(
