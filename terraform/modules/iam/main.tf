@@ -28,15 +28,3 @@ resource "google_project_iam_member" "cloudbuild_sa_member" {
   role     = each.key
   member   = "serviceAccount:${google_service_account.cloudbuild_sa.email}"
 }
-
-resource "google_service_account" "terraform_sa" {
-  account_id   = "${var.environment}-terraform-sa"
-  display_name = "Terraform Service Account"
-}
-
-resource "google_project_iam_member" "terraform_sa_member" {
-  for_each = toset(var.terraform_sa_roles)
-  project  = var.project
-  role     = each.key
-  member   = "serviceAccount:${google_service_account.terraform_sa.email}"
-}

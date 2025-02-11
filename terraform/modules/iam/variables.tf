@@ -34,20 +34,3 @@ variable "cloudrun_sa_roles" {
     "roles/run.invoker",
   ]
 }
-
-variable "terraform_sa_roles" {
-  type        = list(string)
-  description = "List of IAM roles to grant to the Terraform service account."
-  default = [
-    "roles/compute.networkAdmin",
-    "roles/compute.storageAdmin",
-    "roles/compute.securityAdmin",
-    "roles/iam.securityAdmin",
-    "roles/iam.serviceAccountUser",
-    "roles/logging.logWriter",
-    "roles/run.developer",
-    "roles/run.invoker",
-    "roles/secretmanager.secretAccessor",
-    "roles/storage.admin",
-  ]
-}
