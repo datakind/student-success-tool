@@ -241,3 +241,17 @@ def test_create_inst(datakinder_client):
     response = datakinder_client.post("/institutions", json=INSTITUTION_REQ_BAREBONES)
     assert response.status_code == 200
     assert response.json()["name"] == "testing school"
+
+    response = datakinder_client.post(
+        "/institutions", json={"name": "Testing A & M - Main Campus _ hello"}
+    )
+    assert response.status_code == 200
+
+    response = datakinder_client.post(
+        "/institutions", json={"name": "Testing (invalid)"}
+    )
+    assert response.status_code == 400
+    assert (
+        response.text
+        == '{"detail":"Only alphanumeric characters, -, _, &, and a space are allowed in institution names."}'
+    )

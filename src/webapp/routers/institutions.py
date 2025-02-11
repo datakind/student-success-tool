@@ -2,6 +2,7 @@
 """
 
 import uuid
+import re
 
 from typing import Annotated, Any, Union, Dict
 from fastapi import HTTPException, status, APIRouter, Depends
@@ -141,6 +142,14 @@ def create_institution(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Please set the PDP's Institution ID for PDP schools and check PDP as a schema type.",
+        )
+
+    pattern = "^[A-Za-z0-9&_ -]*$"
+    # convert match object into bool.
+    if not re.match(pattern, req.name):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only alphanumeric characters, -, _, &, and a space are allowed in institution names.",
         )
 
     local_session.set(sql_session)
