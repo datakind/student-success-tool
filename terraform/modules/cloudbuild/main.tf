@@ -1,21 +1,19 @@
 resource "google_artifact_registry_repository" "student_success_tool" {
-  location      = "us-central1"
+  location      = var.region
   repository_id = "student-success-tool"
   format        = "DOCKER"
 }
 
 resource "google_artifact_registry_repository" "sst_app_ui" {
-  location      = "us-central1"
+  location      = var.region
   repository_id = "sst-app-ui"
   format        = "DOCKER"
 }
 
-resource "google_cloudbuild_trigger" "webapp" {
-  name            = "${var.environment}-student-success-tool-webapp"
+resource "google_cloudbuild_trigger" "python_apps" {
+  for_each        = toset(["webapp", "worker"])
+  name            = "${var.environment}-student-success-tool-${each.key}"
   service_account = var.cloudbuild_service_account_id
-  substitutions = {
-    "_ENVIRONMENT" = var.environment,
-  }
   github {
     owner = "datakind"
     name  = "student-success-tool"
@@ -28,52 +26,33 @@ resource "google_cloudbuild_trigger" "webapp" {
       name = "gcr.io/cloud-builders/docker"
       args = [
         "build",
+        "-f",
+        "src/${each.key}/Dockerfile",
         "-t",
-        "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:$COMMIT_SHA",
+        "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/${each.key}:$COMMIT_SHA",
         "-t",
-        "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:latest",
+        "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/${each.key}:latest",
         "."
       ]
     }
     step {
       name = "gcr.io/cloud-builders/docker"
-      args = ["push", "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:$COMMIT_SHA"]
+      args = ["push", "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/${each.key}:$COMMIT_SHA"]
     }
     step {
       name = "gcr.io/cloud-builders/docker"
-      args = ["push", "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:latest"]
+      args = ["push", "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/${each.key}:latest"]
     }
     step {
       name = "gcr.io/cloud-builders/gcloud"
       args = [
         "run",
         "deploy",
-        "$_ENVIRONMENT-webapp",
+        "${var.environment}-${each.key}",
         "--image",
-        "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:$COMMIT_SHA",
+        "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/${each.key}:$COMMIT_SHA",
         "--region",
         "${var.region}",
-      ]
-    }
-    step {
-      name = "gcr.io/cloud-builders/gcloud"
-      args = [
-        "run",
-        "deploy",
-        "$_ENVIRONMENT-webapp",
-        "--image",
-        "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:$COMMIT_SHA",
-        "--region",
-        "${var.region}",
-        "--command",
-        "fastapi",
-        "--args",
-        "run",
-        "src/worker",
-        "--port",
-        "8080",
-        "--host",
-        "0.0.0.0"
       ]
     }
     options {
@@ -86,9 +65,6 @@ resource "google_cloudbuild_trigger" "webapp" {
 resource "google_cloudbuild_trigger" "frontend" {
   name            = "${var.environment}-sst-app-ui-frontend"
   service_account = var.cloudbuild_service_account_id
-  substitutions = {
-    "_ENVIRONMENT" = var.environment,
-  }
   github {
     owner = "datakind"
     name  = "sst-app-ui"
@@ -155,7 +131,7 @@ resource "google_cloudbuild_trigger" "frontend" {
         "run",
         "jobs",
         "deploy",
-        "$_ENVIRONMENT-migrate",
+        "${var.environment}-migrate",
         "--image=${var.region}-docker.pkg.dev/${var.project}/sst-app-ui/frontend:$COMMIT_SHA",
         "--region=${var.region}",
         "--execute-now"
@@ -168,7 +144,7 @@ resource "google_cloudbuild_trigger" "frontend" {
       args = [
         "run",
         "deploy",
-        "$_ENVIRONMENT-frontend",
+        "${var.environment}-frontend",
         "--image",
         "${var.region}-docker.pkg.dev/${var.project}/sst-app-ui/frontend:$COMMIT_SHA",
         "--region",
