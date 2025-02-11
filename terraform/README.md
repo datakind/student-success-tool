@@ -6,6 +6,38 @@ This directory contains the Terraform configuration for the Student Success Tool
 
 Each environment has its own directory under `environments/`. For example, the `dev` environment configuration is located in `environments/dev/`.
 
+Each environment directory contains the following files:
+
+- `main.tf`: The main Terraform configuration file for the environment.
+- `variables.tf`: Defines the variables used in the environment.
+- `terraform.tfvars`: Contains the values for the variables specific to the environment. These files are usually added to `.gitignore` to prevent sensitive information from being tracked in version control.
+
+Example directory structure:
+
+```sh
+environments/
+  ├── dev/
+  │   ├── main.tf
+  │   ├── variables.tf
+  │   └── terraform.tfvars
+  ├── staging/
+  │   ├── main.tf
+  │   ├── variables.tf
+  │   └── terraform.tfvars
+  └── prod/
+      ├── main.tf
+      ├── variables.tf
+      └── terraform.tfvars
+```
+
+Example tfvars file:
+```sh
+domain         = "sst.datakind.org"
+frontend_image = "us-docker.pkg.dev/cloudrun/container/placeholder"
+webapp_image   = "us-docker.pkg.dev/cloudrun/container/placeholder"
+project        = "my-project-id"
+```
+
 ## Application of the Configuration
 
 To apply the Terraform configuration, navigate to the desired environment directory and run `terraform apply`. For example, to apply the configuration for the `dev` environment:
@@ -36,10 +68,6 @@ Example placeholder images:
 ```sh
 terraform apply -var="webapp_image=gcr.io/cloudrun/hello" -var="frontend_image=gcr.io/cloudrun/hello"
 ```
-
-## Applying Updates
-
-After an environment has been applied for the first time, future updates may be applied via a Cloud Build trigger that can apply Terraform configurations. This allows for automated and continuous deployment of infrastructure changes.
 
 ## Configuration Details
 
@@ -89,45 +117,25 @@ provider "google" {
 
 ### Modules
 
-The configuration uses two modules: `deployment` and `cloudbuild`.
+The Terraform configuration is organized into several modules, each responsible for a specific part of the infrastructure. Below is a brief description of each module:
 
-#### Deployment Module
+- **network**: Configures the VPC network, subnetwork, and VPC peering.
+- **iam**: Manages IAM roles and service accounts for Cloud Run and Cloud Build.
+- **database**: Sets up the Cloud SQL database instance, users, and secrets for database credentials.
+- **service**: Deploys Cloud Run services and configures environment variables and secrets.
+- **deployment**: Coordinates the deployment of the entire infrastructure by invoking other modules.
+- **cloudbuild**: Configures Cloud Build triggers for building and deploying the web application and frontend UI.
+- **job**: Manages Cloud Run jobs for tasks such as database migrations and other background processes.
 
-The `deployment` module is responsible for deploying the application. It requires several variables, such as project ID, region, environment, database version, database name, domain, and Docker images for the web application and frontend.
+Each module is located in its respective directory under `modules/`.
 
-```hcl
-module "deployment" {
-  source = "../../modules/deployment"
-
-  project          = var.project
-  region           = var.region
-  environment      = var.environment
-  zone             = var.zone
-  database_version = var.database_version
-  database_name    = var.database_name
-  domain           = var.domain
-  webapp_image     = var.webapp_image
-  frontend_image   = var.frontend_image
-}
+```sh
+modules/
+  ├── cloudbuild/
+  ├── database/
+  ├── deployment/
+  ├── iam/
+  ├── job/
+  ├── network/
+  └── service/
 ```
-
-#### Cloud Build Module
-
-The `cloudbuild` module is responsible for configuring Cloud Build. It requires variables such as project ID, domain, environment, region, and Docker images. It also uses the service account ID from the `deployment` module.
-
-```hcl
-module "cloudbuild" {
-  source = "../../modules/cloudbuild"
-
-  project        = var.project
-  domain         = var.domain
-  environment    = var.environment
-  region         = var.region
-  webapp_image   = var.webapp_image
-  frontend_image = var.frontend_image
-
-  cloudbuild_service_account_id = module.deployment.iam.cloudbuild_service_account_id
-}
-```
-
-This module is only configured for the `dev` environment and sets up continuous deployment with cloudbuild triggers on code push. The triggers for `dev` can also deploy the other environments by changing the variable `_ENVIRONMENT` for a manual trigger run.
