@@ -187,17 +187,6 @@ def select_eligible_students(
             term_rank_col=term_rank_col
         )
     )
-    df_students_by_time_left = (
-        shared.select_students_by_time_left(
-            df_ref,
-            student_id_cols=student_id_cols,
-            intensity_time_lefts=intensity_time_lefts,
-            max_term_rank=max_term_rank,
-            num_terms_in_year=num_terms_in_year,
-            enrollment_intensity_col=enrollment_intensity_col,
-            term_rank_col=term_rank_col
-        )
-    )
     df_out = features.shared.merge_many_dataframes(
         [df_students_by_criteria, df_students_by_checkin, df_students_by_time_left],
         on=student_id_cols,
