@@ -297,9 +297,10 @@ def get_nth_student_terms(
     Args:
         df
         student_id_cols
-        sort_cols
         n
+        sort_cols
         include_cols
+        term_is_pre_cohort_col
         exclude_pre_cohort_terms
     """
     student_id_cols = utils.to_list(student_id_cols)
