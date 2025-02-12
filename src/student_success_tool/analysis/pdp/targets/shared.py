@@ -280,6 +280,7 @@ def _compute_intensity_num_terms(
         for intensity, time, unit in intensity_time_lefts
     ]
 
+
 def get_nth_student_terms(
     df: pd.DataFrame,
     *,
@@ -291,8 +292,8 @@ def get_nth_student_terms(
     exclude_pre_cohort_terms: bool = True,
 ) -> pd.DataFrame:
     """
-    For each student, get the nth row in ``df`` (in ascending order of ``sort_cols`` ). If `exclude_pre_cohort_col` is true, then for each student, we want to get the nth row in ``df`` (in ascending order of ``sort_cols`` ) for which the term occurred *within* the student's cohort, i.e. not prior to their official start of enrollment, and a configurable subset of columns. 
-    Ex. n = 0 gets the first term, and is equivalent to the functionality of get_first_student_terms(); n = 1 gets the second term, n = 2, gets the third term, so on and so forth. 
+    For each student, get the nth row in ``df`` (in ascending order of ``sort_cols`` ). If `exclude_pre_cohort_col` is true, then for each student, we want to get the nth row in ``df`` (in ascending order of ``sort_cols`` ) for which the term occurred *within* the student's cohort, i.e. not prior to their official start of enrollment, and a configurable subset of columns.
+    Ex. n = 0 gets the first term, and is equivalent to the functionality of get_first_student_terms(); n = 1 gets the second term, n = 2, gets the third term, so on and so forth.
 
     Args:
         df
@@ -313,20 +314,21 @@ def get_nth_student_terms(
         )
     )
     if exclude_pre_cohort_terms == True:
-        return(
+        return (
             # exclude rows that are "pre-cohort", so "first" meets our criteria here
             df.loc[df[term_is_pre_cohort_col].eq(False), :]
             .sort_values(by=sort_cols, ascending=True)
             .groupby(by=student_id_cols, sort=False, as_index=False)
-            .nth(n) 
+            .nth(n)
         )
-    else: 
+    else:
         return (
             df.loc[:, cols]
             .sort_values(by=sort_cols, ascending=True)
             .groupby(by=student_id_cols, sort=False, as_index=False)
             .nth(n)
         )
+
 
 def _log_eligible_selection(
     nunique_students_in: int, nunique_students_out: int, case: str
@@ -338,4 +340,3 @@ def _log_eligible_selection(
         round(100 * nunique_students_out / nunique_students_in, 1),
         case,
     )
-

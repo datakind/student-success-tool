@@ -1,6 +1,7 @@
 import logging
 import typing as t
 from collections.abc import Collection
+
 # import numpy as np
 import pandas as pd
 from student_success_tool.analysis.pdp.targets import shared
@@ -58,7 +59,7 @@ def make_labeled_dataset(
         include_cols=None,
         term_is_pre_cohort_col=term_is_pre_cohort_col,
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
-        )
+    )
     df_targets = compute_target_variable(
         df_eligible_student_terms,
         intensity_time_lefts=intensity_time_lefts,
@@ -71,46 +72,49 @@ def make_labeled_dataset(
     return df_labeled
 
 
-def compute_target_variable(    
-    df: pd.DataFrame,    
-    *,    
-    student_id_cols: str | list[str] = "student_guid",    
-    years_to_degree_col: str = "first_year_bach",  
-    intensity_time_lefts: list[tuple[str, float, t.Literal["year", "term"]]],   
-    intensity_col: str = "intensity_type",  
+def compute_target_variable(
+    df: pd.DataFrame,
+    *,
+    student_id_cols: str | list[str] = "student_guid",
+    years_to_degree_col: str = "first_year_bach",
+    intensity_time_lefts: list[tuple[str, float, t.Literal["year", "term"]]],
+    intensity_col: str = "intensity_type",
     enrollment_intensity_col: str = "enrollment_intensity_first_term",
     num_terms_in_year: int = 4,
-) -> pd.Series:   
-    """  
-    Args:  
-        df  
-        student_id_cols  
-        years_to_degree_col  
-        intensity_time_lefts  
-        intensity_col  
-    """   
-    student_id_cols = utils.to_list(student_id_cols)  
-    intensity_num_terms = {intensity: time if unit == "year" else time / num_terms_in_year  
-                           for intensity, time, unit in intensity_time_lefts  
-                           }   
-    return (    
-        df[student_id_cols + [years_to_degree_col, enrollment_intensity_col]]    
-        .drop_duplicates(subset=student_id_cols, ignore_index=True)    
-        .assign(target=lambda df: 
-            (
+) -> pd.Series:
+    """
+    Args:
+        df
+        student_id_cols
+        years_to_degree_col
+        intensity_time_lefts
+        intensity_col
+    """
+    student_id_cols = utils.to_list(student_id_cols)
+    intensity_num_terms = {
+        intensity: time if unit == "year" else time / num_terms_in_year
+        for intensity, time, unit in intensity_time_lefts
+    }
+    return (
+        df[student_id_cols + [years_to_degree_col, enrollment_intensity_col]]
+        .drop_duplicates(subset=student_id_cols, ignore_index=True)
+        .assign(
+            target=lambda df: (
                 # didn't graduate within 4 years
-                df[years_to_degree_col].gt(df[enrollment_intensity_col].map(intensity_num_terms)) 
-                
+                df[years_to_degree_col].gt(
+                    df[enrollment_intensity_col].map(intensity_num_terms)
+                )
                 # or they never graduated
                 | (df[years_to_degree_col].isna())
             )
-        )        
-        .astype({"target": "bool"})    
-        .set_index(student_id_cols)    
-        .loc[:, "target"]    
-    ) 
+        )
+        .astype({"target": "bool"})
+        .set_index(student_id_cols)
+        .loc[:, "target"]
+    )
 
-def select_eligible_students(  
+
+def select_eligible_students(
     df: pd.DataFrame,
     *,
     student_criteria: dict[str, object | Collection[object]],
@@ -164,21 +168,19 @@ def select_eligible_students(
         include_cols=None,
         term_is_pre_cohort_col=term_is_pre_cohort_col,
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
-        ).loc[:, utils.to_list(student_id_cols)]
+    ).loc[:, utils.to_list(student_id_cols)]
     nuq_students_checkin = len(df_students_by_checkin)
     shared._log_eligible_selection(
         nuq_students_in, nuq_students_checkin, "check-in point"
     )
-    df_students_by_time_left = (
-        shared.select_students_by_time_left(
-            df_ref,
-            student_id_cols=student_id_cols,
-            intensity_time_lefts=intensity_time_lefts,
-            max_term_rank=max_term_rank,
-            num_terms_in_year=num_terms_in_year,
-            enrollment_intensity_col=enrollment_intensity_col,
-            term_rank_col=term_rank_col
-        )
+    df_students_by_time_left = shared.select_students_by_time_left(
+        df_ref,
+        student_id_cols=student_id_cols,
+        intensity_time_lefts=intensity_time_lefts,
+        max_term_rank=max_term_rank,
+        num_terms_in_year=num_terms_in_year,
+        enrollment_intensity_col=enrollment_intensity_col,
+        term_rank_col=term_rank_col,
     )
     df_out = features.shared.merge_many_dataframes(
         [df_students_by_criteria, df_students_by_checkin, df_students_by_time_left],
