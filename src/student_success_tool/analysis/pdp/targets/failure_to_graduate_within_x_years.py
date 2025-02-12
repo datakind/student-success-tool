@@ -1,7 +1,7 @@
 import logging
 import typing as t
 from collections.abc import Collection
-import numpy as np
+# import numpy as np
 import pandas as pd
 from student_success_tool.analysis.pdp.targets import shared
 from student_success_tool.analysis.pdp import utils, features
