@@ -94,14 +94,21 @@ def compute_target_variable(
                            for intensity, time, unit in intensity_time_lefts  
                            }   
     return (    
-            df[student_id_cols + [years_to_degree_col, enrollment_intensity_col]]    
-            .drop_duplicates(subset=student_id_cols, ignore_index=True)    
-            .assign(target=lambda df: (df[years_to_degree_col].gt(df[enrollment_intensity_col].map(intensity_num_terms))) |   
-                                     (df[years_to_degree_col].isna()))       
-            .astype({"target": "bool"})    
-            .set_index(student_id_cols)    
-            .loc[:, "target"]    
-            )    
+        df[student_id_cols + [years_to_degree_col, enrollment_intensity_col]]    
+        .drop_duplicates(subset=student_id_cols, ignore_index=True)    
+        .assign(target=lambda df: 
+            (
+                # didn't graduate within 4 years
+                df[years_to_degree_col].gt(df[enrollment_intensity_col].map(intensity_num_terms)) 
+                
+                # or they never graduated
+                | (df[years_to_degree_col].isna())
+            )
+        )        
+        .astype({"target": "bool"})    
+        .set_index(student_id_cols)    
+        .loc[:, "target"]    
+    ) 
 
 def select_eligible_students(  
     df: pd.DataFrame,
