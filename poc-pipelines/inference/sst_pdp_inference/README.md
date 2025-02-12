@@ -46,7 +46,8 @@ This section provides instructions for running the inference pipeline with a pre
 * [x] Sample student and cohort CSV files synthetically generated have already been saved on the bucket URI: gs://dev_sst_02_standard_pdp_institution_sst_application/validated/ 
     - File names: 
         - standard_pdp_institution_sample_STUDENT_SEMESTER_AR_DEIDENTIFIED.csv
-        - standard_pdp_institution_sample_COURSE_LEVEL_AR_DEID.csv are 
+        - standard_pdp_institution_sample_COURSE_LEVEL_AR_DEID.csv
+* [x] The standard_pdp_institution.toml file is stored in the Databricks Volume 
 * [x] The Workflow called ["Github_Sourced_PDP_Inference_Pipeline"](./Github_Sourced_PDP_Inference_Pipeline.yaml) is already deployed on Databricks and configured to run on a job cluster (ephemeral cluster for each run).
 
 ### Steps to run with default values
