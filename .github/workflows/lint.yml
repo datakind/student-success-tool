@@ -1,10 +1,10 @@
-name: lint
+name: style
 
 on:
   pull_request:  # any pull request
 
 jobs:
-  lint:
+  style:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
