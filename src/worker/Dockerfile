@@ -1,40 +1,35 @@
-# This Dockerfile utilizes a multi-stage build to separate the build environment from the runtime.
+# This Dockerfile uses a multi-stage build to separate the build environment from the runtime.
 
-# Stage 1: Build stage
+# Build stage
 FROM python:3.10-slim-bookworm AS builder
+COPY --from=ghcr.io/astral-sh/uv:0.5.30 /uv /uvx /bin/
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y build-essential
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_NO_CACHE=1
 
-# Set the working directory
+# Change the working directory to the `app` directory
 WORKDIR /app
 
-# Copy the dependency files
-COPY uv.lock pyproject.toml /app/
+# Add project files
+ADD uv.lock pyproject.toml /app/
 
 # Install dependencies
-RUN pip install uv && uv sync --frozen --no-install-project
+RUN uv sync --frozen --no-install-project
 
-# Stage 2: Production stage
+# Copy the project into the image
+ADD . /app
+
+# Sync the project
+RUN uv sync --frozen --no-editable
+
+# Runtime stage
 FROM python:3.10-slim-bookworm
 
-# Copy uv from the builder stage
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+# Copy the environment, but not the source code
+COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /app/src /app/src
 
-# Set the working directory
-WORKDIR /app
-
-# Copy only the necessary files from the builder stage
-COPY --from=builder /app /app
-
-# Copy the project files
-COPY . /app
-
-# Set environment variables
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Expose the port
-EXPOSE 8080
-
-# Run the application
-CMD ["fastapi", "run", "src/worker", "--host", "0.0.0.0", "--port", "8080"]
+# Run the application.
+CMD ["fastapi", "run", "app/src/worker", "--port", "8080", "--host", "0.0.0.0"]
