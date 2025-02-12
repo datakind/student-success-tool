@@ -315,11 +315,10 @@ def get_nth_student_terms(
     if exclude_pre_cohort_terms.eq(True):
         return(
             # exclude rows that are "pre-cohort", so "first" meets our criteria here
-            df.loc[df[term_is_pre_cohort_col].eq(False), :],
-            student_id_cols=student_id_cols,
-            sort_cols=sort_cols,
-            include_cols=include_cols,
-            n=n, 
+            df.loc[df[term_is_pre_cohort_col].eq(False), :]
+            .sort_values(by=sort_cols, ascending=True)
+            .groupby(by=student_id_cols, sort=False, as_index=False)
+            .nth(n) 
         )
     else: 
         return (
