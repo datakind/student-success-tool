@@ -105,10 +105,12 @@ def select_students_by_time_left(
         term_rank_col: Column name in ``df`` with term rank values.
 
     Warning:
-        This assumes that ``df`` only includes one student-term row per student; namely,
+        1. This assumes that ``df`` only includes one student-term row per student; namely,
         the one from which time left should be measured. If that assumption is violated,
         this code actually checks if *any* of the student's terms occurred with
         enough time left for their particular enrollment intensity.
+        2. Users should also always confirm with the school what to do / how to treat `NaN` intensities in the `enrollment_intensity_first_term` column, because the default in this pipeline drops them! 
+        Users should re-code these null values appropriately prior to running the pipeline to treat them as either "FULL-TIME" or "PART-TIME" students, if seeking to include them in the analysis/modeling dataset!** 
     """
     student_id_cols = utils.to_list(student_id_cols)
     nuq_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
