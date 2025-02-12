@@ -50,22 +50,14 @@ def make_labeled_dataset(
     df_eligible_student_terms = pd.merge(
         df, df_eligible_students, on=student_id_cols, how="inner"
     )
-    if exclude_pre_cohort_terms is True:
-        df_features = shared.get_nth_student_terms_within_cohort(
-            df_eligible_student_terms,
-            student_id_cols=student_id_cols,
-            term_is_pre_cohort_col=term_is_pre_cohort_col,
-            sort_cols=term_rank_col,
-            n=n,
-            include_cols=None,
-        )
-    else:
-        df_features = shared.get_nth_student_terms(
-            df_eligible_student_terms,
-            student_id_cols=student_id_cols,
-            sort_cols=term_rank_col,
-            n=n,
-            include_cols=None,
+    df_features = shared.get_nth_student_terms(
+        df_eligible_student_terms,
+        student_id_cols=student_id_cols,
+        term_is_pre_cohort_col=term_is_pre_cohort_col,
+        sort_cols=term_rank_col,
+        n=n,
+        include_cols=None,
+        exclude_pre_cohort_terms=exclude_pre_cohort_terms,
         )
     df_targets = compute_target_variable(
         df_eligible_student_terms,
@@ -144,14 +136,6 @@ def select_eligible_students(
         df, student_id_cols=student_id_cols, **student_criteria
     )
     if exclude_pre_cohort_terms is True:
-        df_students_by_checkin = shared.get_nth_student_terms_within_cohort(
-            df,
-            student_id_cols=student_id_cols,
-            term_is_pre_cohort_col=term_is_pre_cohort_col,
-            sort_cols=term_rank_col,
-            n=n,
-            include_cols=None,
-        ).loc[:, utils.to_list(student_id_cols)]
         df_ref = shared.get_first_student_terms_within_cohort(
             df,
             student_id_cols=student_id_cols,
@@ -159,23 +143,25 @@ def select_eligible_students(
             include_cols=[enrollment_intensity_col],
         )
     else:
-        df_students_by_checkin = shared.get_nth_student_terms(
-            df,
-            student_id_cols=student_id_cols,
-            sort_cols=term_rank_col,
-            n=n,
-            include_cols=None,
-        ).loc[:, utils.to_list(student_id_cols)]
         df_ref = shared.get_first_student_terms(
             df,
             student_id_cols=student_id_cols,
             sort_cols=term_rank_col,
             include_cols=[enrollment_intensity_col],
         )
+    df_students_by_checkin = shared.get_nth_student_terms(
+        df,
+        student_id_cols=student_id_cols,
+        term_is_pre_cohort_col=term_is_pre_cohort_col,
+        sort_cols=term_rank_col,
+        n=n,
+        include_cols=None,
+        exclude_pre_cohort_terms=exclude_pre_cohort_terms,
+        ).loc[:, utils.to_list(student_id_cols)]
     nuq_students_checkin = len(df_students_by_checkin)
     shared._log_eligible_selection(
         nuq_students_in, nuq_students_checkin, "check-in point"
-        )
+    )
     df_students_by_time_left = (
         shared.select_students_by_time_left(
             df_ref,
