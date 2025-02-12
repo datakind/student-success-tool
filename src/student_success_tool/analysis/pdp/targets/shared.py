@@ -285,7 +285,7 @@ def get_nth_student_terms(
     *,
     student_id_cols: str | list[str] = "student_guid",
     sort_cols: str | list[str] = "term_rank",
-    n: int,
+    n: int = 1,
     include_cols: t.Optional[list[str]] = None,
     exclude_pre_cohort_terms: bool = True,
 ) -> pd.DataFrame:

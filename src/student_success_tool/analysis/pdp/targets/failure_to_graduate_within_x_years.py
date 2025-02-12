@@ -15,14 +15,14 @@ def make_labeled_dataset(
     student_criteria: dict[str, object | Collection[object]],
     student_id_cols: str | list[str] = "student_guid",
     exclude_pre_cohort_terms: bool = True,
-    term_is_pre_cohort_col: str = "term_is_pre_cohort",
     years_to_degree_col: str = "first_year_to_bachelors_at_cohort_inst",
     intensity_time_lefts: list[tuple[str, float, t.Literal["year", "term"]]],
     max_term_rank: int,
     num_terms_in_year: int = 4,
+    n: int = 1,
+    term_is_pre_cohort_col: str = "term_is_pre_cohort",
     enrollment_intensity_col: str = "enrollment_intensity_first_term",
     term_rank_col: str = "term_rank",
-    n: int,
 ) -> pd.DataFrame:
     """
     Make a labeled dataset for modeling, where each row consists of features
@@ -41,9 +41,9 @@ def make_labeled_dataset(
         intensity_time_lefts=intensity_time_lefts,
         max_term_rank=max_term_rank,
         num_terms_in_year=num_terms_in_year,
+        n=n,
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
         term_is_pre_cohort_col=term_is_pre_cohort_col,
-        n=n,
         enrollment_intensity_col=enrollment_intensity_col,
         term_rank_col=term_rank_col,
     )
@@ -112,8 +112,8 @@ def select_eligible_students(
     max_term_rank: int,
     num_terms_in_year: int = 4,
     exclude_pre_cohort_terms: bool = True,
+    n: int = 1,
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
-    n: int,
     enrollment_intensity_col: str = "enrollment_intensity_first_term",
     term_rank_col: str = "term_rank",
 ) -> pd.DataFrame:
@@ -126,8 +126,8 @@ def select_eligible_students(
         max_term_rank
         num_terms_in_year
         exclude_pre_cohort_terms
-        term_is_pre_cohort_col
         n
+        term_is_pre_cohort_col
         enrollment_intensity_col
         term_rank_col
     """
@@ -152,9 +152,9 @@ def select_eligible_students(
     df_students_by_checkin = shared.get_nth_student_terms(
         df,
         student_id_cols=student_id_cols,
+        n=n,
         term_is_pre_cohort_col=term_is_pre_cohort_col,
         sort_cols=term_rank_col,
-        n=n,
         include_cols=None,
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
         ).loc[:, utils.to_list(student_id_cols)]
