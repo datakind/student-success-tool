@@ -53,10 +53,10 @@ def make_labeled_dataset(
     df_features = shared.get_nth_student_terms(
         df_eligible_student_terms,
         student_id_cols=student_id_cols,
-        term_is_pre_cohort_col=term_is_pre_cohort_col,
-        sort_cols=term_rank_col,
         n=n,
+        sort_cols=term_rank_col,
         include_cols=None,
+        term_is_pre_cohort_col=term_is_pre_cohort_col,
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
         )
     df_targets = compute_target_variable(
@@ -111,8 +111,8 @@ def select_eligible_students(
     intensity_time_lefts: list[tuple[str, float, t.Literal["year", "term"]]],
     max_term_rank: int,
     num_terms_in_year: int = 4,
-    exclude_pre_cohort_terms: bool = True,
     n: int = 1,
+    exclude_pre_cohort_terms: bool = True,
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
     enrollment_intensity_col: str = "enrollment_intensity_first_term",
     term_rank_col: str = "term_rank",
@@ -153,9 +153,9 @@ def select_eligible_students(
         df,
         student_id_cols=student_id_cols,
         n=n,
-        term_is_pre_cohort_col=term_is_pre_cohort_col,
         sort_cols=term_rank_col,
         include_cols=None,
+        term_is_pre_cohort_col=term_is_pre_cohort_col,
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
         ).loc[:, utils.to_list(student_id_cols)]
     nuq_students_checkin = len(df_students_by_checkin)

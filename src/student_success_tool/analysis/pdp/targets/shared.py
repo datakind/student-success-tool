@@ -284,9 +284,10 @@ def get_nth_student_terms(
     df: pd.DataFrame,
     *,
     student_id_cols: str | list[str] = "student_guid",
-    sort_cols: str | list[str] = "term_rank",
     n: int = 1,
+    sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
+    term_is_pre_cohort_col: str = "term_is_pre_cohort",
     exclude_pre_cohort_terms: bool = True,
 ) -> pd.DataFrame:
     """
