@@ -47,7 +47,7 @@ This section provides instructions for running the inference pipeline with a pre
     - File names: 
         - standard_pdp_institution_sample_STUDENT_SEMESTER_AR_DEIDENTIFIED.csv
         - standard_pdp_institution_sample_COURSE_LEVEL_AR_DEID.csv are 
-* [x] The Workflow called ["Github_Sourced_PDP_Inference_Pipeline"](poc-pipelines/inference/sst_pdp_inference/Github_Sourced_PDP_Inference_Pipeline.yaml) is already deployed on Databricks and configured to run on a job cluster (ephemeral cluster for each run).
+* [x] The Workflow called ["Github_Sourced_PDP_Inference_Pipeline"](./Github_Sourced_PDP_Inference_Pipeline.yaml) is already deployed on Databricks and configured to run on a job cluster (ephemeral cluster for each run).
 
 ### Steps to run with default values
 
