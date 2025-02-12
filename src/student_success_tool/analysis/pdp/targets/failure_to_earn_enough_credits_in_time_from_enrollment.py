@@ -10,8 +10,7 @@ from . import shared
 
 LOGGER = logging.getLogger(__name__)
 
-
-def make_labeled_dataset(
+def make_features_dataset(
     df: pd.DataFrame,
     *,
     min_num_credits_checkin: float,
@@ -25,7 +24,7 @@ def make_labeled_dataset(
     term_rank_col: str = "term_rank",
 ) -> pd.DataFrame:
     """
-    Make a labeled dataset for modeling, where each row consists of features
+    Make a dataset with the features needed for modeling except the lable. This dataset has the same schema as the one required for inference, where each row consists of features
     from eligible students' first qualifying term matched to computed target variables.
 
     Args:
@@ -64,6 +63,112 @@ def make_labeled_dataset(
         min_num_credits=min_num_credits_checkin,
         student_id_cols=student_id_cols,
         include_cols=None,
+    )
+    # df_targets = compute_target_variable(
+    #     df_eligible_student_terms,
+    #     min_num_credits_target=min_num_credits_target,
+    #     intensity_time_limits=intensity_time_limits,
+    #     student_id_cols=student_id_cols,
+    # )
+    # df_labeled = pd.merge(df_features, df_targets, on=student_id_cols, how="inner")
+    return df_features
+    
+
+def make_inference_dataset(
+    df: pd.DataFrame,
+    *,
+    min_num_credits_checkin: float,
+    min_num_credits_target: float,
+    student_criteria: dict[str, object | Collection[object]],
+    intensity_time_limits: list[tuple[str, float, t.Literal["year", "term"]]],
+    student_id_cols: str | list[str] = "student_guid",
+    enrollment_intensity_col: str = "enrollment_intensity_first_term",
+    num_credits_col: str = "num_credits_earned_cumsum",
+    term_col: str = "academic_term",
+    term_rank_col: str = "term_rank",
+) -> pd.DataFrame:
+    """
+    Make a labeled dataset for modeling, where each row consists of features
+    from eligible students' first qualifying term matched to computed target variables.
+
+    Args:
+        df
+        min_num_credits_checkin
+        min_num_credits_target
+        student_criteria
+        intensity_time_limits
+        student_id_cols
+        enrollment_intensity_col
+        num_credits_col
+        term_col
+        term_rank_col
+
+    See Also:
+        - :func:`select_eligible_students()`
+        - :func:`compute_target_variable()`
+        - :func:`shared.get_first_student_terms_at_num_credits_earned()`
+    """
+
+    df_features = make_features_dataset(
+        df,
+        student_criteria=student_criteria,
+        intensity_time_limits=intensity_time_limits,
+        min_num_credits_target=min_num_credits_target,
+        min_num_credits_checkin=min_num_credits_checkin,
+        student_id_cols=student_id_cols,
+        enrollment_intensity_col=enrollment_intensity_col,
+        num_credits_col=num_credits_col,
+        term_col=term_col,
+        term_rank_col=term_rank_col,
+    )
+    return df_features
+
+
+def make_labeled_dataset(
+    df: pd.DataFrame,
+    *,
+    min_num_credits_checkin: float,
+    min_num_credits_target: float,
+    student_criteria: dict[str, object | Collection[object]],
+    intensity_time_limits: list[tuple[str, float, t.Literal["year", "term"]]],
+    student_id_cols: str | list[str] = "student_guid",
+    enrollment_intensity_col: str = "enrollment_intensity_first_term",
+    num_credits_col: str = "num_credits_earned_cumsum",
+    term_col: str = "academic_term",
+    term_rank_col: str = "term_rank",
+) -> pd.DataFrame:
+    """
+    Make a labeled dataset for modeling, where each row consists of features
+    from eligible students' first qualifying term matched to computed target variables.
+
+    Args:
+        df
+        min_num_credits_checkin
+        min_num_credits_target
+        student_criteria
+        intensity_time_limits
+        student_id_cols
+        enrollment_intensity_col
+        num_credits_col
+        term_col
+        term_rank_col
+
+    See Also:
+        - :func:`select_eligible_students()`
+        - :func:`compute_target_variable()`
+        - :func:`shared.get_first_student_terms_at_num_credits_earned()`
+    """
+    df_features = make_features_dataset(
+        df,
+        student_criteria=student_criteria,
+        intensity_time_limits=intensity_time_limits,
+        min_num_credits_checkin=min_num_credits_checkin,
+        min_num_credits_target=min_num_credits_target,
+        student_id_cols=student_id_cols,
+        enrollment_intensity_col=enrollment_intensity_col,
+        num_credits_col=num_credits_col,
+        term_col=term_col,
+        term_rank_col=term_rank_col,
     )
     df_targets = compute_target_variable(
         df_eligible_student_terms,
