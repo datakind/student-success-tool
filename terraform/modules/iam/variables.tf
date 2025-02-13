@@ -24,6 +24,7 @@ variable "cloudbuild_sa_roles" {
     "roles/iam.serviceAccountUser",
     "roles/secretmanager.secretAccessor",
     "roles/storage.objectCreator",
+    "roles/run.developer",
   ]
 }
 
@@ -31,6 +32,6 @@ variable "cloudrun_sa_roles" {
   type        = list(string)
   description = "List of IAM roles to grant to the Cloud Run service account."
   default = [
-    "roles/run.invoker",
+    "roles/run.viewer",
   ]
 }

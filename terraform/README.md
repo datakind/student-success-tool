@@ -65,7 +65,11 @@ Or to supply variables on the command line:
 terraform apply -var="project=my-project" -var="region=us-central1"
 ```
 
-## DNS Configs
+### Environment Secrets
+
+The application of the templates creates initial <env>-<service>-env-file secrets for the [Cloud Run services](https://console.cloud.google.com/run). Using [Secret Manager](https://console.cloud.google.com/security/secret-manager) you must add a new version containing all the secrets needed to run the application.
+
+### DNS Configs
 
 To ensure that your environment is properly set up, you need to register the IP address of the load balancer to the domain used by the environment. This step is crucial for directing traffic to your application.
 
