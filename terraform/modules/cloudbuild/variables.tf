@@ -1,3 +1,10 @@
+variable "required_services" {
+  type = list(string)
+  default = [
+    "cloudresourcemanager.googleapis.com",
+  ]
+}
+
 variable "project" {
   type = string
 }

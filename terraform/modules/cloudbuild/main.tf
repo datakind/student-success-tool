@@ -1,3 +1,10 @@
+resource "google_project_service" "services" {
+  for_each = toset(var.required_services)
+
+  service            = each.value
+  disable_on_destroy = false
+}
+
 resource "google_artifact_registry_repository" "student_success_tool" {
   location      = var.region
   repository_id = "student-success-tool"
