@@ -13,11 +13,11 @@ def make_labeled_dataset(
     df: pd.DataFrame,
     *,
     student_criteria: dict[str, object | Collection[object]],
+    n: int,
     student_id_cols: str | list[str] = "student_guid",
     intensity_time_lefts: list[tuple[str, float, t.Literal["year", "term"]]],
     max_term_rank: int,
     num_terms_in_year: int = 4,
-    n: int = 1,
     exclude_pre_cohort_terms: bool = True,
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
     years_to_degree_col: str = "first_year_to_bachelors_at_cohort_inst",
@@ -37,11 +37,11 @@ def make_labeled_dataset(
     df_eligible_students = select_eligible_students(
         df,
         student_criteria=student_criteria,
+        n=n,
         student_id_cols=student_id_cols,
         intensity_time_lefts=intensity_time_lefts,
         max_term_rank=max_term_rank,
         num_terms_in_year=num_terms_in_year,
-        n=n,
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
         term_is_pre_cohort_col=term_is_pre_cohort_col,
         enrollment_intensity_col=enrollment_intensity_col,
@@ -52,8 +52,8 @@ def make_labeled_dataset(
     )
     df_features = shared.get_nth_student_terms(
         df_eligible_student_terms,
-        student_id_cols=student_id_cols,
         n=n,
+        student_id_cols=student_id_cols,
         sort_cols=term_rank_col,
         include_cols=None,
         term_is_pre_cohort_col=term_is_pre_cohort_col,
@@ -137,11 +137,11 @@ def select_eligible_students(
     df: pd.DataFrame,
     *,
     student_criteria: dict[str, object | Collection[object]],
+    n: int,
     student_id_cols: str | list[str] = "student_guid",
     intensity_time_lefts: list[tuple[str, float, t.Literal["year", "term"]]],
     max_term_rank: int,
     num_terms_in_year: int = 4,
-    n: int = 1,
     exclude_pre_cohort_terms: bool = True,
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
     enrollment_intensity_col: str = "enrollment_intensity_first_term",
@@ -153,12 +153,12 @@ def select_eligible_students(
     Args:
         df
         student_criteria
+        n
         student_id_cols
         intensity_time_lefts
         max_term_rank
         num_terms_in_year
         exclude_pre_cohort_terms
-        n
         term_is_pre_cohort_col
         enrollment_intensity_col
         term_rank_col

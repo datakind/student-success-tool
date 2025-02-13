@@ -109,8 +109,7 @@ def select_students_by_time_left(
         the one from which time left should be measured. If that assumption is violated,
         this code actually checks if *any* of the student's terms occurred with
         enough time left for their particular enrollment intensity.
-        2. Users should also always confirm with the school what to do / how to treat `NaN` intensities in the `enrollment_intensity_first_term` column, because the default in this pipeline drops them! 
-        Users should re-code these null values appropriately prior to running the pipeline to treat them as either "FULL-TIME" or "PART-TIME" students, if seeking to include them in the analysis/modeling dataset!** 
+        2. Users should also always confirm with the school what to do / how to treat `NaN` intensities in the `enrollment_intensity_first_term` column, because the default in this pipeline drops them! Users should re-code these null values appropriately prior to running the pipeline if seeking to include them in the analysis/modeling dataset!**
     """
     student_id_cols = utils.to_list(student_id_cols)
     nuq_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
@@ -286,8 +285,8 @@ def _compute_intensity_num_terms(
 def get_nth_student_terms(
     df: pd.DataFrame,
     *,
+    n: int,
     student_id_cols: str | list[str] = "student_guid",
-    n: int = 1,
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
@@ -299,8 +298,8 @@ def get_nth_student_terms(
 
     Args:
         df
-        student_id_cols
         n
+        student_id_cols
         sort_cols
         include_cols
         term_is_pre_cohort_col
@@ -315,21 +314,17 @@ def get_nth_student_terms(
             utils.unique_elements_in_order(student_id_cols + sort_cols + include_cols)
         )
     )
-    if exclude_pre_cohort_terms == True:
-        return (
-            # exclude rows that are "pre-cohort", so "first" meets our criteria here
-            df.loc[df[term_is_pre_cohort_col].eq(False), :]
-            .sort_values(by=sort_cols, ascending=True)
-            .groupby(by=student_id_cols, sort=False, as_index=False)
-            .nth(n)
-        )
-    else:
-        return (
-            df.loc[:, cols]
-            .sort_values(by=sort_cols, ascending=True)
-            .groupby(by=student_id_cols, sort=False, as_index=False)
-            .nth(n)
-        )
+    # exclude rows that are "pre-cohort", so "nth" meets our criteria here
+    df = (
+        df.loc[df[term_is_pre_cohort_col].eq(False), :]
+        if exclude_pre_cohort_terms is True
+        else df.loc[:, cols]
+    )
+    return (
+        df.sort_values(by=sort_cols, ascending=True)
+        .groupby(by=student_id_cols, sort=False, as_index=False)
+        .nth(n)
+    )
 
 
 def _log_eligible_selection(
