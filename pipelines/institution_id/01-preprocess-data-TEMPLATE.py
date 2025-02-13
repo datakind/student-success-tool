@@ -114,7 +114,9 @@ cfg
 
 raw_course_file_path = cfg.datasets[dataset_name].raw_course.file_path
 df_course = pdp.dataio.read_raw_pdp_course_data_from_file(
-    raw_course_file_path, schema=pdp.schemas.RawPDPCourseDataSchema, dttm_format="%Y%m%d.0"
+    raw_course_file_path,
+    schema=pdp.schemas.RawPDPCourseDataSchema,
+    dttm_format="%Y%m%d.0",
 )
 print(f"rows x cols = {df_course.shape}")
 df_course.head()
@@ -278,7 +280,9 @@ preprocessed_table_path = "CATALOG.INST_NAME_silver.modeling_dataset_DESCRIPTIVE
 # COMMAND ----------
 
 if run_type != "train":
-    pdp.dataio.write_data_to_delta_table(df_modeling, preprocessed_table_path, spark_session=spark)
+    pdp.dataio.write_data_to_delta_table(
+        df_modeling, preprocessed_table_path, spark_session=spark
+    )
     dbutils.notebook.exit(
         f"'{dataset_name}' modeling dataset saved to {preprocessed_table_path}; "
         "exiting notebook..."
@@ -308,8 +312,7 @@ if splits:
     df_modeling = df_modeling.assign(
         **{
             split_col: ft.partial(
-                modeling.utils.compute_dataset_splits,
-                seed=cfg.random_state
+                modeling.utils.compute_dataset_splits, seed=cfg.random_state
             )
         }
     )
@@ -345,9 +348,8 @@ non_feature_cols = (
 
 # COMMAND ----------
 
-target_corrs = (
-    df_modeling.drop(columns=non_feature_cols + [cfg.target_col])
-    .corrwith(df_modeling[cfg.target_col], method="spearman", numeric_only=True)
+target_corrs = df_modeling.drop(columns=non_feature_cols + [cfg.target_col]).corrwith(
+    df_modeling[cfg.target_col], method="spearman", numeric_only=True
 )
 print(target_corrs.sort_values(ascending=False).head(10))
 print("...")
@@ -360,7 +362,11 @@ target_assocs = pdp.eda.compute_pairwise_associations(
 )
 print(target_assocs.sort_values(by="target", ascending=False).head(10))
 print("...")
-print(target_assocs.sort_values(by="target", ascending=False, na_position="first").tail(10))
+print(
+    target_assocs.sort_values(by="target", ascending=False, na_position="first").tail(
+        10
+    )
+)
 
 # COMMAND ----------
 
@@ -370,7 +376,9 @@ print(target_assocs.sort_values(by="target", ascending=False, na_position="first
 # COMMAND ----------
 
 # save preprocessed dataset
-pdp.dataio.write_data_to_delta_table(df_modeling, preprocessed_table_path, spark_session=spark)
+pdp.dataio.write_data_to_delta_table(
+    df_modeling, preprocessed_table_path, spark_session=spark
+)
 
 # COMMAND ----------
 
@@ -379,5 +387,3 @@ pdp.dataio.write_data_to_delta_table(df_modeling, preprocessed_table_path, spark
 # MAGIC - [ ] Submit a PR including this notebook and any changes in project config
 
 # COMMAND ----------
-
-
