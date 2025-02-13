@@ -183,8 +183,8 @@ def select_eligible_students(
         )
     df_students_by_checkin = shared.get_nth_student_terms(
         df,
-        student_id_cols=student_id_cols,
         n=n,
+        student_id_cols=student_id_cols,
         sort_cols=term_rank_col,
         include_cols=None,
         term_is_pre_cohort_col=term_is_pre_cohort_col,
