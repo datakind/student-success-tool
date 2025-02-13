@@ -2,12 +2,6 @@
 
 This directory contains the Terraform configuration for the Student Success Tool. The configuration is organized into different environments, such as `dev`, `staging`, and `prod`.
 
-## Prerequesites
-
-- [Install the Terraform CLI Tool](https://developer.hashicorp.com/terraform/install)
-- [Configure Google Auth Platform](https://console.cloud.google.com/auth/overview)
-- [Connect GitHub Repositories](https://console.cloud.google.com/cloud-build/repositories/2nd-gen)
-
 ## Environments
 
 Each environment has its own directory under `environments/`. For example, the `dev` environment configuration is located in `environments/dev/`.
@@ -46,6 +40,12 @@ project        = "my-project-id"
 
 ## Application of the Configuration
 
+### Prerequesites
+
+- [Install the Terraform CLI Tool](https://developer.hashicorp.com/terraform/install)
+- [Configure Google Auth Platform](https://console.cloud.google.com/auth/overview)
+- [Connect GitHub Repositories](https://console.cloud.google.com/cloud-build/repositories/2nd-gen)
+
 To apply the Terraform configuration, navigate to the desired environment directory and run `terraform apply`. For example, to apply the configuration for the `dev` environment:
 
 ```sh
@@ -65,6 +65,27 @@ Or to supply variables on the command line:
 terraform apply -var="project=my-project" -var="region=us-central1"
 ```
 
+## DNS Configs
+
+To ensure that your environment is properly set up, you need to register the IP address of the load balancer to the domain used by the environment. This step is crucial for directing traffic to your application.
+
+Here's how you can do it:
+
+[Obtain the IP Address](https://console.cloud.google.com/net-services/loadbalancing/details/http/dev-tf-cr-url-map-1): After setting up your load balancer, you will receive a Frontend IP address. This IP address is what you will use to point your domain to your load balancer.
+
+Update DNS Records: Go to your domain registrar's DNS settings and create an A record. The A record should point your domain (e.g., www.example.com) to the IP address of your load balancer.
+
+Verify the Setup: After updating the DNS records, it may take some time for the changes to propagate. Once propagated, accessing your domain should route traffic through the load balancer to your application.
+
+Here's an example of how you might update your DNS settings:
+
+```
+Type: A
+Name: @ (or your subdomain, e.g., www)
+Value: [Your Load Balancer IP Address]
+TTL: 3600 (or your preferred TTL)
+```
+
 ### Initial Environment Setup
 
 For the initial environment setup, use placeholder images like the "Hello World" example for Cloud Run, as the images for the web application and frontend UI will not exist yet. These placeholder images will take the place of the `webapp_image` and `frontend_image` variables.
@@ -79,13 +100,13 @@ terraform apply -var="webapp_image=gcr.io/cloudrun/hello" -var="frontend_image=g
 
 ### Backend Configuration
 
-The Terraform state is stored in a Google Cloud Storage (GCS) bucket. The backend configuration specifies the bucket name and the prefix for the state files.
+The Terraform state is stored in a Google Cloud Storage (GCS) bucket. The backend configuration specifies the bucket name and, optionally, the prefix for the state files. The bucket name must be globally unique.
 
 ```hcl
 terraform {
   backend "gcs" {
-    bucket = "sst-terraform-state"
-    prefix = "dev"
+    bucket = "<bucket name>"
+    prefix = "<optional object prefix>"
   }
 }
 ```
