@@ -5,7 +5,7 @@ variable "project" {
 
 variable "region" {
   description = "The region to deploy resources"
-  default     = "us-central1"
+  default     = "us-east4"
 }
 
 variable "environment" {
@@ -15,7 +15,7 @@ variable "environment" {
 
 variable "zone" {
   description = "The zone to deploy resources"
-  default     = "us-central1-c"
+  default     = "us-east4-c"
 }
 
 variable "database_version" {
