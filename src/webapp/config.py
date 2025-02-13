@@ -10,6 +10,7 @@ env_vars = {
     "SECRET_KEY": "",
     "ALGORITHM": "HS256",
     "ACCESS_TOKEN_EXPIRE_MINUTES": "120",
+    # "API_KEY_ISSUERS": "",
 }
 
 # The INSTANCE_HOST is the private IP of CLoudSQL instance e.g. '127.0.0.1' ('172.17.0.1' if deployed to GAE Flex)
@@ -49,7 +50,6 @@ fe_vars = {
 databricks_vars = {
     # SECRET.
     "CATALOG_NAME": "",
-    "": "",
 }
 
 

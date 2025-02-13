@@ -246,6 +246,12 @@ async def generate_api_key(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Only Datakinders can generate api keys",
         )
+    # TODO xxx check that the current user is in the smaller subset.
+    if req.access_type != AccessType.DATAKINDER and req.allows_enduser:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Only DATAKINDER type tokens can allow endusers",
+        )
     local_session.set(sql_session)
     generated_key_value = secrets.token_urlsafe(36)
     hashed_val = get_api_key_hash(generated_key_value)
@@ -278,7 +284,7 @@ async def generate_api_key(
         )
     return {
         "access_type": query_result[0][0].access_type,
-        "key": secrets.token_urlsafe(36),
+        "key": generated_key_value,
         "inst_id": (
             None
             if not query_result[0][0].inst_id

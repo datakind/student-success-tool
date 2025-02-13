@@ -155,7 +155,7 @@ class ApiKeyTable(Base):
     inst: Mapped["InstTable"] = relationship(back_populates="apikeys")
     created_by = Column(Uuid(as_uuid=True), nullable=False)
     notes = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=True)
-    # Whether this key allows changing the enduser. ONLY SET FOR THE FRONTEND KEY.
+    # Whether this key allows changing the enduser. ONLY SET FOR THE FRONTEND KEY. Can only be set when the API key has DATAKINDER access type as this allows Datakinder level endusers.
     allows_enduser: Mapped[bool] = mapped_column(nullable=True)
 
     access_type = Column(String(VAR_CHAR_LENGTH), nullable=False)
