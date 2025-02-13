@@ -71,3 +71,7 @@ def test_databricksify_inst_name():
         databricksify_inst_name("Northwest State Community College")
         == "northwest_state_cc"
     )
+
+    with pytest.raises(ValueError) as err:
+        databricksify_inst_name("Northwest (invalid)")
+    assert str(err.value) == "Unexpected character found in Databricks compatible name."

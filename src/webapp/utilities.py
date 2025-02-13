@@ -8,7 +8,7 @@ from strenum import StrEnum
 import uuid
 import os
 import jwt
-
+import re
 from fastapi import HTTPException, status, Depends
 from pydantic import BaseModel, ConfigDict
 from jwt.exceptions import InvalidTokenError
@@ -400,7 +400,7 @@ def get_external_bucket_name(inst_id: str) -> str:
 
 def databricksify_inst_name(inst_name: str) -> str:
     """
-    Follow DK standardized rules for naming conventions
+    Follow DK standardized rules for naming conventions.
     """
     name = inst_name.lower()
     # This needs to be in order from most verbose and encompassing other replacement keys to least.
@@ -420,4 +420,10 @@ def databricksify_inst_name(inst_name: str) -> str:
         name = name.replace(old, new)
 
     # Databricks uses underscores, so we'll do that here.
-    return name.replace(" ", "_")
+    final_name = name.replace(" ", "_")
+
+    # Check to see that no special characters exist
+    pattern = "^[a-z0-9_]*$"
+    if not re.match(pattern, final_name):
+        raise ValueError("Unexpected character found in Databricks compatible name.")
+    return final_name

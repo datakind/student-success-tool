@@ -145,7 +145,6 @@ def create_institution(
         )
 
     pattern = "^[A-Za-z0-9&_ -]*$"
-    # convert match object into bool.
     if not re.match(pattern, req.name):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
