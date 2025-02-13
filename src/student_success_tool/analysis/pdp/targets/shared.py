@@ -105,10 +105,11 @@ def select_students_by_time_left(
         term_rank_col: Column name in ``df`` with term rank values.
 
     Warning:
-        This assumes that ``df`` only includes one student-term row per student; namely,
+        1. This assumes that ``df`` only includes one student-term row per student; namely,
         the one from which time left should be measured. If that assumption is violated,
         this code actually checks if *any* of the student's terms occurred with
         enough time left for their particular enrollment intensity.
+        2. Users should also always confirm with the school what to do / how to treat `NaN` intensities in the `enrollment_intensity_first_term` column, because the default in this pipeline drops them! Users should re-code these null values appropriately prior to running the pipeline if seeking to include them in the analysis/modeling dataset!**
     """
     student_id_cols = utils.to_list(student_id_cols)
     nuq_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
@@ -279,6 +280,51 @@ def _compute_intensity_num_terms(
         (intensity, time if unit == "term" else time * num_terms_in_year)
         for intensity, time, unit in intensity_time_lefts
     ]
+
+
+def get_nth_student_terms(
+    df: pd.DataFrame,
+    *,
+    n: int,
+    student_id_cols: str | list[str] = "student_guid",
+    sort_cols: str | list[str] = "term_rank",
+    include_cols: t.Optional[list[str]] = None,
+    term_is_pre_cohort_col: str = "term_is_pre_cohort",
+    exclude_pre_cohort_terms: bool = True,
+) -> pd.DataFrame:
+    """
+    For each student, get the nth row in ``df`` (in ascending order of ``sort_cols`` ). If `exclude_pre_cohort_col` is true, then for each student, we want to get the nth row in ``df`` (in ascending order of ``sort_cols`` ) for which the term occurred *within* the student's cohort, i.e. not prior to their official start of enrollment, and a configurable subset of columns.
+    Ex. n = 0 gets the first term, and is equivalent to the functionality of get_first_student_terms(); n = 1 gets the second term, n = 2, gets the third term, so on and so forth.
+
+    Args:
+        df
+        n
+        student_id_cols
+        sort_cols
+        include_cols
+        term_is_pre_cohort_col
+        exclude_pre_cohort_terms
+    """
+    student_id_cols = utils.to_list(student_id_cols)
+    sort_cols = utils.to_list(sort_cols)
+    cols = (
+        df.columns.tolist()
+        if include_cols is None
+        else list(
+            utils.unique_elements_in_order(student_id_cols + sort_cols + include_cols)
+        )
+    )
+    # exclude rows that are "pre-cohort", so "nth" meets our criteria here
+    df = (
+        df.loc[df[term_is_pre_cohort_col].eq(False), :]
+        if exclude_pre_cohort_terms is True
+        else df.loc[:, cols]
+    )
+    return (
+        df.sort_values(by=sort_cols, ascending=True)
+        .groupby(by=student_id_cols, sort=False, as_index=False)
+        .nth(n)
+    )
 
 
 def _log_eligible_selection(
