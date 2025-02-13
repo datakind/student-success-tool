@@ -25,6 +25,8 @@ resource "google_secret_manager_secret_version" "db_password_secret_version" {
 data "google_secret_manager_secret_version" "db_password_secret_version" {
   secret  = google_secret_manager_secret.db_password_secret.id
   version = "latest"
+
+  depends_on = [ google_secret_manager_secret_version.db_password_secret_version ]
 }
 
 resource "google_sql_database_instance" "db_instance" {

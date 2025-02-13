@@ -1,3 +1,11 @@
+variable "required_services" {
+  type = list(string)
+  default = [
+    "iap.googleapis.com",
+    "servicenetworking.googleapis.com",
+  ]
+}
+
 variable "project" {
   description = "The project ID"
   type        = string

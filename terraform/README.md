@@ -2,6 +2,12 @@
 
 This directory contains the Terraform configuration for the Student Success Tool. The configuration is organized into different environments, such as `dev`, `staging`, and `prod`.
 
+## Prerequesites
+
+- [Install the Terraform CLI Tool](https://developer.hashicorp.com/terraform/install)
+- [Configure Google Auth Platform](https://console.cloud.google.com/auth/overview)
+- [Connect GitHub Repositories](https://console.cloud.google.com/cloud-build/repositories/2nd-gen)
+
 ## Environments
 
 Each environment has its own directory under `environments/`. For example, the `dev` environment configuration is located in `environments/dev/`.
