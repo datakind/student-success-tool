@@ -1,7 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "sst-terraform-state"
-    prefix = "staging"
+    bucket = "sst-terraform-state-038987"
   }
   required_providers {
     google = {
