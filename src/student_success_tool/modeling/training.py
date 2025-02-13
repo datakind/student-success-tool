@@ -68,7 +68,8 @@ def run_automl_classification(
     kwargs.setdefault("timeout_minutes", 5)
     exclude_cols = kwargs.pop("exclude_cols", [])
     assert isinstance(exclude_cols, list)  # type guard
-    if student_id_col is not None:
+    exclude_cols = exclude_cols.copy()
+    if student_id_col is not None and student_id_col not in exclude_cols:
         exclude_cols.append(student_id_col)
 
     # generate a very descriptive experiment name

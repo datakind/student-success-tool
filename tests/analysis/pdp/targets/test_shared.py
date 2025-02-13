@@ -9,6 +9,26 @@ def test_df():
     return pd.DataFrame(
         {
             "student_id": ["01", "01", "01", "02", "02", "03", "04", "05"],
+            "cohort_id": [
+                "2020-21 SPRING",
+                "2020-21 SPRING",
+                "2020-21 SPRING",
+                "2021-22 FALL",
+                "2021-22 FALL",
+                "2019-20 FALL",
+                "2020-21 SPRING",
+                "2022-23 FALL",
+            ],
+            "term_id": [
+                "2020-21 FALL",
+                "2020-21 SPRING",
+                "2021-22 FALL",
+                "2021-22 FALL",
+                "2021-22 SPRING",
+                "2019-20 SPRING",
+                "2020-21 SPRING",
+                "2022-23 FALL",
+            ],
             "credential_sought": [
                 "Associate's",
                 "Associate's",
@@ -41,6 +61,16 @@ def test_df():
             ],
             "num_credits_earned": [25.0, 30.0, 35.0, 25.0, 35.0, 20.0, 45.0, 10.0],
             "term_rank": [3, 4, 5, 5, 6, 2, 4, 8],
+            "term_is_pre_cohort": [
+                True,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+            ],
         },
     ).astype(
         {
@@ -146,6 +176,20 @@ def test_select_students_by_time_left(
 
 
 @pytest.mark.parametrize(
+    "exp",
+    [
+        pd.DataFrame({"student_id": ["01", "02", "03", "04"]}),
+    ],
+)
+def test_select_students_by_next_year_course_data(test_df, exp):
+    obs = shared.select_students_by_next_year_course_data(
+        test_df, student_id_cols="student_id"
+    )
+    assert isinstance(obs, pd.DataFrame)
+    assert obs.equals(exp) or obs.compare(exp).empty
+
+
+@pytest.mark.parametrize(
     ["include_cols", "exp"],
     [
         (
@@ -182,6 +226,20 @@ def test_select_students_by_time_left(
             pd.DataFrame(
                 {
                     "student_id": ["03", "01", "04", "02", "05"],
+                    "cohort_id": [
+                        "2019-20 FALL",
+                        "2020-21 SPRING",
+                        "2020-21 SPRING",
+                        "2021-22 FALL",
+                        "2022-23 FALL",
+                    ],
+                    "term_id": [
+                        "2019-20 SPRING",
+                        "2020-21 FALL",
+                        "2020-21 SPRING",
+                        "2021-22 FALL",
+                        "2022-23 FALL",
+                    ],
                     "credential_sought": [
                         "Associate's",
                         "Associate's",
@@ -205,6 +263,7 @@ def test_select_students_by_time_left(
                     ],
                     "num_credits_earned": [20.0, 25.0, 45.0, 25.0, 10.0],
                     "term_rank": [2, 3, 4, 5, 8],
+                    "term_is_pre_cohort": [False, True, False, False, False],
                 }
             ).astype(
                 {
@@ -267,6 +326,54 @@ def test_get_first_student_terms_at_num_credits_earned(
         student_id_cols="student_id",
         sort_cols="term_rank",
         num_credits_col="num_credits_earned",
+        include_cols=include_cols,
+    )
+    assert isinstance(obs, pd.DataFrame)
+    assert obs.equals(exp) or obs.compare(exp).empty
+
+
+@pytest.mark.parametrize(
+    ["include_cols", "exp"],
+    [
+        (
+            [],
+            pd.DataFrame(
+                {
+                    "student_id": ["03", "01", "04", "02", "05"],
+                    "term_rank": [2, 4, 4, 5, 8],
+                }
+            ),
+        ),
+        (
+            ["cohort_id", "term_id"],
+            pd.DataFrame(
+                {
+                    "student_id": ["03", "01", "04", "02", "05"],
+                    "term_rank": [2, 4, 4, 5, 8],
+                    "cohort_id": [
+                        "2019-20 FALL",
+                        "2020-21 SPRING",
+                        "2020-21 SPRING",
+                        "2021-22 FALL",
+                        "2022-23 FALL",
+                    ],
+                    "term_id": [
+                        "2019-20 SPRING",
+                        "2020-21 SPRING",
+                        "2020-21 SPRING",
+                        "2021-22 FALL",
+                        "2022-23 FALL",
+                    ],
+                }
+            ),
+        ),
+    ],
+)
+def test_get_first_student_terms_within_cohort(test_df, include_cols, exp):
+    obs = shared.get_first_student_terms_within_cohort(
+        test_df,
+        student_id_cols="student_id",
+        sort_cols="term_rank",
         include_cols=include_cols,
     )
     assert isinstance(obs, pd.DataFrame)

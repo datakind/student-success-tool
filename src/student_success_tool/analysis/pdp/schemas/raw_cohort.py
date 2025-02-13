@@ -47,111 +47,12 @@ GradeField = ft.partial(pda.Field, nullable=True)
 CompletedDevOrGatewayField = ft.partial(
     pda.Field, nullable=True, dtype_kwargs={"categories": ["C", "D", "NA"]}
 )
-YearsToOfField = ft.partial(pda.Field, ge=0, le=7)
+YearsToOfField = ft.partial(pda.Field, ge=0, le=8)
 LocaleField = ft.partial(
     pda.Field,
     nullable=True,
     dtype_kwargs={"categories": ["URBAN", "SUBURB", "TOWN/RURAL"]},
 )
-
-
-class RawPDPCourseDataSchema(pda.DataFrameModel):
-    """
-    Schema (aka ``DataFrameModel``) for raw PDP course data that validates columns,
-    data types (including categorical categories), acceptable value ranges, and more.
-
-    References:
-        - https://help.studentclearinghouse.org/pdp/knowledge-base/course-level-analysis-ready-file-data-dictionary
-        - https://pandera.readthedocs.io/en/stable/dataframe_models.html
-    """
-
-    student_guid: pt.Series["string"]
-    institution_id: pt.Series["string"]
-    student_age: pt.Series[pd.CategoricalDtype] = StudentAgeField()
-    race: pt.Series[pd.CategoricalDtype] = RaceField()
-    ethnicity: pt.Series[pd.CategoricalDtype] = EthnicityField()
-    gender: pt.Series[pd.CategoricalDtype] = GenderField()
-    cohort: pt.Series["string"]
-    cohort_term: pt.Series[pd.CategoricalDtype] = TermField()
-    academic_year: pt.Series["string"]
-    academic_term: pt.Series[pd.CategoricalDtype] = TermField()
-    course_prefix: pt.Series["string"]
-    course_number: pt.Series["string"]
-    section_id: pt.Series["string"]
-    course_name: pt.Series["string"]
-    course_cip: pt.Series["string"]
-    course_type: pt.Series[pd.CategoricalDtype] = pda.Field(
-        dtype_kwargs={
-            "categories": ["CU", "CG", "CC", "CD", "EL", "AB", "GE", "NC", "O"]
-        },
-    )
-    math_or_english_gateway: pt.Series[pd.CategoricalDtype] = pda.Field(
-        nullable=True, dtype_kwargs={"categories": ["M", "E", "NA"]}
-    )
-    co_requisite_course: pt.Series[pd.CategoricalDtype] = pda.Field(
-        dtype_kwargs={"categories": ["Y", "N"]}
-    )
-    course_begin_date: pt.Series["datetime64[ns]"]
-    course_end_date: pt.Series["datetime64[ns]"]
-    grade: pt.Series["string"] = GradeField()
-    number_of_credits_attempted: pt.Series["Float32"] = NumCreditsGt0Field(le=20)
-    number_of_credits_earned: pt.Series["Float32"] = NumCreditsGt0Field(le=20)
-    delivery_method: pt.Series[pd.CategoricalDtype] = pda.Field(
-        nullable=True, dtype_kwargs={"categories": ["F", "O", "H"]}
-    )
-    core_course: pt.Series[pd.CategoricalDtype] = pda.Field(
-        nullable=True, dtype_kwargs={"categories": ["Y", "N"]}
-    )
-    core_course_type: pt.Series["string"] = pda.Field(nullable=True)
-    core_competency_completed: pt.Series[pd.CategoricalDtype] = pda.Field(
-        nullable=True, dtype_kwargs={"categories": ["Y", "N"]}
-    )
-    enrolled_at_other_institution_s: pt.Series[pd.CategoricalDtype] = pda.Field(
-        nullable=True, dtype_kwargs={"categories": ["Y", "N"]}
-    )
-    credential_engine_identifier: t.Optional[pt.Series["string"]] = pda.Field(
-        nullable=True
-    )
-    course_instructor_employment_status: t.Optional[pt.Series[pd.CategoricalDtype]] = (
-        pda.Field(nullable=True, dtype_kwargs={"categories": ["PT", "FT"]})
-    )
-    course_instructor_rank: t.Optional[pt.Series[pd.CategoricalDtype]] = pda.Field(
-        nullable=True, dtype_kwargs={"categories": ["1", "2", "3", "4", "5", "6", "7"]}
-    )
-    enrollment_record_at_other_institution_s_state_s: pt.Series["string"] = pda.Field(
-        nullable=True,
-    )
-    enrollment_record_at_other_institution_s_carnegie_s: pt.Series["string"] = (
-        pda.Field(nullable=True)
-    )
-    enrollment_record_at_other_institution_s_locale_s: pt.Series["string"] = pda.Field(
-        nullable=True
-    )
-
-    @pda.dataframe_check
-    def num_credits_attempted_ge_earned(cls, df: pd.DataFrame) -> pd.Series:
-        col_attempted = "number_of_credits_attempted"
-        col_earned = "number_of_credits_earned"
-        return (
-            df[col_attempted].ge(df[col_earned])
-            # since pandas treats NA != NA, we also need to allow for nulls
-            | df[[col_attempted, col_earned]].isna().any(axis="columns")
-        )
-
-    class Config:
-        coerce = True
-        strict = True
-        unique_column_names = True
-        add_missing_columns = False
-        drop_invalid_rows = False
-        unique = [
-            "student_guid",
-            "academic_year",
-            "academic_term",
-            "course_prefix",
-            "course_number",
-            "section_id",
-        ]
 
 
 class RawPDPCohortDataSchema(pda.DataFrameModel):
@@ -172,8 +73,9 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     enrollment_type: pt.Series[pd.CategoricalDtype] = pda.Field(
         dtype_kwargs={"categories": ["FIRST-TIME", "RE-ADMIT", "TRANSFER-IN"]},
     )
+    # NOTE: categories set in a parser, which forces "UK" / "UNKNOWN" values to null
     enrollment_intensity_first_term: pt.Series[pd.CategoricalDtype] = pda.Field(
-        dtype_kwargs={"categories": ["FULL-TIME", "PART-TIME"]},
+        nullable=True
     )
     # NOTE: categories set in a parser, which forces "UK" values to null
     math_placement: pt.Series[pd.CategoricalDtype] = pda.Field(nullable=True)
@@ -228,9 +130,8 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     program_of_study_term_1: pt.Series["string"] = pda.Field(nullable=True)
     gpa_group_term_1: pt.Series["Float32"] = GPAField()
     gpa_group_year_1: pt.Series["Float32"] = GPAField()
-    # this is the only credits field required to be >= 1
     number_of_credits_attempted_year_1: pt.Series["Float32"] = pda.Field(
-        nullable=True, ge=1.0
+        nullable=True, ge=1.0, raise_warning=True
     )
     number_of_credits_earned_year_1: pt.Series["Float32"] = NumCreditsGt0Field()
     number_of_credits_attempted_year_2: pt.Series["Float32"] = NumCreditsGt0Field()
@@ -297,8 +198,9 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     incarcerated_status: t.Optional[pt.Series[pd.CategoricalDtype]] = pda.Field(
         nullable=True
     )
+    # NOTE: categories set in a parser, which forces "-1" / "-1.0" values to null
     military_status: t.Optional[pt.Series[pd.CategoricalDtype]] = pda.Field(
-        nullable=True, dtype_kwargs={"categories": ["-1", "0", "1", "2"]}
+        nullable=True
     )
     employment_status: t.Optional[pt.Series[pd.CategoricalDtype]] = pda.Field(
         nullable=True, dtype_kwargs={"categories": ["-1", "0", "1", "2", "3", "4"]}
@@ -369,6 +271,10 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
         pd.CategoricalDtype
     ] = LocaleField()
 
+    @pda.parser("enrollment_intensity_first_term")
+    def set_enrollment_intensity_first_term_categories(cls, series):
+        return series.cat.set_categories(["FULL-TIME", "PART-TIME"])
+
     @pda.parser("math_placement", "english_placement", "reading_placement")
     def set_subj_placement_categories(cls, series):
         return series.cat.set_categories(["C", "N"])
@@ -401,6 +307,15 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     def set_disability_status_categories(cls, series):
         return series.cat.set_categories(["Y", "N"])
 
+    @pda.parser("military_status")
+    def set_military_status_categories(cls, series):
+        return (
+            series.astype("Float32")
+            .astype("Int8")
+            .astype("category")
+            .cat.set_categories(["0", "1", "2"])
+        )
+
     @pda.parser(
         "years_to_associates_or_certificate_at_cohort_inst",
         "years_to_bachelors_at_cohort_inst",
@@ -414,10 +329,14 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     def set_zero_year_values_to_null(cls, series):
         return series.mask(series.eq(0), pd.NA).astype("Int8")
 
+    @pda.check("institution_id", name="check_num_institutions")
+    def check_num_institutions(cls, series) -> bool:
+        return series.nunique() == 1
+
     class Config:
         coerce = True
         strict = True
         unique_column_names = True
         add_missing_columns = False
         drop_invalid_rows = False
-        unique = ["institution_id", "student_guid"]
+        unique = ["student_guid"]

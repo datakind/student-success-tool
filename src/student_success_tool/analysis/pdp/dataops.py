@@ -1,10 +1,11 @@
 import functools as ft
 import logging
+import re
 import typing as t
 
 import pandas as pd
 
-from . import constants, features
+from . import constants, features, types, utils
 
 LOGGER = logging.getLogger(__name__)
 
@@ -14,6 +15,7 @@ def make_student_term_dataset(
     df_course: pd.DataFrame,
     *,
     min_passing_grade: float = constants.DEFAULT_MIN_PASSING_GRADE,
+    min_num_credits_full_time: float = constants.DEFAULT_MIN_NUM_CREDITS_FULL_TIME,
     course_level_pattern: str = constants.DEFAULT_COURSE_LEVEL_PATTERN,
     peak_covid_terms: set[tuple[str, str]] = constants.DEFAULT_PEAK_COVID_TERMS,
     key_course_subject_areas: t.Optional[list[str]] = None,
@@ -28,6 +30,10 @@ def make_student_term_dataset(
         df_cohort: As output by :func:`dataio.read_raw_pdp_cohort_data_from_file()` .
         df_course: As output by :func:`dataio.read_raw_pdp_course_data_from_file()` .
         min_passing_grade: Minimum numeric grade considered by institution as "passing".
+            Default value is 1.0, i.e. a "D" grade or better.
+        min_num_credits_full_time: Minimum number of credits *attempted* per term
+            for a student's enrollment intensity to be considered "full-time".
+            Default value is 12.0.
         course_level_pattern
         peak_covid_terms
         key_course_subject_areas
@@ -36,9 +42,10 @@ def make_student_term_dataset(
     References:
         - https://bigfuture.collegeboard.org/plan-for-college/get-started/how-to-convert-gpa-4.0-scale
     """
+    first_term_of_year = infer_first_term_of_year(df_course["academic_term"])
     df_students = (
         df_cohort.pipe(standardize_cohort_dataset)
-        .pipe(features.student.add_features)
+        .pipe(features.student.add_features, first_term_of_year=first_term_of_year)
     )  # fmt: skip
     df_courses_plus = (
         df_course.pipe(standardize_course_dataset)
@@ -47,7 +54,11 @@ def make_student_term_dataset(
             min_passing_grade=min_passing_grade,
             course_level_pattern=course_level_pattern,
         )
-        .pipe(features.term.add_features, peak_covid_terms=peak_covid_terms)
+        .pipe(
+            features.term.add_features,
+            first_term_of_year=first_term_of_year,
+            peak_covid_terms=peak_covid_terms,
+        )
         .pipe(
             features.section.add_features,
             section_id_cols=["term_id", "course_id", "section_id"],
@@ -62,12 +73,22 @@ def make_student_term_dataset(
             key_course_ids=key_course_ids,
         )
         .merge(df_students, how="inner", on=["institution_id", "student_guid"])
-        .pipe(features.student_term.add_features)
+        .pipe(
+            features.student_term.add_features,
+            min_num_credits_full_time=min_num_credits_full_time,
+        )
     )
-    df_student_terms_plus = features.cumulative.add_features(
-        df_student_terms,
-        student_id_cols=["institution_id", "student_guid"],
-        sort_cols=["academic_year", "academic_term"],
+    df_student_terms_plus = (
+        features.cumulative.add_features(
+            df_student_terms,
+            student_id_cols=["institution_id", "student_guid"],
+            sort_cols=["academic_year", "academic_term"],
+        )
+        # NOTE: it's important to standardize column names here to avoid name mismatches
+        # when features are generated here (on-the-fly) as opposed to read (pre-computed)
+        # from a delta table; spark can be configured to behave nicely...
+        # but let's not take any chances
+        .rename(columns=utils.convert_to_snake_case)
     )
     return df_student_terms_plus
 
@@ -171,6 +192,7 @@ def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
     any values corresponding to time after a student's current year of enrollment.
     """
     return (
+        # drop many columns that *should not* be included as features in a model
         df.pipe(
             drop_columns_safely,
             cols=[
@@ -181,17 +203,23 @@ def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
                 # "academic_term",  # keeping this to see if useful
                 "cohort",
                 # "cohort_term",  # keeping this to see if useful
+                "cohort_id",
                 "term_rank",
                 "term_rank_fall_spring",
-                "term_course_begin_date_min",
-                "term_course_end_date_max",
+                "term_is_fall_spring",
                 # columns used to derive other features, but not features themselves
+                "grade",
                 "course_ids",
                 "course_subjects",
                 "course_subject_areas",
                 "min_student_term_rank",
                 "min_student_term_rank_fall_spring",
-                # likely sources of data leakage
+                "sections_num_students_enrolled",
+                "sections_num_students_passed",
+                "sections_num_students_completed",
+                "term_start_dt",
+                "cohort_start_dt",
+                # "outcome" variables / likely sources of data leakage
                 "retention",
                 "persistence",
                 "years_to_bachelors_at_cohort_inst",
@@ -201,29 +229,33 @@ def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
                 "years_of_last_enrollment_at_cohort_institution",
                 "years_of_last_enrollment_at_other_institution",
             ],
-        )
-        # keep "first year to X credential at Y inst" values if they occurred
-        # in any year prior to the current year of enrollment; otherwise, set to null
-        # in this case, the values themselves represent years
-        .assign(
+        ).assign(
+            # keep "first year to X credential at Y inst" values if they occurred
+            # in any year prior to the current year of enrollment; otherwise, set to null
+            # in this case, the values themselves represent years
             **{
-                col: ft.partial(mask_year_values_based_on_enrollment_year, col=col)
-                for col in [
-                    "first_year_to_associates_or_certificate_at_cohort_inst",
-                    "first_year_to_bachelors_at_cohort_inst",
-                    "first_year_to_associates_or_certificate_at_other_inst",
-                    "first_year_to_bachelor_at_other_inst",
-                ]
+                col: ft.partial(_mask_year_values_based_on_enrollment_year, col=col)
+                for col in df.columns[
+                    df.columns.str.contains(r"^first_year_to")
+                ].tolist()
+            }
+            # keep values in "*_year_X" columns if they occurred in any year prior
+            # to the current year of enrollment; otherwise, set to null
+            # in this case, the columns themselves represent years
+            | {
+                col: ft.partial(_mask_year_column_based_on_enrollment_year, col=col)
+                for col in df.columns[df.columns.str.contains(r"_year_\d$")].tolist()
+            }
+            # do the same thing, only by term for term columns: "*_term_X"
+            | {
+                col: ft.partial(_mask_term_column_based_on_enrollment_term, col=col)
+                for col in df.columns[df.columns.str.contains(r"_term_\d$")].tolist()
             }
         )
-        # keep values in "*_year_X" columns if they occurred in any year prior
-        # to the current year of enrollment; otherwise, set to null
-        # in this case, the columns themselves represent years
-        .apply(mask_year_columns_based_on_enrollment_year, axis="columns")
     )
 
 
-def mask_year_values_based_on_enrollment_year(
+def _mask_year_values_based_on_enrollment_year(
     df: pd.DataFrame,
     *,
     col: str,
@@ -232,15 +264,30 @@ def mask_year_values_based_on_enrollment_year(
     return df[col].mask(df[col].ge(df[enrollment_year_col]), other=pd.NA)
 
 
-def mask_year_columns_based_on_enrollment_year(
-    row: pd.Series, enrollment_year_col: str = "year_of_enrollment_at_cohort_inst"
+def _mask_year_column_based_on_enrollment_year(
+    df: pd.DataFrame,
+    *,
+    col: str,
+    enrollment_year_col: str = "year_of_enrollment_at_cohort_inst",
 ) -> pd.Series:
-    enrollment_year: int = row[enrollment_year_col]
-    post_grad_years = tuple(
-        f"_year_{yr}" for yr in (1, 2, 3, 4) if yr >= enrollment_year
-    )
-    row.loc[row.index.str.endswith(post_grad_years)] = pd.NA
-    return row
+    if match := re.search(r"_year_(?P<yr>\d)$", col):
+        col_year = int(match.groupdict()["yr"])
+    else:
+        raise ValueError(f"column '{col}' does not end with '_year_NUM'")
+    return df[col].mask(df[enrollment_year_col].lt(col_year), other=pd.NA)
+
+
+def _mask_term_column_based_on_enrollment_term(
+    df: pd.DataFrame,
+    *,
+    col: str,
+    enrollment_term_col: str = "cumnum_terms_enrolled",
+) -> pd.Series:
+    if match := re.search(r"_term_(?P<num>\d)$", col):
+        col_term = int(match.groupdict()["num"])
+    else:
+        raise ValueError(f"column '{col}' does not end with '_term_NUM'")
+    return df[col].mask(df[enrollment_term_col].lt(col_term), other=pd.NA)
 
 
 def drop_course_rows_missing_identifiers(df: pd.DataFrame) -> pd.DataFrame:
@@ -288,7 +335,7 @@ def drop_columns_safely(df: pd.DataFrame, *, cols: list[str]) -> pd.DataFrame:
     return df_trf
 
 
-def infer_first_term_of_year(s: pd.Series) -> str:
+def infer_first_term_of_year(s: pd.Series) -> types.TermType:
     """
     Infer the first term of the (academic) year by the ordering of its categorical values.
 
@@ -299,7 +346,7 @@ def infer_first_term_of_year(s: pd.Series) -> str:
         first_term_of_year = s.cat.categories[0]
         LOGGER.info("'%s' inferred as the first term of the year", first_term_of_year)
         assert isinstance(first_term_of_year, str)  # type guard
-        return first_term_of_year
+        return first_term_of_year  # type: ignore
     else:
         raise ValueError(
             f"'{s.name}' series is not an ordered categorical: {s.dtype=} ..."

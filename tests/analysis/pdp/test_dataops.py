@@ -1,8 +1,11 @@
+import os
 import numpy as np
 import pandas as pd
 import pytest
 
-from student_success_tool.analysis.pdp import dataops
+from student_success_tool.analysis.pdp import dataops, dataio, schemas
+
+SYNTHETIC_DATA_PATH = "synthetic-data/pdp"
 
 
 @pytest.mark.parametrize(
@@ -146,6 +149,7 @@ def test_standardize_course_dataset(df, exp):
             pd.DataFrame(
                 {
                     "year_of_enrollment_at_cohort_inst": [1, 2, 3, 4],
+                    "cumnum_terms_enrolled": [2, 3, 4, 5],
                     "term_id": [
                         "2020-21 FALL",
                         "2020-21 WINTER",
@@ -175,6 +179,8 @@ def test_standardize_course_dataset(df, exp):
                     "first_year_to_bachelor_at_other_inst": [pd.NA, pd.NA, pd.NA, 6],
                     "frac_credits_earned_year_1": [1.0, 0.5, 0.75, 0.9],
                     "frac_credits_earned_year_2": [0.9, 0.75, 0.8, 0.85],
+                    "num_courses_diff_term_2_to_term_3": [0.0, 1.0, -1.0, 0.0],
+                    "num_courses_diff_term_3_to_term_4": [1.0, -1.0, 0.0, 1.0],
                 }
             ).astype(
                 {
@@ -187,6 +193,7 @@ def test_standardize_course_dataset(df, exp):
             pd.DataFrame(
                 {
                     "year_of_enrollment_at_cohort_inst": [1, 2, 3, 4],
+                    "cumnum_terms_enrolled": [2, 3, 4, 5],
                     "first_year_to_associates_or_certificate_at_cohort_inst": [
                         pd.NA,
                         pd.NA,
@@ -206,8 +213,10 @@ def test_standardize_course_dataset(df, exp):
                         pd.NA,
                         pd.NA,
                     ],
-                    "frac_credits_earned_year_1": [np.nan, 0.5, 0.75, 0.9],
-                    "frac_credits_earned_year_2": [np.nan, np.nan, 0.8, 0.85],
+                    "frac_credits_earned_year_1": [1.0, 0.5, 0.75, 0.9],
+                    "frac_credits_earned_year_2": [np.nan, 0.75, 0.8, 0.85],
+                    "num_courses_diff_term_2_to_term_3": [np.nan, 1.0, -1.0, 0.0],
+                    "num_courses_diff_term_3_to_term_4": [np.nan, np.nan, 0.0, 1.0],
                 }
             ).astype(
                 {
@@ -224,3 +233,35 @@ def test_clean_up_labeled_dataset_cols_and_vals(df, exp):
     obs = dataops.clean_up_labeled_dataset_cols_and_vals(df)
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
+
+
+@pytest.mark.parametrize(
+    ["cohort_file_name", "course_file_name"],
+    [
+        (
+            "INSTXYZ_STUDENT_SEMESTER_AR_DEIDENTIFIED.csv",
+            "INSTXYZ_COURSE_LEVEL_AR_DEID.csv",
+        ),
+    ],
+)
+def test_make_student_term_dataset_against_checked_in_sample(
+    cohort_file_name, course_file_name
+):
+    full_cohort_file_path = os.path.join(SYNTHETIC_DATA_PATH, cohort_file_name)
+    cohort = dataio.read_raw_pdp_cohort_data_from_file(
+        full_cohort_file_path, schema=schemas.RawPDPCohortDataSchema
+    )
+    assert isinstance(cohort, pd.DataFrame)
+    assert not cohort.empty
+
+    full_course_file_path = os.path.join(SYNTHETIC_DATA_PATH, course_file_name)
+    course = dataio.read_raw_pdp_course_data_from_file(
+        full_course_file_path,
+        schema=schemas.RawPDPCourseDataSchema,
+        dttm_format="%Y-%m-%d",
+    )
+    assert isinstance(course, pd.DataFrame)
+    assert not course.empty
+    df = dataops.make_student_term_dataset(cohort, course)
+    assert isinstance(df, pd.DataFrame)
+    assert not df.empty

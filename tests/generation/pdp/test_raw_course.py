@@ -2,7 +2,7 @@ import faker
 import pandas as pd
 import pytest
 
-from student_success_tool.analysis.pdp.schemas.base import RawPDPCourseDataSchema
+from student_success_tool.analysis.pdp.schemas import RawPDPCourseDataSchema
 from student_success_tool.generation.pdp import raw_course
 
 FAKER = faker.Faker()
@@ -13,7 +13,7 @@ FAKER.add_provider(raw_course.Provider)
     ["normalize_col_names"],
     [(False,), (True,)],
 )
-def test_raw_cohort_record(normalize_col_names):
+def test_raw_course_record(normalize_col_names):
     obs = FAKER.raw_course_record(normalize_col_names=normalize_col_names)
     assert obs and isinstance(obs, dict)
     if normalize_col_names is True:

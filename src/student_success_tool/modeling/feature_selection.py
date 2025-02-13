@@ -18,7 +18,7 @@ def select_features(
     force_include_cols: t.Optional[list[str]] = None,
     incomplete_threshold: float = 0.5,
     low_variance_threshold: float = 0.0,
-    collinear_threshold: float = 10.0,
+    collinear_threshold: t.Optional[float] = 10.0,
 ) -> pd.DataFrame:
     """
     Select features by dropping incomplete features, low variance features,
@@ -31,7 +31,8 @@ def select_features(
         force_include_cols: list of features to force include in the final dataset.
         incomplete_threshold: Threshold for determining incomplete features.
         low_variance_threshold: Threshold for determining low-variance features.
-        collinear_threshold: Threshold for determining collinear features.
+        collinear_threshold: Threshold for determining collinear features;
+            if null, skip this selection step.
 
     Returns:
         df with non_features_cols, force_include_cols, and any other columns selected
@@ -55,16 +56,15 @@ def select_features(
         .pipe(drop_low_variance_features, threshold=low_variance_threshold)
     )
     sel_incl_feature_cols = list(set(df_selected.columns.tolist() + force_include_cols))
-    df_selected = (
-        df.loc[:, sel_incl_feature_cols]
+    df_selected = df.loc[:, sel_incl_feature_cols]
+    if collinear_threshold is not None:
         # multi-collinearity: it may not interfere with the model's performance
         # but it does negatively affect the interpretation of the predictors
-        .pipe(
-            drop_collinear_features_iteratively,
+        df_selected = drop_collinear_features_iteratively(
+            df_selected,
             threshold=collinear_threshold,
             force_include_cols=force_include_cols,
         )
-    )
 
     orig_feature_cols = set(df.columns) - set(non_feature_cols)
     selected_feature_cols = set(df_selected.columns)
@@ -204,24 +204,25 @@ def drop_collinear_features_iteratively(
     assert isinstance(df_features, pd.DataFrame)  # type guard
 
     n_features_dropped_so_far = 0
-    while (
-        max_vif := max(
-            (
-                uncentered_vif_dict := {
-                    # calculate VIF of features that are not force-included
-                    # against all numeric variables
-                    col: variance_inflation_factor(df_features, col_index)
-                    for col_index, col in enumerate(df_features.columns.tolist())
-                    if col not in force_include_cols
-                }
-            ).values()
+
+    # calculate initial VIFs for features that aren't force-included
+    uncentered_vif_dict = {
+        col: variance_inflation_factor(df_features, col_idx)
+        for col_idx, col in enumerate(df_features.columns)
+        if col not in force_include_cols
+    }
+    if np.isinf(list(uncentered_vif_dict.values())).all():
+        LOGGER.warning(
+            "all features are perfectly correlated with one another; "
+            "no collinear features will be dropped ..."
         )
-    ) >= threshold:
+        return df
+
+    while (max_vif := max(uncentered_vif_dict.values())) >= threshold:
         highest_vif_cols = [
-            col for col, vif in uncentered_vif_dict.items() if vif == max_vif
+            col for col, vif in uncentered_vif_dict.items() if vif >= max_vif
         ]
-        n_drop_this_round = len(highest_vif_cols)
-        n_features_dropped_so_far += n_drop_this_round
+        n_features_dropped_so_far += len(highest_vif_cols)
         LOGGER.info(
             "dropping %s columns with VIF >= %s: %s ...",
             len(highest_vif_cols),
@@ -230,6 +231,14 @@ def drop_collinear_features_iteratively(
         )
         df = df.drop(columns=highest_vif_cols)
         df_features = df_features.drop(columns=highest_vif_cols)
+
+        # recalculate VIFs after dropping columns
+        uncentered_vif_dict = {
+            col: variance_inflation_factor(df_features, col_idx)
+            for col_idx, col in enumerate(df_features.columns)
+            if col not in force_include_cols
+        }
+
     LOGGER.info("dropping %s collinear features", n_features_dropped_so_far)
 
     assert all(

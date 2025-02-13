@@ -12,6 +12,7 @@ class Provider(BaseProvider):
         min_cohort_yr: int = 2010,
         max_cohort_yr: t.Optional[int] = None,
         normalize_col_names: bool = False,
+        institution_id: t.Optional[str] = None,
     ) -> dict[str, object]:
         # some fields are inputs to others; compute them first, accordingly
         enrollment_type = self.enrollment_type()
@@ -21,10 +22,13 @@ class Provider(BaseProvider):
         number_of_credits_attempted_year_3 = self.number_of_credits_attempted_year_3()
         number_of_credits_attempted_year_4 = self.number_of_credits_attempted_year_4()
         _has_enrollment_other_inst: bool = self.generator.random.random() < 0.25
+
         # TODO: handle other cases, e.g. gateway course attempted/completed/grades
         record = {
             "Student GUID": self.student_guid(),
-            "Institution ID": self.institution_id(),
+            "Institution ID": institution_id
+            if institution_id is not None
+            else self.institution_id(),
             "Cohort": self.cohort(min_yr=min_cohort_yr, max_yr=max_cohort_yr),
             "Cohort Term": self.cohort_term(),
             "Student Age": self.student_age(),
@@ -153,13 +157,17 @@ class Provider(BaseProvider):
     def institution_id(self) -> str:
         return self.numerify("#####!")
 
+    # Returns a string in the format "YYYY-YY" (e.g. "2010-11"), representing a cohort year,
+    # where the first year is the start year (a random date between min_yr and max_yr,
+    # or min_yr and now if the current date if not provided). The second year is the first year + 1.
     def cohort(self, min_yr: int = 2010, max_yr: t.Optional[int] = None) -> str:
         _end_date = date(max_yr, 1, 1) if max_yr is not None else "today"
         start_dt: date = self.generator.date_between(
             start_date=date(min_yr, 1, 1), end_date=_end_date
         )
-        end_dt = start_dt.replace(year=start_dt.year + 1)
-        return f"{start_dt:%Y}-{end_dt:%Y}"
+        start_yr = start_dt.year
+        end_yr = f"{start_yr + 1}"[2:]
+        return f"{start_yr}-{end_yr}"
 
     def cohort_term(self) -> str:
         return self.random_element(["FALL", "WINTER", "SPRING", "SUMMER"])
