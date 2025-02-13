@@ -14,6 +14,10 @@ variable "cloudbuild_service_account_id" {
   type = string
 }
 
+variable "terraform_service_account_id" {
+  type = string
+}
+
 variable "webapp_image" {
   type = string
 }

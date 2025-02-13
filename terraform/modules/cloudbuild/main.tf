@@ -12,7 +12,7 @@ resource "google_artifact_registry_repository" "sst_app_ui" {
 
 resource "google_cloudbuild_trigger" "python_apps" {
   for_each        = toset(["webapp", "worker"])
-  name            = "${var.environment}-student-success-tool-${each.key}"
+  name            = "${var.environment}-${each.key}"
   service_account = var.cloudbuild_service_account_id
   github {
     owner = "datakind"
@@ -63,7 +63,7 @@ resource "google_cloudbuild_trigger" "python_apps" {
 }
 
 resource "google_cloudbuild_trigger" "frontend" {
-  name            = "${var.environment}-sst-app-ui-frontend"
+  name            = "${var.environment}-frontend"
   service_account = var.cloudbuild_service_account_id
   github {
     owner = "datakind"
@@ -149,6 +149,55 @@ resource "google_cloudbuild_trigger" "frontend" {
         "${var.region}-docker.pkg.dev/${var.project}/sst-app-ui/frontend:$COMMIT_SHA",
         "--region",
         "${var.region}",
+      ]
+    }
+    options {
+      logging               = "CLOUD_LOGGING_ONLY"
+      dynamic_substitutions = true
+    }
+  }
+}
+
+resource "google_cloudbuild_trigger" "terraform" {
+  name            = "${var.environment}-terraform"
+  service_account = var.terraform_service_account_id
+  substitutions = {
+    "_PROJECT"        = var.project
+    "_REGION"         = var.region
+    "_ENVIRONMENT"    = var.environment
+    "_DOMAIN"         = var.domain
+    "_WEBAPP_IMAGE"   = "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:latest"
+    "_FRONTEND_IMAGE" = "${var.region}-docker.pkg.dev/${var.project}/sst-app-ui/frontend:latest"
+  }
+  source_to_build {
+    ref       = "refs/heads/fellows-experimental"
+    repo_type = "GITHUB"
+    uri       = "https://github.com/datakind/student-success-tool"
+  }
+  build {
+    step {
+      name = "hashicorp/terraform:1.10.1"
+      dir  = "terraform/environments/${var.environment}"
+      args = ["init"]
+    }
+    step {
+      name = "hashicorp/terraform:1.10.1"
+      dir  = "terraform/environments/${var.environment}"
+      args = [
+        "apply",
+        "-auto-approve",
+        "-var",
+        "project=$_PROJECT",
+        "-var",
+        "region=$_REGION",
+        "-var",
+        "environment=$_ENVIRONMENT",
+        "-var",
+        "webapp_image=$_WEBAPP_IMAGE",
+        "-var",
+        "frontend_image=$_FRONTEND_IMAGE",
+        "-var",
+        "domain=$_DOMAIN",
       ]
     }
     options {

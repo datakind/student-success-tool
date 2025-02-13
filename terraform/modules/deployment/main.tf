@@ -233,6 +233,7 @@ module "cloudbuild" {
   frontend_image = var.frontend_image
 
   cloudbuild_service_account_id = module.iam.cloudbuild_service_account_id
+  terraform_service_account_id  = module.iam.terraform_service_account_id
   static_assets_bucket_name     = google_storage_bucket.static_assets.name
 
   depends_on = [module.services]
