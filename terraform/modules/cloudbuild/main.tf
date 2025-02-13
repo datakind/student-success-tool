@@ -21,11 +21,22 @@ resource "google_cloudbuild_trigger" "python_apps" {
   for_each        = toset(["webapp", "worker"])
   name            = "${var.environment}-${each.key}"
   service_account = var.cloudbuild_service_account_id
-  github {
-    owner = "datakind"
-    name  = "student-success-tool"
-    push {
-      branch = "fellows-experimental"
+  dynamic "github" {
+    for_each = var.environment == "dev" ? [1] : []
+    content {
+      owner = "datakind"
+      name  = "student-success-tool"
+      push {
+        branch = "fellows-experimental"
+      }
+    }
+  }
+  dynamic "source_to_build" {
+    for_each = var.environment != "dev" ? [1] : []
+    content {
+      ref       = "refs/heads/fellows-experimental"
+      repo_type = "GITHUB"
+      uri       = "https://github.com/datakind/student-success-tool"
     }
   }
   build {
@@ -72,11 +83,22 @@ resource "google_cloudbuild_trigger" "python_apps" {
 resource "google_cloudbuild_trigger" "frontend" {
   name            = "${var.environment}-frontend"
   service_account = var.cloudbuild_service_account_id
-  github {
-    owner = "datakind"
-    name  = "sst-app-ui"
-    push {
-      branch = "develop"
+  dynamic "github" {
+    for_each = var.environment == "dev" ? [1] : []
+    content {
+      owner = "datakind"
+      name  = "sst-app-ui"
+      push {
+        branch = "develop"
+      }
+    }
+  }
+  dynamic "source_to_build" {
+    for_each = var.environment != "dev" ? [1] : []
+    content {
+      ref       = "refs/heads/fellows-experimental"
+      repo_type = "GITHUB"
+      uri       = "https://github.com/datakind/sst-app-ui"
     }
   }
   build {
@@ -176,10 +198,23 @@ resource "google_cloudbuild_trigger" "terraform" {
     "_WEBAPP_IMAGE"   = "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:latest"
     "_FRONTEND_IMAGE" = "${var.region}-docker.pkg.dev/${var.project}/sst-app-ui/frontend:latest"
   }
-  source_to_build {
-    ref       = "refs/heads/fellows-experimental"
-    repo_type = "GITHUB"
-    uri       = "https://github.com/datakind/student-success-tool"
+  dynamic "github" {
+    for_each = var.environment == "dev" ? [1] : []
+    content {
+      owner = "datakind"
+      name  = "student-success-tool"
+      push {
+        branch = "fellows-experimental"
+      }
+    }
+  }
+  dynamic "source_to_build" {
+    for_each = var.environment != "dev" ? [1] : []
+    content {
+      ref       = "refs/heads/fellows-experimental"
+      repo_type = "GITHUB"
+      uri       = "https://github.com/datakind/student-success-tool"
+    }
   }
   build {
     step {
