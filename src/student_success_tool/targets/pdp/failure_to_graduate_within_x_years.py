@@ -1,10 +1,12 @@
 import logging
 import typing as t
 from collections.abc import Collection
+
 import numpy as np
 import pandas as pd
-from student_success_tool.analysis.pdp.targets import shared
-from student_success_tool.analysis.pdp import utils, features
+
+from ... import features, utils
+from . import shared
 
 LOGGER = logging.getLogger(__name__)
 
@@ -203,7 +205,7 @@ def select_eligible_students(
         enrollment_intensity_col=enrollment_intensity_col,
         term_rank_col=term_rank_col,
     )
-    df_out = features.shared.merge_many_dataframes(
+    df_out = features.pdp.shared.merge_many_dataframes(
         [df_students_by_criteria, df_students_by_checkin, df_students_by_time_left],
         on=student_id_cols,
         how="inner",
