@@ -9,9 +9,8 @@ import typing as t
 
 import pandas as pd
 
-from student_success_tool import modeling
-from student_success_tool.analysis import pdp
-from student_success_tool.configs.schemas import pdp_v2
+from student_success_tool import modeling, schemas, targets
+from student_success_tool.preprocessing.pdp import dataops
 
 
 def preprocess_data(
@@ -20,7 +19,7 @@ def preprocess_data(
     *,
     run_type: t.Literal["predict", "train"],
     student_id_col: str = "student_guid",
-    cfg: pdp_v2.PDPProjectConfigV2,
+    cfg: schemas.pdp.PDPProjectConfigV2,
 ) -> pd.DataFrame:
     """
     Args:
@@ -30,15 +29,15 @@ def preprocess_data(
         student_id_col
         cfg
     """
-    df_student_terms = pdp.dataops.make_student_term_dataset(
+    df_student_terms = dataops.make_student_term_dataset(
         df_cohort, df_course, **cfg.preprocessing.features.model_dump()
     )
     if run_type == "train":
-        df_modeling = pdp.targets.failure_to_retain.make_labeled_dataset(
+        df_modeling = targets.pdp.failure_to_retain.make_labeled_dataset(
             df_student_terms, **cfg.preprocessing.target.params
         )
     else:
-        eligible_students = pdp.targets.shared.select_students_by_criteria(
+        eligible_students = targets.pdp.shared.select_students_by_criteria(
             df_student_terms,
             student_id_cols=student_id_col,
             **cfg.preprocessing.target.params["student_criteria"],
@@ -50,7 +49,7 @@ def preprocess_data(
             on=student_id_col,
             how="inner",
         )
-    df_modeling = pdp.dataops.clean_up_labeled_dataset_cols_and_vals(df_modeling)
+    df_modeling = dataops.clean_up_labeled_dataset_cols_and_vals(df_modeling)
     if run_type == "train":
         if cfg.split_col is not None and cfg.preprocessing.splits:
             df_modeling = df_modeling.assign(
