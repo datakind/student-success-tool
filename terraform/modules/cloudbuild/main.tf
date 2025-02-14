@@ -196,6 +196,7 @@ resource "google_cloudbuild_trigger" "terraform" {
     "_ENVIRONMENT"    = var.environment
     "_DOMAIN"         = var.domain
     "_WEBAPP_IMAGE"   = "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:latest"
+    "_WORKER_IMAGE"   = "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/worker:latest"
     "_FRONTEND_IMAGE" = "${var.region}-docker.pkg.dev/${var.project}/sst-app-ui/frontend:latest"
   }
   dynamic "github" {
@@ -236,6 +237,8 @@ resource "google_cloudbuild_trigger" "terraform" {
         "environment=$_ENVIRONMENT",
         "-var",
         "webapp_image=$_WEBAPP_IMAGE",
+        "-var",
+        "worker_image=$_WORKER_IMAGE",
         "-var",
         "frontend_image=$_FRONTEND_IMAGE",
         "-var",

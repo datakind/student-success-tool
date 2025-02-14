@@ -38,6 +38,11 @@ variable "webapp_image" {
   type        = string
 }
 
+variable "worker_image" {
+  description = "Image for the worker service"
+  type        = string
+}
+
 variable "frontend_image" {
   description = "Image for the frontend service"
   type        = string
