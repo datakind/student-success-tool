@@ -1,9 +1,13 @@
+import typing as t
+
 import pydantic as pyd
 
 from . import read
 
+S = t.TypeVar("S", bound=pyd.BaseModel)
 
-def read_config(file_path: str, *, schema: pyd.BaseModel) -> pyd.BaseModel:
+
+def read_config(file_path: str, *, schema: type[S]) -> S:
     """
     Read config from ``file_path`` and validate it using ``schema`` ,
     returning an instance with parameters accessible by attribute.
