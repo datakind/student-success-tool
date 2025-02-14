@@ -3,7 +3,7 @@ from datetime import date
 
 from faker.providers import BaseProvider
 
-from ...analysis.pdp import utils
+from ... import utils
 
 
 class Provider(BaseProvider):
@@ -13,6 +13,7 @@ class Provider(BaseProvider):
         max_cohort_yr: t.Optional[int] = None,
         normalize_col_names: bool = False,
         institution_id: t.Optional[str] = None,
+        student_guid: t.Optional[str] = None,
     ) -> dict[str, object]:
         # some fields are inputs to others; compute them first, accordingly
         enrollment_type = self.enrollment_type()
@@ -25,7 +26,9 @@ class Provider(BaseProvider):
 
         # TODO: handle other cases, e.g. gateway course attempted/completed/grades
         record = {
-            "Student GUID": self.student_guid(),
+            "Student GUID": student_guid
+            if student_guid is not None
+            else self.student_guid(),
             "Institution ID": institution_id
             if institution_id is not None
             else self.institution_id(),
