@@ -38,6 +38,8 @@ from ..database import (
     VAR_CHAR_STANDARD_LENGTH,
 )
 
+from ..databricks import DatabricksControl
+
 router = APIRouter(
     tags=["institutions"],
 )
@@ -125,6 +127,7 @@ def create_institution(
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
     storage_control: Annotated[StorageControl, Depends(StorageControl)],
+    databricks_control: Annotated[DatabricksControl, Depends(DatabricksControl)],
 ) -> Any:
     """Create a new institution.
 
@@ -209,6 +212,13 @@ def create_institution(
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Storage bucket creation failed:" + str(e),
+            )
+        try:
+            databricks_control.setup_new_inst(query_result[0][0].name)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Databricks setup failed:" + str(e),
             )
     if len(query_result) > 1:
         raise HTTPException(

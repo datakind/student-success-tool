@@ -10,7 +10,8 @@ env_vars = {
     "SECRET_KEY": "",
     "ALGORITHM": "HS256",
     "ACCESS_TOKEN_EXPIRE_MINUTES": "120",
-    # "API_KEY_ISSUERS": "",
+    # The Issuers env var will be stored as an array of emails.
+    "API_KEY_ISSUERS": [],
 }
 
 # The INSTANCE_HOST is the private IP of CLoudSQL instance e.g. '127.0.0.1' ('172.17.0.1' if deployed to GAE Flex)
@@ -36,6 +37,8 @@ ssl_env_vars = {
 
 gcs_vars = {
     "GCP_SERVICE_ACCOUNT_KEY_PATH": "",
+    "GCP_REGION": "",
+    "GCP_SERVICE_ACCOUNT_EMAIL": "",
 }
 
 # Frontend vars needed for Laravel integration.
@@ -46,10 +49,10 @@ fe_vars = {
 }
 
 # databricks vars needed for databricks integration
-# TODO: enforce presence at app start time.
 databricks_vars = {
     # SECRET.
     "CATALOG_NAME": "",
+    "DATABRICKS_WORKSPACE": "",
 }
 
 
@@ -64,6 +67,11 @@ def startup_env_vars():
     global env_vars
     for name in env_vars:
         env_var = os.environ.get(name)
+        if name == "API_KEY_ISSUERS":
+            # This is okay to be empty, though slightly unexpected, it shouldn't fail.
+            if not env_var:
+                continue
+            env_vars[name] = env_var.split(",").strip()
         if not env_var:
             raise ValueError(
                 "Missing " + name + " value missing. Required environment variable."
@@ -106,6 +114,15 @@ def startup_env_vars():
                     + " value missing. Required Frontend integration environment variable."
                 )
             fe_vars[name] = env_var
+        global databricks_vars
+        for name in databricks_vars:
+            env_var = os.environ.get(name)
+            if not env_var or env_var == "":
+                raise ValueError(
+                    "Missing "
+                    + name
+                    + " value missing. Required Databricks integration environment variable."
+                )
 
 
 # Setup function to get db environment variables. Should be called at db startup time.

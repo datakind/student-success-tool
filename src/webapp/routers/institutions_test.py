@@ -24,6 +24,7 @@ from ..utilities import uuid_to_str, get_current_active_user
 from ..main import app
 from ..database import InstTable, Base, get_session, local_session
 from ..gcsutil import StorageControl
+from ..databricks import DatabricksControl
 
 DATETIME_TESTING = datetime.today()
 UUID_1 = uuid.uuid4()
@@ -33,6 +34,7 @@ USER_VALID_INST_UUID = uuid.UUID("1d7c75c3-3eda-4294-9c66-75ea8af97b55")
 INVALID_UUID = uuid.UUID("27316b89-5e04-474a-9ea4-97beaf72c9af")
 
 MOCK_STORAGE = mock.Mock()
+MOCK_DATABRICKS = mock.Mock()
 
 
 @pytest.fixture(name="session")
@@ -90,10 +92,14 @@ def client_fixture(session: sqlalchemy.orm.Session):
     def storage_control_override():
         return MOCK_STORAGE
 
+    def databricks_control_override():
+        return MOCK_DATABRICKS
+
     app.include_router(institutions.router)
     app.dependency_overrides[get_session] = get_session_override
     app.dependency_overrides[get_current_active_user] = get_current_active_user_override
     app.dependency_overrides[StorageControl] = storage_control_override
+    app.dependency_overrides[DatabricksControl] = databricks_control_override
 
     client = TestClient(app)
     yield client
@@ -111,10 +117,14 @@ def datakinder_client_fixture(session: sqlalchemy.orm.Session):
     def storage_control_override():
         return MOCK_STORAGE
 
+    def databricks_control_override():
+        return MOCK_DATABRICKS
+
     app.include_router(institutions.router)
     app.dependency_overrides[get_session] = get_session_override
     app.dependency_overrides[get_current_active_user] = get_current_active_user_override
     app.dependency_overrides[StorageControl] = storage_control_override
+    app.dependency_overrides[DatabricksControl] = databricks_control_override
 
     client = TestClient(app)
     yield client
@@ -229,6 +239,8 @@ def test_create_inst(datakinder_client):
     assert "DEV" == os.environ.get("ENV")
     MOCK_STORAGE.create_bucket.return_value = None
     MOCK_STORAGE.create_folders.return_value = None
+    MOCK_DATABRICKS.setup_new_inst.return_value = None
+
     # Authorized.
     response = datakinder_client.post("/institutions", json=INSTITUTION_REQ)
     assert response.status_code == 200

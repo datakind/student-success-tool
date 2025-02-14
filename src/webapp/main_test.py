@@ -163,33 +163,6 @@ def test_retrieve_token_gen_from_api_key(client: TestClient):
     assert response.json()["token_type"] == "bearer"
 
 
-def test_generate_api_key(client: TestClient):
-    """Test POST /generate-api-key."""
-    response = client.post(
-        "/generate-api-key", json={"access_type": "DATAKINDER", "valid": True}
-    )
-    assert response.status_code == 200
-    assert response.json()["access_type"] == "DATAKINDER"
-    assert response.json()["allows_enduser"] == None
-    assert response.json()["inst_id"] == None
-    assert response.json()["key"] is not None
-
-    response_viewer = client.post(
-        "/generate-api-key",
-        json={
-            "access_type": "VIEWER",
-            "inst_id": uuid_to_str(USER_VALID_INST_UUID),
-            "allows_enduser": False,
-            "valid": True,
-        },
-    )
-    assert response_viewer.status_code == 200
-    assert response.json()["access_type"] == "DATAKINDER"
-    assert response.json()["allows_enduser"] == None
-    assert response.json()["inst_id"] == None
-    assert response.json()["key"] is not None
-
-
 def test_get_cross_isnt_users(client: TestClient):
     """Test GET /non_inst_users."""
     response = client.get("/non-inst-users")

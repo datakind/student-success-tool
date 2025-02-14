@@ -241,12 +241,14 @@ async def generate_api_key(
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
 ) -> ApiKeyResponse:
-    if not current_user.is_datakinder():
+    if (
+        not current_user.is_datakinder()
+        or current_user.email not in env_vars["API_KEY_ISSUERS"]
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Only Datakinders can generate api keys",
+            detail="Only allowlisted Datakinders can generate api keys",
         )
-    # TODO xxx check that the current user is in the smaller subset.
     if req.access_type != AccessType.DATAKINDER and req.allows_enduser:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

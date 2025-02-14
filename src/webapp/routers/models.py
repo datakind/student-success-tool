@@ -2,6 +2,7 @@
 """
 
 import uuid
+import jsonpickle
 from typing import Annotated, Any, Tuple, Dict
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
@@ -10,6 +11,7 @@ from datetime import datetime, date
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from ..validation import validate_file_reader
+from ..databricks import DatabricksControl, DatabricksInferenceRunRequest
 from ..utilities import (
     has_access_to_inst_or_err,
     has_full_data_access_or_err,
@@ -42,9 +44,47 @@ router = APIRouter(
 
 class SchemaConfigObj(BaseModel):
     schema_type: SchemaType
-    count: int
+    # If both of the following is set to False, you have to have 1 and only 1 of these file types. If both are set to True, you can have any number of these file types.
+    # If optional is set to True, you can have 0 of these.
     optional: bool = False
+    # If multiple_allowed is set to True, you can have more than 1 of these.
     multiple_allowed: bool = False
+
+
+# what happens if one meets multiple schema types f has filetype a, b and
+def check_file_types_valid_schema_configs(
+    file_types: list[list[SchemaType]],
+    valid_schema_configs: list[list[SchemaConfigObj]],
+) -> bool:
+    for config in valid_schema_configs:
+        found = True
+        map_file_to_schema_config_obj = {}
+        for idx, s in enumerate(file_types):
+            for c in config:
+                if c.schema_type in s:
+                    if not map_file_to_schema_config_obj.get(c.schema_type):
+                        map_file_to_schema_config_obj[c.schema_type] = [idx]
+                    else:
+                        map_file_to_schema_config_obj[c.schema_type] = (
+                            map_file_to_schema_config_obj[c.schema_type] + [idx]
+                        )
+        for c in config:
+            val = map_file_to_schema_config_obj.get(c.schema_type)
+            if (not val and not c.optional) or (
+                val and len(val) > 1 and not c.multiple_allowed
+            ):
+                found = False
+        for idx, s in enumerate(file_types):
+            # Check for if files that didn't match the allowed schemas were present.
+            found_v = False
+            for v in map_file_to_schema_config_obj.values():
+                if idx in v:
+                    found_v = True
+            if not found_v:
+                found = False
+        if found:
+            return True
+    return False
 
 
 class ModelCreationRequest(BaseModel):
@@ -74,7 +114,7 @@ class ModelInfo(BaseModel):
 class RunInfo(BaseModel):
     """The RunInfo object that's returned."""
 
-    run_id: str
+    run_id: int
     vers_id: int = 0
     inst_id: str
     m_name: str
@@ -157,6 +197,7 @@ def create_model(
     Args:
         current_user: the user making the request.
     """
+    # TODO add validity check for the schema config obj
     has_access_to_inst_or_err(inst_id, current_user)
     model_owner_and_higher_or_err(current_user, "model training")
     local_session.set(sql_session)
@@ -180,7 +221,7 @@ def create_model(
             created_by=str_to_uuid(current_user.user_id),
             valid=req.valid,
             version=req.vers_id,
-            # schema_configs=req.schema_configs,
+            schema_configs=jsonpickle.encode(req.schema_configs),
         )
         local_session.get().add(model)
         local_session.get().commit()
@@ -392,7 +433,7 @@ def read_inst_model_output(
     inst_id: str,
     model_name: str,
     vers_id: int,
-    run_id: str,
+    run_id: int,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
 ) -> Any:
@@ -449,7 +490,6 @@ def read_inst_model_output(
     )
 
 
-# TODO: xxx update the run info returned items.
 @router.post(
     "/{inst_id}/models/{model_name}/vers/{vers_id}/run-inference",
     response_model=RunInfo,
@@ -461,6 +501,7 @@ def trigger_inference_run(
     req: InferenceRunRequest,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
+    databricks_control: Annotated[DatabricksControl, Depends(DatabricksControl)],
 ) -> Any:
     """Returns top-level info around all executions of a given model.
 
@@ -494,25 +535,56 @@ def trigger_inference_run(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Multiple models of the same version found, this should not have happened.",
         )
-    # TODO issue Databricks call then use the result to populate the below
 
-    triggered_timestamp = datetime.now()
-    # Add an entry to the jobs table with the job id
-    """
-    job = JobTable(
-            id=12345,
-            triggered_at=triggered_timestamp,
-            created_by=str_to_uuid(current_user.user_id),
-            batch_name=req.batch_name,
-            model_id=query_result[0][0].id,
+    # Get all the files in the batch and check that it matches the model specifications.
+    batch_result = (
+        local_session.get()
+        .execute(
+            select(BatchTable).where(
+                and_(
+                    BatchTable.name == req.batch_name,
+                    BatchTable.inst_id == str_to_uuid(inst_id),
+                )
+            )
         )
+        .all()
+    )
+    if len(batch_result) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Batch not found.",
+        )
+    if len(batch_result) > 1:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Multiple batches of the same name found, this should not have happened.",
+        )
+    if not check_file_types_valid_schema_configs(
+        [x.schemas for x in batch_result[0][0].files],
+        jsonpickle.decode(query_result[0][0].schema_configs),
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The files in this batch don't conform to the Schema configs allowed by this batch.",
+        )
+    db_req = DatabricksInferenceRunRequest(
+        inst_name="hello", file_to_type={}, model_name=model_name
+    )
+    res = databricks_control.run_inference(db_req)
+    triggered_timestamp = datetime.now()
+    job = JobTable(
+        id=res.job_run_id,
+        triggered_at=triggered_timestamp,
+        created_by=str_to_uuid(current_user.user_id),
+        batch_name=req.batch_name,
+        model_id=query_result[0][0].id,
+    )
     local_session.get().add(job)
-    """
     return {
         "vers_id": vers_id,
         "inst_id": uuid_to_str(query_result[0][0].inst_id),
         "m_name": query_result[0][0].name,
-        "run_id": "placeholder",
+        "run_id": res.job_run_id,
         "created_by": current_user.user_id,
         "triggered_at": triggered_timestamp,
         "batch_name": req.batch_name,

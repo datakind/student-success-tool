@@ -45,6 +45,7 @@ dependencies = [
     "databricks-sdk>=0.35.0",
     "shap~=0.46.0",
     "tomli~=2.0; python_version<'3.11'",
+    "jsonpickle>=4.0.1",
 ]
 
 [project.urls]

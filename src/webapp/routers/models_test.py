@@ -1,7 +1,5 @@
-"""Test file for the models.py file and constituent API functions.
-"""
-
 import json
+import jsonpickle
 from fastapi.testclient import TestClient
 from fastapi import HTTPException
 import pytest
@@ -32,11 +30,19 @@ from ..database import (
     ModelTable,
 )
 from ..utilities import uuid_to_str, get_current_active_user, SchemaType
-from .models import router, ModelInfo, RunInfo
+from .models import (
+    router,
+    ModelInfo,
+    RunInfo,
+    check_file_types_valid_schema_configs,
+    SchemaConfigObj,
+)
 from collections import Counter
 from ..gcsutil import StorageControl
+from ..databricks import DatabricksControl, DatabricksInferenceRunResponse
 
 MOCK_STORAGE = mock.Mock()
+MOCK_DATABRICKS = mock.Mock()
 
 UUID_2 = uuid.UUID("9bcbc782-2e71-4441-afa2-7a311024a5ec")
 FILE_UUID_1 = uuid.UUID("f0bb3a20-6d92-4254-afed-6a72f43c562a")
@@ -83,6 +89,14 @@ def session_fixture():
         poolclass=StaticPool,
     )
     Base.metadata.create_all(engine)
+    batch_0 = BatchTable(
+        id=UUID_INVALID,
+        inst_id=USER_VALID_INST_UUID,
+        name="batch_none",
+        created_by=created_by_UUID,
+        created_at=DATETIME_TESTING,
+        updated_at=DATETIME_TESTING,
+    )
     batch_1 = BatchTable(
         id=BATCH_UUID,
         inst_id=USER_VALID_INST_UUID,
@@ -101,7 +115,7 @@ def session_fixture():
         updated_at=DATETIME_TESTING,
         sst_generated=False,
         valid=True,
-        schemas=[SchemaType.UNKNOWN],
+        schemas=[SchemaType.PDP_COURSE],
     )
     file_3 = FileTable(
         id=FILE_UUID_3,
@@ -118,6 +132,27 @@ def session_fixture():
         id=SAMPLE_UUID,
         inst_id=USER_VALID_INST_UUID,
         name="sample_model_for_school_1",
+        schema_configs=jsonpickle.encode(
+            [
+                [
+                    SchemaConfigObj(
+                        schema_type=SchemaType.PDP_COURSE,
+                        optional=False,
+                        multiple_allowed=False,
+                    ),
+                    SchemaConfigObj(
+                        schema_type=SchemaType.PDP_COHORT,
+                        optional=False,
+                        multiple_allowed=False,
+                    ),
+                    SchemaConfigObj(
+                        schema_type=SchemaType.SST_PDP_FINANCE,
+                        optional=True,
+                        multiple_allowed=False,
+                    ),
+                ]
+            ]
+        ),
         valid=True,
     )
     try:
@@ -130,6 +165,7 @@ def session_fixture():
                         created_at=DATETIME_TESTING,
                         updated_at=DATETIME_TESTING,
                     ),
+                    batch_0,
                     batch_1,
                     file_1,
                     FileTable(
@@ -164,10 +200,14 @@ def client_fixture(session: sqlalchemy.orm.Session):
     def storage_control_override():
         return MOCK_STORAGE
 
+    def databricks_control_override():
+        return MOCK_DATABRICKS
+
     app.include_router(router)
     app.dependency_overrides[get_session] = get_session_override
     app.dependency_overrides[get_current_active_user] = get_current_active_user_override
     app.dependency_overrides[StorageControl] = storage_control_override
+    app.dependency_overrides[DatabricksControl] = databricks_control_override
 
     client = TestClient(app)
     yield client
@@ -281,16 +321,122 @@ def test_create_model(client: TestClient):
 
 def test_trigger_inference_run(client: TestClient):
     """Depending on timeline, fellows may not get to this."""
+    MOCK_DATABRICKS.run_inference.return_value = DatabricksInferenceRunResponse(
+        job_run_id=123
+    )
     response = client.post(
         "/institutions/"
         + uuid_to_str(USER_VALID_INST_UUID)
         + "/models/sample_model_for_school_1/vers/0/run-inference",
         json={
-            "batch_name": "abc",
+            "batch_name": "batch_none",
+        },
+    )
+
+    assert response.status_code == 400
+    assert (
+        response.text
+        == '{"detail":"The files in this batch don\'t conform to the Schema configs allowed by this batch."}'
+    )
+
+    response = client.post(
+        "/institutions/"
+        + uuid_to_str(USER_VALID_INST_UUID)
+        + "/models/sample_model_for_school_1/vers/0/run-inference",
+        json={
+            "batch_name": "batch_foo",
         },
     )
 
     assert response.status_code == 200
+    assert response.json()["vers_id"] == 0
+    assert response.json()["inst_id"] == uuid_to_str(USER_VALID_INST_UUID)
+    assert response.json()["m_name"] == "sample_model_for_school_1"
+    assert response.json()["run_id"] == 123
+    assert response.json()["created_by"] == uuid_to_str(USER_UUID)
+    assert response.json()["triggered_at"] != None
+    assert response.json()["batch_name"] == "batch_foo"
+
+
+def test_check_file_types_valid_schema_configs():
+    """Test batch schema validation logic."""
+    file_types1 = [
+        [SchemaType.PDP_COURSE],
+        [SchemaType.PDP_COHORT],
+        [SchemaType.UNKNOWN],
+    ]
+    file_types2 = [
+        [SchemaType.SST_PDP_COHORT],
+        [SchemaType.SST_PDP_COURSE],
+        [SchemaType.SST_PDP_FINANCE],
+    ]
+    file_types3 = [
+        [SchemaType.SST_PDP_COHORT, SchemaType.UNKNOWN],
+        [SchemaType.SST_PDP_COURSE],
+    ]
+    file_types4 = [
+        [SchemaType.SST_PDP_COHORT, SchemaType.UNKNOWN],
+        [SchemaType.UNKNOWN],
+    ]
+    pdp_configs = [
+        SchemaConfigObj(
+            schema_type=SchemaType.PDP_COURSE,
+            optional=False,
+            multiple_allowed=False,
+        ),
+        SchemaConfigObj(
+            schema_type=SchemaType.PDP_COHORT,
+            optional=False,
+            multiple_allowed=False,
+        ),
+        SchemaConfigObj(
+            schema_type=SchemaType.SST_PDP_FINANCE,
+            optional=True,
+            multiple_allowed=False,
+        ),
+    ]
+    sst_configs = [
+        SchemaConfigObj(
+            schema_type=SchemaType.SST_PDP_COHORT,
+            optional=False,
+            multiple_allowed=False,
+        ),
+        SchemaConfigObj(
+            schema_type=SchemaType.SST_PDP_COURSE,
+            optional=False,
+            multiple_allowed=False,
+        ),
+        SchemaConfigObj(
+            schema_type=SchemaType.SST_PDP_FINANCE,
+            optional=True,
+            multiple_allowed=False,
+        ),
+    ]
+    custom = [
+        SchemaConfigObj(
+            schema_type=SchemaType.UNKNOWN,
+            optional=False,
+            multiple_allowed=True,
+        ),
+    ]
+    schema_configs1 = [
+        pdp_configs,
+        sst_configs,
+        custom,
+    ]
+    assert not check_file_types_valid_schema_configs(file_types1, [pdp_configs])
+    assert not check_file_types_valid_schema_configs(file_types1, [sst_configs])
+    assert not check_file_types_valid_schema_configs(file_types1, [custom])
+    assert not check_file_types_valid_schema_configs(file_types1, schema_configs1)
+    assert check_file_types_valid_schema_configs(file_types2, [sst_configs])
+    assert not check_file_types_valid_schema_configs(file_types2, [pdp_configs])
+    assert not check_file_types_valid_schema_configs(file_types2, [custom])
+    assert check_file_types_valid_schema_configs(file_types3, [sst_configs])
+    assert not check_file_types_valid_schema_configs(file_types3, [pdp_configs])
+    assert not check_file_types_valid_schema_configs(file_types3, [custom])
+    assert not check_file_types_valid_schema_configs(file_types4, [sst_configs])
+    assert not check_file_types_valid_schema_configs(file_types4, [pdp_configs])
+    assert check_file_types_valid_schema_configs(file_types4, [custom])
 
 
 # Retrain a new model.

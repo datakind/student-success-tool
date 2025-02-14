@@ -336,7 +336,7 @@ class ModelTable(Base):
 
     name = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=False)
     # What configuration of schemas are allowed (list of maps e.g. [PDP Course : 1 + PDP Cohort : 1, X_schema :1 + Y_schema: 2])
-    schema_configs = Column(MutableList.as_mutable(JSON), nullable=True)
+    schema_configs = Column(JSON, nullable=True)
     created_by = Column(Uuid(as_uuid=True), nullable=True)
     # If null, the following is non-deleted.
     deleted: Mapped[bool] = mapped_column(nullable=True)
