@@ -194,8 +194,8 @@ class ModelConfig(pyd.BaseModel):
         return f"runs:/{self.run_id}/model"
 
 
-class PDPProjectConfigV2(pyd.BaseModel):
-    """Configuration (v2) schema for PDP SST projects."""
+class PDPProjectConfig(pyd.BaseModel):
+    """Configuration schema for SST PDP projects."""
 
     institution_id: str = pyd.Field(
         ...,
