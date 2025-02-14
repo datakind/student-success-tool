@@ -151,4 +151,10 @@ resource "google_cloud_run_v2_job" "migrate" {
       }
     }
   }
+  # This is a workaround to avoid unnecessary updates to the container image
+  lifecycle {
+    ignore_changes = [
+      template[0].template[0].containers[0].image,
+    ]
+  }
 }
