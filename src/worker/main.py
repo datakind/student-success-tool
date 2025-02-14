@@ -29,7 +29,7 @@ app = FastAPI(
         {"url": "https://stag.example.com", "description": "Staging environment"},
         {"url": "https://prod.example.com", "description": "Production environment"},
     ],
-    root_path="/workers/api/v1",
+    root_path="/worker/api/v1",
 )
 
 # this uses api key to auth to backend api, but credentials to auth to this service
