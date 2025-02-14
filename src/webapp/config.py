@@ -71,7 +71,8 @@ def startup_env_vars():
             # This is okay to be empty, though slightly unexpected, it shouldn't fail.
             if not env_var:
                 continue
-            env_vars[name] = env_var.split(",").strip()
+            emails = env_var.split(",")
+            env_vars[name] = [x.strip() for x in emails]
         if not env_var:
             raise ValueError(
                 "Missing " + name + " value missing. Required environment variable."
