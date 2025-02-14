@@ -53,6 +53,7 @@ databricks_vars = {
     # SECRET.
     "CATALOG_NAME": "",
     "DATABRICKS_WORKSPACE": "",
+    "DATABRICKS_HOST_URL": "",
 }
 
 

@@ -7,7 +7,7 @@ from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.jobs import Task, NotebookTask, Source
 from databricks.sdk.service import catalog
 
-from .config import databricks_vars
+from .config import databricks_vars, gcs_vars
 from .utilities import databricksify_inst_name
 
 medallion_levels = ["silver", "gold", "bronze"]  # List of data medallion levels
@@ -34,7 +34,10 @@ class DatabricksControl(BaseModel):
 
     def setup_new_inst(self, inst_name: str) -> None:
         """Sets up Databricks resources for a new institution."""
-        w = WorkspaceClient()
+        w = WorkspaceClient(
+            host=databricks_vars["DATABRICKS_HOST_URL"],
+            google_service_account=gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"],
+        )
         db_inst_name = databricksify_inst_name(inst_name)
         cat_name = databricks_vars["CATALOG_NAME"]
         for medallion in medallion_levels:
@@ -57,7 +60,10 @@ class DatabricksControl(BaseModel):
         self, req: DatabricksInferenceRunRequest
     ) -> DatabricksInferenceRunResponse:
         """Triggers Databricks run."""
-        w = WorkspaceClient()
+        w = WorkspaceClient(
+            host=databricks_vars["DATABRICKS_HOST_URL"],
+            google_service_account=gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"],
+        )
         db_inst_name = databricksify_inst_name(req.inst_name)
         job_id = next(w.jobs.list(name=inference_job_name)).job_id
         run_job = w.jobs.run_now(
