@@ -230,16 +230,16 @@ class PDPProjectConfig(pyd.BaseModel):
     random_state: t.Optional[int] = None
 
     # key artifacts produced by project pipeline
-    datasets: t.Optional[dict[str, DatasetConfig]] = pyd.Field(
-        None,
+    datasets: dict[str, DatasetConfig] = pyd.Field(
+        default={},
         description=(
             "Mapping of dataset name, e.g. 'labeled', to file/table paths for each "
             "derived form produced by steps in the data transformation pipeline, "
             "used to load the artifacts from storage"
         ),
     )
-    models: t.Optional[dict[str, ModelConfig]] = pyd.Field(
-        None,
+    models: dict[str, ModelConfig] = pyd.Field(
+        default={},
         description=(
             "Mapping of model name, e.g. 'graduation', to MLFlow metadata used to "
             "load the trained artifact from storage"
@@ -249,9 +249,6 @@ class PDPProjectConfig(pyd.BaseModel):
     preprocessing: t.Optional[PreprocessingConfig] = None
     modeling: t.Optional[ModelingConfig] = None
     inference: t.Optional[InferenceConfig] = None
-
-    # NOTE: this is for *pydantic* model -- not ML model -- configuration
-    model_config = pyd.ConfigDict(extra="ignore", strict=True)
 
     @pyd.computed_field  # type: ignore[misc]
     @property
@@ -269,3 +266,6 @@ class PDPProjectConfig(pyd.BaseModel):
         if not re.search(r"^\w+$", value, flags=re.ASCII):
             raise ValueError(f"institution_id='{value}' is not ASCII-only")
         return value
+
+    # NOTE: this is for *pydantic* model -- not ML model -- configuration
+    model_config = pyd.ConfigDict(extra="ignore", strict=True)
