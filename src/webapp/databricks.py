@@ -12,7 +12,8 @@ from .config import databricks_vars, gcs_vars
 from .utilities import databricksify_inst_name, SchemaType
 
 medallion_levels = ["silver", "gold", "bronze"]  # List of data medallion levels
-inference_job_name = "inference_pipeline"  # can this be the job name for every inst or does it havve to be inst specific
+# For every unique pipeline with unique param sets, you'll need a separate name.
+pdp_inference_job_name = "PDP_inference_pipeline"  # can this be the job name for every inst or does it havve to be inst specific
 
 
 class DatabricksInferenceRunRequest(BaseModel):
@@ -70,7 +71,7 @@ class DatabricksControl(BaseModel):
         )
 
     """Note that for each unique PIPELINE, we'll need a new function, this is by nature of how unique pipelines 
-    may have unique parameters. But any run of a given pipeline (even across institutions) can use the same function. 
+    may have unique parameters and would have a unique name (i.e. the name field specified in w.jobs.list()). But any run of a given pipeline (even across institutions) can use the same function. 
     E.g. there is one PDP inference pipeline, so one PDP inference function here."""
 
     def run_pdp_inference(
@@ -89,7 +90,7 @@ class DatabricksControl(BaseModel):
             google_service_account=gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"],
         )
         db_inst_name = databricksify_inst_name(req.inst_name)
-        job_id = next(w.jobs.list(name=inference_job_name)).job_id
+        job_id = next(w.jobs.list(name=pdp_inference_job_name)).job_id
         run_job = w.jobs.run_now(
             job_id,
             job_parameters={
