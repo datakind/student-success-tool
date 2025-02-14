@@ -118,6 +118,8 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
     enrollment_record_at_other_institution_s_locale_s: pt.Series["string"] = pda.Field(
         nullable=True
     )
+    # added in 2025-01
+    term_program_of_study: t.Optional[pt.Series["string"]] = pda.Field(nullable=True)
 
     @pda.parser("course_instructor_rank")
     def set_course_instructor_rank_categories(cls, series):
