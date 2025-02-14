@@ -321,7 +321,7 @@ def test_create_model(client: TestClient):
 
 def test_trigger_inference_run(client: TestClient):
     """Depending on timeline, fellows may not get to this."""
-    MOCK_DATABRICKS.run_inference.return_value = DatabricksInferenceRunResponse(
+    MOCK_DATABRICKS.run_pdp_inference.return_value = DatabricksInferenceRunResponse(
         job_run_id=123
     )
     response = client.post(
@@ -330,6 +330,7 @@ def test_trigger_inference_run(client: TestClient):
         + "/models/sample_model_for_school_1/vers/0/run-inference",
         json={
             "batch_name": "batch_none",
+            "is_pdp": True,
         },
     )
 
@@ -345,6 +346,7 @@ def test_trigger_inference_run(client: TestClient):
         + "/models/sample_model_for_school_1/vers/0/run-inference",
         json={
             "batch_name": "batch_foo",
+            "is_pdp": True,
         },
     )
 

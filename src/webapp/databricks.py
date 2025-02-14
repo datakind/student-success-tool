@@ -1,6 +1,7 @@
 """Databricks SDk related helper functions.
 """
 
+import os
 import datetime
 from pydantic import BaseModel
 from databricks.sdk import WorkspaceClient
@@ -8,7 +9,7 @@ from databricks.sdk.service.jobs import Task, NotebookTask, Source
 from databricks.sdk.service import catalog
 
 from .config import databricks_vars, gcs_vars
-from .utilities import databricksify_inst_name
+from .utilities import databricksify_inst_name, SchemaType
 
 medallion_levels = ["silver", "gold", "bronze"]  # List of data medallion levels
 inference_job_name = "inference_pipeline"  # can this be the job name for every inst or does it havve to be inst specific
@@ -18,14 +19,26 @@ class DatabricksInferenceRunRequest(BaseModel):
     """Databricks parameters for an inference run."""
 
     inst_name: str
-    file_to_type: dict[str, str]
+    # Note that the following should be the filepath.
+    filepath_to_type: dict[str, list[SchemaType]]
     model_name: str
+    model_type: str = "sklearn"
 
 
 class DatabricksInferenceRunResponse(BaseModel):
     """Databricks parameters for an inference run."""
 
     job_run_id: int
+
+
+# Helper functions to get a file of a given file_type. For both, we will return the first file that matches the schema.
+def get_filepath_of_filetype(
+    file_dict: dict[str, list[SchemaType]], file_type: SchemaType
+):
+    for k, v in file_dict.items():
+        if file_type in v:
+            return k
+    return ""
 
 
 # Wrapping the usages in a class makes it easier to unit test via mocks.
@@ -56,10 +69,21 @@ class DatabricksControl(BaseModel):
             exist_ok=True,
         )
 
-    def run_inference(
+    """Note that for each unique PIPELINE, we'll need a new function, this is by nature of how unique pipelines 
+    may have unique parameters. But any run of a given pipeline (even across institutions) can use the same function. 
+    E.g. there is one PDP inference pipeline, so one PDP inference function here."""
+
+    def run_pdp_inference(
         self, req: DatabricksInferenceRunRequest
     ) -> DatabricksInferenceRunResponse:
-        """Triggers Databricks run."""
+        """Triggers PDP inference Databricks run."""
+        if (
+            SchemaType.PDP_COURSE not in req.file_to_type.values()
+            or SchemaType.PDP_COHORT not in req.file_to_type.values()
+        ):
+            raise ValueError(
+                "run_pdp_inference() requires PDP_COURSE and PDP_COHORT type files to run."
+            )
         w = WorkspaceClient(
             host=databricks_vars["DATABRICKS_HOST_URL"],
             google_service_account=gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"],
@@ -69,15 +93,19 @@ class DatabricksControl(BaseModel):
         run_job = w.jobs.run_now(
             job_id,
             job_parameters={
-                # "synthetic_needed": "True",
+                "cohort_file_name": get_filepath_of_filetype(
+                    req.file_to_type, SchemaType.PDP_COHORT
+                ),
+                "course_file_name": get_filepath_of_filetype(
+                    req.file_to_type, SchemaType.PDP_COURSE
+                ),
                 "institution_id": db_inst_name,
                 # "sst_job_id": f"{institution_id}_inference_job_id_{str(random.randint(1, 1000))}",
                 "DB_workspace": databricks_vars[
                     "DATABRICKS_WORKSPACE"
                 ],  # is this value the same PER environemtn? dev/staging/prod
                 "model_name": req.model_name,
-                "model_type": None,  # ?
-                # how do we pass the files
+                "model_type": req.model_type,
             },
         )
         return DatabricksInferenceRunResponse(job_run_id=run_job.response.run_id)

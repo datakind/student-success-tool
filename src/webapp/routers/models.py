@@ -134,6 +134,8 @@ class InferenceRunRequest(BaseModel):
     """Parameters for an inference run."""
 
     batch_name: str
+    # This MUST be set for uses of the PDP inference pipeline.
+    is_pdp: bool = False
 
 
 # Model related operations. Or model specific data.
@@ -490,6 +492,14 @@ def read_inst_model_output(
     )
 
 
+def convert_files_to_dict(files):
+    res = {}
+    for f in files:
+        # TODO: construct the filepath instead -- where does the filepath need to start? bucket level?
+        res[f.name] = f.schemas
+    return res
+
+
 @router.post(
     "/{inst_id}/models/{model_name}/vers/{vers_id}/run-inference",
     response_model=RunInfo,
@@ -511,7 +521,29 @@ def trigger_inference_run(
         current_user: the user making the request.
     """
     has_access_to_inst_or_err(inst_id, current_user)
+    if not req.is_pdp:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="Currently, only PDP inference is supported.",
+        )
     local_session.set(sql_session)
+    inst_result = (
+        local_session.get()
+        .execute(
+            select(InstTable).where(
+                and_(
+                    InstTable.id == str_to_uuid(inst_id),
+                )
+            )
+        )
+        .all()
+    )
+    if len(inst_result) != 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unexpected number of institutions found: Expected 1, got "
+            + str(len(inst_result)),
+        )
     query_result = (
         local_session.get()
         .execute(
@@ -525,15 +557,11 @@ def trigger_inference_run(
         )
         .all()
     )
-    if len(query_result) == 0:
+    if len(query_result) != 1:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Model not found.",
-        )
-    if len(query_result) > 1:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Multiple models of the same version found, this should not have happened.",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unexpected number of models found: Expected 1, got "
+            + str(len(inst_result)),
         )
 
     # Get all the files in the batch and check that it matches the model specifications.
@@ -549,15 +577,11 @@ def trigger_inference_run(
         )
         .all()
     )
-    if len(batch_result) == 0:
+    if len(batch_result) != 1:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Batch not found.",
-        )
-    if len(batch_result) > 1:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Multiple batches of the same name found, this should not have happened.",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unexpected number of batches found: Expected 1, got "
+            + str(len(inst_result)),
         )
     if not check_file_types_valid_schema_configs(
         [x.schemas for x in batch_result[0][0].files],
@@ -567,10 +591,13 @@ def trigger_inference_run(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="The files in this batch don't conform to the Schema configs allowed by this batch.",
         )
+    # Note to Datakind: In the long-term, this is where you would have a case block or something that would call different types of pipelines.
     db_req = DatabricksInferenceRunRequest(
-        inst_name="hello", file_to_type={}, model_name=model_name
+        inst_name=inst_result[0][0].name,
+        filepath_to_type=convert_files_to_dict(batch_result[0][0].files),
+        model_name=model_name,
     )
-    res = databricks_control.run_inference(db_req)
+    res = databricks_control.run_pdp_inference(db_req)
     triggered_timestamp = datetime.now()
     job = JobTable(
         id=res.job_run_id,
