@@ -199,23 +199,10 @@ resource "google_cloudbuild_trigger" "terraform" {
     "_WORKER_IMAGE"   = "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/worker:latest"
     "_FRONTEND_IMAGE" = "${var.region}-docker.pkg.dev/${var.project}/sst-app-ui/frontend:latest"
   }
-  dynamic "github" {
-    for_each = var.environment == "dev" ? [1] : []
-    content {
-      owner = "datakind"
-      name  = "student-success-tool"
-      push {
-        branch = "fellows-experimental"
-      }
-    }
-  }
-  dynamic "source_to_build" {
-    for_each = var.environment != "dev" ? [1] : []
-    content {
-      ref       = "refs/heads/fellows-experimental"
-      repo_type = "GITHUB"
-      uri       = "https://github.com/datakind/student-success-tool"
-    }
+  source_to_build {
+    ref       = "refs/heads/fellows-experimental"
+    repo_type = "GITHUB"
+    uri       = "https://github.com/datakind/student-success-tool"
   }
   build {
     step {
