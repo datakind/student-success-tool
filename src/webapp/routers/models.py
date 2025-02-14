@@ -596,6 +596,8 @@ def trigger_inference_run(
         inst_name=inst_result[0][0].name,
         filepath_to_type=convert_files_to_dict(batch_result[0][0].files),
         model_name=model_name,
+        # The email to which pipeline success/failure notifications will get sent.
+        email=current_user.email,
     )
     res = databricks_control.run_pdp_inference(db_req)
     triggered_timestamp = datetime.now()

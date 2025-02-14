@@ -24,6 +24,8 @@ class DatabricksInferenceRunRequest(BaseModel):
     filepath_to_type: dict[str, list[SchemaType]]
     model_name: str
     model_type: str = "sklearn"
+    # The email where notifications will get sent.
+    email: str
 
 
 class DatabricksInferenceRunResponse(BaseModel):
@@ -107,6 +109,7 @@ class DatabricksControl(BaseModel):
                 ],  # is this value the same PER environemtn? dev/staging/prod
                 "model_name": req.model_name,
                 "model_type": req.model_type,
+                # "notification_email": req.email,
             },
         )
         return DatabricksInferenceRunResponse(job_run_id=run_job.response.run_id)
