@@ -13,7 +13,7 @@ This Databricks job uses [TensorFlow Data Validation (TFDV)](https://www.tensorf
 
 The job requires the following parameters:
 
-* `--input_table_path`: Path to the input Delta table or CSV file.
+* `--input_table_path`: Path to the input Delta table.
 * `--input_table_format`: Format of the input table (default: `delta`).
 * `--input_schema_path`: Path to the schema pbtxt file.
 * `--output_artifact_path`: Path to write output artifacts (anomalies and statistics).
@@ -32,14 +32,14 @@ The job requires the following parameters:
     * **Parameters:** Provide the required parameters as described above.
 4. **Run the Job:** Run the job to validate your data.
 
-**NOTE:** You can also easily integrate this task with other pipelines / jobs / tasks as well!
+**NOTE:** You can also easily integrate this task with other pipelines / jobs / tasks as well, and also import the DataValidationTask class and create new tasks!
 
 ## Example
 
 To validate data in a Delta table against a schema and fail the job if anomalies are found:
 ```
 [
-"--input_table_path", "/path/to/your/delta/table",
+"--input_table_path", "project.schema.table",
 "--input_schema_path", "/path/to/your/schema.pbtxt",
 "--output_artifact_path", "/path/to/your/output/directory",
 "--environment", "SERVING",
