@@ -496,4 +496,6 @@ def plot_features_permutation_importance(
     ax.set_title("Permutation Feature Importances")
     ax.axvline(x=0, color="k", linestyle="--")
     ax.set_xlabel("Decrease in score")
+    # ugh mypy is so stupid
+    assert isinstance(ax, matplotlib.axes.Axes)  # type guard
     return ax
