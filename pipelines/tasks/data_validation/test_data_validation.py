@@ -107,7 +107,7 @@ class TestDataValidationTask(unittest.TestCase):
         anomalies = self.task.generate_anomalies(stats, schema, "TRAINING")
         self.task.save_anomalies(anomalies, self.output_dir)
         self.assertTrue(
-            os.path.exists(os.path.join(self.output_dir, "anomalies"))
+            os.path.exists(os.path.join(self.output_dir, "anomalies.pbtxt"))
         )
 
     def test_save_statistics(self):
@@ -115,7 +115,7 @@ class TestDataValidationTask(unittest.TestCase):
         stats = self.task.generate_statistics_from_csv(self.anomalous_csv_path)
         self.task.save_statistics(stats, self.output_dir)
         self.assertTrue(
-            os.path.exists(os.path.join(self.output_dir, "statistics"))
+            os.path.exists(os.path.join(self.output_dir, "statistics.pbtxt"))
         )
 
     def test_check_for_anomalies_no_fail(self):
@@ -125,7 +125,7 @@ class TestDataValidationTask(unittest.TestCase):
         anomalies = self.task.generate_anomalies(stats, schema, "TRAINING")
         self.task.check_for_anomalies(anomalies, self.output_dir)
         self.assertTrue(
-            os.path.exists(os.path.join(self.output_dir, "anomalies"))
+            os.path.exists(os.path.join(self.output_dir, "anomalies.pbtxt"))
         )
 
     def test_check_for_anomalies_fail(self):
@@ -138,7 +138,7 @@ class TestDataValidationTask(unittest.TestCase):
                 anomalies, self.output_dir, fail_on_anomalies=True
             )
         self.assertTrue(
-            os.path.exists(os.path.join(self.output_dir, "anomalies"))
+            os.path.exists(os.path.join(self.output_dir, "anomalies.pbtxt"))
         )
 
     def test_check_for_anomalies_on_false(self):
@@ -150,7 +150,7 @@ class TestDataValidationTask(unittest.TestCase):
             anomalies, self.output_dir, fail_on_anomalies=False
         )
         self.assertTrue(
-            os.path.exists(os.path.join(self.output_dir, "anomalies"))
+            os.path.exists(os.path.join(self.output_dir, "anomalies.pbtxt"))
         )
 
     def test_generate_statistics_from_delta_table(self):
