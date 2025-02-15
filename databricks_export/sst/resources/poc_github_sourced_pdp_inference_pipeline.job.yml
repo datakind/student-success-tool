@@ -1,0 +1,144 @@
+resources:
+  jobs:
+    poc_github_sourced_pdp_inference_pipeline:
+      name: poc_github_sourced_pdp_inference_pipeline
+      job_clusters:
+        - job_cluster_key: pdp-inference-pipeline-cluster
+          new_cluster:
+            enable_elastic_disk: true
+            spark_conf:
+              "spark.databricks.cluster.profile": "singleNode"
+              "spark.master": "local[*, 4]"
+            runtime_engine: STANDARD
+            data_security_mode: SINGLE_USER
+            node_type_id: n2-highmem-4
+            spark_version: 16.1.x-cpu-ml-scala2.12
+            custom_tags:
+              "ResourceClass": "SingleNode"
+              "x-databricks-nextgen-cluster": "true"
+            gcp_attributes:
+              google_service_account: pedro-pdp-inference-pipeline@dev-sst-02.iam.gserviceaccount.com
+              zone_id: HA
+              availability: ON_DEMAND_GCP
+      tasks:
+        - task_key: Need_synthetic_data
+          condition_task:
+            left: '{{job.parameters.synthetic_needed}}'
+            op: EQUAL_TO
+            right: True
+          email_notifications: {}
+          run_if: ALL_SUCCESS
+        - task_key: generate_synthetic_data
+          depends_on:
+            - outcome: "true"
+              task_key: Need_synthetic_data
+          job_cluster_key: pdp-inference-pipeline-cluster
+          email_notifications: {}
+          libraries:
+            - pypi:
+                package: faker
+            - pypi:
+                package: pandera
+            - pypi:
+                package: git+https://github.com/datakind/student-success-tool.git@pedro-develop
+          notebook_task:
+            base_parameters:
+              avg_num_courses_per_student: "5"
+              normalize_col_names: ""
+              num_students: "300"
+              save_dir: ""
+              seed: ""
+            notebook_path: pipelines/tasks/sst_pdp_synthetic_data_generation/synthetic_data_generation_pipeline_task
+            source: GIT
+          run_if: ALL_SUCCESS
+        - task_key: data_ingestion
+          depends_on:
+            - task_key: Need_synthetic_data
+              outcome: "false"
+            - task_key: generate_synthetic_data
+          job_cluster_key: pdp-inference-pipeline-cluster
+          email_notifications: {}
+          libraries:
+            - pypi:
+                package: faker
+            - pypi:
+                package: pandera
+            - pypi:
+                package: git+https://github.com/datakind/student-success-tool.git@pedro-develop
+          notebook_task:
+            notebook_path: pipelines/tasks/sst_pdp_data_ingestion/data_ingestion_pipeline_task
+            source: GIT
+          run_if: AT_LEAST_ONE_SUCCESS
+        - task_key: data_processing
+          depends_on:
+            - task_key: data_ingestion
+          job_cluster_key: pdp-inference-pipeline-cluster
+          email_notifications: {}
+          libraries:
+            - pypi:
+                package: faker
+            - pypi:
+                package: pandera
+            - pypi:
+                package: git+https://github.com/datakind/student-success-tool.git@pedro-develop
+          notebook_task:
+            notebook_path: pipelines/tasks/sst_pdp_data_processing/data_processing_pipeline_task
+            source: GIT
+          run_if: ALL_SUCCESS
+        - task_key: data_validation
+          depends_on:
+            - task_key: data_processing
+          job_cluster_key: pdp-inference-pipeline-cluster
+          email_notifications: {}
+          notebook_task:
+            notebook_path: pipelines/tasks/sst_pdp_data_validation/data_validation_pipeline_task
+            source: GIT
+          run_if: ALL_SUCCESS
+        - task_key: inference
+          depends_on:
+            - task_key: data_validation
+          job_cluster_key: pdp-inference-pipeline-cluster
+          email_notifications:
+            on_failure:
+              - pedro.melendez@datakind.org
+            on_start:
+              - pedro.melendez@datakind.org
+            on_success:
+              - pedro.melendez@datakind.org
+          libraries:
+            - pypi:
+                package: faker
+            - pypi:
+                package: pandera
+            - pypi:
+                package: git+https://github.com/datakind/student-success-tool.git@pedro-develop
+          notebook_task:
+            notebook_path: pipelines/tasks/sst_pdp_model_inference/model_inference_pipeline_task
+            source: GIT
+          run_if: ALL_SUCCESS
+      parameters:
+        - name: cohort_file_name
+          default: standard_pdp_institution_sample_STUDENT_SEMESTER_AR_DEIDENTIFIED.csv
+        - name: course_file_name
+          default: standard_pdp_institution_sample_COURSE_LEVEL_AR_DEID.csv
+        - name: DB_workspace
+          default: dev_sst_02
+        - name: institution_id
+          default: standard_pdp_institution
+        - name: model_name
+          default: latest_enrollment_model
+        - name: model_type
+          default: sklearn
+        - name: sst_job_id
+          default: job_id_{{job.run_id}}
+        - name: synthetic_needed
+          default: False
+      email_notifications: {}
+      git_source:
+        git_branch: pedro-develop
+        git_provider: gitHub
+        git_url: https://github.com/datakind/student-success-tool
+      max_concurrent_runs: 2
+      queue:
+        enabled: true
+      webhook_notifications: {}
