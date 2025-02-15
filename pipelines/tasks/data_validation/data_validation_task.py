@@ -19,7 +19,6 @@ from tensorflow_metadata.proto.v0 import schema_pb2
 from tensorflow_metadata.proto.v0 import statistics_pb2
 
 
-
 # pylint: disable=no-member
 class DataValidationTask:
     """Task for validating data using TFDV."""
@@ -115,7 +114,7 @@ class DataValidationTask:
         logging.info("Saving anomalies to: %s", output_path)
         tfdv.write_anomalies_text(
             anomalies,
-            os.path.join(output_path, "anomalies")
+            os.path.join(output_path, "anomalies.pbtxt")
         )
 
     def save_statistics(
@@ -135,7 +134,7 @@ class DataValidationTask:
         logging.info("Saving statistics to: %s", output_path)
         tfdv.write_stats_text(
             statistics,
-            os.path.join(output_path, "statistics")
+            os.path.join(output_path, "statistics.pbtxt")
         )
 
     def check_for_anomalies(
@@ -161,7 +160,7 @@ class DataValidationTask:
         )
         if anomalies.anomaly_info:
             logging.warning(
-                "Anomalies found. Check: %s/anomalies",
+                "Anomalies found. Check: %s/anomalies.pbtxt",
                 output_path
             )
             if fail_on_anomalies:
