@@ -13,6 +13,7 @@ from student_success_tool.targets.pdp import graduation
                     "student_id": ["01", "01", "01", "03", "02", "02"],
                     "enrollment_intensity": ["FT", "PT", "FT", "FT", "PT", "FT"],
                     "years_to_degree": [4, 4, 4, 5, 6, 6],
+                    "enrollment_year": [1, 1, 1, 1, 1, 1],
                 },
             ).astype({"student_id": "string", "enrollment_intensity": "string"}),
             {"FT": [4, "year"], "PT": [12, "term"]},
@@ -30,6 +31,7 @@ from student_success_tool.targets.pdp import graduation
                     "student_id": ["01", "02", "03"],
                     "enrollment_intensity": ["FT", "PT", "FT"],
                     "years_to_degree": [2, 4, 3],
+                    "enrollment_year": [1, 1, 1],
                 },
             ).astype({"student_id": "string", "enrollment_intensity": "string"}),
             {"FT": [8, "term"], "PT": [16, "term"]},
@@ -47,6 +49,7 @@ from student_success_tool.targets.pdp import graduation
                     "student_id": ["01", "02"],
                     "enrollment_intensity": ["FT", "FT"],
                     "years_to_degree": [1, pd.NA],
+                    "enrollment_year": [1, 1],
                 },
             ).astype({"student_id": "string", "enrollment_intensity": "string"}),
             {"FT": [2, "year"]},
@@ -65,6 +68,7 @@ from student_success_tool.targets.pdp import graduation
                     "student_id2": ["A", "B", "A"],
                     "enrollment_intensity": ["FT", "PT", "FT"],
                     "years_to_degree": [2, 4, 3],
+                    "enrollment_year": [1, 1, 1],
                 },
             ).astype(
                 {
@@ -97,6 +101,7 @@ from student_success_tool.targets.pdp import graduation
                     "student_id": ["01", "01", "01"],
                     "enrollment_intensity": ["FT", "PT", "FT"],
                     "years_to_degree": [4, 5, pd.NA],
+                    "enrollment_year": [1, 1, 1],
                 },
             ).astype(
                 {
@@ -126,6 +131,7 @@ def test_compute_target(
         student_id_cols=student_id_cols,
         enrollment_intensity_col="enrollment_intensity",
         years_to_degree_col="years_to_degree",
+        enrollment_year_col="enrollment_year",
     )
     assert isinstance(obs, pd.Series)
     assert pd.testing.assert_series_equal(obs, exp) is None

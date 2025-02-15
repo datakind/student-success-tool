@@ -14,6 +14,7 @@ def compute_target(
     student_id_cols: str | list[str] = "student_guid",
     enrollment_intensity_col: str = "student_term_enrollment_intensity",
     years_to_degree_col: str = "first_year_to_bachelors_at_cohort_inst",
+    enrollment_year_col: str = "year_of_enrollment_at_cohort_inst",
 ) -> pd.Series:
     """
     Compute *non* graduation target for each distinct student in ``df`` , for which
@@ -36,15 +37,25 @@ def compute_target(
             PDP's standard "first years to a Bachelor's degree" column
             Note: If ``df`` has one row per student-term, it's assumed that years-to-degree
             values are the same across all rows, and we simply use the first.
+        enrollment_year_col: Column whose values give students' "current" year of enrollment
+            at the cohort inst as of the given row, used to filter rows to pre-graduation
+            when determining students' most common enrollment intensity.
     """
     student_id_cols = utils.to_list(student_id_cols)
     # we want a target for every student in input df; this will ensure it
     df_distinct_students = df[student_id_cols].drop_duplicates(ignore_index=True)
-    # get most common intensity value per student across all terms
+    # get most common intensity value per student across all pre-graduation terms
     # and *first* years to degree value (we assume this is the same across all terms)
     # use this as reference data for computing target variable
-    df_student_intensities = df.groupby(by=student_id_cols, as_index=False).agg(
-        enrollment_intensity=(enrollment_intensity_col, _mode_aggfunc)
+    df_student_intensities = (
+        df.loc[
+            df[enrollment_year_col]
+            .le(df[years_to_degree_col].astype("Int8"))
+            .fillna(True),
+            :,
+        ]
+        .groupby(by=student_id_cols, as_index=False)
+        .agg(enrollment_intensity=(enrollment_intensity_col, _mode_aggfunc))
     )
     df_student_years_to_degree = df.groupby(by=student_id_cols, as_index=False).agg(
         years_to_degree=(years_to_degree_col, "first")
@@ -76,6 +87,7 @@ def compute_target(
         for intensity, max_years in intensity_max_years.items()
     ]
     target = np.logical_or.reduce(targets)
+    # assign True to all students passing intensity/term condition(s) above
     df_target_true = (
         df_ref.loc[target, student_id_cols]
         .assign(target=True)
