@@ -35,7 +35,8 @@ def compute_target(
             to the maximum number of years or terms considered to be "on-time" for
             the target number of credits earned (e.g. [4.0, "year"], [12.0, "term"]),
             where the numeric values are for the time between "checkpoint" and "target"
-            terms.
+            terms. Passing special "*" as the only key applies the corresponding time limits
+            to all students, regardless of intensity.
         num_terms_in_year: Number of academic terms in one academic year,
             used to convert from year-based time limits to term-based time limits;
             default value assumes FALL, WINTER, SPRING, and SUMMER terms.
@@ -79,8 +80,11 @@ def compute_target(
     tr_col = term_rank_col  # hack, so logic below fits on lines
     targets = [
         (
-            # enrollment intensity is equal to a specified value
-            df_at[f"{enrollment_intensity_col}_ckpt"].eq(intensity)
+            # enrollment intensity is equal to a specified value or "*" given as intensity
+            (
+                df_at[f"{enrollment_intensity_col}_ckpt"].eq(intensity)
+                | (intensity == "*")
+            )
             & (
                 # num terms between target/checkpoint greater than max num allowed
                 (df_at[f"{tr_col}_tgt"] - df_at[f"{tr_col}_ckpt"]).gt(num_terms)

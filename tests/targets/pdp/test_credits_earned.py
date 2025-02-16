@@ -127,6 +127,34 @@ from student_success_tool.targets.pdp import credits_earned, shared
                 name="target",
             ),
         ),
+        (
+            pd.DataFrame(
+                {
+                    "student_id": ["01", "01", "02", "02"],
+                    "enrollment_intensity": ["FT", "FT", "PT", "PT"],
+                    "num_credits": [12, 48, 8, 64],
+                    "term_rank": [1, 4, 1, 8],
+                },
+            ).astype({"student_id": "string", "enrollment_intensity": "string"}),
+            60.0,
+            # first term as checkpoint
+            pd.DataFrame(
+                {
+                    "student_id": ["01", "02"],
+                    "enrollment_intensity": ["FT", "PT"],
+                    "num_credits": [12, 8],
+                    "term_rank": [1, 1],
+                },
+            ).astype({"student_id": "string", "enrollment_intensity": "string"}),
+            {"*": [8, "term"]},
+            2,
+            "student_id",
+            pd.Series(
+                data=[True, False],
+                index=pd.Index(["01", "02"], dtype="string", name="student_id"),
+                name="target",
+            ),
+        ),
     ],
 )
 def test_compute_target(

@@ -24,7 +24,8 @@ def compute_target(
         df: Student-term dataset.
         intensity_time_limits: Mapping of enrollment intensity value (e.g. "FULL-TIME")
             to the maximum number of years or terms considered to be an "on-time" graduation
-            (e.g. [4.0, "year"], [12.0, "term"])
+            (e.g. [4.0, "year"], [12.0, "term"]). Passing special "*" as the only key
+            applies the corresponding time limits to all students, regardless of intensity.
         num_terms_in_year: Number of academic terms in one academic year,
             used to convert from term-based time limits to year-based time limits;
             default value assumes FALL, WINTER, SPRING, and SUMMER terms.
@@ -74,8 +75,8 @@ def compute_target(
     # then combine with a logical OR
     targets = [
         (
-            # enrollment intensity is equal to specified value
-            df_ref["enrollment_intensity"].eq(intensity)
+            # enrollment intensity is equal to specified value or "*" given as intensity
+            (df_ref["enrollment_intensity"].eq(intensity) | (intensity == "*"))
             & (
                 # student graduated after max num years allowed
                 (df_ref["years_to_degree"]).gt(num_years)

@@ -94,6 +94,24 @@ from student_success_tool.targets.pdp import graduation
                 name="target",
             ),
         ),
+        (
+            pd.DataFrame(
+                {
+                    "student_id": ["01", "02"],
+                    "enrollment_intensity": ["FT", "PT"],
+                    "years_to_degree": [1, 3],
+                    "enrollment_year": [1, 1],
+                },
+            ).astype({"student_id": "string", "enrollment_intensity": "string"}),
+            {"*": [2, "year"]},
+            4,
+            "student_id",
+            pd.Series(
+                data=[False, True],
+                index=pd.Index(["01", "02"], dtype="string", name="student_id"),
+                name="target",
+            ),
+        ),
         # this is a pathological case: years-to-degree varies across student-terms
         (
             pd.DataFrame(
