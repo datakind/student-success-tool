@@ -64,3 +64,35 @@ def get_db_widget_param(name: str, *, default: t.Optional[object] = None) -> obj
             "no db widget found with name=%s; returning default=%s", name, default
         )
         return default
+
+
+def convert_intensity_time_limits(
+    unit: t.Literal["term", "year"],
+    intensity_time_limits: dict[str, tuple[float, t.Literal["term", "year"]]],
+    *,
+    num_terms_in_year: int,
+) -> dict[str, float]:
+    """
+    Convert enrollment intensity-specific time limits into a particular ``unit`` ,
+    whether input limits were given in units of years or terms.
+
+    Args:
+        unit: The time unit into which inputs are converted, either "term" or "year".
+        intensity_time_limits: Mapping of enrollment intensity value (e.g. "FULL-TIME")
+            to the maximum number of years or terms (e.g. [4.0, "year"], [12.0, "term"])
+            considered "success" for a school in their particular use case.
+        num_terms_in_year: Number of academic terms in one academic year,
+            used to convert between term- and year-based time limits;
+            for example: 4 => FALL, WINTER, SPRING, and SUMMER terms.
+    """
+    if unit == "year":
+        intensity_nums = {
+            intensity: num if unit == "year" else num / num_terms_in_year
+            for intensity, (num, unit) in intensity_time_limits.items()
+        }
+    else:
+        intensity_nums = {
+            intensity: num if unit == "term" else num * num_terms_in_year
+            for intensity, (num, unit) in intensity_time_limits.items()
+        }
+    return intensity_nums
