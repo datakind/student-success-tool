@@ -71,10 +71,9 @@ def compute_target(
         suffixes=("_ckpt", "_tgt"),
     )
     # convert from year limits to term limits, as needed
-    intensity_max_terms = {
-        intensity: time if unit == "term" else time * num_terms_in_year
-        for intensity, (time, unit) in intensity_time_limits.items()
-    }
+    intensity_num_terms = utils.convert_intensity_time_limits(
+        "term", intensity_time_limits, num_terms_in_year=num_terms_in_year
+    )
     # compute all intensity/term boolean arrays separately
     # then combine with a logical OR
     tr_col = term_rank_col  # hack, so logic below fits on lines
@@ -84,12 +83,12 @@ def compute_target(
             df_at[f"{enrollment_intensity_col}_ckpt"].eq(intensity)
             & (
                 # num terms between target/checkpoint greater than max num allowed
-                (df_at[f"{tr_col}_tgt"] - df_at[f"{tr_col}_ckpt"]).gt(max_terms)
+                (df_at[f"{tr_col}_tgt"] - df_at[f"{tr_col}_ckpt"]).gt(num_terms)
                 # or they *never* earned enough credits for target
                 | df_at[f"{tr_col}_tgt"].isna()
             )
         )
-        for intensity, max_terms in intensity_max_terms.items()
+        for intensity, num_terms in intensity_num_terms.items()
     ]
     target = np.logical_or.reduce(targets)
     # assign True to all students passing intensity/year condition(s) above

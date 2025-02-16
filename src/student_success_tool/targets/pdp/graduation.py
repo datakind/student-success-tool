@@ -67,10 +67,9 @@ def compute_target(
         on=student_id_cols,
     )
     # convert from term limits to year limits, as needed
-    intensity_max_years = {
-        intensity: time if unit == "year" else time / num_terms_in_year
-        for intensity, (time, unit) in intensity_time_limits.items()
-    }
+    intensity_num_years = utils.convert_intensity_time_limits(
+        "year", intensity_time_limits, num_terms_in_year=num_terms_in_year
+    )
     # compute all intensity/year boolean arrays separately
     # then combine with a logical OR
     targets = [
@@ -79,12 +78,12 @@ def compute_target(
             df_ref["enrollment_intensity"].eq(intensity)
             & (
                 # student graduated after max num years allowed
-                (df_ref["years_to_degree"]).gt(max_years)
+                (df_ref["years_to_degree"]).gt(num_years)
                 # or never graduated at all
                 | df_ref["years_to_degree"].isna()
             )
         )
-        for intensity, max_years in intensity_max_years.items()
+        for intensity, num_years in intensity_num_years.items()
     ]
     target = np.logical_or.reduce(targets)
     # assign True to all students passing intensity/term condition(s) above
