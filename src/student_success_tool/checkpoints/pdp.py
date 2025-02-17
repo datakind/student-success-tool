@@ -33,7 +33,9 @@ def nth_student_terms(
     included_cols = _get_included_cols(df, student_id_cols, sort_cols, include_cols)
     df_nth = (
         df.loc[:, included_cols]
-        .sort_values(by=sort_cols, ascending=True, ignore_index=False)
+        .sort_values(
+            by=(student_id_cols + sort_cols), ascending=True, ignore_index=False
+        )
         .groupby(by=student_id_cols)
         .nth(n)
     )
