@@ -527,6 +527,7 @@ def trigger_inference_run(
             detail="Currently, only PDP inference is supported.",
         )
     local_session.set(sql_session)
+    """
     inst_result = (
         local_session.get()
         .execute(
@@ -591,10 +592,11 @@ def trigger_inference_run(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="The files in this batch don't conform to the Schema configs allowed by this batch.",
         )
+    """
     # Note to Datakind: In the long-term, this is where you would have a case block or something that would call different types of pipelines.
     db_req = DatabricksInferenceRunRequest(
-        inst_name=inst_result[0][0].name,
-        filepath_to_type=convert_files_to_dict(batch_result[0][0].files),
+        inst_name="foobar", #inst_result[0][0].name,
+        filepath_to_type={},#convert_files_to_dict(batch_result[0][0].files),
         model_name=model_name,
         # The email to which pipeline success/failure notifications will get sent.
         email=current_user.email,
