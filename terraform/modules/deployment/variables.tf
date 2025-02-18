@@ -50,3 +50,7 @@ variable "frontend_image" {
   description = "Image for the frontend service"
   type        = string
 }
+
+variable "subnet_ip_cidr_range" {
+  type = string
+}

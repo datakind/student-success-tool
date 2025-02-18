@@ -6,27 +6,35 @@ resource "google_project_service" "services" {
 }
 
 resource "google_compute_network" "vpc_network" {
-  name                    = "${var.environment}-vpc-network"
+ name                    = "${var.environment}-vpc-network"
   auto_create_subnetworks = false
 }
 
-resource "google_compute_subnetwork" "vpc_subnetwork" {
-  name          = "${var.environment}-vpc-subnetwork"
-  network       = google_compute_network.vpc_network.id
-  region        = var.region
-  ip_cidr_range = "10.0.1.0/24"
+data "google_compute_network" "vpc_network" {
+  name = "prod-shared-vpc-network-01"
+  project = "prod-shared-vpc-project-01"
 }
 
-resource "google_compute_global_address" "vpc_connector_ip" {
+resource "google_compute_subnetwork" "subnetwork" {
+  name          = "${var.environment}-vpc-subnetwork"
+  network       = data.google_compute_network.vpc_network.id
+  region        = var.region
+  ip_cidr_range = var.subnet_ip_cidr_range
+  project = "prod-shared-vpc-project-01"
+}
+
+resource "google_compute_global_address" "connector_ip" {
   name          = "${var.environment}-vpc-connector-ip"
   purpose       = "VPC_PEERING"
   address_type  = "INTERNAL"
   prefix_length = 16
-  network       = google_compute_network.vpc_network.id
+  network       = data.google_compute_network.vpc_network.id
+  project = "prod-shared-vpc-project-01"
 }
 
-resource "google_service_networking_connection" "vpc_connection" {
-  network                 = google_compute_network.vpc_network.id
+resource "google_service_networking_connection" "connection" {
+  network                 = data.google_compute_network.vpc_network.id
   service                 = "servicenetworking.googleapis.com"
-  reserved_peering_ranges = [google_compute_global_address.vpc_connector_ip.name]
+  reserved_peering_ranges = [google_compute_global_address.connector_ip.name]
+
 }

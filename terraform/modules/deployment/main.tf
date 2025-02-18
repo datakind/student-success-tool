@@ -10,6 +10,8 @@ module "network" {
 
   environment = var.environment
   region      = var.region
+  subnet_ip_cidr_range = var.subnet_ip_cidr_range
+
 }
 
 module "iam" {

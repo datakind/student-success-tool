@@ -12,3 +12,7 @@ variable "region" {
 variable "environment" {
   type = string
 }
+
+variable "subnet_ip_cidr_range" {
+  type = string
+}

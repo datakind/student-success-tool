@@ -32,4 +32,5 @@ module "deployment" {
   domain           = var.domain
   webapp_image     = var.webapp_image
   frontend_image   = var.frontend_image
+  subnet_ip_cidr_range = var.subnet_ip_cidr_range
 }
