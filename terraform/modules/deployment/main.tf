@@ -8,10 +8,9 @@ resource "google_project_service" "services" {
 module "network" {
   source = "../network"
 
-  environment = var.environment
-  region      = var.region
+  environment          = var.environment
+  region               = var.region
   subnet_ip_cidr_range = var.subnet_ip_cidr_range
-
 }
 
 module "iam" {

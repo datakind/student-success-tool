@@ -23,14 +23,14 @@ provider "google" {
 module "deployment" {
   source = "../../modules/deployment"
 
-  project          = var.project
-  region           = var.region
-  environment      = var.environment
-  zone             = var.zone
-  database_version = var.database_version
-  database_name    = var.database_name
-  domain           = var.domain
-  webapp_image     = var.webapp_image
-  frontend_image   = var.frontend_image
+  project              = var.project
+  region               = var.region
+  environment          = var.environment
+  zone                 = var.zone
+  database_version     = var.database_version
+  database_name        = var.database_name
+  domain               = var.domain
+  webapp_image         = var.webapp_image
+  frontend_image       = var.frontend_image
   subnet_ip_cidr_range = var.subnet_ip_cidr_range
 }

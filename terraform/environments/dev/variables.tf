@@ -49,6 +49,6 @@ variable "frontend_image" {
 }
 
 variable "subnet_ip_cidr_range" {
-  type = string
+  type    = string
   default = "10.13.0.0/24"
 }
