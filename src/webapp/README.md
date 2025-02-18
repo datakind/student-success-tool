@@ -53,3 +53,5 @@ postgresql requires that SSL certs be 0600 or 0640 depending on group/owners. Th
 The flow to add a Datakinder user is different from adding a user to an institution:
 * adding a user to an institution has to happen prior to that user creating an account (by allowlisting their email for a given institution)
 * adding a Datakinder user has to happen after the Datakinder person has already created their account, then their account's access type is updated.
+
+In general, the service account used to run this service in GCP will also need to be granted Databricks access in the equivalent environment.
