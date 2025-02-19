@@ -29,6 +29,12 @@ Enter into the root directory of the repo.
 1. `uv sync --all-extras --dev`
 1. `coverage run -m pytest  -v -s ./src/webapp/`
 
+For integration wtih Databricks, run:
+
+The workspace URL will look like `https://<some_id>.gcp.databricks.com`
+
+1. `databricks auth login --host <workspace_url>`
+
 For all of the following, be in the repo root folder (`student-success-tool/`).
 
 Spin up the app locally:
@@ -55,3 +61,4 @@ The flow to add a Datakinder user is different from adding a user to an institut
 * adding a Datakinder user has to happen after the Datakinder person has already created their account, then their account's access type is updated.
 
 In general, the service account used to run this service in GCP will also need to be granted Databricks access in the equivalent environment.
+

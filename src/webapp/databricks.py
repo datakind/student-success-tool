@@ -13,7 +13,7 @@ from .utilities import databricksify_inst_name, SchemaType
 
 medallion_levels = ["silver", "gold", "bronze"]  # List of data medallion levels
 # For every unique pipeline with unique param sets, you'll need a separate name.
-pdp_inference_job_name = "PDP_inference_pipeline"  # can this be the job name for every inst or does it havve to be inst specific
+pdp_inference_job_name = "pdp_inference_pipeline"  # can this be the job name for every inst or does it havve to be inst specific
 
 
 class DatabricksInferenceRunRequest(BaseModel):
@@ -104,19 +104,19 @@ class DatabricksControl(BaseModel):
             job_id,
             job_parameters={
                 "cohort_file_name": "standard_pdp_institution_sample_STUDENT_SEMESTER_AR_DEIDENTIFIED.csv",
-                #get_filepath_of_filetype(
+                # get_filepath_of_filetype(
                 #    req.file_to_type, SchemaType.PDP_COHORT
-                #),
+                # ),
                 "course_file_name": "standard_pdp_institution_sample_COURSE_LEVEL_AR_DEID.csv",
-                #get_filepath_of_filetype(
+                # get_filepath_of_filetype(
                 #    req.file_to_type, SchemaType.PDP_COURSE
-                #),
-                "institution_id": "standard_pdp_institution",#db_inst_name,
+                # ),
+                "institution_id": "standard_pdp_institution",  # db_inst_name,
                 # "sst_job_id": f"{institution_id}_inference_job_id_{str(random.randint(1, 1000))}",
                 "DB_workspace": databricks_vars[
                     "DATABRICKS_WORKSPACE"
                 ],  # is this value the same PER environemtn? dev/staging/prod
-                "model_name": "latest_enrollment_model",#req.model_name,
+                "model_name": "latest_enrollment_model",  # req.model_name,
                 "model_type": req.model_type,
                 # "notification_email": req.email,
             },
