@@ -55,22 +55,28 @@ class DatabricksControl(BaseModel):
             google_service_account=gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"],
         )
         db_inst_name = databricksify_inst_name(inst_name)
+        print("xxxxxxxxxxxxxxxxxxxxxx1")
+        print(db_inst_name)
         cat_name = databricks_vars["CATALOG_NAME"]
+        print(cat_name)
         for medallion in medallion_levels:
             w.schemas.create(name=f"{db_inst_name}_{medallion}", catalog_name=cat_name)
-
+            print("xxxxxxxxxxxxxxxxxxxxxx2")
         # Create a managed volume in the bronze schema for internal pipeline data.
+        print("xxxxxxxxxxxxxxxxxxxxxx3")
         created_volume = w.volumes.create(
             catalog_name=cat_name,
             schema_name=f"{db_inst_name}_bronze",
             name=f"pipeline_internal",
             volume_type=catalog.VolumeType.MANAGED,
         )
+        print("xxxxxxxxxxxxxxxxxxxxxx4")
         # Create directory on the volume
         os.makedirs(
             f"/Volumes/{cat_name}/{db_inst_name}_bronze/pipeline_internal/configuration_files/",
             exist_ok=True,
         )
+        print("xxxxxxxxxxxxxxxxxxxxxx6")
 
     """Note that for each unique PIPELINE, we'll need a new function, this is by nature of how unique pipelines 
     may have unique parameters and would have a unique name (i.e. the name field specified in w.jobs.list()). But any run of a given pipeline (even across institutions) can use the same function. 
