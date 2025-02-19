@@ -20,6 +20,7 @@ resource "google_artifact_registry_repository" "sst_app_ui" {
 resource "google_cloudbuild_trigger" "python_apps" {
   for_each        = toset(["webapp", "worker"])
   name            = "${var.environment}-${each.key}"
+  description     = "Trigger for building and deploying ${each.key} service"
   service_account = var.cloudbuild_service_account_id
   dynamic "github" {
     for_each = var.environment == "dev" ? [1] : []
@@ -82,6 +83,7 @@ resource "google_cloudbuild_trigger" "python_apps" {
 
 resource "google_cloudbuild_trigger" "frontend" {
   name            = "${var.environment}-frontend"
+  description     = "Trigger for building and deploying frontend service and running migration job"
   service_account = var.cloudbuild_service_account_id
   dynamic "github" {
     for_each = var.environment == "dev" ? [1] : []
@@ -189,6 +191,7 @@ resource "google_cloudbuild_trigger" "frontend" {
 
 resource "google_cloudbuild_trigger" "terraform" {
   name            = "${var.environment}-terraform"
+  description     = "Trigger for running Terraform apply"
   service_account = var.terraform_service_account_id
   source_to_build {
     ref       = "refs/heads/fellows-experimental"
