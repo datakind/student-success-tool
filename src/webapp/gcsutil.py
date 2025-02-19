@@ -53,14 +53,7 @@ class StorageControl(BaseModel):
 
     def generate_upload_signed_url(self, bucket_name: str, file_name: str) -> str:
         """Generates a v4 signed URL for uploading a blob using HTTP PUT."""
-        if (
-            not gcs_vars["GCP_SERVICE_ACCOUNT_KEY_PATH"]
-            or gcs_vars["GCP_SERVICE_ACCOUNT_KEY_PATH"] == ""
-        ):
-            raise ValueError("GCP_SERVICE_ACCOUNT_KEY_PATH env var not set.")
-        client = storage.Client.from_service_account_json(
-            gcs_vars["GCP_SERVICE_ACCOUNT_KEY_PATH"]
-        )
+        client = storage.Client()
         bucket = client.bucket(bucket_name)
         if not bucket.exists():
             raise ValueError("Storage bucket not found.")
@@ -85,14 +78,7 @@ class StorageControl(BaseModel):
 
     def generate_download_signed_url(self, bucket_name: str, blob_name: str) -> str:
         """Generates a v4 signed URL for downloading a blob using HTTP GET."""
-        if (
-            not gcs_vars["GCP_SERVICE_ACCOUNT_KEY_PATH"]
-            or gcs_vars["GCP_SERVICE_ACCOUNT_KEY_PATH"] == ""
-        ):
-            raise ValueError("GCP_SERVICE_ACCOUNT_KEY_PATH env var not set.")
-        client = storage.Client.from_service_account_json(
-            gcs_vars["GCP_SERVICE_ACCOUNT_KEY_PATH"]
-        )
+        client = storage.Client()
         bucket = client.bucket(bucket_name)
         if not bucket.exists():
             raise ValueError("Storage bucket not found.")
