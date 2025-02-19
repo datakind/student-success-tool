@@ -20,9 +20,10 @@ Before running the pipeline, ensure the following prerequisites are met:
 * **Institution Onboarding:** The target institution must be onboarded with the following Databricks components:
     * **Databricks Schemas:** Three schemas: `institution_ID_bronze`, `institution_ID_silver`, and `institution_ID_gold`.
     * **Databricks Volume:** A Databricks Volume named `pdp_pipeline_internal` within the bronze schema (e.g., `/Volumes/{workspace}/{institution_ID}_bronze/pdp_pipeline_internal`).
+    * **Databricks Volume:** A Databricks Volume named `gold_volume` within the gold schema (e.g., `/Volumes/{workspace}/{institution_ID}_bronze/gold_volume`).
     * **External GCS Bucket:** A GCS bucket for storing raw CSV files, with the URI structure: `gs://{workspace}_{institution_ID}_sst_application/validated/`.
     * **Registered Model:** A trained model registered within the institution's bronze schema (e.g., `{workspace}.{institution_ID}_bronze.latest_enrollment_model`).
-    * **Institution Configuration File:** A `.toml` configuration file stored in the Databricks Volume: `/Volumes/{workspace}/{institution_ID}_bronze/pdp_pipeline_internal/configuration_files/{institution_ID}.toml`.
+    * **Institution Configuration File:** A `.toml` configuration file stored in the Gold volume: `/Volumes/{workspace}/{institution_ID}_gold/gold_volume/configuration_files/{institution_ID}.toml`.
 * **Data Schema Compliance:** The student and cohort CSV files must adhere to the PDP schema.
     * Sample files are available for reference at: https://github.com/datakind/student-success-tool/tree/pedro-develop/synthetic-data/pdp
 
@@ -65,5 +66,5 @@ This section provides instructions for running the inference pipeline with a pre
 
 ### Important Notes
 
-* **Configuration Files:** The `.toml` configuration file is crucial for customizing the data processing steps. Ensure it is correctly configured for the target institution.
+* **Configuration Files:** The `.toml` configuration file is crucial for customizing the data processing steps, it is model-specific.  Ensure it is correctly configured for the target institution and the specific model.
 * **Model Versioning:** The pipeline utilizes the "latest" version of the registered model. If you need to use a specific model version, update the pipeline code accordingly.
