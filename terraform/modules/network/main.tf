@@ -44,7 +44,7 @@ data "google_project" "service_project" {
 
 resource "google_project_iam_member" "host_project_network_user" {
   project = var.vpc_host_project
-  role    = "roles/compute.networkUser"
+  role    = "roles/compute.networkViewer"
   member  = "serviceAccount:service-${data.google_project.service_project.number}@serverless-robot-prod.iam.gserviceaccount.com"
 }
 
