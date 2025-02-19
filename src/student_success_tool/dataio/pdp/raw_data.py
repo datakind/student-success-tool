@@ -17,7 +17,7 @@ def read_raw_course_data(
     *,
     table_path: t.Optional[str] = None,
     file_path: t.Optional[str] = None,
-    schema: t.Optional[pda.DataFrameModel] = None,
+    schema: t.Optional[type[pda.DataFrameModel]] = None,
     dttm_format: str = "%Y%m%d",
     converter_func: t.Optional[t.Callable[[pd.DataFrame], pd.DataFrame]] = None,
     spark_session: t.Optional[pyspark.sql.SparkSession] = None,
@@ -92,7 +92,7 @@ def read_raw_cohort_data(
     *,
     table_path: t.Optional[str] = None,
     file_path: t.Optional[str] = None,
-    schema: t.Optional[pda.DataFrameModel] = None,
+    schema: t.Optional[type[pda.DataFrameModel]] = None,
     converter_func: t.Optional[t.Callable[[pd.DataFrame], pd.DataFrame]] = None,
     spark_session: t.Optional[pyspark.sql.SparkSession] = None,
     **kwargs: object,
@@ -181,7 +181,7 @@ def read_raw_cohort_data(
 def _maybe_convert_maybe_validate_data(
     df: pd.DataFrame,
     converter_func: t.Optional[t.Callable[[pd.DataFrame], pd.DataFrame]] = None,
-    schema: t.Optional[pda.DataFrameModel] = None,
+    schema: t.Optional[type[pda.DataFrameModel]] = None,
 ) -> pd.DataFrame:
     if converter_func is not None:
         LOGGER.info("applying %s converter to raw data", converter_func)
@@ -190,8 +190,9 @@ def _maybe_convert_maybe_validate_data(
         return df
     else:
         try:
-            df = schema.validate(df, lazy=True)  # type: ignore
-            return df  # type: ignore
+            df_validated = schema.validate(df, lazy=True)
+            assert isinstance(df_validated, pd.DataFrame)
+            return df_validated
         except pandera.errors.SchemaErrors:
             LOGGER.error("unable to parse/validate raw data")
             raise

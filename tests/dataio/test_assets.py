@@ -1,5 +1,7 @@
+import os
 from contextlib import nullcontext as does_not_raise
 
+import pydantic as pyd
 import pytest
 
 from student_success_tool import dataio
@@ -8,6 +10,28 @@ try:
     import tomllib  # noqa
 except ImportError:  # => PY3.10
     import tomli as tomllib  # noqa
+
+
+FIXTURES_PATH = "tests/fixtures"
+
+
+class BadProjectConfig(pyd.BaseModel):
+    is_bad: bool = pyd.Field(...)
+
+
+@pytest.mark.parametrize(
+    ["file_name", "schema", "context"],
+    [
+        # TODO
+        # ("project_config.toml", PDPProjectConfig, does_not_raise()),
+        ("project_config.toml", BadProjectConfig, pytest.raises(pyd.ValidationError)),
+    ],
+)
+def test_load_config(file_name, schema, context):
+    file_path = os.path.join(FIXTURES_PATH, file_name)
+    with context:
+        result = dataio.read_config(file_path, schema=schema)
+        assert isinstance(result, pyd.BaseModel)
 
 
 @pytest.mark.parametrize(

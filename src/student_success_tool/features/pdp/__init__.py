@@ -1,1 +1,10 @@
-from . import course, cumulative, section, shared, student, student_term, term
+from . import (
+    constants,
+    course,
+    cumulative,
+    section,
+    shared,
+    student,
+    student_term,
+    term,
+)

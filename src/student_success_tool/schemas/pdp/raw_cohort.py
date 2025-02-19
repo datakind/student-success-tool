@@ -270,6 +270,31 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     first_associates_or_certificate_at_other_institution_locale: pt.Series[
         pd.CategoricalDtype
     ] = LocaleField()
+    # added in 2025-01
+    years_to_latest_associates_at_cohort_inst: t.Optional[pt.Series["Int8"]] = (
+        YearsToOfField(nullable=True)
+    )
+    years_to_latest_certificate_at_cohort_inst: t.Optional[pt.Series["Int8"]] = (
+        YearsToOfField(nullable=True)
+    )
+    years_to_latest_associates_at_other_inst: t.Optional[pt.Series["Int8"]] = (
+        YearsToOfField(nullable=True)
+    )
+    years_to_latest_certificate_at_other_inst: t.Optional[pt.Series["Int8"]] = (
+        YearsToOfField(nullable=True)
+    )
+    first_year_to_associates_at_cohort_inst: t.Optional[pt.Series["Int8"]] = (
+        YearsToOfField(nullable=True)
+    )
+    first_year_to_certificate_at_cohort_inst: t.Optional[pt.Series["Int8"]] = (
+        YearsToOfField(nullable=True)
+    )
+    first_year_to_associates_at_other_inst: t.Optional[pt.Series["Int8"]] = (
+        YearsToOfField(nullable=True)
+    )
+    first_year_to_certificate_at_other_inst: t.Optional[pt.Series["Int8"]] = (
+        YearsToOfField(nullable=True)
+    )
 
     @pda.parser("enrollment_intensity_first_term")
     def set_enrollment_intensity_first_term_categories(cls, series):
