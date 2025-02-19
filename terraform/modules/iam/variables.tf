@@ -35,3 +35,11 @@ variable "cloudrun_sa_roles" {
     "roles/iam.serviceAccountTokenCreator",
   ]
 }
+
+variable "databricks_sa_roles" {
+  type        = list(string)
+  description = "List of IAM roles to grant to the Databricks service account."
+  default = [
+    
+  ]
+}

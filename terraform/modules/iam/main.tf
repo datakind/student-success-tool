@@ -33,3 +33,15 @@ resource "google_service_account" "terraform_sa" {
   account_id   = "${var.environment}-terraform-sa"
   display_name = "Terraform Service Account"
 }
+
+resource "google_service_account" "databricks_sa" {
+  account_id   = "${var.environment}-databricks-sa"
+  display_name = "Databricks Service Account"
+}
+
+resource "google_project_iam_member" "databricks_sa_member" {
+  for_each = toset(var.databricks_sa_roles)
+  project  = var.project
+  role     = each.key
+  member   = "serviceAccount:${google_service_account.databricks_sa.email}"
+}
