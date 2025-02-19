@@ -1,7 +1,7 @@
 resources:
   jobs:
     poc_github_sourced_pdp_inference_pipeline:
-      name: poc-github_sourced_pdp_inference_pipeline
+      name: poc_github_sourced_pdp_inference_pipeline
       max_concurrent_runs: 2
       tasks:
         - task_key: Need_synthetic_data
@@ -14,7 +14,7 @@ resources:
             - task_key: Need_synthetic_data
               outcome: "true"
           notebook_task:
-            notebook_path: poc-pipelines/tasks/sst_pdp_synthetic_data_generation/synthetic_data_generation_pipeline_task
+            notebook_path: pipelines/tasks/sst_pdp_synthetic_data_generation/synthetic_data_generation_pipeline_task
             base_parameters:
               seed: ""
               num_students: "300"
@@ -37,7 +37,7 @@ resources:
             - task_key: generate_synthetic_data
           run_if: AT_LEAST_ONE_SUCCESS
           notebook_task:
-            notebook_path: poc-pipelines/tasks/sst_pdp_data_ingestion/data_ingestion_pipeline_task
+            notebook_path: pipelines/tasks/sst_pdp_data_ingestion/data_ingestion_pipeline_task
             source: GIT
           job_cluster_key: pdp-inference-pipeline-cluster
           libraries:
@@ -51,7 +51,7 @@ resources:
           depends_on:
             - task_key: data_ingestion
           notebook_task:
-            notebook_path: poc-pipelines/tasks/sst_pdp_data_processing/data_processing_pipeline_task
+            notebook_path: pipelines/tasks/sst_pdp_data_processing/data_processing_pipeline_task
             source: GIT
           job_cluster_key: pdp-inference-pipeline-cluster
           libraries:
@@ -65,14 +65,14 @@ resources:
           depends_on:
             - task_key: data_processing
           notebook_task:
-            notebook_path: poc-pipelines/tasks/sst_pdp_data_validation/data_validation_pipeline_task
+            notebook_path: pipelines/tasks/sst_pdp_data_validation/data_validation_pipeline_task
             source: GIT
           job_cluster_key: pdp-inference-pipeline-cluster
         - task_key: inference
           depends_on:
             - task_key: data_validation
           notebook_task:
-            notebook_path: poc-pipelines/tasks/sst_pdp_model_inference/model_inference_pipeline_task
+            notebook_path: pipelines/tasks/sst_pdp_model_inference/model_inference_pipeline_task
             source: GIT
           job_cluster_key: pdp-inference-pipeline-cluster
           libraries:
@@ -99,7 +99,7 @@ resources:
               spark.databricks.cluster.profile: singleNode
             gcp_attributes:
               use_preemptible_executors: false
-              google_service_account: <PIPELINE SERVICE ACCOUNT>
+              google_service_account: <PIPELINE_SERVICE_ACCOUNT>
               availability: ON_DEMAND_GCP
               zone_id: HA
             node_type_id: n2-highmem-4
