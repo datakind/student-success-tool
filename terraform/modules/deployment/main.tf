@@ -1,3 +1,10 @@
+resource "google_project_service" "services" {
+  for_each = toset(var.required_services)
+
+  service            = each.value
+  disable_on_destroy = false
+}
+
 module "network" {
   source = "../network"
 
