@@ -2,9 +2,10 @@
 
 This directory contains the Terraform configuration for the Student Success Tool. The configuration is organized into different environments, such as `dev`, `staging`, and `prod`.
 
-## Prerequesites
+## Prerequisites
 
 - [Install the Terraform CLI Tool](https://developer.hashicorp.com/terraform/install)
+- [Install](https://cloud.google.com/sdk/docs/install) & [Setup](https://cloud.google.com/sdk/docs/initializing) the gcloud CLI
 
 ## Environments
 
@@ -36,10 +37,11 @@ environments/
 
 Example tfvars file:
 ```sh
-domain         = "sst.datakind.org"
-frontend_image = "us-docker.pkg.dev/cloudrun/container/placeholder"
-webapp_image   = "us-docker.pkg.dev/cloudrun/container/placeholder"
-project        = "my-project-id"
+project              = "example-project-id"
+domain               = "example.datakind.org"
+vpc_host_network     = "example-shared-vpc-network"
+vpc_host_project     = "example-shared-vpc-project"
+subnet_ip_cidr_range = "10.1.0.0/24" # A unique range within the vpc_host_project
 ```
 
 ## Application of the Configuration
@@ -77,11 +79,11 @@ To ensure that your environment is properly set up, you need to register the IP 
 
 Here's how you can do it:
 
-[Obtain the IP Address](https://console.cloud.google.com/net-services/loadbalancing/details/http/dev-tf-cr-url-map-1): After setting up your load balancer, you will receive a Frontend IP address. This IP address is what you will use to point your domain to your load balancer.
+*Get the IP Address*: After applying the templates get the IP address of url map [load balancer](https://console.cloud.google.com/net-services/loadbalancing/list/loadBalancers) (not the http redirect). 
 
-Update DNS Records: Go to your domain registrar's DNS settings and create an A record. The A record should point your domain (e.g., www.example.com) to the IP address of your load balancer.
+*Update DNS Records*: Go to your domain registrar's DNS settings and create an A record. The A record should point your domain (e.g., www.example.com) to the IP address of your load balancer.
 
-Verify the Setup: After updating the DNS records, it may take some time for the changes to propagate. Once propagated, accessing your domain should route traffic through the load balancer to your application.
+*Verify the Setup*: After updating the DNS records, it may take some time for the changes to propagate. Once propagated, accessing your domain should route traffic through the load balancer to your application.
 
 Here's an example of how you might update your DNS settings:
 
@@ -90,16 +92,6 @@ Type: A
 Name: @ (or your subdomain, e.g., www)
 Value: [Your Load Balancer IP Address]
 TTL: 3600 (or your preferred TTL)
-```
-
-### Initial Environment Setup
-
-For the initial environment setup, use placeholder images like the "Hello World" example for Cloud Run, as the images for the web application and frontend UI will not exist yet. These placeholder images will take the place of the `webapp_image` and `frontend_image` variables.
-
-Example placeholder images:
-
-```sh
-terraform apply -var="webapp_image=gcr.io/cloudrun/hello" -var="frontend_image=gcr.io/cloudrun/hello"
 ```
 
 ## Configuration Details
