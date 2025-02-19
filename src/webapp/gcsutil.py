@@ -126,16 +126,17 @@ class StorageControl(BaseModel):
             # fmt: on
         bucket.storage_class = "STANDARD"
         # Grant object admin access to the specified service account.
-        bucket.policy.bindings = [
+        new_bucket = storage_client.create_bucket(
+            bucket, location=gcs_vars["GCP_REGION"]
+        )
+        policy = new_bucket.get_iam_policy(requested_policy_version=3)
+        policy.bindings.append(
             {
                 "role": "roles/storage.objectAdmin",
                 "members": {"serviceAccount:" + gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"]},
             }
-        ]
-        bucket.policy.version = 3
-        new_bucket = storage_client.create_bucket(
-            bucket, location=gcs_vars["GCP_REGION"]
         )
+        new_bucket.set_iam_policy(policy)
 
     def list_blobs_in_folder(
         self, bucket_name: str, prefix: str, delimiter=None

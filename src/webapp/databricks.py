@@ -63,17 +63,31 @@ class DatabricksControl(BaseModel):
             w.schemas.create(name=f"{db_inst_name}_{medallion}", catalog_name=cat_name)
             print("xxxxxxxxxxxxxxxxxxxxxx2")
         # Create a managed volume in the bronze schema for internal pipeline data.
+        # update to include a managed volume for toml files
         print("xxxxxxxxxxxxxxxxxxxxxx3")
-        created_volume = w.volumes.create(
+        created_volume_bronze = w.volumes.create(
             catalog_name=cat_name,
             schema_name=f"{db_inst_name}_bronze",
             name=f"pipeline_internal",
             volume_type=catalog.VolumeType.MANAGED,
         )
+        created_volume_gold = w.volumes.create(
+            catalog_name=cat_name,
+            schema_name=f"{db_inst_name}_gold",
+            name=f"gold_volume",
+            volume_type=catalog.VolumeType.MANAGED,
+        )
+
+        # Create directory on the volume
+        os.makedirs(
+            f"/Volumes/{cat_name}/{db_inst_name}_gold/gold_volume/configuration_files/",
+            exist_ok=True,
+        )
+
         print("xxxxxxxxxxxxxxxxxxxxxx4")
         # Create directory on the volume
         os.makedirs(
-            f"/Volumes/{cat_name}/{db_inst_name}_bronze/pipeline_internal/configuration_files/",
+            f"/Volumes/{cat_name}/{db_inst_name}_bronze/pipeline_internal/files/",
             exist_ok=True,
         )
         print("xxxxxxxxxxxxxxxxxxxxxx6")
