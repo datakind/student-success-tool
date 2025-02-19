@@ -167,7 +167,7 @@ resource "google_compute_url_map" "url_map" {
     }
 
     path_rule {
-      paths   = ["/~/worker", "/~/worker/*"]
+      paths   = ["/worker", "/worker/*"]
       service = module.lb-http.backend_services["${var.environment}-webapp"].self_link
     }
 
@@ -221,12 +221,13 @@ resource "google_iap_web_backend_service_iam_policy" "web_backend_service_iam_po
 module "cloudbuild" {
   source = "../cloudbuild"
 
-  project        = var.project
-  domain         = var.domain
-  environment    = var.environment
-  region         = var.region
-  webapp_image   = var.webapp_image
-  frontend_image = var.frontend_image
+  project              = var.project
+  domain               = var.domain
+  environment          = var.environment
+  region               = var.region
+  subnet_ip_cidr_range = var.subnet_ip_cidr_range
+  vpc_host_network     = var.vpc_host_network
+  vpc_host_project     = var.vpc_host_project
 
   cloudbuild_service_account_id = module.iam.cloudbuild_service_account_id
   terraform_service_account_id  = module.iam.terraform_service_account_id
