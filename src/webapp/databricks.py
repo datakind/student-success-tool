@@ -80,48 +80,36 @@ class DatabricksControl(BaseModel):
         self, req: DatabricksInferenceRunRequest
     ) -> DatabricksInferenceRunResponse:
         """Triggers PDP inference Databricks run."""
-        """
         if (
-            not req.file_to_type or SchemaType.PDP_COURSE not in req.file_to_type.values()
+            not req.file_to_type
+            or SchemaType.PDP_COURSE not in req.file_to_type.values()
             or SchemaType.PDP_COHORT not in req.file_to_type.values()
         ):
             raise ValueError(
                 "run_pdp_inference() requires PDP_COURSE and PDP_COHORT type files to run."
             )
-        """
-        print("xxxxxxxxxxxxxxxxxxxx1")
-        print("xxxxx:" + databricks_vars["DATABRICKS_HOST_URL"])
-        print("xxxxx:" + gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"])
         w = WorkspaceClient(
             host=databricks_vars["DATABRICKS_HOST_URL"],
             google_service_account=gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"],
         )
-        print("xxxxxxxxxxxxxxxxxxxx2")
         db_inst_name = databricksify_inst_name(req.inst_name)
-        print("xxxxxxxxxxxxxxxxxxxx3")
         job_id = next(w.jobs.list(name=pdp_inference_job_name)).job_id
-        # TODO xxxx delete hardcoded values
-        print("xxxxxxxxxxxxxxxxxxxx4")
         run_job = w.jobs.run_now(
             job_id,
             job_parameters={
-                "cohort_file_name": "standard_pdp_institution_sample_STUDENT_SEMESTER_AR_DEIDENTIFIED.csv",
-                # get_filepath_of_filetype(
-                #    req.file_to_type, SchemaType.PDP_COHORT
-                # ),
-                "course_file_name": "standard_pdp_institution_sample_COURSE_LEVEL_AR_DEID.csv",
-                # get_filepath_of_filetype(
-                #    req.file_to_type, SchemaType.PDP_COURSE
-                # ),
-                "institution_id": "standard_pdp_institution",  # db_inst_name,
-                # "sst_job_id": f"{institution_id}_inference_job_id_{str(random.randint(1, 1000))}",
+                "cohort_file_name": get_filepath_of_filetype(
+                    req.file_to_type, SchemaType.PDP_COHORT
+                ),
+                "course_file_name": get_filepath_of_filetype(
+                    req.file_to_type, SchemaType.PDP_COURSE
+                ),
+                "institution_id": db_inst_name,
                 "DB_workspace": databricks_vars[
                     "DATABRICKS_WORKSPACE"
-                ],  # is this value the same PER environemtn? dev/staging/prod
-                "model_name": "latest_enrollment_model",  # req.model_name,
+                ],  # is this value the same PER environ? dev/staging/prod
+                "model_name": req.model_name,
                 "model_type": req.model_type,
-                # "notification_email": req.email,
+                "notification_email": req.email,
             },
         )
-        print("xxxxxxxxxxxxxxxxxxxx5")
         return DatabricksInferenceRunResponse(job_run_id=run_job.response.run_id)
