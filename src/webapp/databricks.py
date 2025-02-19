@@ -90,6 +90,8 @@ class DatabricksControl(BaseModel):
             )
         """
         print("xxxxxxxxxxxxxxxxxxxx1")
+        print("xxxxx:" + databricks_vars["DATABRICKS_HOST_URL"])
+        print("xxxxx:" + gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"])
         w = WorkspaceClient(
             host=databricks_vars["DATABRICKS_HOST_URL"],
             google_service_account=gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"],

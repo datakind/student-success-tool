@@ -125,6 +125,7 @@ def startup_env_vars():
                     + name
                     + " value missing. Required Databricks integration environment variable."
                 )
+            databricks_vars[name] = env_var
 
 
 # Setup function to get db environment variables. Should be called at db startup time.
