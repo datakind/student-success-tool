@@ -33,4 +33,6 @@ module "deployment" {
   webapp_image         = var.webapp_image
   frontend_image       = var.frontend_image
   subnet_ip_cidr_range = var.subnet_ip_cidr_range
+  vpc_host_network     = var.vpc_host_network
+  vpc_host_project     = var.vpc_host_project
 }

@@ -16,3 +16,11 @@ variable "environment" {
 variable "subnet_ip_cidr_range" {
   type = string
 }
+
+variable "vpc_host_project" {
+  type = string
+}
+
+variable "vpc_host_network" {
+  type = string
+}

@@ -11,8 +11,8 @@ resource "google_compute_network" "vpc_network" {
 }
 
 data "google_compute_network" "vpc_network" {
-  name    = "prod-shared-vpc-network-01"
-  project = "prod-shared-vpc-project-01"
+  name    = var.vpc_host_network
+  project = var.vpc_host_project
 }
 
 resource "google_compute_subnetwork" "subnetwork" {
@@ -20,7 +20,7 @@ resource "google_compute_subnetwork" "subnetwork" {
   network       = data.google_compute_network.vpc_network.id
   region        = var.region
   ip_cidr_range = var.subnet_ip_cidr_range
-  project       = "prod-shared-vpc-project-01"
+  project       = var.vpc_host_project
 }
 
 resource "google_compute_global_address" "connector_ip" {
@@ -29,12 +29,11 @@ resource "google_compute_global_address" "connector_ip" {
   address_type  = "INTERNAL"
   prefix_length = 16
   network       = data.google_compute_network.vpc_network.id
-  project       = "prod-shared-vpc-project-01"
+  project       = var.vpc_host_project
 }
 
 resource "google_service_networking_connection" "connection" {
   network                 = data.google_compute_network.vpc_network.id
   service                 = "servicenetworking.googleapis.com"
   reserved_peering_ranges = [google_compute_global_address.connector_ip.name]
-
 }

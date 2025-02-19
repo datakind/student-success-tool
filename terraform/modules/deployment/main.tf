@@ -1,16 +1,11 @@
-resource "google_project_service" "services" {
-  for_each = toset(var.required_services)
-
-  service            = each.value
-  disable_on_destroy = false
-}
-
 module "network" {
   source = "../network"
 
   environment          = var.environment
   region               = var.region
   subnet_ip_cidr_range = var.subnet_ip_cidr_range
+  vpc_host_network     = var.vpc_host_network
+  vpc_host_project     = var.vpc_host_project
 }
 
 module "iam" {
@@ -172,8 +167,8 @@ resource "google_compute_url_map" "url_map" {
     }
 
     path_rule {
-      paths   = ["/worker", "/worker/*"]
-      service = module.lb-http.backend_services["${var.environment}-worker"].self_link
+      paths   = ["/~/worker", "/~/worker/*"]
+      service = module.lb-http.backend_services["${var.environment}-webapp"].self_link
     }
 
     path_rule {
@@ -207,7 +202,6 @@ resource "google_compute_backend_bucket" "build" {
   enable_cdn  = true
 }
 
-# TODO disable this for the prod deployment
 data "google_iam_policy" "admin" {
   binding {
     role = "roles/iap.httpsResourceAccessor"
@@ -217,6 +211,7 @@ data "google_iam_policy" "admin" {
   }
 }
 
+# TODO: disable this for the prod environment
 resource "google_iap_web_backend_service_iam_policy" "web_backend_service_iam_policy" {
   for_each            = module.lb-http.backend_services
   web_backend_service = each.value.name

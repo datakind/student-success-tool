@@ -52,5 +52,16 @@ variable "frontend_image" {
 }
 
 variable "subnet_ip_cidr_range" {
-  type = string
+  description = "The CIDR range for the subnet"
+  type        = string
+}
+
+variable "vpc_host_project" {
+  description = "The project ID of the VPC host"
+  type        = string
+}
+
+variable "vpc_host_network" {
+  description = "The name of the VPC host network"
+  type        = string
 }
