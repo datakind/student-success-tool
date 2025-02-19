@@ -28,23 +28,23 @@ variable "database_name" {
   default     = "all_tables"
 }
 
-variable "domain" {
-  description = "The domain name"
-  type        = string
-}
-
 variable "webapp_image" {
   description = "Image for the webapp service"
-  type        = string
+  default     = "us-docker.pkg.dev/cloudrun/container/placeholder"
 }
 
 variable "worker_image" {
   description = "Image for the worker service"
-  type        = string
+  default     = "us-docker.pkg.dev/cloudrun/container/placeholder"
 }
 
 variable "frontend_image" {
   description = "Image for the frontend service"
+  default     = "us-docker.pkg.dev/cloudrun/container/placeholder"
+}
+
+variable "domain" {
+  description = "The domain name"
   type        = string
 }
 

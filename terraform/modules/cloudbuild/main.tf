@@ -190,15 +190,6 @@ resource "google_cloudbuild_trigger" "frontend" {
 resource "google_cloudbuild_trigger" "terraform" {
   name            = "${var.environment}-terraform"
   service_account = var.terraform_service_account_id
-  substitutions = {
-    "_PROJECT"        = var.project
-    "_REGION"         = var.region
-    "_ENVIRONMENT"    = var.environment
-    "_DOMAIN"         = var.domain
-    "_WEBAPP_IMAGE"   = "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/webapp:latest"
-    "_WORKER_IMAGE"   = "${var.region}-docker.pkg.dev/${var.project}/student-success-tool/worker:latest"
-    "_FRONTEND_IMAGE" = "${var.region}-docker.pkg.dev/${var.project}/sst-app-ui/frontend:latest"
-  }
   source_to_build {
     ref       = "refs/heads/fellows-experimental"
     repo_type = "GITHUB"
@@ -217,19 +208,15 @@ resource "google_cloudbuild_trigger" "terraform" {
         "apply",
         "-auto-approve",
         "-var",
-        "project=$_PROJECT",
+        "project=${var.project}",
         "-var",
-        "region=$_REGION",
+        "domain=${var.domain}",
         "-var",
-        "environment=$_ENVIRONMENT",
+        "subnet_ip_cidr_range=${var.subnet_ip_cidr_range}",
         "-var",
-        "webapp_image=$_WEBAPP_IMAGE",
+        "vpc_host_project=${var.vpc_host_project}",
         "-var",
-        "worker_image=$_WORKER_IMAGE",
-        "-var",
-        "frontend_image=$_FRONTEND_IMAGE",
-        "-var",
-        "domain=$_DOMAIN",
+        "vpc_host_network=${var.vpc_host_network}",
       ]
     }
     options {
