@@ -22,7 +22,6 @@ variable "cloudbuild_sa_roles" {
     "roles/compute.instanceAdmin.v1",
     "roles/compute.networkUser",
     "roles/iam.serviceAccountUser",
-    "roles/secretmanager.secretAccessor",
     "roles/storage.objectCreator",
     "roles/run.developer",
   ]
@@ -33,5 +32,6 @@ variable "cloudrun_sa_roles" {
   description = "List of IAM roles to grant to the Cloud Run service account."
   default = [
     "roles/run.viewer",
+    "roles/iam.serviceAccountTokenCreator",
   ]
 }
