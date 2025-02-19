@@ -209,7 +209,7 @@ def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
                 "term_rank_fall_spring",
                 "term_is_fall_spring",
                 # columns used to derive other features, but not features themselves
-                "grade",
+                # "grade",  # TODO: should this be course_grade?
                 "course_ids",
                 "course_subjects",
                 "course_subject_areas",

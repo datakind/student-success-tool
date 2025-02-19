@@ -4,6 +4,7 @@ import typing as t
 import uuid
 from collections.abc import Sequence
 
+import matplotlib.axes
 import matplotlib.figure
 import matplotlib.pyplot as plt
 import mlflow
@@ -11,8 +12,9 @@ import mlflow.artifacts
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import sklearn.inspection
+import sklearn.metrics
 from sklearn.calibration import calibration_curve
-from sklearn.metrics import recall_score
 from statsmodels.nonparametric.smoothers_lowess import lowess
 
 # TODO: eventually we should use the custom_style.mplstyle colors, but currently
@@ -200,7 +202,7 @@ def get_sensitivity_of_top_q_pctl_thresh(
     # convert actual outcome to booleans to match high_risk array
     y_true = y_true.apply(lambda x: True if x == pos_label else False)
 
-    result = recall_score(y_true, high_risk)
+    result = sklearn.metrics.recall_score(y_true, high_risk)
     assert isinstance(result, float)
     return result
 
@@ -460,3 +462,40 @@ def create_evaluation_plots_by_subgroup(
     )
 
     return cal_subgroup_plot, sla_subgroup_plot
+
+
+def plot_features_permutation_importance(
+    model: sklearn.base.BaseEstimator,
+    features: pd.DataFrame,
+    target: pd.Series,
+    scoring: t.Optional[str | t.Callable] = None,
+    sample_weight: t.Optional[np.ndarray] = None,
+    random_state: t.Optional[int] = None,
+) -> matplotlib.axes.Axes:
+    """
+    See Also:
+        - https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html
+        - https://scikit-learn.org/stable/modules/model_evaluation.html#callable-scorers
+    """
+    result = sklearn.inspection.permutation_importance(
+        model,
+        features,
+        target,
+        scoring=scoring,
+        n_repeats=5,
+        sample_weight=sample_weight,
+        random_state=random_state,
+    )
+    assert not isinstance(result, dict)  # type guard
+    sorted_importances_idx = result.importances_mean.argsort()
+    importances = pd.DataFrame(
+        result.importances[sorted_importances_idx].T,
+        columns=features.columns[sorted_importances_idx],
+    )
+    ax = importances.plot.box(vert=False, whis=10, figsize=(10, 10))
+    ax.set_title("Permutation Feature Importances")
+    ax.axvline(x=0, color="k", linestyle="--")
+    ax.set_xlabel("Decrease in score")
+    # ugh mypy is so stupid
+    assert isinstance(ax, matplotlib.axes.Axes)  # type guard
+    return ax
