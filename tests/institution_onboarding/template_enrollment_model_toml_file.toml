@@ -20,6 +20,7 @@ preprocessed = { table_path = "CATALOG.SCHEMA.TABLE_NAME" }
 splits = { train = 0.6, test = 0.2, validate = 0.2 }
 sample_class_weight = "balanced"
 
+
 [preprocessing.features]
 min_passing_grade = 1.0
 min_num_credits_full_time = 12
@@ -30,12 +31,14 @@ key_course_ids = ["ENGL101", "MATH101"]
 
 [preprocessing.target]
 params = { min_num_credits_checkin = 1.0, min_num_credits_target = 1.0 }
-student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year_1 = "Bachelor's Degree" }
+student_criteria = { enrollment_type = ["FIRST-TIME", "RE-ADMIT", "TRANSFER-IN"]}
+
 
 [modeling.feature_selection]
 incomplete_threshold = 0.5
 low_variance_threshold = 0.0
 collinear_threshold = 10.0
+
 
 [modeling.training]
 # exclude_frameworks = ["xgboost", "lightgbm"]
