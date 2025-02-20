@@ -33,6 +33,7 @@ variable "cloudrun_sa_roles" {
   default = [
     "roles/run.viewer",
     "roles/iam.serviceAccountTokenCreator",
+    "roles/storage.admin",
   ]
 }
 
