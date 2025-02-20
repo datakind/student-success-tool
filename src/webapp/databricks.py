@@ -13,7 +13,7 @@ from .utilities import databricksify_inst_name, SchemaType
 
 medallion_levels = ["silver", "gold", "bronze"]  # List of data medallion levels
 # For every unique pipeline with unique param sets, you'll need a separate name.
-pdp_inference_job_name = "pdp_inference_pipeline"  # can this be the job name for every inst or does it havve to be inst specific
+pdp_inference_job_name = "development_crystal_pdp_inference_pipeline"  # "pdp_inference_pipeline"  # can this be the job name for every inst or does it havve to be inst specific
 
 
 class DatabricksInferenceRunRequest(BaseModel):
@@ -26,6 +26,7 @@ class DatabricksInferenceRunRequest(BaseModel):
     model_type: str = "sklearn"
     # The email where notifications will get sent.
     email: str
+    gcp_external_bucket_name: str
 
 
 class DatabricksInferenceRunResponse(BaseModel):
@@ -55,20 +56,16 @@ class DatabricksControl(BaseModel):
             google_service_account=gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"],
         )
         db_inst_name = databricksify_inst_name(inst_name)
-        print("xxxxxxxxxxxxxxxxxxxxxx1")
-        print(db_inst_name)
         cat_name = databricks_vars["CATALOG_NAME"]
         print(cat_name)
         for medallion in medallion_levels:
             w.schemas.create(name=f"{db_inst_name}_{medallion}", catalog_name=cat_name)
-            print("xxxxxxxxxxxxxxxxxxxxxx2")
         # Create a managed volume in the bronze schema for internal pipeline data.
         # update to include a managed volume for toml files
-        print("xxxxxxxxxxxxxxxxxxxxxx3")
         created_volume_bronze = w.volumes.create(
             catalog_name=cat_name,
             schema_name=f"{db_inst_name}_bronze",
-            name=f"pipeline_internal",
+            name=f"bronze_volume",
             volume_type=catalog.VolumeType.MANAGED,
         )
         created_volume_gold = w.volumes.create(
@@ -77,20 +74,6 @@ class DatabricksControl(BaseModel):
             name=f"gold_volume",
             volume_type=catalog.VolumeType.MANAGED,
         )
-
-        # Create directory on the volume
-        os.makedirs(
-            f"/Volumes/{cat_name}/{db_inst_name}_gold/gold_volume/configuration_files/",
-            exist_ok=True,
-        )
-
-        print("xxxxxxxxxxxxxxxxxxxxxx4")
-        # Create directory on the volume
-        os.makedirs(
-            f"/Volumes/{cat_name}/{db_inst_name}_bronze/pipeline_internal/files/",
-            exist_ok=True,
-        )
-        print("xxxxxxxxxxxxxxxxxxxxxx6")
 
     """Note that for each unique PIPELINE, we'll need a new function, this is by nature of how unique pipelines 
     may have unique parameters and would have a unique name (i.e. the name field specified in w.jobs.list()). But any run of a given pipeline (even across institutions) can use the same function. 
@@ -123,10 +106,11 @@ class DatabricksControl(BaseModel):
                 "course_file_name": get_filepath_of_filetype(
                     req.file_to_type, SchemaType.PDP_COURSE
                 ),
-                "institution_id": db_inst_name,
+                "databricks_institution_name": db_inst_name,
                 "DB_workspace": databricks_vars[
                     "DATABRICKS_WORKSPACE"
                 ],  # is this value the same PER environ? dev/staging/prod
+                "gcp_bucket_name": req.gcp_external_bucket_name,
                 "model_name": req.model_name,
                 "model_type": req.model_type,
                 "notification_email": req.email,

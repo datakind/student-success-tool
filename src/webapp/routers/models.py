@@ -596,6 +596,7 @@ def trigger_inference_run(
         inst_name=inst_result[0][0].name,
         filepath_to_type=convert_files_to_dict(batch_result[0][0].files),
         model_name=model_name,
+        gcp_external_bucket_name=get_external_bucket_name(inst_id),
         # The email to which pipeline success/failure notifications will get sent.
         email=current_user.email,
     )
