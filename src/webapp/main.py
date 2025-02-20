@@ -101,7 +101,7 @@ async def shutdown_event():
 @app.get("/")
 def read_root() -> Any:
     """Returns the index.html file."""
-    return FileResponse("src/webapp/index.html")
+    return FileResponse("index.html")
 
 
 @app.post("/token")
