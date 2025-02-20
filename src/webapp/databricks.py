@@ -12,7 +12,7 @@ from .config import databricks_vars, gcs_vars
 from .utilities import databricksify_inst_name, SchemaType
 
 
-# initialize a datakinder account
+# TODO initialize a datakinder account
 
 medallion_levels = ["silver", "gold", "bronze"]  # List of data medallion levels
 # For every unique pipeline with unique param sets, you'll need a separate name.
@@ -71,12 +71,6 @@ class DatabricksControl(BaseModel):
             catalog_name=cat_name,
             schema_name=f"{db_inst_name}_bronze",
             name=f"bronze_volume",
-            volume_type=catalog.VolumeType.MANAGED,
-        )
-        created_volume_bronze_sample = w.volumes.create(
-            catalog_name=cat_name,
-            schema_name=f"{db_inst_name}_bronze",
-            name=f"sample_data",
             volume_type=catalog.VolumeType.MANAGED,
         )
         created_volume_silver = w.volumes.create(
