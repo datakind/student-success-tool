@@ -36,7 +36,7 @@ ssl_env_vars = {
 }
 
 gcs_vars = {
-    # "GCP_SERVICE_ACCOUNT_KEY_PATH": "",
+    "GCP_SERVICE_ACCOUNT_KEY_PATH": "",
     "GCP_REGION": "",
     "GCP_SERVICE_ACCOUNT_EMAIL": "",
 }
