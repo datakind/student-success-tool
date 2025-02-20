@@ -34,6 +34,7 @@ variable "cloudrun_sa_roles" {
     "roles/run.viewer",
     "roles/iam.serviceAccountTokenCreator",
     "roles/storage.admin",
+    "roles/secretmanager.secretAccessor",
   ]
 }
 
