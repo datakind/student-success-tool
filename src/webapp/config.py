@@ -54,6 +54,8 @@ databricks_vars = {
     "CATALOG_NAME": "",
     "DATABRICKS_WORKSPACE": "",
     "DATABRICKS_HOST_URL": "",
+    # The service account that is used in Databricks to access GCP buckets.
+    "DATABRICKS_SERVICE_ACCOUNT_EMAIL": "",
 }
 
 

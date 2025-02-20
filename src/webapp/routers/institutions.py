@@ -19,7 +19,6 @@ from ..utilities import (
     BaseUser,
     AccessType,
     get_external_bucket_name_from_uuid,
-    get_internal_bucket_name_from_uuid,
     str_to_uuid,
     uuid_to_str,
     get_current_active_user,
@@ -202,12 +201,10 @@ def create_institution(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Database write of the institution created duplicate entries.",
             )
-        # Create an internal and external storage bucket for it. During creation, we have to include the /.
+        # Create a storage bucket for it. During creation, we have to include the /.
         bucket_name = get_external_bucket_name_from_uuid(query_result[0][0].id)
-        internal_bucket_name = get_internal_bucket_name_from_uuid(query_result[0][0].id)
         try:
             storage_control.create_bucket(bucket_name)
-            storage_control.create_bucket(internal_bucket_name)
         except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

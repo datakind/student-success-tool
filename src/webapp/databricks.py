@@ -11,6 +11,9 @@ from databricks.sdk.service import catalog
 from .config import databricks_vars, gcs_vars
 from .utilities import databricksify_inst_name, SchemaType
 
+
+# initialize a datakinder account
+
 medallion_levels = ["silver", "gold", "bronze"]  # List of data medallion levels
 # For every unique pipeline with unique param sets, you'll need a separate name.
 pdp_inference_job_name = "development_crystal_pdp_inference_pipeline"  # "pdp_inference_pipeline"  # can this be the job name for every inst or does it havve to be inst specific
@@ -53,6 +56,8 @@ class DatabricksControl(BaseModel):
         """Sets up Databricks resources for a new institution."""
         w = WorkspaceClient(
             host=databricks_vars["DATABRICKS_HOST_URL"],
+            # This should still be cloud run, since it's cloud run triggering the databricks
+            # this account needs to exist on Databricks as well and needs to hvae the creation and job management permissions
             google_service_account=gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"],
         )
         db_inst_name = databricksify_inst_name(inst_name)
@@ -68,11 +73,34 @@ class DatabricksControl(BaseModel):
             name=f"bronze_volume",
             volume_type=catalog.VolumeType.MANAGED,
         )
+        created_volume_bronze_sample = w.volumes.create(
+            catalog_name=cat_name,
+            schema_name=f"{db_inst_name}_bronze",
+            name=f"sample_data",
+            volume_type=catalog.VolumeType.MANAGED,
+        )
+        created_volume_silver = w.volumes.create(
+            catalog_name=cat_name,
+            schema_name=f"{db_inst_name}_silver",
+            name=f"silver_volume",
+            volume_type=catalog.VolumeType.MANAGED,
+        )
         created_volume_gold = w.volumes.create(
             catalog_name=cat_name,
             schema_name=f"{db_inst_name}_gold",
             name=f"gold_volume",
             volume_type=catalog.VolumeType.MANAGED,
+        )
+
+        # Create directory on the volume
+        os.makedirs(
+            f"/Volumes/{cat_name}/{db_inst_name}_gold/gold_volume/configuration_files/",
+            exist_ok=True,
+        )
+        # Create directory on the volume
+        os.makedirs(
+            f"/Volumes/{cat_name}/{db_inst_name}_bronze/bronze_volume/raw_files/",
+            exist_ok=True,
         )
 
     """Note that for each unique PIPELINE, we'll need a new function, this is by nature of how unique pipelines 

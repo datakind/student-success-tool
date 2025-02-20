@@ -8,7 +8,7 @@ from google.cloud import storage, storage_control_v2
 from google.cloud.storage import Client
 from google.cloud.storage_control_v2 import StorageControlClient
 from typing import Any
-from .config import gcs_vars
+from .config import gcs_vars, databricks_vars
 from .validation import validate_file_reader, SchemaType
 from .utilities import (
     SchemaType,
@@ -114,16 +114,15 @@ class StorageControl(BaseModel):
             }
         ]
         # fmt: on
-        # For external facing buckets, apply TTL to unvalidated files. This may occur if an API caller uploads but doesn't call validate.
-        if not bucket_name.endswith("_internal"):
-            # fmt: off
-            bucket.lifecycle_rules = [
-                {
-                "action": {"type": "Delete"},
-                "condition": {"age": 1, "matchesPrefix": ["unvalidated/"]}
-                }
-            ]
-            # fmt: on
+        # Apply TTL to unvalidated files. This may occur if an API caller uploads but doesn't call validate.
+        # fmt: off
+        bucket.lifecycle_rules = [
+            {
+            "action": {"type": "Delete"},
+            "condition": {"age": 1, "matchesPrefix": ["unvalidated/"]}
+            }
+        ]
+        # fmt: on
         bucket.storage_class = "STANDARD"
         # Grant object admin access to the specified service account.
         new_bucket = storage_client.create_bucket(
@@ -133,7 +132,11 @@ class StorageControl(BaseModel):
         policy.bindings.append(
             {
                 "role": "roles/storage.objectAdmin",
-                "members": {"serviceAccount:" + gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"]},
+                # The account triggering the job is not the same as the account reading the buckets content INSIDE the job. This is the account reading the buckets from within Databricks accounts.
+                "members": {
+                    "serviceAccount:"
+                    + databricks_vars["DATABRICKS_SERVICE_ACCOUNT_EMAIL"]
+                },
             }
         )
         new_bucket.set_iam_policy(policy)

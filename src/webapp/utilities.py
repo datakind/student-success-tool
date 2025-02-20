@@ -389,11 +389,6 @@ def get_external_bucket_name_from_uuid(inst_id: uuid.UUID) -> str:
     return prepend_env_prefix(uuid_to_str(inst_id))
 
 
-def get_internal_bucket_name_from_uuid(inst_id: uuid.UUID) -> str:
-    """Creates an internal bucket <bucket_name>-internal used only for tmp file storage and other files stored by the webapp."""
-    return get_external_bucket_name_from_uuid(inst_id) + "_internal"
-
-
 def get_external_bucket_name(inst_id: str) -> str:
     return prepend_env_prefix(inst_id)
 
