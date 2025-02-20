@@ -561,7 +561,7 @@ def trigger_inference_run(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Unexpected number of models found: Expected 1, got "
-            + str(len(inst_result)),
+            + str(len(query_result)),
         )
 
     # Get all the files in the batch and check that it matches the model specifications.
