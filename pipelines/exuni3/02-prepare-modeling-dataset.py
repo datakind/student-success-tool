@@ -33,7 +33,6 @@
 
 import sys
 import logging
-import numpy as np
 import pandas as pd
 import seaborn as sb
 from databricks.connect import DatabricksSession
@@ -249,7 +248,7 @@ df_labeled = df_labeled.drop(future_cols, axis=1)
 
 # COMMAND ----------
 
-df_labeled_selected.isna().mean(axis="index").sort_values(ascending=False)[:15]
+df_labeled.isna().mean(axis="index").sort_values(ascending=False)[:15]
 
 # COMMAND ----------
 
