@@ -14,9 +14,9 @@ from .utilities import databricksify_inst_name, SchemaType
 
 # TODO initialize a datakinder account
 
-medallion_levels = ["silver", "gold", "bronze"]  # List of data medallion levels
-# For every unique pipeline with unique param sets, you'll need a separate name.
-pdp_inference_job_name = "development_crystal_pdp_inference_pipeline"  # "pdp_inference_pipeline"  # can this be the job name for every inst or does it havve to be inst specific
+# List of data medallion levels
+medallion_levels = ["silver", "gold", "bronze"]
+pdp_inference_job_name = "pdp_inference_pipeline"
 
 
 class DatabricksInferenceRunRequest(BaseModel):
@@ -47,6 +47,13 @@ def get_filepath_of_filetype(
         if file_type in v:
             return k
     return ""
+
+
+def check_types(dict_values, file_type: SchemaType):
+    for elem in dict_values:
+        if file_type in elem:
+            return True
+    return False
 
 
 # Wrapping the usages in a class makes it easier to unit test via mocks.
@@ -108,8 +115,8 @@ class DatabricksControl(BaseModel):
         """Triggers PDP inference Databricks run."""
         if (
             not req.filepath_to_type
-            or SchemaType.PDP_COURSE not in req.filepath_to_type.values()
-            or SchemaType.PDP_COHORT not in req.filepath_to_type.values()
+            or not check_types(req.filepath_to_type.values(), SchemaType.PDP_COURSE)
+            or not check_types(req.filepath_to_type.values(), SchemaType.PDP_COHORT)
         ):
             raise ValueError(
                 "run_pdp_inference() requires PDP_COURSE and PDP_COHORT type files to run."
