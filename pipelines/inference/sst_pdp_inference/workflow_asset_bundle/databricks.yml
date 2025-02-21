@@ -1,0 +1,42 @@
+# This is a Databricks asset bundle definition for sst_pipeline_workflow_deployment.
+# See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
+bundle:
+  name: sst_pipeline_workflow_deployment
+  uuid: 99992898-07ae-4641-b086-dd3ba80ffc2f
+
+include:
+  - resources/*.yml
+
+variables:
+  pipeline_sa_email:
+    description: "Ingestion pipeline SA"
+  notification_email:
+    description: "Account used for email notifications"
+  can_manage_group:
+    description: "Group with permissions to manage the job"
+  can_run_account_email:
+    description: "Service account user"
+
+    
+targets:
+  dev:
+    # The default target uses 'mode: development' to create a development copy.
+    # - Deployed resources get prefixed with '[dev my_user_name]'
+    # - Any job schedules and triggers are paused by default.
+    # See also https://docs.databricks.com/dev-tools/bundles/deployment-modes.html.
+    mode: development
+    default: true
+    workspace:
+      host: https://4437281602191762.2.gcp.databricks.com
+
+  prod:
+    mode: production
+    workspace:
+      host: https://4437281602191762.2.gcp.databricks.com
+      # We explicitly specify /Workspace/Users/pedro.melendez@datakind.org to make sure we only have a single copy.
+      root_path: /Workspace/Users/pedro.melendez@datakind.org/.bundle/${bundle.name}/${bundle.target}
+    permissions:
+      - user_name: pedro.melendez@datakind.org
+        level: CAN_MANAGE
+    run_as:
+      user_name: pedro.melendez@datakind.org
