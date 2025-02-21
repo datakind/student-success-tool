@@ -146,6 +146,8 @@ module "lb-http" {
       enable_cdn = false
 
       iap_config = {
+        # TODO: disable this for the prod environment
+        # enable = var.environment != "prod"
         enable = true
       }
       log_config = {
@@ -220,7 +222,6 @@ data "google_iam_policy" "admin" {
   }
 }
 
-# TODO: disable this for the prod environment
 resource "google_iap_web_backend_service_iam_policy" "web_backend_service_iam_policy" {
   for_each            = module.lb-http.backend_services
   web_backend_service = each.value.name
