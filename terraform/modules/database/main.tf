@@ -30,7 +30,6 @@ data "google_secret_manager_secret_version" "db_password_secret_version" {
 }
 
 resource "google_sql_database_instance" "db_instance" {
-  deletion_protection = false
   name                = "${var.environment}-db-instance"
   database_version    = var.database_version
   region              = var.region
