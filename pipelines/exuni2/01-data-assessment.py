@@ -17,7 +17,7 @@
 # MAGIC %pip install "missingno ~= 0.5.0"
 # MAGIC %pip install "numpy ~= 1.26.0"
 # MAGIC %pip install "seaborn ~= 0.13.0"
-# MAGIC %pip install git+https://github.com/datakind/student-success-tool.git@develop
+# MAGIC # %pip install git+https://github.com/datakind/student-success-tool.git@develop
 
 # COMMAND ----------
 
@@ -37,7 +37,7 @@ import os
 import sys
 from IPython.display import display
 
-import missingno as msno
+# import missingno as msno
 import pandas as pd
 import seaborn as sns
 import numpy as np

@@ -23,7 +23,7 @@
 # COMMAND ----------
 
 # install dependencies, most of which should come through our 1st-party SST package
-%pip install git+https://github.com/datakind/student-success-tool.git@develop
+# %pip install git+https://github.com/datakind/student-success-tool.git@develop
 
 # COMMAND ----------
 
