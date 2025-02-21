@@ -51,14 +51,8 @@ class DataValidationTask:
         Returns:
           The statistics generated from the delta table.
         """
-        logging.info(
-            "Generating statistics from delta table: %s", input_table_path
-        )
-        df = (
-            spark_session.read.format(table_format)
-            .table(input_table_path)
-            .toPandas()
-        )
+        logging.info("Generating statistics from delta table: %s", input_table_path)
+        df = spark_session.read.format(table_format).table(input_table_path).toPandas()
         logging.info("Generated statistics from delta table.")
         return tfdv.generate_statistics_from_dataframe(df)
 
@@ -113,14 +107,11 @@ class DataValidationTask:
         """
         logging.info("Saving anomalies to: %s", output_path)
         tfdv.write_anomalies_text(
-            anomalies,
-            os.path.join(output_path, "anomalies.pbtxt")
+            anomalies, os.path.join(output_path, "anomalies.pbtxt")
         )
 
     def save_statistics(
-        self,
-        statistics: statistics_pb2.DatasetFeatureStatisticsList,
-        output_path: str
+        self, statistics: statistics_pb2.DatasetFeatureStatisticsList, output_path: str
     ) -> None:
         """Saves the statistics to a pbtxt file.
 
@@ -132,10 +123,7 @@ class DataValidationTask:
           None
         """
         logging.info("Saving statistics to: %s", output_path)
-        tfdv.write_stats_text(
-            statistics,
-            os.path.join(output_path, "statistics.pbtxt")
-        )
+        tfdv.write_stats_text(statistics, os.path.join(output_path, "statistics.pbtxt"))
 
     def check_for_anomalies(
         self,
@@ -155,19 +143,13 @@ class DataValidationTask:
         """
         self.save_anomalies(anomalies, output_path)
         logging.info(
-            "Checking for anomalies. fail_on_anomalies is set to %s",
-            fail_on_anomalies
+            "Checking for anomalies. fail_on_anomalies is set to %s", fail_on_anomalies
         )
         if anomalies.anomaly_info:
-            logging.warning(
-                "Anomalies found. Check: %s/anomalies.pbtxt",
-                output_path
-            )
+            logging.warning("Anomalies found. Check: %s/anomalies.pbtxt", output_path)
             if fail_on_anomalies:
                 logging.error(anomalies.anomaly_info.items())
-                raise ValueError(
-                    "Anomalies found, pipline error."
-                )
+                raise ValueError("Anomalies found, pipline error.")
             logging.warning(anomalies.anomaly_info.items())
         else:
             logging.info("No anomalies found.")
@@ -178,41 +160,31 @@ def main():
     logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--input_table_path",
-        required=True,
-        help="Path to input table to validate."
+        "--input_table_path", required=True, help="Path to input table to validate."
     )
     parser.add_argument(
         "--input_table_format",
         required=False,
         default="delta",
-        help="Input data table format."
+        help="Input data table format.",
     )
     parser.add_argument(
-        "--input_schema_path",
-        required=True,
-        help="Path to input schema."
+        "--input_schema_path", required=True, help="Path to input schema."
     )
     parser.add_argument(
-        "--output_artifact_path",
-        required=True,
-        help="Path to write output artifacts."
+        "--output_artifact_path", required=True, help="Path to write output artifacts."
     )
     parser.add_argument(
         "--environment",
         required=True,
-        help="Environment to use for validation (TRAINING or SERVING)."
+        help="Environment to use for validation (TRAINING or SERVING).",
     )
     parser.add_mutually_exclusive_group(required=False)
     parser.add_argument(
-        "--fail_on_anomalies_true",
-        dest="fail_on_anomalies",
-        action="store_true"
+        "--fail_on_anomalies_true", dest="fail_on_anomalies", action="store_true"
     )
     parser.add_argument(
-        "--fail_on_anomalies_false",
-        dest="fail_on_anomalies",
-        action="store_false"
+        "--fail_on_anomalies_false", dest="fail_on_anomalies", action="store_false"
     )
     parser.set_defaults(fail_on_anomalies=True)
     args = parser.parse_args()
@@ -227,9 +199,7 @@ def main():
     schema = task.load_reference_schema(args.input_schema_path)
     anomalies = task.generate_anomalies(stats, schema, args.environment)
     task.check_for_anomalies(
-        anomalies,
-        args.output_artifact_path,
-        fail_on_anomalies=args.fail_on_anomalies
+        anomalies, args.output_artifact_path, fail_on_anomalies=args.fail_on_anomalies
     )
 
 
