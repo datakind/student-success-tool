@@ -591,7 +591,7 @@ def trigger_inference_run(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="The files in this batch don't conform to the Schema configs allowed by this batch.",
         )
-    print("xxxxxxxxxxxxxxxxxxxxxxxxxx")
+    print("xxxxxxxxxxxxxxxxxxxxxxxxxx1")
     print(convert_files_to_dict(batch_result[0][0].files).values())
     # Note to Datakind: In the long-term, this is where you would have a case block or something that would call different types of pipelines.
     db_req = DatabricksInferenceRunRequest(
@@ -603,14 +603,18 @@ def trigger_inference_run(
         email=current_user.email,
         version_id=vers_id,
     )
+    print("xxxxxxxxxxxxxxxxxxxxxxxxxx2")
     try:
+        print("xxxxxxxxxxxxxxxxxxxxxxxxxx3")
         res = databricks_control.run_pdp_inference(db_req)
+        print("xxxxxxxxxxxxxxxxxxxxxxxxxx4")
     except Exception as e:
+        print("xxxxxxxxxxxxxxxxxxxxxxxxxx5" + e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         )
-
+    print("xxxxxxxxxxxxxxxxxxxxxxxxxx6")
     triggered_timestamp = datetime.now()
     job = JobTable(
         id=res.job_run_id,
@@ -619,6 +623,7 @@ def trigger_inference_run(
         batch_name=req.batch_name,
         model_id=query_result[0][0].id,
     )
+    print("xxxxxxxxxxxxxxxxxxxxxxxxxx7")
     local_session.get().add(job)
     return {
         "vers_id": vers_id,
