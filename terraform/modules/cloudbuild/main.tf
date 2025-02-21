@@ -6,15 +6,58 @@ resource "google_project_service" "services" {
 }
 
 resource "google_artifact_registry_repository" "student_success_tool" {
-  location      = var.region
-  repository_id = "student-success-tool"
-  format        = "DOCKER"
+  location               = var.region
+  repository_id          = "student-success-tool"
+  format                 = "DOCKER"
+  cleanup_policy_dry_run = false
+  cleanup_policies {
+    id     = "keep-latest"
+    action = "KEEP"
+    condition {
+      tag_prefixes = ["latest"]
+    }
+  }
+  cleanup_policies {
+    id     = "keep-recent"
+    action = "KEEP"
+    most_recent_versions {
+      keep_count = 10
+    }
+  }
+  cleanup_policies {
+    id     = "delete-older-than-7d"
+    action = "DELETE"
+    condition {
+      older_than = "7d"
+    }
+  }
 }
 
 resource "google_artifact_registry_repository" "sst_app_ui" {
   location      = var.region
   repository_id = "sst-app-ui"
   format        = "DOCKER"
+  cleanup_policies {
+    id     = "keep-latest"
+    action = "KEEP"
+    condition {
+      tag_prefixes = ["latest"]
+    }
+  }
+  cleanup_policies {
+    id     = "keep-recent"
+    action = "KEEP"
+    most_recent_versions {
+      keep_count = 10
+    }
+  }
+  cleanup_policies {
+    id     = "delete-older-than-7d"
+    action = "DELETE"
+    condition {
+      older_than = "7d"
+    }
+  }
 }
 
 resource "google_cloudbuild_trigger" "python_apps" {
