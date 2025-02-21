@@ -13,7 +13,11 @@ from .validation import validate_file_reader, SchemaType
 from .utilities import (
     SchemaType,
 )
+import google.auth
+from google.auth.transport import requests
 
+
+credentials, project_id = google.auth.default()
 SIGNED_URL_EXPIRY_MIN = 30
 
 
@@ -53,14 +57,9 @@ class StorageControl(BaseModel):
 
     def generate_upload_signed_url(self, bucket_name: str, file_name: str) -> str:
         """Generates a v4 signed URL for uploading a blob using HTTP PUT."""
-        if (
-            not gcs_vars["GCP_SERVICE_ACCOUNT_KEY_PATH"]
-            or gcs_vars["GCP_SERVICE_ACCOUNT_KEY_PATH"] == ""
-        ):
-            raise ValueError("GCP_SERVICE_ACCOUNT_KEY_PATH env var not set.")
-        client = storage.Client.from_service_account_json(
-            gcs_vars["GCP_SERVICE_ACCOUNT_KEY_PATH"]
-        )
+        r = requests.Request()
+        credentials.refresh(r)
+        client = storage.Client()
         bucket = client.bucket(bucket_name)
         if not bucket.exists():
             raise ValueError("Storage bucket not found.")
@@ -72,8 +71,14 @@ class StorageControl(BaseModel):
         # All files uploaded directly are considered unvalidated.
         blob_name = "unvalidated/" + file_name
         blob = bucket.blob(blob_name)
+
+        service_account_email = ""
+        if hasattr(credentials, "service_account_email"):
+            service_account_email = credentials.service_account_email
         url = blob.generate_signed_url(
             version="v4",
+            service_account_email=service_account_email,
+            access_token=credentials.token,
             # How long the url is usable for.
             expiration=datetime.timedelta(minutes=SIGNED_URL_EXPIRY_MIN),
             # Allow PUT requests using this URL.
@@ -85,22 +90,22 @@ class StorageControl(BaseModel):
 
     def generate_download_signed_url(self, bucket_name: str, blob_name: str) -> str:
         """Generates a v4 signed URL for downloading a blob using HTTP GET."""
-        if (
-            not gcs_vars["GCP_SERVICE_ACCOUNT_KEY_PATH"]
-            or gcs_vars["GCP_SERVICE_ACCOUNT_KEY_PATH"] == ""
-        ):
-            raise ValueError("GCP_SERVICE_ACCOUNT_KEY_PATH env var not set.")
-        client = storage.Client.from_service_account_json(
-            gcs_vars["GCP_SERVICE_ACCOUNT_KEY_PATH"]
-        )
+        r = requests.Request()
+        credentials.refresh(r)
+        client = storage.Client()
         bucket = client.bucket(bucket_name)
         if not bucket.exists():
             raise ValueError("Storage bucket not found.")
         blob = bucket.blob(blob_name)
         if not blob.exists():
             raise ValueError(blob_name + ": File not found.")
+        service_account_email = ""
+        if hasattr(credentials, "service_account_email"):
+            service_account_email = credentials.service_account_email
         url = blob.generate_signed_url(
             version="v4",
+            service_account_email=service_account_email,
+            access_token=credentials.token,
             # How long the url is usable for.
             expiration=datetime.timedelta(minutes=SIGNED_URL_EXPIRY_MIN),
             # Allow GET requests using this URL.
