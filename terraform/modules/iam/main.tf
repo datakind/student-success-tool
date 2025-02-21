@@ -51,7 +51,7 @@ resource "google_service_account_key" "cloudrun_sa_key" {
 }
 
 resource "google_secret_manager_secret" "cloudrun_sa_key_secret" {
- secret_id = "${var.environment}-cloudrun-sa-key-secret"
+ secret_id = "${var.environment}-cloudrun-sa-key"
   replication {
     auto {}
  }
