@@ -28,7 +28,7 @@ resource "google_artifact_registry_repository" "student_success_tool" {
     id     = "delete-older-than-7d"
     action = "DELETE"
     condition {
-      older_than = "7d"
+      older_than = "604800s"
     }
   }
 }
@@ -55,7 +55,7 @@ resource "google_artifact_registry_repository" "sst_app_ui" {
     id     = "delete-older-than-7d"
     action = "DELETE"
     condition {
-      older_than = "7d"
+      older_than = "604800s"
     }
   }
 }
