@@ -1,5 +1,4 @@
-"""Tests for data_validation_task.
-"""
+"""Tests for data_validation_task."""
 
 import os
 import shutil
@@ -27,20 +26,24 @@ class TestDataValidationTask(unittest.TestCase):
 
         # Create test CSV data
         cls.test_csv_path = "test_data.csv"
-        cls.test_data = pd.DataFrame({
-            "col1": [1, 1, 1, 1, 1],
-            "col2": ["a", "b", "c", "d", "e"],
-            "col3": [10.0, 20.0, 30.0, 40.0, 50.0]
-        })
+        cls.test_data = pd.DataFrame(
+            {
+                "col1": [1, 1, 1, 1, 1],
+                "col2": ["a", "b", "c", "d", "e"],
+                "col3": [10.0, 20.0, 30.0, 40.0, 50.0],
+            }
+        )
         cls.test_data.to_csv(cls.test_csv_path, index=False)
 
         # Create anomalous CSV data
         cls.anomalous_csv_path = "anomalous_data.csv"
-        cls.anomalous_data = pd.DataFrame({
-            "col1": [0, 0, 0, 0, 0],
-            "col2": ["out", "of", "schema", "validation", "error"],
-            "col3": [1000.0, 2000.0, 3000.0, 4000.0, 5000.0],
-        })
+        cls.anomalous_data = pd.DataFrame(
+            {
+                "col1": [0, 0, 0, 0, 0],
+                "col2": ["out", "of", "schema", "validation", "error"],
+                "col3": [1000.0, 2000.0, 3000.0, 4000.0, 5000.0],
+            }
+        )
         cls.anomalous_data.to_csv(cls.anomalous_csv_path, index=False)
 
         # Create test schema
@@ -52,9 +55,7 @@ class TestDataValidationTask(unittest.TestCase):
 
         # Create anomalous schema
         cls.anomalous_schema_path = "anomalous_schema.pbtxt"
-        anomalous_stats = tfdv.generate_statistics_from_dataframe(
-            cls.anomalous_data
-        )
+        anomalous_stats = tfdv.generate_statistics_from_dataframe(cls.anomalous_data)
         anomalous_schema = tfdv.infer_schema(anomalous_stats)
         anomalous_schema.default_environment.append("TRAINING")
         tfdv.write_schema_text(anomalous_schema, cls.anomalous_schema_path)
@@ -64,9 +65,11 @@ class TestDataValidationTask(unittest.TestCase):
         os.makedirs(cls.output_dir, exist_ok=True)
 
         # Create SparkSession
-        cls.spark = pyspark.sql.SparkSession.builder.master("local[*]").appName(
-            "TestDataValidationTask"
-        ).getOrCreate()
+        cls.spark = (
+            pyspark.sql.SparkSession.builder.master("local[*]")
+            .appName("TestDataValidationTask")
+            .getOrCreate()
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -87,10 +90,7 @@ class TestDataValidationTask(unittest.TestCase):
     def test_generate_statistics_from_csv(self):
         """Test generating statistics from a CSV file."""
         stats = self.task.generate_statistics_from_csv(self.test_csv_path)
-        self.assertIsInstance(
-            stats,
-            statistics_pb2.DatasetFeatureStatisticsList
-        )
+        self.assertIsInstance(stats, statistics_pb2.DatasetFeatureStatisticsList)
 
     def test_generate_anomalies(self):
         """Test generating anomalies."""
@@ -162,12 +162,10 @@ class TestDataValidationTask(unittest.TestCase):
         stats = self.task.generate_statistics_from_delta_table(
             self.spark, test_table_path
         )
-        self.assertIsInstance(
-            stats,
-            statistics_pb2.DatasetFeatureStatisticsList
-        )
+        self.assertIsInstance(stats, statistics_pb2.DatasetFeatureStatisticsList)
 
         self.spark.sql(f"DROP TABLE {test_table_path}")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
