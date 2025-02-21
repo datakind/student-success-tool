@@ -4,7 +4,7 @@ This Databricks job uses [TensorFlow Data Validation (TFDV)](https://www.tensorf
 
 ## How it Works
 
-1. **Loads a reference schema:** The job loads a schema.pbtxt file, this should be the expected schema determined during the training / experimentation phase of model development and maintained as need. It also assumes that there are two schema environments; TRAINING and SERVING, see [ref.](https://www.tensorflow.org/tfx/data_validation/get_started#schema_environments) for details.
+1. **Loads a reference schema:** The job loads a schema.pbtxt file, this should be the expected schema determined and persisted during the training / experimentation phase of model development and maintained as need (see [ref.](https://www.tensorflow.org/tfx/data_validation/get_started#inferring_a_schema_over_the_data)). It also assumes that there are two schema environments; TRAINING and SERVING, see [ref.](https://www.tensorflow.org/tfx/data_validation/get_started#schema_environments) for details.
 2. **Generates statistics:** It generates statistics from a Delta table or CSV file and persists them for further analysis (e.g. [checking skew and drift](https://www.tensorflow.org/tfx/data_validation/get_started#checking_data_skew_and_drift)).
 3. **Validates data:** It validates the data against the schema and generates a list of anomalies, optionally causing the task to fail upon detection.
 4. **Saves anomalies:** It saves the anomalies to a pbtxt file for review.
