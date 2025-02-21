@@ -32,6 +32,7 @@ module "deployment" {
   domain               = var.domain
   webapp_image         = var.webapp_image
   frontend_image       = var.frontend_image
+  worker_image         = var.worker_image
   subnet_ip_cidr_range = var.subnet_ip_cidr_range
   vpc_host_network     = var.vpc_host_network
   vpc_host_project     = var.vpc_host_project

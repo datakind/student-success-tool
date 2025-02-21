@@ -85,7 +85,7 @@ locals {
     },
     {
       name  = "worker"
-      image = var.webapp_image
+      image = var.worker_image
     }
   ]
 }
@@ -179,7 +179,7 @@ resource "google_compute_url_map" "url_map" {
 
     path_rule {
       paths   = ["/worker", "/worker/*"]
-      service = module.lb-http.backend_services["${var.environment}-webapp"].self_link
+      service = module.lb-http.backend_services["${var.environment}-worker"].self_link
     }
 
     path_rule {

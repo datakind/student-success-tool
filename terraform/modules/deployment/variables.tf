@@ -51,6 +51,12 @@ variable "frontend_image" {
   type        = string
 }
 
+variable "worker_image" {
+  description = "Image for the worker service"
+  type        = string
+}
+
+
 variable "subnet_ip_cidr_range" {
   description = "The CIDR range for the subnet"
   type        = string
