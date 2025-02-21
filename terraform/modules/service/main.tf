@@ -29,6 +29,22 @@ resource "google_secret_manager_secret_iam_member" "cloudbuild_sa_env_file_acces
   member    = "serviceAccount:${var.cloudbuild_service_account_email}"
 }
 
+resource "google_service_account_key" "cloudrun_sa_key" {
+  service_account_id = var.cloudrun_service_account_id
+}
+
+resource "google_secret_manager_secret" "sa_key_secret" {
+ secret_id = "${var.environment}-sa-key-secret"
+  replication {
+    auto {}
+ }
+}
+
+resource "google_secret_manager_secret_version" "sa_key_secret_version" {
+ secret = google_secret_manager_secret.sa_key_secret.id
+ secret_data = google_service_account_key.cloudrun_sa_key.private_key
+}
+
 resource "google_cloud_run_v2_service" "cloudrun_service" {
   deletion_protection = false
   location            = var.region
@@ -88,10 +104,10 @@ resource "google_cloud_run_v2_service" "cloudrun_service" {
         mount_path = "/vol_mt/certs/server"
         name       = "db-server-ca-vol"
       }
-      #volume_mounts {
-      #  mount_path = "/vol_mt/secrets/sa-keys"
-      #  name       = "gcs-service-account-key-vol"
-      #}
+      volume_mounts {
+        mount_path = "/vol_mt/secrets/sa-keys"
+        name       = "gcs-service-account-key-vol"
+      }
     }
     vpc_access {
       network_interfaces {
@@ -148,16 +164,16 @@ resource "google_cloud_run_v2_service" "cloudrun_service" {
         secret = "${var.environment}-db-server-ca"
       }
     }
-    #volumes {
-    #  name = "gcs-service-account-key-vol"
-    #  secret {
-    #    items {
-    #      path    = "key.json"
-    #      version = "latest"
-    #    }
-    #    secret = "${var.environment}-service-account-key"
-    #  }
-    #}
+    volumes {
+      name = "gcs-service-account-key-vol"
+      secret {
+        items {
+          path    = "key.json"
+          version = "latest"
+        }
+        secret = google_secret_manager_secret.sa_key_secret.id
+      }
+    }
   }
   lifecycle {
     ignore_changes = [

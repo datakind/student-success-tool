@@ -109,6 +109,7 @@ module "services" {
   subnetwork_id                     = module.network.subnetwork_id
   cloudrun_service_account_email    = module.iam.cloudrun_service_account_email
   cloudbuild_service_account_email  = module.iam.cloudbuild_service_account_email
+  cloudrun_service_account_id       = module.iam.cloudrun_service_account_id
 
   depends_on = [module.database, module.network, module.iam]
 }

@@ -10,10 +10,6 @@ resource "google_service_account" "cloudrun_sa" {
   display_name = "Cloud Run Service Account"
 }
 
-#resource "google_service_account_key" "cloudrun_sa_key" {
-#  service_account_id = google_service_account.cloudrun_sa.name
-#}
-
 resource "google_project_iam_member" "cloudrun_sa_invoker" {
   for_each = toset(var.cloudrun_sa_roles)
   project  = var.project
