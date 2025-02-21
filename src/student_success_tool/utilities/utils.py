@@ -69,23 +69,27 @@ def list_blobs_in_ext(bucket_name: str) -> list[str]:
     return res
 
 
-def send_completion_email(sender_email, receiver_email_list, cc_email_list):
+def send_completion_email(sender_email, receiver_email_list, cc_email_list, username, password):
     send_email(
         sender_email,
         receiver_email_list,
         cc_email_list,
         COMPLETION_SUCCESS_SUBJECT,
         COMPLETION_SUCCESS_MESSAGE,
+        username,
+        password,
     )
 
 
-def send_inference_kickoff_email(sender_email, receiver_email_list, cc_email_list):
+def send_inference_kickoff_email(sender_email, receiver_email_list, cc_email_list, username, password):
     send_email(
         sender_email,
         receiver_email_list,
         cc_email_list,
         INFERENCE_KICKOFF_SUBJECT,
         INFERENCE_KICKOFF_MESSAGE,
+        username,
+        password,
     )
 
 
