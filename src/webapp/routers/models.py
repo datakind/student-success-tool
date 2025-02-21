@@ -609,7 +609,7 @@ def trigger_inference_run(
         res = databricks_control.run_pdp_inference(db_req)
         print("xxxxxxxxxxxxxxxxxxxxxxxxxx4")
     except Exception as e:
-        print("xxxxxxxxxxxxxxxxxxxxxxxxxx5" + e)
+        print("xxxxxxxxxxxxxxxxxxxxxxxxxx5" + str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),

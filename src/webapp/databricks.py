@@ -16,7 +16,7 @@ from .utilities import databricksify_inst_name, SchemaType
 
 # List of data medallion levels
 medallion_levels = ["silver", "gold", "bronze"]
-pdp_inference_job_name = "pdp_inference_pipeline"
+pdp_inference_job_name = "github_sourced_pdp_inference_pipeline"
 
 
 class DatabricksInferenceRunRequest(BaseModel):
@@ -121,11 +121,13 @@ class DatabricksControl(BaseModel):
             raise ValueError(
                 "run_pdp_inference() requires PDP_COURSE and PDP_COHORT type files to run."
             )
+        print("bbbbbbbbbbbbbbbbbbbbbbbbbbbb1")
         w = WorkspaceClient(
             host=databricks_vars["DATABRICKS_HOST_URL"],
             google_service_account=gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"],
         )
         db_inst_name = databricksify_inst_name(req.inst_name)
+        print("bbbbbbbbbbbbbbbbbbbbbbbbbbbb2")
         job_id = next(w.jobs.list(name=pdp_inference_job_name)).job_id
         run_job = w.jobs.run_now(
             job_id,
