@@ -45,25 +45,3 @@ resource "google_project_iam_member" "databricks_sa_member" {
   role     = each.key
   member   = "serviceAccount:${google_service_account.databricks_sa.email}"
 }
-
-resource "google_service_account_key" "cloudrun_sa_key" {
-  service_account_id = google_service_account.cloudrun_sa.id
-}
-
-resource "google_secret_manager_secret" "cloudrun_sa_key_secret" {
- secret_id = "${var.environment}-cloudrun-sa-key"
-  replication {
-    auto {}
- }
-}
-
-resource "google_secret_manager_secret_version" "cloudrun_sa_key_secret_version" {
- secret = google_secret_manager_secret.cloudrun_sa_key_secret.id
- secret_data = google_service_account_key.cloudrun_sa_key.private_key
-}
-
-resource "google_secret_manager_secret_iam_member" "cloudrun_sa_env_file_access" {
-  secret_id = google_secret_manager_secret.cloudrun_sa_key_secret.secret_id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_service_account.cloudrun_sa.email}"
-}

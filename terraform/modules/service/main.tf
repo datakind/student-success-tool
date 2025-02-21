@@ -88,10 +88,6 @@ resource "google_cloud_run_v2_service" "cloudrun_service" {
         mount_path = "/vol_mt/certs/server"
         name       = "db-server-ca-vol"
       }
-      volume_mounts {
-        mount_path = "/vol_mt/secrets/sa-keys"
-        name       = "gcs-service-account-key-vol"
-      }
     }
     vpc_access {
       network_interfaces {
@@ -146,16 +142,6 @@ resource "google_cloud_run_v2_service" "cloudrun_service" {
           version = "latest"
         }
         secret = "${var.environment}-db-server-ca"
-      }
-    }
-    volumes {
-      name = "gcs-service-account-key-vol"
-      secret {
-        items {
-          path    = "key.json"
-          version = "latest"
-        }
-        secret = var.cloudrun_service_account_key_secret_id
       }
     }
   }
