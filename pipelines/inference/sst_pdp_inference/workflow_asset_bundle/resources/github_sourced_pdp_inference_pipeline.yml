@@ -1,41 +1,10 @@
 resources:
   jobs:
-    poc_github_sourced_pdp_inference_pipeline:
-      name: poc_github_sourced_pdp_inference_pipeline
+    github_sourced_pdp_inference_pipeline:
+      name: github_sourced_pdp_inference_pipeline
       max_concurrent_runs: 2
       tasks:
-        - task_key: Need_synthetic_data
-          condition_task:
-            op: EQUAL_TO
-            left: "{{job.parameters.synthetic_needed}}"
-            right: "True"
-        - task_key: generate_synthetic_data
-          depends_on:
-            - task_key: Need_synthetic_data
-              outcome: "true"
-          notebook_task:
-            notebook_path: pipelines/tasks/sst_pdp_synthetic_data_generation/synthetic_data_generation_pipeline_task
-            base_parameters:
-              seed: ""
-              num_students: "300"
-              normalize_col_names: ""
-              avg_num_courses_per_student: "5"
-              save_dir: ""
-            source: GIT
-          job_cluster_key: pdp-inference-pipeline-cluster
-          libraries:
-            - pypi:
-                package: faker
-            - pypi:
-                package: pandera
-            - pypi:
-                package: git+https://github.com/datakind/student-success-tool.git@develop
         - task_key: data_ingestion
-          depends_on:
-            - task_key: Need_synthetic_data
-              outcome: "false"
-            - task_key: generate_synthetic_data
-          run_if: AT_LEAST_ONE_SUCCESS
           notebook_task:
             notebook_path: pipelines/tasks/sst_pdp_data_ingestion/data_ingestion_pipeline_task
             source: GIT
@@ -99,10 +68,10 @@ resources:
               spark.databricks.cluster.profile: singleNode
             gcp_attributes:
               use_preemptible_executors: false
-              google_service_account: <PIPELINE_SERVICE_ACCOUNT>
+              google_service_account: ${var.pipeline_sa_email}
               availability: ON_DEMAND_GCP
               zone_id: HA
-            node_type_id: n2-highmem-4
+            node_type_id: n2-standard-4
             custom_tags:
               ResourceClass: SingleNode
               x-databricks-nextgen-cluster: "true"
@@ -118,18 +87,28 @@ resources:
         enabled: true
       parameters:
         - name: cohort_file_name
-          default: standard_pdp_institution_sample_STUDENT_SEMESTER_AR_DEIDENTIFIED.csv
+          default: 1740098728373_synthetic_STUDENT_SEMESTER_AR_DEIDENTIFIED.csv
         - name: course_file_name
-          default: standard_pdp_institution_sample_COURSE_LEVEL_AR_DEID.csv
+          default: 1740098728372_synthetic_COURSE_LEVEL_AR_DEID.csv
+        - name: databricks_institution_name
+          default: uni_of_crystal_testing
+        - name: db_run_id
+          default: "{{job.run_id}}"
         - name: DB_workspace
           default: dev_sst_02
-        - name: institution_id
-          default: standard_pdp_institution
+        - name: gcp_bucket_name
+          default: dev_6782b2f451f84c17ae6e14e918432b65
         - name: model_name
           default: latest_enrollment_model
         - name: model_type
           default: sklearn
-        - name: sst_job_id
-          default: job_id_{{job.run_id}}
-        - name: synthetic_needed
-          default: "False"
+        - name: notification_email
+          default: ${var.notification_email}
+        - name: version_id
+          default: "1"
+      permissions:
+        - group_name: ${var.can_manage_group} 
+          level: CAN_MANAGE
+        - user_name: ${var.can_run_account_email}
+          level: CAN_MANAGE_RUN
+
