@@ -4,9 +4,6 @@
 import smtplib
 
 from email.message import EmailMessage
-from email.headerregistry import Address
-from email.utils import make_msgid
-from google.cloud import storage
 
 SMTP_SERVER = "smtp.mandrillapp.com"
 # TODO: switch port?
