@@ -26,6 +26,7 @@ class DatabricksInferenceRunRequest(BaseModel):
     # Note that the following should be the filepath.
     filepath_to_type: dict[str, list[SchemaType]]
     model_name: str
+    version_id: int = 0
     model_type: str = "sklearn"
     # The email where notifications will get sent.
     email: str
@@ -136,6 +137,7 @@ class DatabricksControl(BaseModel):
                 "model_name": req.model_name,
                 "model_type": req.model_type,
                 "notification_email": req.email,
+                "version_id": req.version_id,
             },
         )
         return DatabricksInferenceRunResponse(job_run_id=run_job.response.run_id)
