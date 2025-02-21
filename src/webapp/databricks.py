@@ -107,9 +107,9 @@ class DatabricksControl(BaseModel):
     ) -> DatabricksInferenceRunResponse:
         """Triggers PDP inference Databricks run."""
         if (
-            not req.file_to_type
-            or SchemaType.PDP_COURSE not in req.file_to_type.values()
-            or SchemaType.PDP_COHORT not in req.file_to_type.values()
+            not req.filepath_to_type
+            or SchemaType.PDP_COURSE not in req.filepath_to_type.values()
+            or SchemaType.PDP_COHORT not in req.filepath_to_type.values()
         ):
             raise ValueError(
                 "run_pdp_inference() requires PDP_COURSE and PDP_COHORT type files to run."
@@ -124,10 +124,10 @@ class DatabricksControl(BaseModel):
             job_id,
             job_parameters={
                 "cohort_file_name": get_filepath_of_filetype(
-                    req.file_to_type, SchemaType.PDP_COHORT
+                    req.filepath_to_type, SchemaType.PDP_COHORT
                 ),
                 "course_file_name": get_filepath_of_filetype(
-                    req.file_to_type, SchemaType.PDP_COURSE
+                    req.filepath_to_type, SchemaType.PDP_COURSE
                 ),
                 "databricks_institution_name": db_inst_name,
                 "DB_workspace": databricks_vars[
