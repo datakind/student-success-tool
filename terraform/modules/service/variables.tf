@@ -56,7 +56,7 @@ variable "cloudrun_service_account_email" {
   type = string
 }
 
-variable "cloudrun_service_account_id" {
+variable "cloudrun_service_account_key_secret_id" {
   type = string
 }
 
