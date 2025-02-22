@@ -6,7 +6,7 @@ resources:
       tasks:
         - task_key: data_ingestion
           notebook_task:
-            notebook_path: pipelines/tasks/sst_pdp_data_ingestion/data_ingestion_pipeline_task
+            notebook_path: pipelines/tasks/pdp_data_ingestion/pdp_data_ingestion
             source: GIT
           job_cluster_key: pdp-inference-pipeline-cluster
           libraries:
@@ -16,11 +16,11 @@ resources:
                 package: pandera
             - pypi:
                 package: git+https://github.com/datakind/student-success-tool.git@develop
-        - task_key: data_processing
+        - task_key: data_preprocessing
           depends_on:
             - task_key: data_ingestion
           notebook_task:
-            notebook_path: pipelines/tasks/sst_pdp_data_processing/data_processing_pipeline_task
+            notebook_path: pipelines/tasks/pdp_data_preprocessing/pdp_data_preprocessing
             source: GIT
           job_cluster_key: pdp-inference-pipeline-cluster
           libraries:
@@ -32,16 +32,16 @@ resources:
                 package: git+https://github.com/datakind/student-success-tool.git@develop
         - task_key: data_validation
           depends_on:
-            - task_key: data_processing
+            - task_key: data_preprocessing
           notebook_task:
-            notebook_path: pipelines/tasks/sst_pdp_data_validation/data_validation_pipeline_task
+            notebook_path: pipelines/tasks/pdp_data_validation/pdp_data_validation
             source: GIT
           job_cluster_key: pdp-inference-pipeline-cluster
         - task_key: inference
           depends_on:
             - task_key: data_validation
           notebook_task:
-            notebook_path: pipelines/tasks/sst_pdp_model_inference/model_inference_pipeline_task
+            notebook_path: pipelines/tasks/pdp_model_inference/pdp_model_inference
             source: GIT
           job_cluster_key: pdp-inference-pipeline-cluster
           libraries:
