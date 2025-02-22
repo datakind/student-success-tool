@@ -40,7 +40,7 @@ The 'SST Pipeline Workflow Asset Bundle' is used to deploy the demo inference pi
     Note: "dev" is the default target, so the `--target dev` parameter is optional here.
 
     This deploys a single pipeline called `[dev yourname] github_sourced_pdp_inference_pipeline` to your workspace.
-    You can find that job by opening your workpace and clicking on **Workflows**.
+    You can find that job by opening your workspace and clicking **Workflows**.
 
 
 
