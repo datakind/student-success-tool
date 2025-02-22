@@ -1,6 +1,5 @@
 import logging
 import typing as t
-from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
@@ -8,12 +7,13 @@ import sklearn.utils
 
 LOGGER = logging.getLogger(__name__)
 
+_DEFAULT_SPLIT_LABEL_FRACS = {"train": 0.6, "test": 0.2, "validate": 0.2}
+
 
 def compute_dataset_splits(
     df: pd.DataFrame,
     *,
-    labels: Sequence[str] = ("train", "test", "validate"),
-    fracs: Sequence[float] = (0.6, 0.2, 0.2),
+    label_fracs: t.Optional[dict[str, float]] = None,
     shuffle: bool = True,
     seed: t.Optional[int] = None,
 ) -> pd.Series:
@@ -23,9 +23,8 @@ def compute_dataset_splits(
 
     Args:
         df
-        labels: Labels for each subset into which ``df`` is split.
-        fracs: Approximate proportions of each subset into which ``df`` is split;
-            corresponds 1:1 with each label in ``labels`` .
+        label_fracs: Mapping of subset label to the (approximate) proportion of ``df``
+            that gets split into it.
         shuffle: Whether or not to shuffle the data before splitting.
         seed: Optional integer used to set state for the underlying random generator;
             specify a value for reproducible splits, otherwise each call is unique.
@@ -33,12 +32,11 @@ def compute_dataset_splits(
     See Also:
         - :func:`sklearn.model_selection.train_test_split()`
     """
-    if len(labels) != len(fracs):
-        raise ValueError(
-            f"the number of specified labels ({len(labels)}) and fracs {len(fracs)} "
-            "must be the same"
-        )
+    if label_fracs is None:
+        label_fracs = _DEFAULT_SPLIT_LABEL_FRACS
 
+    labels = list(label_fracs.keys())
+    fracs = list(label_fracs.values())
     rng = np.random.default_rng(seed=seed)
     return pd.Series(
         data=rng.choice(labels, size=len(df), p=fracs, shuffle=shuffle),

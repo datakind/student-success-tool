@@ -5,41 +5,40 @@ from student_success_tool.modeling import utils
 
 
 @pytest.mark.parametrize(
-    ["df", "labels", "fracs", "shuffle", "seed"],
+    ["df", "label_fracs", "shuffle", "seed"],
     [
         (
             pd.DataFrame(data=list(range(1000))),
-            ["train", "test"],
-            [0.5, 0.5],
+            {"train": 0.5, "test": 0.5},
             True,
             None,
         ),
         (
             pd.DataFrame(data=list(range(1000))),
-            ["train", "test", "valid"],
-            [0.6, 0.2, 0.2],
+            {"train": 0.6, "test": 0.2, "valid": 0.2},
             False,
             None,
         ),
         (
             pd.DataFrame(data=list(range(1000))),
-            ["train", "test"],
-            [0.5, 0.5],
+            {"train": 0.5, "test": 0.5},
             True,
             42,
         ),
     ],
 )
-def test_compute_dataset_splits(df, labels, fracs, shuffle, seed):
+def test_compute_dataset_splits(df, label_fracs, shuffle, seed):
     obs = utils.compute_dataset_splits(
-        df, labels=labels, fracs=fracs, shuffle=shuffle, seed=seed
+        df, label_fracs=label_fracs, shuffle=shuffle, seed=seed
     )
     assert isinstance(obs, pd.Series)
     assert len(obs) == len(df)
+    labels = list(label_fracs.keys())
+    fracs = list(label_fracs.values())
     obs_value_counts = obs.value_counts(normalize=True)
     exp_value_counts = pd.Series(
-        data=list(fracs),
-        index=pd.Index(list(labels), dtype="string", name="split"),
+        data=fracs,
+        index=pd.Index(labels, dtype="string", name="split"),
         name="proportion",
         dtype="Float64",
     )
@@ -51,7 +50,7 @@ def test_compute_dataset_splits(df, labels, fracs, shuffle, seed):
     )
     if seed is not None:
         obs2 = utils.compute_dataset_splits(
-            df, labels=labels, fracs=fracs, shuffle=shuffle, seed=seed
+            df, label_fracs=label_fracs, shuffle=shuffle, seed=seed
         )
         assert obs.equals(obs2)
 
