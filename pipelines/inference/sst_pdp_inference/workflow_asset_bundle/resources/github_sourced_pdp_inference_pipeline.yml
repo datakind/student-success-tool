@@ -53,11 +53,11 @@ resources:
                 package: git+https://github.com/datakind/student-success-tool.git@develop
           email_notifications:
             on_start:
-              - pedro.melendez@datakind.org
+              - ${var.datakind_notification_email}
             on_success:
-              - pedro.melendez@datakind.org
+              - ${var.datakind_notification_email}
             on_failure:
-              - pedro.melendez@datakind.org
+              - ${var.datakind_notification_email}
       job_clusters:
         - job_cluster_key: pdp-inference-pipeline-cluster
           new_cluster:
@@ -103,12 +103,12 @@ resources:
         - name: model_type
           default: sklearn
         - name: notification_email
-          default: ${var.notification_email}
+          default: ${var.end_user_notification_email}
         - name: version_id
           default: "1"
       permissions:
-        - group_name: ${var.can_manage_group} 
+        - group_name: ${var.group_to_manage_workflow} 
           level: CAN_MANAGE
-        - user_name: ${var.can_run_account_email}
+        - user_name: ${var.service_account_user}
           level: CAN_MANAGE_RUN
 
