@@ -1,6 +1,6 @@
 # SST Pipeline Workflow Asset Bundle
 
-The 'SST Pipeline Workflow Asset Bundle' is used to deploy the inference pipeline from github
+The 'SST Pipeline Workflow Asset Bundle' is used to deploy the demo inference pipeline based on [the workflow YAML definition](resources/github_sourced_pdp_inference_pipeline.yml)
 
 ## Getting started
 
@@ -10,24 +10,31 @@ The 'SST Pipeline Workflow Asset Bundle' is used to deploy the inference pipelin
     ```
     $ databricks auth login --host <Databricks host URL>
     ```
+   This will create a local **Databricks profile name** that is needed for Step 3.
+   
 
-3. To deploy a development copy of this project:
+3. To deploy a development copy of this workflow:
 
    Set local env variables:
    ```
-   export ingestion_pipeline_service_account=<ingestion pipline service account email>
-   export notification_email=<email address>
-   export group_to_manage_workflow=<managing group>
-   export user_service_account=<user service account email>
+   export profile_name=<Profile name created on Step 2>
+   export group_to_manage_workflow=<Databrics managing group>
+   export service_account_user=<Service account user>
+   export pipeline_sa_email=<Ingestion pipline service account email>
+   export datakind_notification_email=<Datakind email to receive notifications>
+   export end_user_notification_email=<End user email to receive notifications>
    ```
 
    Then execute the command:
 
    ```
    $ databricks bundle deploy \
-   --var="pipeline_sa_email=$ingestion_pipeline_service_account" \
-   --var="notification_email=$notification_email" --var="can_manage_group=$group_to_manage_workflow" \
-   --var="can_run_account_email=$user_service_account" \
+   --profile=$profile_name \
+   --var="service_account_user=$service_account_user" \
+   --var="group_to_manage_workflow=$group_to_manage_workflow" \
+   --var="pipeline_sa_email=$pipeline_sa_email" \
+   --var="end_user_notification_email=$end_user_notification_email" \
+   --var="datakind_notification_email=$datakind_notification_email" \
    --target dev
    ```
     Note: "dev" is the default target, so the `--target dev` parameter is optional here.
@@ -37,23 +44,29 @@ The 'SST Pipeline Workflow Asset Bundle' is used to deploy the inference pipelin
 
 
 
-4. The job could be executed from the SST application or from CLI type:
-   ```
-   $ databricks bundle run \
-   --var="pipeline_sa_email=$ingestion_pipeline_service_account" \
-   --var="notification_email=$notification_email" --var="can_manage_group=$group_to_manage_workflow" \
-   --var="can_run_account_email=$user_service_account" \
-   --target dev
-   ```
-
-
-5. Similarly, to deploy a production copy, type:
+4. Similarly, to deploy a production copy, execute:
    ```
    $ databricks bundle deploy \
-   --var="pipeline_sa_email=$ingestion_pipeline_service_account" \
-   --var="notification_email=$notification_email" --var="can_manage_group=$group_to_manage_workflow" \
-   --var="can_run_account_email=$user_service_account" \
+   --profile=$profile_name \
+   --var="service_account_user=$service_account_user" \
+   --var="group_to_manage_workflow=$group_to_manage_workflow" \
+   --var="pipeline_sa_email=$pipeline_sa_email" \
+   --var="end_user_notification_email=$end_user_notification_email" \
+   --var="datakind_notification_email=$datakind_notification_email" \
    --target prod
    ```
 
    Note: The production pipeline is not prefixed by the username. It is called `github_sourced_pdp_inference_pipeline`
+
+5. The job could be executed via SST web application or to run it from CLI type:
+   ```
+   $ databricks bundle run \
+   --profile=$profile_name \
+   --var="service_account_user=$service_account_user" \
+   --var="group_to_manage_workflow=$group_to_manage_workflow" \
+   --var="pipeline_sa_email=$pipeline_sa_email" \
+   --var="end_user_notification_email=$end_user_notification_email" \
+   --var="datakind_notification_email=$datakind_notification_email" \
+   --target dev
+   ```
+   Note: SST app will use only the prod version of the workflow
