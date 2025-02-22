@@ -275,7 +275,7 @@ def _mask_year_column_based_on_enrollment_year(
         col_year = int(match.groupdict()["yr"])
     else:
         raise ValueError(f"column '{col}' does not end with '_year_NUM'")
-    return df[col].mask(df[enrollment_year_col].lt(col_year), other=pd.NA)
+    return df[col].mask(df[enrollment_year_col].le(col_year), other=pd.NA)
 
 
 def _mask_term_column_based_on_enrollment_term(
