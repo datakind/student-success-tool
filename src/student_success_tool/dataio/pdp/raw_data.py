@@ -85,6 +85,10 @@ def read_raw_course_data(
             }
         )
     )
+    # HACK!
+    if "study_id" in df.columns:
+        df = df.rename(columns={"study_id": "student_guid"})
+        LOGGER.warning("renaming raw column: 'study_id' => 'student_guid'")
     return _maybe_convert_maybe_validate_data(df, converter_func, schema)
 
 
@@ -175,6 +179,10 @@ def read_raw_cohort_data(
             }
         )
     )
+    # HACK!
+    if "study_id" in df.columns:
+        df = df.rename(columns={"study_id": "student_guid"})
+        LOGGER.warning("renaming raw column: 'study_id' => 'student_guid'")
     return _maybe_convert_maybe_validate_data(df, converter_func, schema)
 
 
