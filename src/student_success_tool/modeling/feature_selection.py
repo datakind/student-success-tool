@@ -248,9 +248,11 @@ def drop_collinear_features_iteratively(
 
     LOGGER.info("dropping %s collinear features", n_features_dropped_so_far)
 
-    assert all(
-        [col in df.columns for col in force_include_cols]
-    ), "The dataset with selected features is missing one of the force include variables!"
+    if not all([col in df.columns for col in force_include_cols]):
+        raise ValueError(
+            "The dataset with selected features is missing one of the force include variables!"
+        )
+
     return df
 
     # TODO: figure out why this below code gives different results from the original :/
