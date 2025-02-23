@@ -257,6 +257,7 @@ def test_read_inst_model(client: TestClient):
 
 def test_read_inst_model_outputs(client: TestClient):
     """Test GET /institutions/345/models/10/output."""
+    MOCK_STORAGE.list_blobs_in_folder.return_value = []
     # Authorized.
     response = client.get(
         "/institutions/"

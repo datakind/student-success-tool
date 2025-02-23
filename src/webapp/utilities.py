@@ -25,7 +25,7 @@ from .authn import (
     oauth2_apikey_scheme,
 )
 from .database import get_session, AccountTable, ApiKeyTable
-from .config import env_vars, fe_vars
+from .config import env_vars
 
 
 class AccessType(StrEnum):
@@ -250,28 +250,21 @@ def get_user(sess: Session, username: str) -> BaseUser:
 def authenticate_user(
     username: str, password: str, enduser: str | None, sess: Session
 ) -> BaseUser:
-    """For the frontend caller only, there is a specific username/password and end user username passed in."""
-    if fe_vars and fe_vars["FE_USER"] and username == fe_vars["FE_USER"]:
-        if not verify_password(password, fe_vars["FE_HASHED_PASSWORD"]):
-            return False
-        else:
-            return get_user(sess, enduser)
-    else:
-        query_result = sess.execute(
-            select(AccountTable).where(
-                AccountTable.email == username,
-            )
-        ).all()
-        if len(query_result) == 0 or len(query_result) > 1:
-            return False
-        if not verify_password(password, query_result[0][0].password):
-            return False
-        return BaseUser(
-            usr=uuid_to_str(query_result[0][0].id),
-            inst=uuid_to_str(query_result[0][0].inst_id),
-            access=query_result[0][0].access_type,
-            email=username,
+    query_result = sess.execute(
+        select(AccountTable).where(
+            AccountTable.email == username,
         )
+    ).all()
+    if len(query_result) == 0 or len(query_result) > 1:
+        return False
+    if not verify_password(password, query_result[0][0].password):
+        return False
+    return BaseUser(
+        usr=uuid_to_str(query_result[0][0].id),
+        inst=uuid_to_str(query_result[0][0].inst_id),
+        access=query_result[0][0].access_type,
+        email=username,
+    )
 
 
 def authenticate_api_key(api_key_enduser_tuple: str, sess: Session) -> BaseUser:

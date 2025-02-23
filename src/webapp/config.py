@@ -40,13 +40,6 @@ gcs_vars = {
     "GCP_SERVICE_ACCOUNT_EMAIL": "",
 }
 
-# Frontend vars needed for Laravel integration.
-fe_vars = {
-    # SECRET.
-    "FE_USER": "fe-usr",
-    "FE_HASHED_PASSWORD": "",
-}
-
 # databricks vars needed for databricks integration
 databricks_vars = {
     # SECRET.
@@ -107,16 +100,6 @@ def startup_env_vars():
                     + " value missing. Required GCP environment variable."
                 )
             gcs_vars[name] = env_var
-        global fe_vars
-        for name in fe_vars:
-            env_var = os.environ.get(name)
-            if not env_var or env_var == "":
-                raise ValueError(
-                    "Missing "
-                    + name
-                    + " value missing. Required Frontend integration environment variable."
-                )
-            fe_vars[name] = env_var
         global databricks_vars
         for name in databricks_vars:
             env_var = os.environ.get(name)
