@@ -37,8 +37,8 @@ from .database import (
 
 # From a fully qualified file nam (i.e. everything sub-bucket name level), get the job id.
 def get_job_id(filename: str) -> int:
-    filename.removeprefix("approved/")
-    return filename.split("/")[0]
+    tmp = filename.removeprefix("approved/")
+    return int(tmp.split("/")[0])
 
 
 # Updates the sql tables by checking if there are new files in the bucket.
