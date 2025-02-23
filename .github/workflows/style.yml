@@ -23,8 +23,8 @@ jobs:
       - name: Run linter
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
-          uv tool run ruff check --verbose ${{ steps.changed-files.outputs.all_changed_files }}
+          uv tool run ruff check --diff ${{ steps.changed-files.outputs.all_changed_files }}
       - name: Run formatter
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
-          uv tool run ruff format --check --verbose ${{ steps.changed-files.outputs.all_changed_files }}
+          uv tool run ruff format --check --diff ${{ steps.changed-files.outputs.all_changed_files }}
