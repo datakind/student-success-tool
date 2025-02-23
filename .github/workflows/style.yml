@@ -27,4 +27,4 @@ jobs:
       - name: Run formatter
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
-          uv tool run ruff format --check --diff ${{ steps.changed-files.outputs.all_changed_files }}
+          uv tool run ruff format --diff ${{ steps.changed-files.outputs.all_changed_files }}
