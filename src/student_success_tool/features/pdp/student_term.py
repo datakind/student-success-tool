@@ -98,7 +98,7 @@ def aggregate_from_course_level_features(
     agg_col_vals: list[tuple[str, t.Any | list[t.Any]]] = [
         ("core_course", "Y"),
         ("course_type", ["CC", "CD"]),
-        ("course_level", [2, 3, 4, 5, 6, 7]),
+        ("course_level", [0, 1]),
         ("enrolled_at_other_institution_s", "Y"),
     ]
     if key_course_subject_areas is not None:
