@@ -282,8 +282,8 @@ def authenticate_api_key(api_key_enduser_tuple: str, sess: Session) -> BaseUser:
             and elem[0].valid
             and not elem[0].deleted
         ):
-            if enduser and query_result[0][0].impersonation_allowed:
-                return get_user(sess, api_key_enduser_tuple[1])
+            if enduser and query_result[0][0].allows_enduser:
+                return get_user(sess, enduser)
             return BaseUser(
                 usr=uuid_to_str(elem[0].id),
                 inst=uuid_to_str(elem[0].inst_id),
