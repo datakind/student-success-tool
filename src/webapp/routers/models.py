@@ -34,6 +34,8 @@ from ..database import (
     JobTable,
 )
 
+from ..gcsdbutils import update_db_from_bucket
+
 from ..gcsutil import StorageControl
 
 router = APIRouter(
@@ -89,8 +91,6 @@ def check_file_types_valid_schema_configs(
 
 class ModelCreationRequest(BaseModel):
     name: str
-    # The default is version zero.
-    vers_id: int = 0
     # valid = False, means the model is not ready for use.
     valid: bool = False
     schema_configs: list[list[SchemaConfigObj]]
@@ -103,8 +103,6 @@ class ModelInfo(BaseModel):
     m_id: str
     name: str
     inst_id: str
-    # The default is version zero.
-    vers_id: int = 0
     # User id of created_by.
     created_by: str | None = None
     valid: bool = False
@@ -115,7 +113,6 @@ class RunInfo(BaseModel):
     """The RunInfo object that's returned."""
 
     run_id: int
-    vers_id: int = 0
     inst_id: str
     m_name: str
     # user id of the person who executed this run.
@@ -147,8 +144,7 @@ def read_inst_models(
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
 ) -> Any:
-    """Returns top-level view of all models attributed to a given institution. Returns all
-    versions of all models.
+    """Returns top-level view of all models attributed to a given institution. Versions and model history are not retained in the model table. That will need to be looked up in Databricks.
 
     Only visible to data owners of that institution or higher.
 
@@ -210,7 +206,6 @@ def create_model(
                 and_(
                     ModelTable.name == req.name,
                     ModelTable.inst_id == str_to_uuid(inst_id),
-                    ModelTable.version == 0 if not req.vers_id else req.vers_id,
                 )
             )
         )
@@ -222,7 +217,6 @@ def create_model(
             inst_id=str_to_uuid(inst_id),
             created_by=str_to_uuid(current_user.user_id),
             valid=req.valid,
-            version=req.vers_id,
             schema_configs=jsonpickle.encode(req.schema_configs),
         )
         local_session.get().add(model)
@@ -252,7 +246,7 @@ def create_model(
     if len(query_result) > 1:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Model with this name and version already exists.",
+            detail="Model with this name already exists.",
         )
     return {
         "m_id": uuid_to_str(query_result[0][0].id),
@@ -264,7 +258,7 @@ def create_model(
     }
 
 
-@router.get("/{inst_id}/models/{model_name}", response_model=list[ModelInfo])
+@router.get("/{inst_id}/models/{model_name}", response_model=ModelInfo)
 def read_inst_model(
     inst_id: str,
     model_name: str,
@@ -298,83 +292,28 @@ def read_inst_model(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Model not found.",
         )
-    # if multiple found, that means we have more than one version.
-    res = []
-    for elem in query_result:
-        res.append(
-            {
-                "m_id": uuid_to_str(elem[0].id),
-                "inst_id": uuid_to_str(elem[0].inst_id),
-                "name": elem[0].name,
-                "created_by": uuid_to_str(elem[0].created_by),
-                "deleted": elem[0].deleted,
-                "valid": elem[0].valid,
-            }
-        )
-    return res
-
-
-@router.get("/{inst_id}/models/{model_name}/vers/{vers_id}", response_model=ModelInfo)
-def read_inst_model_version(
-    inst_id: str,
-    model_name: str,
-    vers_id: int,
-    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
-    sql_session: Annotated[Session, Depends(get_session)],
-) -> Any:
-    """Returns details around a version of a given model.
-
-    Only visible to data owners of that institution or higher.
-
-    Args:
-        current_user: the user making the request.
-    """
-    has_access_to_inst_or_err(inst_id, current_user)
-    has_full_data_access_or_err(current_user, "this model")
-    local_session.set(sql_session)
-    query_result = (
-        local_session.get()
-        .execute(
-            select(ModelTable).where(
-                and_(
-                    ModelTable.name == model_name,
-                    ModelTable.inst_id == str_to_uuid(inst_id),
-                    ModelTable.version == vers_id,
-                )
-            )
-        )
-        .all()
-    )
-    if len(query_result) == 0:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Model of this version not found.",
-        )
     if len(query_result) > 1:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Multiple models of the same version found, this should not have happened.",
+            detail="Multiple models found.",
         )
-    elem = query_result[0]
     return {
-        "m_id": uuid_to_str(elem[0].id),
-        "inst_id": uuid_to_str(elem[0].inst_id),
-        "name": elem[0].name,
-        "created_by": uuid_to_str(elem[0].created_by),
-        "deleted": elem[0].deleted,
-        "valid": elem[0].valid,
+        "m_id": uuid_to_str(query_result[0][0].id),
+        "inst_id": uuid_to_str(query_result[0][0].inst_id),
+        "name": query_result[0][0].name,
+        "created_by": uuid_to_str(query_result[0][0].created_by),
+        "deleted": query_result[0][0].deleted,
+        "valid": query_result[0][0].valid,
     }
 
 
-@router.get(
-    "/{inst_id}/models/{model_name}/vers/{vers_id}/runs", response_model=list[RunInfo]
-)
+@router.get("/{inst_id}/models/{model_name}/runs", response_model=list[RunInfo])
 def read_inst_model_outputs(
     inst_id: str,
     model_name: str,
-    vers_id: int,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
+    storage_control: Annotated[StorageControl, Depends(StorageControl)],
 ) -> Any:
     """Returns top-level info around all executions of a given model.
 
@@ -392,7 +331,6 @@ def read_inst_model_outputs(
                 and_(
                     ModelTable.name == model_name,
                     ModelTable.inst_id == str_to_uuid(inst_id),
-                    ModelTable.version == vers_id,
                 )
             )
         )
@@ -406,15 +344,16 @@ def read_inst_model_outputs(
     if len(query_result) > 1:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Multiple models of the same version found, this should not have happened.",
+            detail="Multiple models of the same name found, this should not have happened.",
         )
+    update_db_from_bucket(inst_id, local_session.get(), storage_control)
+    local_session.get().commit()
     res = []
     for elem in query_result[0][0].jobs or []:
         # if not elem.output_filename:
         # TODO make a query to databricks to retrieve status.
         res.append(
             {
-                "vers_id": vers_id,
                 "inst_id": uuid_to_str(query_result[0][0].inst_id),
                 "m_name": query_result[0][0].name,
                 "run_id": elem.id,
@@ -428,16 +367,16 @@ def read_inst_model_outputs(
 
 
 @router.get(
-    "/{inst_id}/models/{model_name}/vers/{vers_id}/run/{run_id}",
+    "/{inst_id}/models/{model_name}/run/{run_id}",
     response_model=RunInfo,
 )
 def read_inst_model_output(
     inst_id: str,
     model_name: str,
-    vers_id: int,
     run_id: int,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
+    storage_control: Annotated[StorageControl, Depends(StorageControl)],
 ) -> Any:
     """Returns a given executions of a given model.
 
@@ -456,7 +395,6 @@ def read_inst_model_output(
                 and_(
                     ModelTable.name == model_name,
                     ModelTable.inst_id == str_to_uuid(inst_id),
-                    ModelTable.version == vers_id,
                 )
             )
         )
@@ -470,14 +408,14 @@ def read_inst_model_output(
     if len(query_result) > 1:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Multiple models of the same version found, this should not have happened.",
+            detail="Multiple models of the same name found, this should not have happened.",
         )
-
+    update_db_from_bucket(inst_id, local_session.get(), storage_control)
+    local_session.get().commit()
     for elem in query_result[0][0].jobs or []:
         if elem.id == run_id:
             # TODO xxx: if the output_filename is empty make a query to Databricks
             return {
-                "vers_id": vers_id,
                 "inst_id": uuid_to_str(query_result[0][0].inst_id),
                 "m_name": query_result[0][0].name,
                 "run_id": elem.id,
@@ -501,13 +439,12 @@ def convert_files_to_dict(files):
 
 
 @router.post(
-    "/{inst_id}/models/{model_name}/vers/{vers_id}/run-inference",
+    "/{inst_id}/models/{model_name}/run-inference",
     response_model=RunInfo,
 )
 def trigger_inference_run(
     inst_id: str,
     model_name: str,
-    vers_id: int,
     req: InferenceRunRequest,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
@@ -551,7 +488,6 @@ def trigger_inference_run(
                 and_(
                     ModelTable.name == model_name,
                     ModelTable.inst_id == str_to_uuid(inst_id),
-                    ModelTable.version == vers_id,
                 )
             )
         )
@@ -591,8 +527,6 @@ def trigger_inference_run(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="The files in this batch don't conform to the Schema configs allowed by this batch.",
         )
-    print("xxxxxxxxxxxxxxxxxxxxxxxxxx1")
-    print(convert_files_to_dict(batch_result[0][0].files).values())
     # Note to Datakind: In the long-term, this is where you would have a case block or something that would call different types of pipelines.
     db_req = DatabricksInferenceRunRequest(
         inst_name=inst_result[0][0].name,
@@ -601,11 +535,8 @@ def trigger_inference_run(
         gcp_external_bucket_name=get_external_bucket_name(inst_id),
         # The institution email to which pipeline success/failure notifications will get sent.
         email=current_user.email,
-        version_id=vers_id,
     )
-    print("xxxxxxxxxxxxxxxxxxxxxxxxxx2")
     try:
-        print("xxxxxxxxxxxxxxxxxxxxxxxxxx3")
         res = databricks_control.run_pdp_inference(db_req)
         print("xxxxxxxxxxxxxxxxxxxxxxxxxx4")
     except Exception as e:
@@ -614,7 +545,6 @@ def trigger_inference_run(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         )
-    print("xxxxxxxxxxxxxxxxxxxxxxxxxx6")
     triggered_timestamp = datetime.now()
     job = JobTable(
         id=res.job_run_id,
@@ -626,7 +556,6 @@ def trigger_inference_run(
     print("xxxxxxxxxxxxxxxxxxxxxxxxxx7")
     local_session.get().add(job)
     return {
-        "vers_id": vers_id,
         "inst_id": inst_id,
         "m_name": model_name,
         "run_id": res.job_run_id,
@@ -637,14 +566,14 @@ def trigger_inference_run(
 
 
 # TODO: DK to implement
-@router.post("/{inst_id}/models/{model_id}/vers/")
+@router.post("/{inst_id}/models/{model_id}")
 def retrain_model(
     inst_id: str,
     model_id: str,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
 ) -> Any:
-    """Retrain an existing model (creates a new version of a model).
+    """Retrain an existing model.
 
     Only visible to model owners of that institution or higher. This function takes a
     list of training data batch ids.

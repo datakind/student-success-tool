@@ -134,6 +134,10 @@ class SchemaType(StrEnum):
     SST_PDP_COURSE = "SST_PDP_COURSE"
     SST_PDP_FINANCE = "SST_PDP_FINANCE"
 
+    # Schema Types of output files
+    SST_OUTPUT = "SST_OUTPUT"
+    PNG = "PNG"
+
 
 PDP_SCHEMA_GROUP: Final = {
     SchemaType.PDP_COHORT,

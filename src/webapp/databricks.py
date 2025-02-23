@@ -11,9 +11,6 @@ from databricks.sdk.service import catalog
 from .config import databricks_vars, gcs_vars
 from .utilities import databricksify_inst_name, SchemaType
 
-
-# TODO initialize a datakinder account
-
 # List of data medallion levels
 medallion_levels = ["silver", "gold", "bronze"]
 pdp_inference_job_name = "github_sourced_pdp_inference_pipeline"
@@ -26,7 +23,6 @@ class DatabricksInferenceRunRequest(BaseModel):
     # Note that the following should be the filepath.
     filepath_to_type: dict[str, list[SchemaType]]
     model_name: str
-    version_id: int = 0
     model_type: str = "sklearn"
     # The email where notifications will get sent.
     email: str
@@ -121,13 +117,11 @@ class DatabricksControl(BaseModel):
             raise ValueError(
                 "run_pdp_inference() requires PDP_COURSE and PDP_COHORT type files to run."
             )
-        print("bbbbbbbbbbbbbbbbbbbbbbbbbbbb1")
         w = WorkspaceClient(
             host=databricks_vars["DATABRICKS_HOST_URL"],
             google_service_account=gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"],
         )
         db_inst_name = databricksify_inst_name(req.inst_name)
-        print("bbbbbbbbbbbbbbbbbbbbbbbbbbbb2")
         job_id = next(w.jobs.list(name=pdp_inference_job_name)).job_id
         run_job = w.jobs.run_now(
             job_id,
@@ -146,7 +140,6 @@ class DatabricksControl(BaseModel):
                 "model_name": req.model_name,
                 "model_type": req.model_type,
                 "notification_email": req.email,
-                "version_id": req.version_id,
             },
         )
         return DatabricksInferenceRunResponse(job_run_id=run_job.response.run_id)

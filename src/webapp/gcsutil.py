@@ -270,3 +270,10 @@ class StorageControl(BaseModel):
         bucket.copy_blob(blob, bucket, new_blob_name)
         blob.delete()
         return schems
+
+    def get_file_contents(self, bucket_name: str, file_name: str):
+        """Returns file as a bytes object."""
+        storage_client = storage.Client()
+        bucket = storage_client.get_bucket(bucket_name)
+        blob = bucket.blob(file_name)
+        return blob.download_as_bytes()

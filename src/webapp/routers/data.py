@@ -26,7 +26,16 @@ from ..utilities import (
     SchemaType,
 )
 
-from ..database import get_session, local_session, BatchTable, FileTable, InstTable
+from ..database import (
+    get_session,
+    local_session,
+    BatchTable,
+    FileTable,
+    InstTable,
+    JobTable,
+)
+
+from ..gcsdbutils import update_db_from_bucket
 
 from ..gcsutil import StorageControl
 
@@ -131,7 +140,12 @@ def get_all_files(
     datakind_user: bool,
     sst_generated_value: bool | None,
     sess: Session,
+    storage_control,
 ) -> list[DataInfo]:
+    # Update from bucket
+    if sst_generated_value:
+        update_db_from_bucket(inst_id, sess, storage_control)
+        sess.commit()
     # construct query
     query = None
     if sst_generated_value is None:
@@ -253,7 +267,7 @@ def read_inst_all_input_files(
         ),
         # Set sst_generated_value=false to get input only
         "files": get_all_files(
-            inst_id, current_user.is_datakinder, False, local_session.get()
+            inst_id, current_user.is_datakinder, False, local_session.get(), None
         ),
     }
 
@@ -278,8 +292,9 @@ def read_inst_all_output_files(
     inst_id: str,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
+    storage_control: Annotated[StorageControl, Depends(StorageControl)],
 ) -> Any:
-    """Returns top-level overview of input data (date uploaded, size, file names etc.) and batch info.
+    """Returns top-level overview of output data (date uploaded, size, file names etc.) and batch info.
 
     Only visible to data owners of that institution or higher.
 
@@ -296,9 +311,77 @@ def read_inst_all_output_files(
         ),
         # Set sst_generated_value=true to get output only.
         "files": get_all_files(
-            inst_id, current_user.is_datakinder, True, local_session.get()
+            inst_id,
+            current_user.is_datakinder,
+            True,
+            local_session.get(),
+            storage_control,
         ),
     }
+
+
+@router.post("/{inst_id}/update-data")
+def update_data(
+    inst_id: str,
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
+    sql_session: Annotated[Session, Depends(get_session)],
+    storage_control: Annotated[StorageControl, Depends(StorageControl)],
+) -> Any:
+    has_access_to_inst_or_err(inst_id, current_user)
+    local_session.set(sql_session)
+    update_db_from_bucket(inst_id, local_session.get(), storage_control)
+    local_session.get().commit()
+
+
+@router.get("/{inst_id}/output-file-contents/{file_name}", response_model=bytes)
+def retrieve_file_as_bytes(
+    inst_id: str,
+    file_name: str,
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
+    sql_session: Annotated[Session, Depends(get_session)],
+    storage_control: Annotated[StorageControl, Depends(StorageControl)],
+) -> Any:
+    """Returns top-level overview of output data (date uploaded, size, file names etc.) and batch info.
+
+    Only visible to data owners of that institution or higher.
+
+    Args:
+        current_user: the user making the request.
+    """
+    has_access_to_inst_or_err(inst_id, current_user)
+    has_full_data_access_or_err(current_user, "output file")
+    local_session.set(sql_session)
+    # TODO: consider removing this call here and forcing users to call <inst-id>/update-data
+    update_db_from_bucket(inst_id, local_session.get(), storage_control)
+    local_session.get().commit()
+
+    query_result = (
+        local_session.get()
+        .execute(
+            select(FileTable).where(
+                and_(
+                    FileTable.valid,
+                    FileTable.sst_generated,
+                    FileTable.name == file_name,
+                    FileTable.inst_id == str_to_uuid(inst_id),
+                )
+            )
+        )
+        .all()
+    )
+    if len(query_result) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No such output file exists.",
+        )
+    if len(query_result) > 1:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Multiple matches found. Unexpected.",
+        )
+    return storage_control.get_file_contents(
+        get_external_bucket_name(inst_id), file_name
+    )
 
 
 @router.get("/{inst_id}/batch/{batch_id}", response_model=DataOverview)
@@ -814,8 +897,9 @@ def download_url_inst_file(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="File not yet approved by Datakind. Cannot be downloaded by non Datakinders.",
         )
-    bucket_name = get_external_bucket_name(inst_id)
-    return storage_control.generate_download_signed_url(bucket_name, file_name)
+    return storage_control.generate_download_signed_url(
+        get_external_bucket_name(inst_id), file_name
+    )
 
 
 # the process to upload a file would involve three API calls:

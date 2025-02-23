@@ -275,6 +275,7 @@ def test_read_inst_all_input_files(client: TestClient):
 
 def test_read_inst_all_output_files(client: TestClient):
     """Test GET /institutions/<uuid>/output."""
+    MOCK_STORAGE.list_blobs_in_folder.return_value = []
     response = client.get("/institutions/" + uuid_to_str(UUID_INVALID) + "/output")
 
     assert str(response) == "<Response [401 Unauthorized]>"
@@ -454,6 +455,31 @@ def test_read_file_id_info(client: TestClient):
             "uploaded_date": "2024-12-24T20:22:20.132022",
         },
     )
+
+
+def test_retrieve_file_as_bytes(client: TestClient):
+    """Test GET /institutions/<uuid>/output-file-contents/<file_name>."""
+    response = client.get(
+        "/institutions/"
+        + uuid_to_str(UUID_INVALID)
+        + "/output-file-contents/"
+        + "file_does_not_exist.csv"
+    )
+
+    assert str(response) == "<Response [401 Unauthorized]>"
+    assert (
+        response.text
+        == '{"detail":"Not authorized to read this institution\'s resources."}'
+    )
+    # Authorized.
+    response = client.get(
+        "/institutions/"
+        + uuid_to_str(USER_VALID_INST_UUID)
+        + "/output-file-contents/"
+        + "file_does_not_exist.csv"
+    )
+    assert str(response) == "<Response [404 Not Found]>"
+    assert response.text == '{"detail":"No such output file exists."}'
 
 
 # TODO: xxx add more test cases including sst generated = true etc.

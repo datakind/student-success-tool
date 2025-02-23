@@ -58,7 +58,6 @@ def same_model_orderless(a_elem: ModelInfo, b_elem: ModelInfo):
         a_elem["inst_id"] != b_elem["inst_id"]
         or a_elem["name"] != b_elem["name"]
         or a_elem["m_id"] != b_elem["m_id"]
-        or a_elem["vers_id"] != b_elem["vers_id"]
         or a_elem["valid"] != b_elem["valid"]
         or a_elem["deleted"] != b_elem["deleted"]
     ):
@@ -71,7 +70,6 @@ def same_run_info_orderless(a_elem: ModelInfo, b_elem: ModelInfo):
         a_elem["inst_id"] != b_elem["inst_id"]
         or a_elem["name"] != b_elem["name"]
         or a_elem["m_id"] != b_elem["m_id"]
-        or a_elem["vers_id"] != b_elem["vers_id"]
         or a_elem["valid"] != b_elem["valid"]
         or a_elem["deleted"] != b_elem["deleted"]
     ):
@@ -229,7 +227,6 @@ def test_read_inst_models(client: TestClient):
             "m_id": "e4862c62829440d8ab4c9c298f02f619",
             "name": "sample_model_for_school_1",
             "valid": True,
-            "vers_id": 0,
         },
     )
 
@@ -255,40 +252,28 @@ def test_read_inst_model(client: TestClient):
         + "/models/sample_model_for_school_1"
     )
     assert response.status_code == 200
-    assert same_model_orderless(response.json()[0], MODEL_OBJ)
-
-
-def test_read_inst_model_version(client: TestClient):
-    """Test GET /institutions/345/models/10/vers/0."""
-    # Authorized.
-    response = client.get(
-        "/institutions/"
-        + uuid_to_str(USER_VALID_INST_UUID)
-        + "/models/sample_model_for_school_1/vers/0"
-    )
-    assert response.status_code == 200
     assert same_model_orderless(response.json(), MODEL_OBJ)
 
 
 def test_read_inst_model_outputs(client: TestClient):
-    """Test GET /institutions/345/models/10/vers/0/output."""
+    """Test GET /institutions/345/models/10/output."""
     # Authorized.
     response = client.get(
         "/institutions/"
         + uuid_to_str(USER_VALID_INST_UUID)
-        + "/models/sample_model_for_school_1/vers/0/runs"
+        + "/models/sample_model_for_school_1/runs"
     )
     assert response.status_code == 200
     assert response.json() == []
 
 
 def test_read_inst_model_output(client: TestClient):
-    """Test GET /institutions/345/models/10/vers/0/output/1."""
+    """Test GET /institutions/345/models/10/output/1."""
     # Authorized.
     response = client.get(
         "/institutions/"
         + uuid_to_str(USER_VALID_INST_UUID)
-        + "/models/sample_model_for_school_1/vers/0/run/1"
+        + "/models/sample_model_for_school_1/run/1"
     )
     assert response.status_code == 404
 
@@ -327,7 +312,7 @@ def test_trigger_inference_run(client: TestClient):
     response = client.post(
         "/institutions/"
         + uuid_to_str(USER_VALID_INST_UUID)
-        + "/models/sample_model_for_school_1/vers/0/run-inference",
+        + "/models/sample_model_for_school_1/run-inference",
         json={
             "batch_name": "batch_none",
             "is_pdp": True,
@@ -343,7 +328,7 @@ def test_trigger_inference_run(client: TestClient):
     response = client.post(
         "/institutions/"
         + uuid_to_str(USER_VALID_INST_UUID)
-        + "/models/sample_model_for_school_1/vers/0/run-inference",
+        + "/models/sample_model_for_school_1/run-inference",
         json={
             "batch_name": "batch_foo",
             "is_pdp": True,
@@ -351,7 +336,6 @@ def test_trigger_inference_run(client: TestClient):
     )
 
     assert response.status_code == 200
-    assert response.json()["vers_id"] == 0
     assert response.json()["inst_id"] == uuid_to_str(USER_VALID_INST_UUID)
     assert response.json()["m_name"] == "sample_model_for_school_1"
     assert response.json()["run_id"] == 123
@@ -445,6 +429,6 @@ def test_check_file_types_valid_schema_configs():
 def test_retrain_model(client: TestClient):
     """Depending on timeline, fellows may not get to this."""
     response = client.post(
-        "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + "/models/123/vers/"
+        "/institutions/" + uuid_to_str(USER_VALID_INST_UUID) + "/models/123"
     )
     assert response.status_code == 200

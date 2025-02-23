@@ -346,13 +346,11 @@ class ModelTable(Base):
     deleted_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    # Each new version of a model can have the same name, but note the uuid will be different.
+    # version is unused. version is not currently supported. The webapp only knows about the name of the model and any usages of a model will only use the live version.
     version = Column(Integer, default=0)
 
-    # Within a given institution, there should be no duplicated model names + versions.
-    __table_args__ = (
-        UniqueConstraint("name", "inst_id", "version", name="model_name_inst_uc"),
-    )
+    # Within a given institution, there should be no duplicated model names.
+    __table_args__ = (UniqueConstraint("name", "inst_id", name="model_name_inst_uc"),)
 
 
 class JobTable(Base):
