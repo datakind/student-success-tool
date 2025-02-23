@@ -101,6 +101,7 @@ def test_sum_dummy_cols_by_group(df, grp_cols, agg_cols, exp):
             [
                 ("course_type", ["CC", "CD"]),
                 ("course_level", 0),
+                ("course_level", [2, 3]),
                 ("grade", ["0", "1", "F", "W"]),
             ],
             pd.DataFrame(
@@ -114,6 +115,7 @@ def test_sum_dummy_cols_by_group(df, grp_cols, agg_cols, exp):
                     ],
                     "num_courses_course_type_CC|CD": [1, 0, 1, 0],
                     "num_courses_course_level_0": [1, 0, 1, 0],
+                    "num_courses_course_level_2|3": [0, 0, 1, 0],
                     "num_courses_grade_0|1|F|W": [2, 0, 2, 0],
                 }
             ),
