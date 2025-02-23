@@ -134,8 +134,15 @@ def drop_low_variance_features(
         sklearn.feature_selection.VarianceThreshold(threshold=threshold)
         .fit(df_numeric)
     )  # fmt: skip
+    df_categorical = df.select_dtypes(include=["string", "category"])
+    constant_value_cols = {
+        col
+        for col, nunique in df_categorical.nunique().eq(1).to_dict().items()
+        if nunique == 1
+    }
     low_variance_cols = list(
         set(df_numeric.columns) - set(selector.get_feature_names_out())
+        | constant_value_cols
     )
     if low_variance_cols:
         LOGGER.info(
