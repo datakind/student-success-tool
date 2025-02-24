@@ -280,4 +280,6 @@ class StorageControl(BaseModel):
         print("aaaaaaaaaaaaaaaaaaaaaaaaaa3")
         blob = bucket.blob(file_name)
         print("aaaaaaaaaaaaaaaaaaaaaaaaaa4")
-        return blob.download_as_bytes()
+        res = blob.download_as_bytes()
+        print("aaaaaaaaaaaaaaaaaaaaaaaaaa5")
+        return res

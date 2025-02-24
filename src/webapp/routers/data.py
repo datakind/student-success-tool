@@ -384,10 +384,13 @@ def retrieve_file_as_bytes(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Multiple matches found. Unexpected.",
         )
-    print("bbbbbbbbbbbbbbbbbbbbbbbbb1")
-    return storage_control.get_file_contents(
+    print("bbbbbbbbbbbbbbbbbbbbbbbbb1:" + file_name)
+    res = storage_control.get_file_contents(
         get_external_bucket_name(inst_id), file_name
     )
+    print("bbbbbbbbbbbbbbbbbbbbbbbbb2")
+    print(type(res))
+    return res
 
 
 @router.get("/{inst_id}/batch/{batch_id}", response_model=DataOverview)
