@@ -349,14 +349,16 @@ def retrieve_file_as_bytes(
     Args:
         current_user: the user making the request.
     """
+    print("*xxxxxxxxxxxxxxxxxxxxx0:" + file_name)
     file_name = decode_url_piece(file_name)
+    print("*xxxxxxxxxxxxxxxxxxxxx.5:" + file_name)
     has_access_to_inst_or_err(inst_id, current_user)
     has_full_data_access_or_err(current_user, "output file")
     local_session.set(sql_session)
     # TODO: consider removing this call here and forcing users to call <inst-id>/update-data
     update_db_from_bucket(inst_id, local_session.get(), storage_control)
     local_session.get().commit()
-    print("xxxxxxxxxxxxxxxxxxxxx1")
+    print("*xxxxxxxxxxxxxxxxxxxxx1")
     print(file_name)
     query_result = (
         local_session.get()
@@ -382,6 +384,7 @@ def retrieve_file_as_bytes(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Multiple matches found. Unexpected.",
         )
+    print("bbbbbbbbbbbbbbbbbbbbbbbbb1")
     return storage_control.get_file_contents(
         get_external_bucket_name(inst_id), file_name
     )

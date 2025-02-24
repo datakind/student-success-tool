@@ -47,7 +47,7 @@ def update_db_from_bucket(inst_id: str, session, storage_control):
     res = storage_control.list_blobs_in_folder(
         get_external_bucket_name(inst_id), dir_prefix
     )
-    print("xxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+    print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxa")
     print(res)
     new_files_to_add_to_database = []
     for f in res:

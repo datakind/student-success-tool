@@ -273,7 +273,11 @@ class StorageControl(BaseModel):
 
     def get_file_contents(self, bucket_name: str, file_name: str):
         """Returns file as a bytes object."""
+        print("aaaaaaaaaaaaaaaaaaaaaaaaaa1")
         storage_client = storage.Client()
+        print("aaaaaaaaaaaaaaaaaaaaaaaaaa2")
         bucket = storage_client.get_bucket(bucket_name)
+        print("aaaaaaaaaaaaaaaaaaaaaaaaaa3")
         blob = bucket.blob(file_name)
+        print("aaaaaaaaaaaaaaaaaaaaaaaaaa4")
         return blob.download_as_bytes()
