@@ -893,11 +893,9 @@ def download_url_inst_file(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Only SST generated files can be downloaded.",
         )
-    if res.valid:
-        file_name = "approved/" + file_name
-    elif current_user.is_datakinder:
-        file_name = "unapproved/" + file_name
-    else:
+    if not current_user.is_datakinder and (
+        not res.valid or not file_name.startswith("approved/")
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="File not yet approved by Datakind. Cannot be downloaded by non Datakinders.",
