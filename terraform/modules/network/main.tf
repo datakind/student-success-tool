@@ -32,12 +32,6 @@ resource "google_compute_global_address" "connector_ip" {
   project       = var.vpc_host_project
 }
 
-resource "google_service_networking_connection" "connection" {
-  network                 = data.google_compute_network.vpc_network.id
-  service                 = "servicenetworking.googleapis.com"
-  reserved_peering_ranges = [google_compute_global_address.connector_ip.name]
-}
-
 data "google_project" "service_project" {
   project_id = var.project
 }
