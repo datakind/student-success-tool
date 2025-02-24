@@ -4,7 +4,7 @@
 import uuid
 
 from typing import Annotated, Any, Tuple, Dict
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from pydantic import BaseModel
 from sqlalchemy import and_, or_, update
 from datetime import datetime, date
@@ -390,7 +390,7 @@ def retrieve_file_as_bytes(
     )
     print("bbbbbbbbbbbbbbbbbbbbbbbbb2")
     print(type(res))
-    return res
+    return Response(res)
 
 
 @router.get("/{inst_id}/batch/{batch_id}", response_model=DataOverview)
