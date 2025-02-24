@@ -287,8 +287,30 @@ def authenticate_api_key(api_key_enduser_tuple: str, sess: Session) -> BaseUser:
             and elem[0].valid
             and not elem[0].deleted
         ):
-            if enduser and query_result[0][0].allows_enduser:
-                return get_user(sess, enduser)
+            # If enduser is set, only allow if the API allows the enduser and the enduser exists.
+            if enduser:
+                if not query_result[0][0].allows_enduser:
+                    return False
+                user_query = select(AccountTable).where(
+                    AccountTable.email == enduser,
+                )
+                if inst:
+                    # If there's an institution set, ensure the user is part of the institution
+                    user_query = select(AccountTable).where(
+                        _and(
+                            AccountTable.email == enduser,
+                            AccountTable.inst_id == uuid_to_str(inst),
+                        )
+                    )
+                user_result = sess.execute(user_query).all()
+                if len(user_result) == 0 or len(user_result) > 1:
+                    return False
+                return BaseUser(
+                    usr=uuid_to_str(user_result[0][0].id),
+                    inst=uuid_to_str(user_result[0][0].inst_id),
+                    access=user_result[0][0].access_type,
+                    email=enduser,
+                )
             return BaseUser(
                 usr=uuid_to_str(elem[0].id),
                 inst=uuid_to_str(elem[0].inst_id),
