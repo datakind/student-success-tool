@@ -24,6 +24,7 @@ from ..utilities import (
     DataSource,
     get_external_bucket_name,
     SchemaType,
+    decode_url_piece,
 )
 
 from ..database import (
@@ -333,7 +334,7 @@ def update_data(
     local_session.get().commit()
 
 
-@router.get("/{inst_id}/output-file-contents/{file_name}", response_model=bytes)
+@router.get("/{inst_id}/output-file-contents/{file_name:path}", response_model=bytes)
 def retrieve_file_as_bytes(
     inst_id: str,
     file_name: str,
@@ -348,13 +349,15 @@ def retrieve_file_as_bytes(
     Args:
         current_user: the user making the request.
     """
+    file_name = decode_url_piece(file_name)
     has_access_to_inst_or_err(inst_id, current_user)
     has_full_data_access_or_err(current_user, "output file")
     local_session.set(sql_session)
     # TODO: consider removing this call here and forcing users to call <inst-id>/update-data
     update_db_from_bucket(inst_id, local_session.get(), storage_control)
     local_session.get().commit()
-
+    print("xxxxxxxxxxxxxxxxxxxxx1")
+    print(file_name)
     query_result = (
         local_session.get()
         .execute(
@@ -776,7 +779,7 @@ def read_file_id_info(
     }
 
 
-@router.get("/{inst_id}/file/{file_name}", response_model=DataInfo)
+@router.get("/{inst_id}/file/{file_name:path}", response_model=DataInfo)
 def read_file_info(
     inst_id: str,
     file_name: str,
@@ -791,6 +794,7 @@ def read_file_info(
     Args:
         current_user: the user making the request.
     """
+    file_name = decode_url_piece(file_name)
     has_access_to_inst_or_err(inst_id, current_user)
     has_full_data_access_or_err(current_user, "file data")
     local_session.set(sql_session)
@@ -836,7 +840,7 @@ def read_file_info(
 
 
 # TODO: ADD TESTS for the below
-@router.get("/{inst_id}/download-url/{file_name}", response_model=str)
+@router.get("/{inst_id}/download-url/{file_name:path}", response_model=str)
 def download_url_inst_file(
     inst_id: str,
     file_name: str,
@@ -851,6 +855,7 @@ def download_url_inst_file(
     Args:
         current_user: the user making the request.
     """
+    file_name = decode_url_piece(file_name)
     has_access_to_inst_or_err(inst_id, current_user)
     has_full_data_access_or_err(current_user, "file data")
     local_session.set(sql_session)
@@ -971,7 +976,7 @@ def validation_helper(
 
 
 @router.post(
-    "/{inst_id}/input/validate-sftp/{file_name}", response_model=ValidationResult
+    "/{inst_id}/input/validate-sftp/{file_name:path}", response_model=ValidationResult
 )
 def validate_file_sftp(
     inst_id: str,
@@ -980,7 +985,8 @@ def validate_file_sftp(
     storage_control: Annotated[StorageControl, Depends(StorageControl)],
     sql_session: Annotated[Session, Depends(get_session)],
 ) -> Any:
-    """Validate a given file pulled from SFTP. The file_name should not contain slashes."""
+    """Validate a given file pulled from SFTP. The file_name should be url encoded."""
+    file_name = decode_url_piece(file_name)
     if not current_user.is_datakinder:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -992,7 +998,7 @@ def validate_file_sftp(
 
 
 @router.post(
-    "/{inst_id}/input/validate-upload/{file_name}", response_model=ValidationResult
+    "/{inst_id}/input/validate-upload/{file_name:path}", response_model=ValidationResult
 )
 def validate_file_manual_upload(
     inst_id: str,
@@ -1001,13 +1007,14 @@ def validate_file_manual_upload(
     storage_control: Annotated[StorageControl, Depends(StorageControl)],
     sql_session: Annotated[Session, Depends(get_session)],
 ) -> Any:
-    """Validate a given file. The file_name should not contain slashes."""
+    """Validate a given file. The file_name should be url encoded."""
+    file_name = decode_url_piece(file_name)
     return validation_helper(
         "MANUAL_UPLOAD", inst_id, file_name, current_user, storage_control, sql_session
     )
 
 
-@router.get("/{inst_id}/upload-url/{file_name}", response_model=str)
+@router.get("/{inst_id}/upload-url/{file_name:path}", response_model=str)
 def get_upload_url(
     inst_id: str,
     file_name: str,
@@ -1019,6 +1026,7 @@ def get_upload_url(
     Args:
         current_user: the user making the request.
     """
+    file_name = decode_url_piece(file_name)
     # raise error at this level instead bc otherwise it's getting wrapped as a 200
     has_access_to_inst_or_err(inst_id, current_user)
     return storage_control.generate_upload_signed_url(

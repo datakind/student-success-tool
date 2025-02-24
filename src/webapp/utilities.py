@@ -15,6 +15,7 @@ from jwt.exceptions import InvalidTokenError
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.future import select
+from urllib.parse import unquote
 
 from .authn import (
     verify_password,
@@ -26,6 +27,10 @@ from .authn import (
 )
 from .database import get_session, AccountTable, ApiKeyTable
 from .config import env_vars
+
+
+def decode_url_piece(src: str):
+    return unquote(src)
 
 
 class AccessType(StrEnum):

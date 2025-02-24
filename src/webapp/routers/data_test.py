@@ -463,7 +463,7 @@ def test_retrieve_file_as_bytes(client: TestClient):
         "/institutions/"
         + uuid_to_str(UUID_INVALID)
         + "/output-file-contents/"
-        + "file_does_not_exist.csv"
+        + "val%2Ffile_does_not_exist.csv"
     )
 
     assert str(response) == "<Response [401 Unauthorized]>"
@@ -476,7 +476,7 @@ def test_retrieve_file_as_bytes(client: TestClient):
         "/institutions/"
         + uuid_to_str(USER_VALID_INST_UUID)
         + "/output-file-contents/"
-        + "file_does_not_exist.csv"
+        + "val%2Ffile_does_not_exist.csv"
     )
     assert str(response) == "<Response [404 Not Found]>"
     assert response.text == '{"detail":"No such output file exists."}'

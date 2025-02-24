@@ -23,6 +23,7 @@ from ..utilities import (
     DataSource,
     get_external_bucket_name,
     SchemaType,
+    decode_url_piece,
 )
 from ..database import (
     get_session,
@@ -272,6 +273,7 @@ def read_inst_model(
     Args:
         current_user: the user making the request.
     """
+    model_name = decode_url_piece(model_name)
     has_access_to_inst_or_err(inst_id, current_user)
     has_full_data_access_or_err(current_user, "this model")
     local_session.set(sql_session)
@@ -322,6 +324,7 @@ def read_inst_model_outputs(
     Args:
         current_user: the user making the request.
     """
+    model_name = decode_url_piece(model_name)
     has_access_to_inst_or_err(inst_id, current_user)
     local_session.set(sql_session)
     query_result = (
@@ -386,6 +389,7 @@ def read_inst_model_output(
     Args:
         current_user: the user making the request.
     """
+    model_name = decode_url_piece(model_name)
     has_access_to_inst_or_err(inst_id, current_user)
     local_session.set(sql_session)
     query_result = (
@@ -457,6 +461,7 @@ def trigger_inference_run(
     Args:
         current_user: the user making the request.
     """
+    model_name = decode_url_piece(model_name)
     has_access_to_inst_or_err(inst_id, current_user)
     if not req.is_pdp:
         raise HTTPException(
