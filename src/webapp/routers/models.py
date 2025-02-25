@@ -362,8 +362,9 @@ def read_inst_model_outputs(
         # TODO make a query to databricks to retrieve status.
         ret_val.append(
             {
-                "inst_id": uuid_to_str(elem.inst_id),
-                "m_name": elem.name,
+                # JobTable doesn't have inst_id, so we retrieve that from the model query.
+                "inst_id": uuid_to_str(query_result[0][0].inst_id),
+                "m_name": query_result[0][0].name,
                 "run_id": elem.id,
                 "created_by": uuid_to_str(elem.created_by),
                 "triggered_at": elem.triggered_at,
