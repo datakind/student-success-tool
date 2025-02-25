@@ -141,7 +141,7 @@ resource "google_cloudbuild_trigger" "frontend" {
   dynamic "source_to_build" {
     for_each = var.environment != "dev" ? [1] : []
     content {
-      ref       = "refs/heads/fellows-experimental"
+      ref       = "refs/heads/develop"
       repo_type = "GITHUB"
       uri       = "https://github.com/datakind/sst-app-ui"
     }
