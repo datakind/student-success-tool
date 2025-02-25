@@ -354,7 +354,7 @@ def read_inst_model_outputs(
     local_session.get().commit()
     if not query_result[0][0].jobs:
         return []
-    result = query_result[0][0].jobs
+    result = list(query_result[0][0].jobs)
     result.sort(key=lambda x: x.triggered_at, reverse=True)
     ret_val = []
     for elem in result:
