@@ -66,7 +66,6 @@ class DatabricksControl(BaseModel):
         )
         db_inst_name = databricksify_inst_name(inst_name)
         cat_name = databricks_vars["CATALOG_NAME"]
-        print(cat_name)
         for medallion in medallion_levels:
             w.schemas.create(name=f"{db_inst_name}_{medallion}", catalog_name=cat_name)
         # Create a managed volume in the bronze schema for internal pipeline data.
@@ -143,3 +142,40 @@ class DatabricksControl(BaseModel):
             },
         )
         return DatabricksInferenceRunResponse(job_run_id=run_job.response.run_id)
+
+    def delete_inst(self, inst_name: str) -> None:
+        db_inst_name = databricksify_inst_name(inst_name)
+        cat_name = databricks_vars["CATALOG_NAME"]
+        w = WorkspaceClient(
+            host=databricks_vars["DATABRICKS_HOST_URL"],
+            # This should still be cloud run, since it's cloud run triggering the databricks
+            # this account needs to exist on Databricks as well and needs to have permissions.
+            google_service_account=gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"],
+        )
+        # Delete the managed volume.
+        w.volumes.delete(name=f"{cat_name}.{db_inst_name}_bronze.bronze_volume")
+        w.volumes.delete(name=f"{cat_name}.{db_inst_name}_silver.silver_volume")
+        w.volumes.delete(name=f"{cat_name}.{db_inst_name}_gold.gold_volume")
+
+        # Delete the MLflow model.
+        # TODO how to handle deleting all models?
+        """
+        model_name = "latest_enrollment_model"
+        new_institution_model_uri = f"{cat_name}.{db_inst_name}_gold.{model_name}"
+        mlflow_client.delete_registered_model(name=new_institution_model_uri)
+        """
+
+        # Delete tables and schemas for each medallion level.
+        for medallion in medallion_levels:
+            all_tables = [
+                table.name
+                for table in w.tables.list(
+                    catalog_name=cat_name,
+                    schema_name=f"{db_inst_name}_{medallion}",
+                )
+            ]
+            for table in all_tables:
+                w.tables.delete(
+                    full_name=f"{cat_name}.{db_inst_name}_{medallion}.{table}"
+                )
+            w.schemas.delete(full_name=f"{cat_name}.{db_inst_name}_{medallion}")

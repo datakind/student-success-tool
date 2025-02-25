@@ -231,6 +231,52 @@ def create_institution(
     }
 
 
+# TODO: add tests
+@router.delete("/institutions/{inst_id}", response_model=None)
+def delete_inst(
+    inst_id: str,
+    current_user: Annotated[BaseUser, Depends(get_current_active_user)],
+    sql_session: Annotated[Session, Depends(get_session)],
+    storage_control: Annotated[StorageControl, Depends(StorageControl)],
+    databricks_control: Annotated[DatabricksControl, Depends(DatabricksControl)],
+) -> Any:
+    """Delete an existing institution.
+
+    Only available to Datakinders.
+
+    Args:
+        current_user: the user making the request.
+    """
+    if not current_user.is_datakinder():
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authorized to delete an institution.",
+        )
+
+    local_session.set(sql_session)
+    local_session.get().execute(
+        delete(InstTable).where(InstTable.id == str_to_uuid(inst_id))
+    )
+    local_session.get().commit()
+    # Delete GCS bucket
+    bucket_name = get_external_bucket_name_from_uuid(query_result[0][0].id)
+    try:
+        storage_control.delete_bucket(bucket_name)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Storage bucket deletion failed:" + str(e),
+        )
+    # Delete all databricks managed pieces.
+    try:
+        databricks_control.delete_inst(query_result[0][0].name)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Databricks deletion failed:" + str(e),
+        )
+
+
 # All other API transactions require the UUID as an identifier, this allows the UUID lookup by human readable name.
 @router.get("/institutions/name/{inst_name}", response_model=Institution)
 def read_inst_name(
