@@ -45,8 +45,15 @@ from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 from py4j.protocol import Py4JJavaError
 
-from student_success_tool import configs, modeling
-from student_success_tool.analysis import pdp
+from student_success_tool import (
+    dataio,
+    eda,
+    features,
+    modeling,
+    preprocessing,
+    schemas,
+    targets,
+)
 
 # COMMAND ----------
 
@@ -97,7 +104,9 @@ from analysis import *  # noqa: F403
 # it'll start out with just basic info: institution_id, institution_name
 # but as each step of the pipeline gets built, more parameters will be moved
 # from hard-coded notebook variables to shareable, persistent config fields
-cfg = configs.load_config("./config-v2-TEMPLATE.toml", configs.PDPProjectConfigV2)
+cfg = dataio.read_config(
+    "./config-TEMPLATE.toml", schema=schemas.pdp.PDPProjectConfigV2
+)
 cfg
 
 # COMMAND ----------
@@ -113,8 +122,10 @@ cfg
 # COMMAND ----------
 
 raw_course_file_path = cfg.datasets[dataset_name].raw_course.file_path
-df_course = pdp.dataio.read_raw_pdp_course_data_from_file(
-    raw_course_file_path, schema=pdp.schemas.RawPDPCourseDataSchema, dttm_format="%Y%m%d.0"
+df_course = dataio.pdp.read_raw_course_data(
+    file_path=raw_course_file_path,
+    schema=schemas.pdp.RawPDPCourseDataSchema,
+    dttm_format="%Y%m%d.0",
 )
 print(f"rows x cols = {df_course.shape}")
 df_course.head()
@@ -122,8 +133,8 @@ df_course.head()
 # COMMAND ----------
 
 raw_cohort_file_path = cfg.datasets[dataset_name].raw_cohort.file_path
-df_cohort = pdp.dataio.read_raw_pdp_cohort_data_from_file(
-    raw_cohort_file_path, schema=pdp.schemas.RawPDPCohortDataSchema
+df_cohort = dataio.pdp.read_raw_cohort_data(
+    file_path=raw_cohort_file_path, schema=schemas.pdp.RawPDPCohortDataSchema
 )
 print(f"rows x cols = {df_cohort.shape}")
 df_cohort.head()
@@ -141,19 +152,19 @@ try:
     feature_params = cfg.preprocessing.features.model_dump()
 except AttributeError:
     feature_params = {
-        "min_passing_grade": pdp.constants.DEFAULT_MIN_PASSING_GRADE,
-        "min_num_credits_full_time": pdp.constants.DEFAULT_MIN_NUM_CREDITS_FULL_TIME,
+        "min_passing_grade": features.pdp.constants.DEFAULT_MIN_PASSING_GRADE,
+        "min_num_credits_full_time": features.pdp.constants.DEFAULT_MIN_NUM_CREDITS_FULL_TIME,
         # NOTE: this pattern in particular may be something you need to change
         # schools have many different conventions for course numbering!
-        "course_level_pattern": pdp.constants.DEFAULT_COURSE_LEVEL_PATTERN,
-        "peak_covid_terms": pdp.constants.DEFAULT_PEAK_COVID_TERMS,
+        "course_level_pattern": features.pdp.constants.DEFAULT_COURSE_LEVEL_PATTERN,
+        "peak_covid_terms": features.pdp.constants.DEFAULT_PEAK_COVID_TERMS,
         "key_course_subject_areas": None,
         "key_course_ids": None,
     }
 
 # COMMAND ----------
 
-df_student_terms = pdp.dataops.make_student_term_dataset(
+df_student_terms = preprocessing.pdp.dataops.make_student_term_dataset(
     df_cohort, df_course, **feature_params
 )
 df_student_terms
@@ -218,7 +229,7 @@ except AttributeError:
 
 # TODO: run target-specific function suitable for school's use case
 if run_type == "train":
-    df_labeled = pdp.targets.TODO.make_labeled_dataset(
+    df_labeled = targets.pdp.TODO.make_labeled_dataset(
         df_student_terms, **target_params
     )
     print(df_labeled[cfg.target_col].value_counts())
@@ -253,9 +264,13 @@ if run_type == "train":
 
 # drop unwanted columns and mask values by time
 if run_type == "train":
-    df_modeling = pdp.dataops.clean_up_labeled_dataset_cols_and_vals(df_labeled)
+    df_modeling = preprocessing.pdp.dataops.clean_up_labeled_dataset_cols_and_vals(
+        df_labeled
+    )
 else:
-    df_modeling = pdp.dataops.clean_up_labeled_dataset_cols_and_vals(df_student_terms)
+    df_modeling = preprocessing.pdp.dataops.clean_up_labeled_dataset_cols_and_vals(
+        df_student_terms
+    )
 df_modeling.shape
 
 # COMMAND ----------
@@ -278,7 +293,9 @@ preprocessed_table_path = "CATALOG.INST_NAME_silver.modeling_dataset_DESCRIPTIVE
 # COMMAND ----------
 
 if run_type != "train":
-    pdp.dataio.write_data_to_delta_table(df_modeling, preprocessed_table_path, spark_session=spark)
+    dataio.write.to_delta_table(
+        df_modeling, preprocessed_table_path, spark_session=spark
+    )
     dbutils.notebook.exit(
         f"'{dataset_name}' modeling dataset saved to {preprocessed_table_path}; "
         "exiting notebook..."
@@ -308,8 +325,7 @@ if splits:
     df_modeling = df_modeling.assign(
         **{
             split_col: ft.partial(
-                modeling.utils.compute_dataset_splits,
-                seed=cfg.random_state
+                modeling.utils.compute_dataset_splits, seed=cfg.random_state
             )
         }
     )
@@ -345,9 +361,8 @@ non_feature_cols = (
 
 # COMMAND ----------
 
-target_corrs = (
-    df_modeling.drop(columns=non_feature_cols + [cfg.target_col])
-    .corrwith(df_modeling[cfg.target_col], method="spearman", numeric_only=True)
+target_corrs = df_modeling.drop(columns=non_feature_cols + [cfg.target_col]).corrwith(
+    df_modeling[cfg.target_col], method="spearman", numeric_only=True
 )
 print(target_corrs.sort_values(ascending=False).head(10))
 print("...")
@@ -355,12 +370,16 @@ print(target_corrs.sort_values(ascending=False, na_position="first").tail(10))
 
 # COMMAND ----------
 
-target_assocs = pdp.eda.compute_pairwise_associations(
+target_assocs = eda.compute_pairwise_associations(
     df_modeling, ref_col=cfg.target_col, exclude_cols=non_feature_cols
 )
 print(target_assocs.sort_values(by="target", ascending=False).head(10))
 print("...")
-print(target_assocs.sort_values(by="target", ascending=False, na_position="first").tail(10))
+print(
+    target_assocs.sort_values(by="target", ascending=False, na_position="first").tail(
+        10
+    )
+)
 
 # COMMAND ----------
 
@@ -370,7 +389,7 @@ print(target_assocs.sort_values(by="target", ascending=False, na_position="first
 # COMMAND ----------
 
 # save preprocessed dataset
-pdp.dataio.write_data_to_delta_table(df_modeling, preprocessed_table_path, spark_session=spark)
+dataio.write.to_delta_table(df_modeling, preprocessed_table_path, spark_session=spark)
 
 # COMMAND ----------
 
@@ -379,5 +398,3 @@ pdp.dataio.write_data_to_delta_table(df_modeling, preprocessed_table_path, spark
 # MAGIC - [ ] Submit a PR including this notebook and any changes in project config
 
 # COMMAND ----------
-
-

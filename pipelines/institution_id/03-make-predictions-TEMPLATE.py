@@ -47,9 +47,8 @@ from databricks.sdk.runtime import dbutils
 from py4j.protocol import Py4JJavaError
 from pyspark.sql.types import FloatType, StringType, StructField, StructType
 
-from student_success_tool import configs, modeling
-from student_success_tool.analysis import pdp
-from student_success_tool.modeling import inference, utils
+from student_success_tool import dataio, modeling, schemas
+from student_success_tool.modeling import inference
 
 # COMMAND ----------
 
@@ -107,7 +106,9 @@ logging.info(
 # it'll start out with just basic info: institution_id, institution_name
 # but as each step of the pipeline gets built, more parameters will be moved
 # from hard-coded notebook variables to shareable, persistent config fields
-cfg = configs.load_config("./config-v2-TEMPLATE.toml", configs.PDPProjectConfigV2)
+cfg = dataio.read_config(
+    "./config-TEMPLATE.toml", schema=schemas.pdp.PDPProjectConfigV2
+)
 cfg
 
 # COMMAND ----------
@@ -117,8 +118,8 @@ cfg
 
 # COMMAND ----------
 
-df = pdp.schemas.PDPLabeledDataSchema(
-    pdp.dataio.read_data_from_delta_table(
+df = schemas.pdp.PDPLabeledDataSchema(
+    dataio.read.from_delta_table(
         cfg.datasets[dataset_name].preprocessed.table_path,
         spark_session=spark,
     )
@@ -167,7 +168,7 @@ logging.info(
 
 # COMMAND ----------
 
-features_table = modeling.utils.load_features_table("assets/pdp/features_table.toml")
+features_table = dataio.read_features_table("assets/pdp/features_table.toml")
 
 # COMMAND ----------
 
@@ -309,7 +310,7 @@ with mlflow.start_run(run_id=cfg.models[model_name].run_id) as run:
 
 # COMMAND ----------
 
-features_table = utils.load_features_table("assets/pdp/features_table.toml")
+features_table = dataio.read_features_table("assets/pdp/features_table.toml")
 result = inference.select_top_features_for_display(
     features,
     unique_ids,
