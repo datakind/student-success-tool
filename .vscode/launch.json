@@ -1,0 +1,34 @@
+{
+  "configurations": [
+    {
+      "name": "Debug Webapp",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "fastapi",
+      "args": [
+        "dev",
+        "src/webapp",
+        "--port",
+        "8000"
+      ],
+      "env": {
+        "ENV_FILE_PATH": "${workspaceFolder}/src/webapp/.env"
+      }
+    },
+    {
+      "name": "Debug Worker",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "fastapi",
+      "args": [
+        "dev",
+        "src/worker",
+        "--port",
+        "8001"
+      ],
+      "env": {
+        "ENV_FILE_PATH": "${workspaceFolder}/src/worker/.env"
+      }
+    }
+  ],
+}
