@@ -15,7 +15,7 @@ The job requires the following parameters:
 
 * `--input_table_path`: Path to the input Delta table.
 * `--input_table_format`: Format of the input table (default: `delta`).
-* `--input_schema_path`: Path to the input reference schema pbtxt file.
+* `--input_schema_path`: Path to the schema pbtxt file.
 * `--output_artifact_path`: Path to write output artifacts (anomalies and statistics).
 * `--environment`: Environment to use for validation (`TRAINING` or `SERVING`).
 * `--fail_on_anomalies_true`: Fail the job if anomalies are found (default).
