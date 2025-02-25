@@ -86,6 +86,7 @@ def init_db(env: str):
                 ApiKeyTable(
                     id=LOCAL_APIKEY_UUID,
                     hashed_key_value=get_api_key_hash("key_1"),
+                    allows_enduser=True,
                     created_at=DATETIME_TESTING,
                     updated_at=DATETIME_TESTING,
                     created_by=LOCAL_USER_UUID,

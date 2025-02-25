@@ -277,12 +277,12 @@ async def generate_api_key(
     if not query_result:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database write of the institution creation failed.",
+            detail="Database write of the API key failed.",
         )
     elif len(query_result) > 1:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database write of the institution created duplicate entries.",
+            detail="Database write of the API key duplicate entries.",
         )
     return {
         "access_type": query_result[0][0].access_type,

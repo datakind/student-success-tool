@@ -530,7 +530,7 @@ def trigger_inference_run(
     ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The files in this batch don't conform to the Schema configs allowed by this batch.",
+            detail="The files in this batch don't conform to the schema configs allowed by this model.",
         )
     # Note to Datakind: In the long-term, this is where you would have a case block or something that would call different types of pipelines.
     db_req = DatabricksInferenceRunRequest(

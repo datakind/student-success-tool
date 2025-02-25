@@ -289,7 +289,7 @@ def authenticate_api_key(api_key_enduser_tuple: str, sess: Session) -> BaseUser:
         ):
             # If enduser is set, only allow if the API allows the enduser and the enduser exists.
             if enduser:
-                if not query_result[0][0].allows_enduser:
+                if not elem[0].allows_enduser:
                     return False
                 user_query = select(AccountTable).where(
                     AccountTable.email == enduser,
