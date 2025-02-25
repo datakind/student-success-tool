@@ -113,6 +113,12 @@ class StorageControl(BaseModel):
         )
         return url
 
+    def delete_bucket(self, bucket_name: str) -> None:
+        storage_client = storage.Client()
+        # Delete the GCS bucket.  Force=True handles non-empty buckets.
+        bucket = storage_client.get_bucket(bucket_name)
+        bucket.delete(force=True)
+
     def create_bucket(self, bucket_name: str) -> None:
         """
         Create a new bucket in the US region with the standard storage
