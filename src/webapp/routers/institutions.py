@@ -9,7 +9,7 @@ from fastapi import HTTPException, status, APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
-from sqlalchemy import and_
+from sqlalchemy import and_, delete
 from google.cloud import storage
 from google.cloud.storage import Client
 
@@ -25,6 +25,7 @@ from ..utilities import (
     SchemaType,
     PDP_SCHEMA_GROUP,
     UsState,
+    get_external_bucket_name,
 )
 
 from ..gcsutil import StorageControl
@@ -254,12 +255,24 @@ def delete_inst(
         )
 
     local_session.set(sql_session)
+    query_result = (
+        local_session.get()
+        .execute(select(InstTable).where(InstTable.id == str_to_uuid(inst_id)))
+        .all()
+    )
+    if len(query_result) != 1:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected number of institutions found. Expected 1 got "
+            + str(len(query_result)),
+        )
+    inst_name = query_result[0][0].name
     local_session.get().execute(
         delete(InstTable).where(InstTable.id == str_to_uuid(inst_id))
     )
     local_session.get().commit()
     # Delete GCS bucket
-    bucket_name = get_external_bucket_name_from_uuid(query_result[0][0].id)
+    bucket_name = get_external_bucket_name(inst_id)
     try:
         storage_control.delete_bucket(bucket_name)
     except ValueError as e:
@@ -269,7 +282,7 @@ def delete_inst(
         )
     # Delete all databricks managed pieces.
     try:
-        databricks_control.delete_inst(query_result[0][0].name)
+        databricks_control.delete_inst(inst_name)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

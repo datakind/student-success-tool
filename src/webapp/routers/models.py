@@ -320,6 +320,7 @@ def read_inst_model_outputs(
     """Returns top-level info around all executions of a given model.
 
     Only visible to users of that institution or Datakinder access types.
+    Returns a list of runs in order of most recent to least recent based on triggering time.
 
     Args:
         current_user: the user making the request.
@@ -351,14 +352,18 @@ def read_inst_model_outputs(
         )
     update_db_from_bucket(inst_id, local_session.get(), storage_control)
     local_session.get().commit()
-    res = []
-    for elem in query_result[0][0].jobs or []:
-        # if not elem.output_filename:
+    if not query_result[0][0].jobs:
+        return []
+    result = query_result[0][0].jobs
+    result.sort(key=lambda x: x.triggered_at, reverse=True)
+    ret_val = []
+    for elem in result:
+        # This will show incomplete runs as well.
         # TODO make a query to databricks to retrieve status.
-        res.append(
+        ret_val.append(
             {
-                "inst_id": uuid_to_str(query_result[0][0].inst_id),
-                "m_name": query_result[0][0].name,
+                "inst_id": uuid_to_str(elem.inst_id),
+                "m_name": elem.name,
                 "run_id": elem.id,
                 "created_by": uuid_to_str(elem.created_by),
                 "triggered_at": elem.triggered_at,
@@ -366,7 +371,7 @@ def read_inst_model_outputs(
                 "output_filename": elem.output_filename,
             }
         )
-    return res
+    return ret_val
 
 
 @router.get(

@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.future import select
 from urllib.parse import unquote
+from sqlalchemy import and_
 
 from .authn import (
     verify_password,
@@ -297,7 +298,7 @@ def authenticate_api_key(api_key_enduser_tuple: str, sess: Session) -> BaseUser:
                 if inst:
                     # If there's an institution set, ensure the user is part of the institution
                     user_query = select(AccountTable).where(
-                        _and(
+                        and_(
                             AccountTable.email == enduser,
                             AccountTable.inst_id == uuid_to_str(inst),
                         )

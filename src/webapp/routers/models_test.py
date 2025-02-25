@@ -323,7 +323,7 @@ def test_trigger_inference_run(client: TestClient):
     assert response.status_code == 400
     assert (
         response.text
-        == '{"detail":"The files in this batch don\'t conform to the Schema configs allowed by this batch."}'
+        == '{"detail":"The files in this batch don\'t conform to the schema configs allowed by this model."}'
     )
 
     response = client.post(
