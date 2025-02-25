@@ -62,3 +62,6 @@ The flow to add a Datakinder user is different from adding a user to an institut
 
 In general, the service account used to run this service in GCP will also need to be granted Databricks access in the equivalent environment.
 
+### Local VSCode Debugging
+
+From the Run & Debug panel (⇧⌘D on 🍎) you can run the [debug launch config](../../.vscode/launch.json) for the webapp or worker modules. This will allow you to set breakpoints within the source code while the applications are running.
