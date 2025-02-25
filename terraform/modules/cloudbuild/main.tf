@@ -25,10 +25,10 @@ resource "google_artifact_registry_repository" "student_success_tool" {
     }
   }
   cleanup_policies {
-    id     = "delete-older-than-7d"
+    id     = "delete-older-than-1d"
     action = "DELETE"
     condition {
-      older_than = "604800s"
+      older_than = "86400s"
     }
   }
 }
