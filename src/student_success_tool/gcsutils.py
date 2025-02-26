@@ -8,7 +8,9 @@ from google.cloud.storage.bucket import Bucket
 from databricks.sdk.runtime import dbutils  # noqa: F401
 
 
-def save_file(bucket: Bucket, src_volume_filepath: str, dest_bucket_pathname: str):
+def save_file(
+    bucket: Bucket, src_volume_filepath: str, dest_bucket_pathname: str
+) -> None:
     """Save file from databricks volume to a GCP bucket path."""
     blob = bucket.blob(dest_bucket_pathname)
     if blob.exists():
@@ -16,7 +18,7 @@ def save_file(bucket: Bucket, src_volume_filepath: str, dest_bucket_pathname: st
     blob.upload_from_filename(src_volume_filepath)
 
 
-def get_filename_from_file_path(file_path: str):
+def get_filename_from_file_path(file_path: str) -> str:
     """Get the filename only of a given filepath, e.g. for home/directory/file.csv, return just file.csv."""
     return file_path.split("/")[-1]
 
