@@ -4,9 +4,10 @@ For instance, copying files from Databricks volumes into GCP buckets.
 """
 
 from google.cloud import storage
+from databricks.sdk.runtime import dbutils  # noqa: F401
 
 
-def save_file(bucket, src_volume_filepath: str, dest_bucket_pathname: str):
+def save_file(bucket: object, src_volume_filepath: str, dest_bucket_pathname: str):
     """Save file from databricks volume to a GCP bucket path."""
     blob = bucket.blob(dest_bucket_pathname)
     if blob.exists():
