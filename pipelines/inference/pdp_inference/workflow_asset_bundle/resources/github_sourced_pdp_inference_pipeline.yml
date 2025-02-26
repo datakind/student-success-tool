@@ -1,0 +1,114 @@
+resources:
+  jobs:
+    github_sourced_pdp_inference_pipeline:
+      name: github_sourced_pdp_inference_pipeline
+      max_concurrent_runs: 2
+      tasks:
+        - task_key: data_ingestion
+          notebook_task:
+            notebook_path: pipelines/tasks/pdp_data_ingestion/pdp_data_ingestion
+            source: GIT
+          job_cluster_key: pdp-inference-pipeline-cluster
+          libraries:
+            - pypi:
+                package: faker
+            - pypi:
+                package: pandera
+            - pypi:
+                package: git+https://github.com/datakind/student-success-tool.git@develop
+        - task_key: data_preprocessing
+          depends_on:
+            - task_key: data_ingestion
+          notebook_task:
+            notebook_path: pipelines/tasks/pdp_data_preprocessing/pdp_data_preprocessing
+            source: GIT
+          job_cluster_key: pdp-inference-pipeline-cluster
+          libraries:
+            - pypi:
+                package: faker
+            - pypi:
+                package: pandera
+            - pypi:
+                package: git+https://github.com/datakind/student-success-tool.git@develop
+        - task_key: data_validation
+          depends_on:
+            - task_key: data_preprocessing
+          notebook_task:
+            notebook_path: pipelines/tasks/pdp_data_validation/pdp_data_validation
+            source: GIT
+          job_cluster_key: pdp-inference-pipeline-cluster
+        - task_key: inference
+          depends_on:
+            - task_key: data_validation
+          notebook_task:
+            notebook_path: pipelines/tasks/pdp_model_inference/pdp_model_inference
+            source: GIT
+          job_cluster_key: pdp-inference-pipeline-cluster
+          libraries:
+            - pypi:
+                package: faker
+            - pypi:
+                package: pandera
+            - pypi:
+                package: git+https://github.com/datakind/student-success-tool.git@develop
+          email_notifications:
+            on_start:
+              - ${var.datakind_notification_email}
+            on_success:
+              - ${var.datakind_notification_email}
+            on_failure:
+              - ${var.datakind_notification_email}
+      job_clusters:
+        - job_cluster_key: pdp-inference-pipeline-cluster
+          new_cluster:
+            cluster_name: ""
+            spark_version: 16.1.x-cpu-ml-scala2.12
+            spark_conf:
+              spark.master: local[*, 4]
+              spark.databricks.cluster.profile: singleNode
+            gcp_attributes:
+              use_preemptible_executors: false
+              google_service_account: ${var.pipeline_sa_email}
+              availability: ON_DEMAND_GCP
+              zone_id: HA
+            node_type_id: n2-standard-4
+            custom_tags:
+              ResourceClass: SingleNode
+              x-databricks-nextgen-cluster: "true"
+            enable_elastic_disk: true
+            data_security_mode: SINGLE_USER
+            runtime_engine: STANDARD
+            num_workers: 0
+      git_source:
+        git_url: https://github.com/datakind/student-success-tool
+        git_provider: gitHub
+        git_branch: pedro-develop
+      queue:
+        enabled: true
+      parameters:
+        - name: cohort_file_name
+          default: 1740098728373_synthetic_STUDENT_SEMESTER_AR_DEIDENTIFIED.csv
+        - name: course_file_name
+          default: 1740098728372_synthetic_COURSE_LEVEL_AR_DEID.csv
+        - name: databricks_institution_name
+          default: uni_of_crystal_testing
+        - name: db_run_id
+          default: "{{job.run_id}}"
+        - name: DB_workspace
+          default: dev_sst_02
+        - name: gcp_bucket_name
+          default: dev_6782b2f451f84c17ae6e14e918432b65
+        - name: model_name
+          default: latest_enrollment_model
+        - name: model_type
+          default: sklearn
+        - name: notification_email
+          default: ${var.end_user_notification_email}
+        - name: version_id
+          default: "1"
+      permissions:
+        - group_name: ${var.group_to_manage_workflow} 
+          level: CAN_MANAGE
+        - user_name: ${var.service_account_user}
+          level: CAN_MANAGE_RUN
+
