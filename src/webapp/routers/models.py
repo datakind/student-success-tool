@@ -371,12 +371,13 @@ def read_inst_model_outputs(
                 "triggered_at": elem.triggered_at,
                 "batch_name": elem.batch_name,
                 "output_filename": elem.output_filename,
-                "output_valid": elem.output_valid,
+                "output_valid": False if not elem.output_valid else elem.output_valid,
             }
         )
     return ret_val
 
 
+# TODO add tests for runinfo returning endpoints
 @router.get(
     "/{inst_id}/models/{model_name}/run/{run_id}",
     response_model=RunInfo,
@@ -435,7 +436,7 @@ def read_inst_model_output(
                 "triggered_at": elem.triggered_at,
                 "batch_name": elem.batch_name,
                 "output_filename": elem.output_filename,
-                "output_valid": elem.output_valid,
+                "output_valid": False if not elem.output_valid else elem.output_valid,
             }
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
