@@ -46,8 +46,7 @@ import seaborn as sb
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 
-from student_success_tool import configs
-from student_success_tool.analysis import pdp
+from student_success_tool import dataio, eda, schemas
 
 # COMMAND ----------
 
@@ -85,7 +84,9 @@ from analysis import *  # noqa: F403
 # it'll start out with just basic info: institution_id, institution_name
 # but as each step of the pipeline gets built, more parameters will be moved
 # from hard-coded notebook variables to shareable, persistent config fields
-cfg = configs.load_config("./config-v2-TEMPLATE.toml", configs.PDPProjectConfigV2)
+cfg = dataio.read_config(
+    "./config-TEMPLATE.toml", schema=schemas.pdp.PDPProjectConfigV2
+)
 cfg
 
 # COMMAND ----------
@@ -108,8 +109,8 @@ raw_course_file_path = cfg.datasets["labeled"].raw_course.file_path
 # COMMAND ----------
 
 # read without any schema validation, so we can look at the data "raw"
-df_course_raw = pdp.dataio.read_raw_pdp_course_data_from_file(
-    raw_course_file_path, schema=None, dttm_format="%Y%m%d.0"
+df_course_raw = dataio.pdp.read_raw_course_data(
+    file_path=raw_course_file_path, schema=None, dttm_format="%Y%m%d.0"
 )
 print(f"rows x cols = {df_course_raw.shape}")
 df_course_raw.head()
@@ -133,9 +134,9 @@ df_course_raw["course_begin_date"].describe()
 # COMMAND ----------
 
 # try to read data while validating with the "base" PDP schema
-df_course = pdp.dataio.read_raw_pdp_course_data_from_file(
-    raw_course_file_path,
-    schema=pdp.schemas.RawPDPCourseDataSchema,
+df_course = dataio.pdp.read_raw_course_data(
+    file_path=raw_course_file_path,
+    schema=schemas.pdp.RawPDPCourseDataSchema,
     dttm_format="%Y%m%d.0",
 )
 df_course
@@ -215,8 +216,8 @@ raw_cohort_file_path = cfg.datasets["labeled"].raw_cohort.file_path
 # COMMAND ----------
 
 # read without any schema validation, so we can look at the data "raw"
-df_cohort_raw = pdp.dataio.read_raw_pdp_cohort_data_from_file(
-    raw_cohort_file_path, schema=None
+df_cohort_raw = dataio.pdp.read_raw_cohort_data(
+    file_path=raw_cohort_file_path, schema=None
 )
 print(f"rows x cols = {df_cohort_raw.shape}")
 df_cohort_raw.head()
@@ -224,8 +225,8 @@ df_cohort_raw.head()
 # COMMAND ----------
 
 # try to read data while validating with the "base" PDP schema
-df_cohort = pdp.dataio.read_raw_pdp_cohort_data_from_file(
-    raw_cohort_file_path, schema=pdp.schemas.base.RawPDPCohortDataSchema
+df_cohort = dataio.pdp.read_raw_cohort_data(
+    file_path=raw_cohort_file_path, schema=schemas.pdp.RawPDPCohortDataSchema
 )
 df_cohort
 
@@ -257,7 +258,7 @@ df_cohort
 
 # COMMAND ----------
 
-pdp.dataio.write_data_to_delta_table(
+dataio.write.to_delta_table(
     df_course,
     "CATALOG.INST_NAME_silver.course_dataset_validated",
     spark_session=spark,
@@ -265,7 +266,7 @@ pdp.dataio.write_data_to_delta_table(
 
 # COMMAND ----------
 
-pdp.dataio.write_data_to_delta_table(
+dataio.write.to_delta_table(
     df_cohort,
     "CATALOG.INST_NAME_silver.cohort_dataset_validated",
     spark_session=spark,
@@ -286,8 +287,8 @@ pdp.dataio.write_data_to_delta_table(
 # COMMAND ----------
 
 # use base or school-specific schema, as needed
-df_course = pdp.schemas.RawPDPCourseDataSchema(
-    pdp.dataio.read_data_from_delta_table(
+df_course = schemas.pdp.RawPDPCourseDataSchema(
+    dataio.read.from_delta_table(
         "CATALOG.INST_NAME_silver.course_dataset_validated",
         spark_session=spark,
     )
@@ -296,8 +297,8 @@ df_course.shape
 
 # COMMAND ----------
 
-df_cohort = pdp.schemas.RawCohortDataSchema(
-    pdp.dataio.read_data_from_delta_table(
+df_cohort = schemas.pdp.RawPDPCohortDataSchema(
+    dataio.read.from_delta_table(
         "CATALOG.INST_NAME_silver.cohort_dataset_validated",
         spark_session=spark,
     )
@@ -633,7 +634,7 @@ _ = ax.set(xlabel="Number of Students")
 # COMMAND ----------
 
 # same as plot above, only in cross-tab form
-100 * pdp.eda.compute_crosstabs(
+100 * eda.compute_crosstabs(
     df_cohort,
     "enrollment_type",
     "enrollment_intensity_first_term",
@@ -718,7 +719,7 @@ jg.set_axis_labels("Number of Credits Attempted", "Number of Credits Earned")
 
 # COMMAND ----------
 
-df_assoc_course = pdp.eda.compute_pairwise_associations(
+df_assoc_course = eda.compute_pairwise_associations(
     df_course,
     exclude_cols=[
         "student_guid",
@@ -748,7 +749,7 @@ _ = ax.set_xticklabels(
 
 # COMMAND ----------
 
-df_assoc_cohort = pdp.eda.compute_pairwise_associations(
+df_assoc_cohort = eda.compute_pairwise_associations(
     df_cohort,
     exclude_cols=[
         "student_guid",

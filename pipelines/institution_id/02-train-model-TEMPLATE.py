@@ -48,8 +48,7 @@ from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 from py4j.protocol import Py4JJavaError
 
-from student_success_tool import configs, modeling
-from student_success_tool.analysis import pdp
+from student_success_tool import dataio, modeling, schemas
 
 # COMMAND ----------
 
@@ -106,7 +105,9 @@ if run_type != "train":
 # it'll start out with just basic info: institution_id, institution_name
 # but as each step of the pipeline gets built, more parameters will be moved
 # from hard-coded notebook variables to shareable, persistent config fields
-cfg = configs.load_config("./config.toml", configs.PDPProjectConfigV2)
+cfg = dataio.read_config(
+    "./config-TEMPLATE.toml", schema=schemas.pdp.PDPProjectConfigV2
+)
 cfg
 
 # COMMAND ----------
@@ -116,8 +117,8 @@ cfg
 
 # COMMAND ----------
 
-df = pdp.schemas.PDPLabeledDataSchema(
-    pdp.dataio.read_data_from_delta_table(
+df = schemas.pdp.PDPLabeledDataSchema(
+    dataio.read.from_delta_table(
         cfg.datasets[dataset_name].preprocessed.table_path,
         spark_session=spark,
     )
@@ -379,7 +380,7 @@ with mlflow.start_run(run_id=run_id) as run:
 
 # COMMAND ----------
 
-# TODO TODO TODO
+# TODO(Burton?): clean this up and incorporate it into modeling.evaluation
 result = sklearn.inspection.permutation_importance(
     model,
     df_features.drop(columns=cfg.target_col),
@@ -387,7 +388,7 @@ result = sklearn.inspection.permutation_importance(
     scoring=sklearn.metrics.make_scorer(
         sklearn.metrics.log_loss, greater_is_better=False
     ),
-    n_repeats=10,
+    n_repeats=5,
 )
 
 sorted_importances_idx = result.importances_mean.argsort()
