@@ -35,7 +35,8 @@ def compute_target(
             to the maximum number of years or terms considered to be "on-time" for
             the target number of credits earned (e.g. [4.0, "year"], [12.0, "term"]),
             where the numeric values are for the time between "checkpoint" and "target"
-            terms.
+            terms. Passing special "*" as the only key applies the corresponding time limits
+            to all students, regardless of intensity.
         num_terms_in_year: Number of academic terms in one academic year,
             used to convert from year-based time limits to term-based time limits;
             default value assumes FALL, WINTER, SPRING, and SUMMER terms.
@@ -71,25 +72,27 @@ def compute_target(
         suffixes=("_ckpt", "_tgt"),
     )
     # convert from year limits to term limits, as needed
-    intensity_max_terms = {
-        intensity: time if unit == "term" else time * num_terms_in_year
-        for intensity, (time, unit) in intensity_time_limits.items()
-    }
+    intensity_num_terms = utils.convert_intensity_time_limits(
+        "term", intensity_time_limits, num_terms_in_year=num_terms_in_year
+    )
     # compute all intensity/term boolean arrays separately
     # then combine with a logical OR
     tr_col = term_rank_col  # hack, so logic below fits on lines
     targets = [
         (
-            # enrollment intensity is equal to a specified value
-            df_at[f"{enrollment_intensity_col}_ckpt"].eq(intensity)
+            # enrollment intensity is equal to a specified value or "*" given as intensity
+            (
+                df_at[f"{enrollment_intensity_col}_ckpt"].eq(intensity)
+                | (intensity == "*")
+            )
             & (
                 # num terms between target/checkpoint greater than max num allowed
-                (df_at[f"{tr_col}_tgt"] - df_at[f"{tr_col}_ckpt"]).gt(max_terms)
+                (df_at[f"{tr_col}_tgt"] - df_at[f"{tr_col}_ckpt"]).gt(num_terms)
                 # or they *never* earned enough credits for target
                 | df_at[f"{tr_col}_tgt"].isna()
             )
         )
-        for intensity, max_terms in intensity_max_terms.items()
+        for intensity, num_terms in intensity_num_terms.items()
     ]
     target = np.logical_or.reduce(targets)
     # assign True to all students passing intensity/year condition(s) above
