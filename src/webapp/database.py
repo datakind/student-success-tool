@@ -373,7 +373,7 @@ class JobTable(Base):
     # The following will be empty if not completed or if job errored out. Getting additional details will require a call to the Databricks table.
     output_filename = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=True)
     # Whether the file was approved.
-    output_valid: Mapped[bool] = mapped_column(nullable=False, default=False)
+    output_valid: Mapped[bool] = mapped_column(nullable=True, default=False)
     err_msg = Column(String(VAR_CHAR_STANDARD_LENGTH), nullable=True)
     completed: Mapped[bool] = mapped_column(nullable=True)
 
