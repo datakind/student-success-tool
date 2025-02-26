@@ -55,7 +55,7 @@ def session_fixture():
                         id=UUID_1,
                         name="school_1",
                         state="GA",
-                        pdp_id=456,
+                        pdp_id="456",
                         created_at=DATETIME_TESTING,
                         updated_at=DATETIME_TESTING,
                     ),
@@ -68,7 +68,7 @@ def session_fixture():
                     InstTable(
                         id=USER_VALID_INST_UUID,
                         name="valid_school",
-                        pdp_id=12345,
+                        pdp_id="12345",
                         state="NY",
                         created_at=DATETIME_TESTING,
                         updated_at=DATETIME_TESTING,
@@ -246,7 +246,7 @@ def test_create_inst(datakinder_client):
     assert response.status_code == 200
     assert response.json()["name"] == "foobar school"
     assert response.json()["state"] == "NY"
-    assert response.json()["pdp_id"] == 12345
+    assert response.json()["pdp_id"] == "12345"
     assert response.json()["retention_days"] == 1
     assert response.json()["inst_id"] != None
 

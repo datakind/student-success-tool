@@ -124,6 +124,7 @@ class RunInfo(BaseModel):
     batch_name: str | None = None
     # output file name
     output_filename: str | None = None
+    output_valid: bool = False
     completed: bool | None = None
     err_msg: str | None = None
 
@@ -370,6 +371,7 @@ def read_inst_model_outputs(
                 "triggered_at": elem.triggered_at,
                 "batch_name": elem.batch_name,
                 "output_filename": elem.output_filename,
+                "output_valid": elem.output_valid,
             }
         )
     return ret_val
@@ -433,6 +435,7 @@ def read_inst_model_output(
                 "triggered_at": elem.triggered_at,
                 "batch_name": elem.batch_name,
                 "output_filename": elem.output_filename,
+                "output_valid": elem.output_valid,
             }
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
@@ -549,9 +552,7 @@ def trigger_inference_run(
     )
     try:
         res = databricks_control.run_pdp_inference(db_req)
-        print("xxxxxxxxxxxxxxxxxxxxxxxxxx4")
     except Exception as e:
-        print("xxxxxxxxxxxxxxxxxxxxxxxxxx5" + str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
@@ -563,8 +564,8 @@ def trigger_inference_run(
         created_by=str_to_uuid(current_user.user_id),
         batch_name=req.batch_name,
         model_id=query_result[0][0].id,
+        output_valid=False,
     )
-    print("xxxxxxxxxxxxxxxxxxxxxxxxxx7")
     local_session.get().add(job)
     return {
         "inst_id": inst_id,
@@ -573,6 +574,7 @@ def trigger_inference_run(
         "created_by": current_user.user_id,
         "triggered_at": triggered_timestamp,
         "batch_name": req.batch_name,
+        "output_valid": False,
     }
 
 

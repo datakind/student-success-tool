@@ -138,7 +138,6 @@ class DataOverview(BaseModel):
 
 def get_all_files(
     inst_id: str,
-    datakind_user: bool,
     sst_generated_value: bool | None,
     sess: Session,
     storage_control,
@@ -150,33 +149,16 @@ def get_all_files(
     # construct query
     query = None
     if sst_generated_value is None:
-        if datakind_user:
-            query = select(FileTable).where(
-                FileTable.inst_id == str_to_uuid(inst_id),
-            )
-        else:
-            query = select(FileTable).where(
-                and_(
-                    FileTable.valid,
-                    FileTable.inst_id == str_to_uuid(inst_id),
-                )
-            )
+        query = select(FileTable).where(
+            FileTable.inst_id == str_to_uuid(inst_id),
+        )
     else:
-        if datakind_user:
-            query = select(FileTable).where(
-                and_(
-                    FileTable.inst_id == str_to_uuid(inst_id),
-                    FileTable.sst_generated == sst_generated_value,
-                )
+        query = select(FileTable).where(
+            and_(
+                FileTable.inst_id == str_to_uuid(inst_id),
+                FileTable.sst_generated == sst_generated_value,
             )
-        else:
-            query = select(FileTable).where(
-                and_(
-                    FileTable.valid,
-                    FileTable.inst_id == str_to_uuid(inst_id),
-                    FileTable.sst_generated == sst_generated_value,
-                )
-            )
+        )
 
     result_files = []
     for e in sess.execute(query).all():
@@ -203,7 +185,7 @@ def get_all_files(
 
 # Some batches are associated with output. This function lets you decide if you want only those batches.
 def get_all_batches(
-    inst_id: str, datakind_user: bool, output_batches_only: bool, sess: Session
+    inst_id: str, output_batches_only: bool, sess: Session
 ) -> list[BatchInfo]:
     query_result_batches = (
         local_session.get()
@@ -263,13 +245,9 @@ def read_inst_all_input_files(
     # Datakinders can see unapproved files as well.
     local_session.set(sql_session)
     return {
-        "batches": get_all_batches(
-            inst_id, current_user.is_datakinder, False, local_session.get()
-        ),
+        "batches": get_all_batches(inst_id, False, local_session.get()),
         # Set sst_generated_value=false to get input only
-        "files": get_all_files(
-            inst_id, current_user.is_datakinder, False, local_session.get(), None
-        ),
+        "files": get_all_files(inst_id, False, local_session.get(), None),
     }
 
 
@@ -307,13 +285,10 @@ def read_inst_all_output_files(
     local_session.set(sql_session)
     return {
         # Set output_batches_only=true to get output related batches only.
-        "batches": get_all_batches(
-            inst_id, current_user.is_datakinder, True, local_session.get()
-        ),
+        "batches": get_all_batches(inst_id, True, local_session.get()),
         # Set sst_generated_value=true to get output only.
         "files": get_all_files(
             inst_id,
-            current_user.is_datakinder,
             True,
             local_session.get(),
             storage_control,
@@ -349,23 +324,19 @@ def retrieve_file_as_bytes(
     Args:
         current_user: the user making the request.
     """
-    print("*xxxxxxxxxxxxxxxxxxxxx0:" + file_name)
     file_name = decode_url_piece(file_name)
-    print("*xxxxxxxxxxxxxxxxxxxxx.5:" + file_name)
     has_access_to_inst_or_err(inst_id, current_user)
     has_full_data_access_or_err(current_user, "output file")
     local_session.set(sql_session)
     # TODO: consider removing this call here and forcing users to call <inst-id>/update-data
     update_db_from_bucket(inst_id, local_session.get(), storage_control)
     local_session.get().commit()
-    print("*xxxxxxxxxxxxxxxxxxxxx1")
-    print(file_name)
+    # We don't include the valid check, because we want to return unapproved AND approved data.
     query_result = (
         local_session.get()
         .execute(
             select(FileTable).where(
                 and_(
-                    FileTable.valid,
                     FileTable.sst_generated,
                     FileTable.name == file_name,
                     FileTable.inst_id == str_to_uuid(inst_id),
@@ -384,12 +355,9 @@ def retrieve_file_as_bytes(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Multiple matches found. Unexpected.",
         )
-    print("bbbbbbbbbbbbbbbbbbbbbbbbb1:" + file_name)
     res = storage_control.get_file_contents(
         get_external_bucket_name(inst_id), file_name
     )
-    print("bbbbbbbbbbbbbbbbbbbbbbbbb2")
-    print(type(res))
     return Response(res)
 
 
@@ -854,7 +822,7 @@ def download_url_inst_file(
     sql_session: Annotated[Session, Depends(get_session)],
     storage_control: Annotated[StorageControl, Depends(StorageControl)],
 ) -> Any:
-    """Enables download of approved output files.
+    """Enables download of output files (approved and unapproved).
 
     Only visible to users of that institution or Datakinder access types.
 
@@ -864,6 +832,13 @@ def download_url_inst_file(
     file_name = decode_url_piece(file_name)
     has_access_to_inst_or_err(inst_id, current_user)
     has_full_data_access_or_err(current_user, "file data")
+    if not file_name.startswith("approved/") and not file_name.startswith(
+        "unapproved/"
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This filepath is not allowed to be downloaded.",
+        )
     local_session.set(sql_session)
     query_result = (
         local_session.get()
@@ -872,6 +847,8 @@ def download_url_inst_file(
                 and_(
                     FileTable.name == file_name,
                     FileTable.inst_id == str_to_uuid(inst_id),
+                    FileTable.sst_generated,
+                    not FileTable.deleted,
                 )
             )
         )
@@ -881,7 +858,7 @@ def download_url_inst_file(
     if not query_result or len(query_result) == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found.",
+            detail="File does not exist or is not available for download.",
         )
     if len(query_result) > 1:
         raise HTTPException(
@@ -889,23 +866,6 @@ def download_url_inst_file(
             detail="File duplicates found.",
         )
     res = query_result[0][0]
-    if res.deleted:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File has been deleted.",
-        )
-    if not res.sst_generated:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Only SST generated files can be downloaded.",
-        )
-    if not current_user.is_datakinder and (
-        not res.valid or not file_name.startswith("approved/")
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="File not yet approved by Datakind. Cannot be downloaded by non Datakinders.",
-        )
     return storage_control.generate_download_signed_url(
         get_external_bucket_name(inst_id), file_name
     )

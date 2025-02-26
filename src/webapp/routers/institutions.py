@@ -49,11 +49,11 @@ router = APIRouter(
 # softdelete/ is the folder where files in soft-deletion (from user requests or retention time-up) are held prior to deletion.
 # Files in softdelete/ should not be visible to even datakinders unless they are in a debugging group -- they can view these files from the gcs console.
 DEFAULT_FOLDERS = [
-    "input/unvalidated",
+    "unvalidated",  # for inputs
+    "validated",  # for inputs
     "output/metadata",
-    "input/validated",
-    "output/unapproved",
-    "output/approved",
+    "unapproved",  # for outputs
+    "approved",  # for outputs
     "softdelete",  # TODO: we might not need this folder
 ]
 
@@ -72,7 +72,7 @@ class InstitutionCreationRequest(BaseModel):
     allowed_emails: Dict[str, AccessType] | None = None
     # The following is a shortcut to specifying the allowed_schemas list and will mean that the allowed_schemas will be augmented with the PDP_SCHEMA_GROUP.
     is_pdp: bool | None = None
-    pdp_id: int | None = None
+    pdp_id: str | None = None
     retention_days: int | None = None
 
 
@@ -85,7 +85,7 @@ class Institution(BaseModel):
     # The following are characteristics of an institution set at institution creation time.
     # If zero, it follows DK defaults (deletion after completion).
     retention_days: int | None = None  # In Days
-    pdp_id: int | None = None
+    pdp_id: str | None = None
 
 
 @router.get("/institutions", response_model=list[Institution])
@@ -334,7 +334,7 @@ def read_inst_name(
 # All other API transactions require the UUID as an identifier, this allows the UUID lookup by PDP ID.
 @router.get("/institutions/pdp-id/{pdp_id}", response_model=Institution)
 def read_inst_pdp_id(
-    pdp_id: int,
+    pdp_id: str,
     current_user: Annotated[BaseUser, Depends(get_current_active_user)],
     sql_session: Annotated[Session, Depends(get_session)],
 ) -> Any:

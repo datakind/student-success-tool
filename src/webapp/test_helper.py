@@ -64,7 +64,7 @@ INSTITUTION_REQ = {
     "name": "foobar school",
     "state": "NY",
     "retention_days": 1,
-    "pdp_id": 12345,
+    "pdp_id": "12345",
     "is_pdp": True,
     "allowed_schemas": ["UNKNOWN"],
     "allowed_emails": {"foo@foobar.edu": "VIEWER"},
@@ -86,7 +86,7 @@ INSTITUTION_OBJ = {
     "inst_id": uuid_to_str(USER_VALID_INST_UUID),
     "name": "valid_school",
     "state": "NY",
-    "pdp_id": 12345,
+    "pdp_id": "12345",
     "retention_days": None,
 }
 
