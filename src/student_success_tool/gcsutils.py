@@ -1,3 +1,8 @@
+"""
+Utility functions that interact with Google Cloud Storage.
+For instance, copying files from Databricks volumes into GCP buckets.
+"""
+
 from google.cloud import storage
 
 
