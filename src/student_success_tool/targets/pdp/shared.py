@@ -201,6 +201,8 @@ def get_first_student_terms(
     return (
         df.loc[:, cols]
         .sort_values(by=sort_cols, ascending=True)
+        # TODO: it seems like we should sort by student id in the returned data, no?
+        # .sort_values(by=(student_id_cols + sort_cols), ascending=True)
         .groupby(by=student_id_cols, sort=False, as_index=False)
         .first()
     )
