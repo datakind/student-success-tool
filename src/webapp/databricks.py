@@ -108,6 +108,7 @@ class DatabricksControl(BaseModel):
         self, req: DatabricksInferenceRunRequest
     ) -> DatabricksInferenceRunResponse:
         """Triggers PDP inference Databricks run."""
+        print('aaaaaaaaaaaaaaaaaa0')
         if (
             not req.filepath_to_type
             or not check_types(req.filepath_to_type.values(), SchemaType.PDP_COURSE)
@@ -116,12 +117,16 @@ class DatabricksControl(BaseModel):
             raise ValueError(
                 "run_pdp_inference() requires PDP_COURSE and PDP_COHORT type files to run."
             )
+        print('aaaaaaaaaaaaaaaaaa1')
         w = WorkspaceClient(
             host=databricks_vars["DATABRICKS_HOST_URL"],
             google_service_account=gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"],
         )
         db_inst_name = databricksify_inst_name(req.inst_name)
+        print('aaaaaaaaaaaaaaaaaa2')
         job_id = next(w.jobs.list(name=pdp_inference_job_name)).job_id
+        print('aaaaaaaaaaaaaaaaaa3:'+str(job_id))
+        print(databricks_vars["DATABRICKS_WORKSPACE"])
         run_job = w.jobs.run_now(
             job_id,
             job_parameters={
@@ -141,6 +146,7 @@ class DatabricksControl(BaseModel):
                 "notification_email": req.email,
             },
         )
+        print('aaaaaaaaaaaaaaaaaa4')
         return DatabricksInferenceRunResponse(job_run_id=run_job.response.run_id)
 
     def delete_inst(self, inst_name: str) -> None:
