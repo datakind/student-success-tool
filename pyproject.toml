@@ -8,6 +8,7 @@ dependencies = [
     "databricks-connect~=16.0",
     "databricks-sdk~=0.38.0",
     "faker>=20.1",
+    "google-cloud>=0.34.0",
     "ipywidgets~=8.1",
     "matplotlib~=3.7",
     "missingno~=0.5",
