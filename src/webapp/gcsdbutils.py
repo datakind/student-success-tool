@@ -71,11 +71,15 @@ def update_db_from_bucket(inst_id: str, session, storage_control):
         all_files = all_files + storage_control.list_blobs_in_folder(
             get_external_bucket_name(inst_id), dir_prefix
         )
+    print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1")
+    print(all_files)
     new_files_to_add_to_database = []
     for f in all_files:
         # We only handle png and csv outputs.
         if not f.endswith(".png") and not f.endswith(".csv"):
             continue
+        print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2")
+        print(f)
         file_approved = is_file_approved(f)
         # Check if that file already exists in the table, otherwise add it.
         query_result = session.execute(
@@ -87,6 +91,8 @@ def update_db_from_bucket(inst_id: str, session, storage_control):
             )
         ).all()
         if len(query_result) == 0:
+            print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3")
+            print(f)
             new_files_to_add_to_database.append(
                 FileTable(
                     name=f,
@@ -113,15 +119,24 @@ def update_db_from_bucket(inst_id: str, session, storage_control):
                 session.execute(query)
         elif len(query_result) == 1:
             # This file already exists, check if its status has changed.
+            print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx4")
+            print(f)
             if query_result[0][0].valid != file_approved:
                 # Technically you could make an approved file unapproved.
                 query = (
                     update(FileTable)
-                    .where(FileTable.name == f)
+                    .where(
+                        and_(
+                            FileTable.name == f,
+                            FileTable.inst_id == str_to_uuid(inst_id),
+                        )
+                    )
                     .values(valid=file_approved)
                 )
                 session.execute(query)
         else:
             raise ValueError("Attempted creation of file with duplicate name.")
     for elem in new_files_to_add_to_database:
+        print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5")
+        print(elem.name)
         session.add(elem)
