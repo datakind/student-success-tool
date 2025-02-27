@@ -2,7 +2,6 @@
 
 import argparse
 import logging
-import os
 
 from ..utils.gcsutils import publish_inference_output_files
 from ..utils.emails import send_completion_email
