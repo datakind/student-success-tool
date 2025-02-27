@@ -1,5 +1,4 @@
-""" Utility functions for sending emails in Databricks.
-"""
+"""Utility functions for sending emails in Databricks."""
 
 import smtplib
 
