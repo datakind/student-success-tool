@@ -830,6 +830,7 @@ def download_url_inst_file(
         current_user: the user making the request.
     """
     file_name = decode_url_piece(file_name)
+    print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$0:"+file_name)
     has_access_to_inst_or_err(inst_id, current_user)
     has_full_data_access_or_err(current_user, "file data")
     if not file_name.startswith("approved/") and not file_name.startswith(
@@ -839,6 +840,7 @@ def download_url_inst_file(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="This filepath is not allowed to be downloaded.",
         )
+    print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$1")
     local_session.set(sql_session)
     query_result = (
         local_session.get()
@@ -854,6 +856,7 @@ def download_url_inst_file(
         )
         .all()
     )
+    print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$2")
     # This should only result in a match of a single file.
     if not query_result or len(query_result) == 0:
         raise HTTPException(
@@ -865,7 +868,6 @@ def download_url_inst_file(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="File duplicates found.",
         )
-    res = query_result[0][0]
     return storage_control.generate_download_signed_url(
         get_external_bucket_name(inst_id), file_name
     )
