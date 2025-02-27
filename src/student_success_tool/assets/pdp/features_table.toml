@@ -52,6 +52,7 @@ num_courses_course_level_5 = { name = "number of 500-level courses taken this te
 num_courses_course_level_6 = { name = "number of 600-level courses taken this term" }
 num_courses_course_level_7 = { name = "number of 700-level courses taken this term" }
 num_courses_course_level_8 = { name = "number of 800-level courses taken this term" }
+num_courses_course_level_0_1 = { name = "number of intro-level courses taken this term" }
 num_courses_course_grade_a = { name = "number of A grades earned this term" }
 num_courses_course_grade_b = { name = "number of B grades earned this term" }
 num_courses_course_grade_c = { name = "number of C grades earned this term" }
@@ -138,6 +139,7 @@ frac_courses_course_level_5 = { name = "fraction of 500-level courses taken this
 frac_courses_course_level_6 = { name = "fraction of 600-level courses taken this term" }
 frac_courses_course_level_7 = { name = "fraction of 700-level courses taken this term" }
 frac_courses_course_level_8 = { name = "fraction of 800-level courses taken this term" }
+frac_courses_course_level_0_1 = { name = "fraction of intro-level courses taken this term" }
 frac_courses_course_grade_a = { name = "fraction of A grades earned this term" }
 frac_courses_course_grade_b = { name = "fraction of B grades earned this term" }
 frac_courses_course_grade_c = { name = "fraction of C grades earned this term" }
@@ -217,6 +219,7 @@ num_courses_course_level_5_cumfrac = { name = "fraction of 500-level courses tak
 num_courses_course_level_6_cumfrac = { name = "fraction of 600-level courses taken so far" }
 num_courses_course_level_7_cumfrac = { name = "fraction of 700-level courses taken so far" }
 num_courses_course_level_8_cumfrac = { name = "fraction of 800-level courses taken so far" }
+num_courses_course_level_0_1_cumfrac = { name = "fraction of intro-level courses taken so far" }
 num_courses_course_grade_a_cumfrac = { name = "fraction of A grades earned so far" }
 num_courses_course_grade_b_cumfrac = { name = "fraction of B grades earned so far" }
 num_courses_course_grade_c_cumfrac = { name = "fraction of C grades earned so far" }

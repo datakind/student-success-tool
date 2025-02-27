@@ -14,6 +14,7 @@ import pandas as pd
 import seaborn as sns
 import sklearn.inspection
 import sklearn.metrics
+import sklearn.utils
 from sklearn.calibration import calibration_curve
 from statsmodels.nonparametric.smoothers_lowess import lowess
 
@@ -486,7 +487,7 @@ def plot_features_permutation_importance(
         sample_weight=sample_weight,
         random_state=random_state,
     )
-    assert not isinstance(result, dict)  # type guard
+    assert isinstance(result, sklearn.utils.Bunch)  # type guard
     sorted_importances_idx = result.importances_mean.argsort()
     importances = pd.DataFrame(
         result.importances[sorted_importances_idx].T,

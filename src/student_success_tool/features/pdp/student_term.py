@@ -98,6 +98,7 @@ def aggregate_from_course_level_features(
     agg_col_vals: list[tuple[str, t.Any | list[t.Any]]] = [
         ("core_course", "Y"),
         ("course_type", ["CC", "CD"]),
+        ("course_level", [0, 1]),
         ("enrolled_at_other_institution_s", "Y"),
     ]
     if key_course_subject_areas is not None:
@@ -428,7 +429,11 @@ def sum_val_equal_cols_by_group(
     temp_col_series = {}
     for col, val in agg_col_vals:
         # make multi-value col names nicer to read
-        temp_col = f"{col}_{'|'.join(val)}" if isinstance(val, list) else f"{col}_{val}"
+        temp_col = (
+            f"{col}_{'|'.join(str(item) for item in val)}"
+            if isinstance(val, list)
+            else f"{col}_{val}"
+        )
         temp_col_series[temp_col] = shared.compute_values_equal(df[col], val)
     return (
         df.assign(**temp_col_series)
