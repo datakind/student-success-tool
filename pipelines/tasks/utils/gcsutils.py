@@ -19,7 +19,7 @@ def save_file(
     blob.upload_from_filename(src_volume_filepath)
 
 
-def publish_output_files(
+def publish_inference_output_files(
     db_workspace: str,
     institution_name: str,
     external_bucket_name: str,
