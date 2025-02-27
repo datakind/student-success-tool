@@ -473,6 +473,7 @@ def trigger_inference_run(
     """
     model_name = decode_url_piece(model_name)
     has_access_to_inst_or_err(inst_id, current_user)
+    print('xxxxxxxxxxxxxxxxxxxxxxxx0')
     if not req.is_pdp:
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
@@ -490,6 +491,7 @@ def trigger_inference_run(
         )
         .all()
     )
+    print('xxxxxxxxxxxxxxxxxxxxxxxx1')
     if len(inst_result) != 1:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -508,6 +510,7 @@ def trigger_inference_run(
         )
         .all()
     )
+    print('xxxxxxxxxxxxxxxxxxxxxxxx2')
     if len(query_result) != 1:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -528,12 +531,14 @@ def trigger_inference_run(
         )
         .all()
     )
+    print('xxxxxxxxxxxxxxxxxxxxxxxx3')
     if len(batch_result) != 1:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Unexpected number of batches found: Expected 1, got "
             + str(len(inst_result)),
         )
+    print('xxxxxxxxxxxxxxxxxxxxxxxx4')
     if not check_file_types_valid_schema_configs(
         [x.schemas for x in batch_result[0][0].files],
         jsonpickle.decode(query_result[0][0].schema_configs),
@@ -542,6 +547,7 @@ def trigger_inference_run(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="The files in this batch don't conform to the schema configs allowed by this model.",
         )
+    print('xxxxxxxxxxxxxxxxxxxxxxxx5')
     # Note to Datakind: In the long-term, this is where you would have a case block or something that would call different types of pipelines.
     db_req = DatabricksInferenceRunRequest(
         inst_name=inst_result[0][0].name,
@@ -551,14 +557,16 @@ def trigger_inference_run(
         # The institution email to which pipeline success/failure notifications will get sent.
         email=current_user.email,
     )
+    print('xxxxxxxxxxxxxxxxxxxxxxxx6')
     try:
         res = databricks_control.run_pdp_inference(db_req)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e),
+            detail="Databricks run_pdp_inference error: "+str(e),
         )
     triggered_timestamp = datetime.now()
+    print('xxxxxxxxxxxxxxxxxxxxxxxx7')
     job = JobTable(
         id=res.job_run_id,
         triggered_at=triggered_timestamp,
@@ -567,6 +575,7 @@ def trigger_inference_run(
         model_id=query_result[0][0].id,
         output_valid=False,
     )
+    print('xxxxxxxxxxxxxxxxxxxxxxxx8')
     local_session.get().add(job)
     return {
         "inst_id": inst_id,
