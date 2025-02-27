@@ -4,7 +4,7 @@ import argparse
 import logging
 
 from ..utils.gcsutils import publish_inference_output_files
-from ..utils.emails import send_completion_email
+from ..utils.emails import send_inference_completion_email
 from databricks.sdk import WorkspaceClient
 
 
@@ -51,7 +51,7 @@ def main():
     cc_email_list = ["education@datakind.org"]
     password = w.dbutils.secrets.get(scope="sst", key="MANDRILL_PASSWORD")
     logging.info("Sending email notification")
-    send_completion_email(
+    send_inference_completion_email(
         sender_email, [args.email_recipient], cc_email_list, username, password
     )
 

@@ -30,7 +30,21 @@ def send_email(
     body,
     mandrill_username,
     mandrill_password,
-):
+) -> None:
+    """Send email.
+
+    Args:
+      sender_email: Email of sender.
+      receiver_email_list: List of emails to send to.
+      cc_email_list: List of emails to CC.
+      subject: Subject of email.
+      body: Body of email.
+      mandrill_username: Mandrill username for the SMTP server.
+      mandrill_password: Mandrill password for the SMTP server.
+
+    Returns:
+      Nothing.
+    """
     # Create the email message
     msg = EmailMessage()
     msg["Subject"] = subject
@@ -49,9 +63,21 @@ def send_email(
         raise e
 
 
-def send_completion_email(
+def send_inference_completion_email(
     sender_email, receiver_email_list, cc_email_list, username, password
-):
+) -> None:
+    """Send email with completion of inference run message.
+
+    Args:
+      sender_email: Email of sender.
+      receiver_email_list: List of emails to send to.
+      cc_email_list: List of emails to CC.
+      username: Mandrill username for the SMTP server.
+      password: Mandrill password for the SMTP server.
+
+    Returns:
+      Nothing.
+    """
     send_email(
         sender_email,
         receiver_email_list,
@@ -65,7 +91,19 @@ def send_completion_email(
 
 def send_inference_kickoff_email(
     sender_email, receiver_email_list, cc_email_list, username, password
-):
+) -> None:
+    """Send email with kickoff of inference run message.
+
+    Args:
+      sender_email: Email of sender.
+      receiver_email_list: List of emails to send to.
+      cc_email_list: List of emails to CC.
+      username: Mandrill username for the SMTP server.
+      password: Mandrill password for the SMTP server.
+
+    Returns:
+      Nothing.
+    """
     send_email(
         sender_email,
         receiver_email_list,
