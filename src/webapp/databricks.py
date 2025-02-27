@@ -118,13 +118,21 @@ class DatabricksControl(BaseModel):
                 "run_pdp_inference() requires PDP_COURSE and PDP_COHORT type files to run."
             )
         print('aaaaaaaaaaaaaaaaaa1')
+        print(databricks_vars["DATABRICKS_HOST_URL"])
+        print(gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"])
         w = WorkspaceClient(
             host=databricks_vars["DATABRICKS_HOST_URL"],
             google_service_account=gcs_vars["GCP_SERVICE_ACCOUNT_EMAIL"],
         )
         db_inst_name = databricksify_inst_name(req.inst_name)
         print('aaaaaaaaaaaaaaaaaa2')
-        job_id = next(w.jobs.list(name=pdp_inference_job_name)).job_id
+        list_jobs = w.jobs.list(name=pdp_inference_job_name)
+        print('aaaaaaaaaaaaaaaaaa2.5')
+        print(list_jobs)
+        job = next(list_jobs)
+        print('aaaaaaaaaaaaaaaaaa2.75')
+        print(job)
+        job_id = job.job_id
         print('aaaaaaaaaaaaaaaaaa3:'+str(job_id))
         print(databricks_vars["DATABRICKS_WORKSPACE"])
         run_job = w.jobs.run_now(
