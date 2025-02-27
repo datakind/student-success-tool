@@ -52,7 +52,7 @@ def publish_inference_output_files(
     # Destination: The output directory in the bucket that the files get moved to.
     bucket_directory = f"{'approved' if approved else 'unapproved'}/{sst_job_id}"
     # Source: The Databricks volume path we want to read the files from.
-    volume_path_top_level = f"/Volumes/{db_workspace}/{institution_name}_gold/gold_volume/inference_jobs/{sst_job_id}/ext/"
+    volume_path_top_level = f"/Volumes/{db_workspace}/{institution_name}_gold/gold_volume/inference_jobs/{sst_job_id}/ext"
     volume_path_inference_folder = f"{volume_path_top_level}/inference_output"
 
     storage_client = storage.Client()
