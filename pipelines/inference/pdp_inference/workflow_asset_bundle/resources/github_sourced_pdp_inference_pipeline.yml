@@ -33,10 +33,23 @@ resources:
         - task_key: data_validation
           depends_on:
             - task_key: data_preprocessing
-          notebook_task:
-            notebook_path: pipelines/tasks/pdp_data_validation/pdp_data_validation
+          spark_python_task:
+            python_file: pipelines/tasks/data_validation/data_validation_task.py
+            parameters:
+              - --input_table_path
+              - "{{tasks.data_preprocessing.values.processed_dataset_path}}"
+              - --input_schema_path
+              - /Workspace/Users/sam.rooney@datakind.org/schema # TODO: Update
+              - --output_artifact_path
+              - "{{job.parameters.pipeline_root_dir}}"
+              - --environment
+              - SERVING
+              - "{{job.parameters.fail_on_anomalies}}"
             source: GIT
           job_cluster_key: pdp-inference-pipeline-cluster
+          libraries:
+            - pypi:
+                package: tensorflow_data_validation==1.16.1
         - task_key: inference
           depends_on:
             - task_key: data_validation
@@ -94,6 +107,8 @@ resources:
           default: uni_of_crystal_testing
         - name: db_run_id
           default: "{{job.run_id}}"
+        - name: pipeline_root_dir
+          default: "{{job.run_id}}"
         - name: DB_workspace
           default: dev_sst_02
         - name: gcp_bucket_name
@@ -106,6 +121,8 @@ resources:
           default: ${var.end_user_notification_email}
         - name: version_id
           default: "1"
+        - name: fail_on_anomalies
+          default: --fail_on_anomalies_false
       permissions:
         - group_name: ${var.group_to_manage_workflow} 
           level: CAN_MANAGE
