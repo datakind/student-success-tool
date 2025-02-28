@@ -3,6 +3,7 @@ import typing as t
 
 import mlflow
 import mlflow.exceptions
+import mlflow.tracking
 
 LOGGER = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ def register_mlflow_model(
     catalog: str,
     registry_uri: str = "databricks-uc",
     model_alias: t.Optional[str] = "Staging",
-    mlflow_client: mlflow.MlflowClient,
+    mlflow_client: mlflow.tracking.MlflowClient,
 ) -> None:
     """
     Register an mlflow model according to one of their various recommended approaches.
