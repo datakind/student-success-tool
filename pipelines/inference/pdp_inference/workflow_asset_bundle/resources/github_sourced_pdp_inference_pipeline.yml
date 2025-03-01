@@ -39,7 +39,7 @@ resources:
               - --input_table_path
               - "{{tasks.data_preprocessing.values.processed_dataset_path}}"
               - --input_schema_path
-              - /Workspace/Users/sam.rooney@datakind.org/schema # TODO: Update
+              - /Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_bronze/schema # TODO: Update
               - --output_artifact_path
               - "{{job.parameters.pipeline_root_dir}}"
               - --environment
