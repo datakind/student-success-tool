@@ -39,7 +39,7 @@ resources:
               - --input_table_path
               - "{{tasks.data_preprocessing.values.processed_dataset_path}}"
               - --input_schema_path
-              - /Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_bronze/schema # TODO: Update
+              - /Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_bronze/schema # TODO(samroon2): Update once finalized.
               - --output_artifact_path
               - "{{job.parameters.pipeline_root_dir}}"
               - --environment
@@ -107,10 +107,10 @@ resources:
           default: uni_of_crystal_testing
         - name: db_run_id
           default: "{{job.run_id}}"
-        - name: pipeline_root_dir
-          default: "{{job.run_id}}"
         - name: DB_workspace
           default: dev_sst_02
+        - name: fail_on_anomalies
+          default: --fail_on_anomalies_false
         - name: gcp_bucket_name
           default: dev_6782b2f451f84c17ae6e14e918432b65
         - name: model_name
@@ -119,10 +119,10 @@ resources:
           default: sklearn
         - name: notification_email
           default: ${var.end_user_notification_email}
+        - name: pipeline_root_dir
+          default: "{{job.run_id}}"
         - name: version_id
           default: "1"
-        - name: fail_on_anomalies
-          default: --fail_on_anomalies_false
       permissions:
         - group_name: ${var.group_to_manage_workflow} 
           level: CAN_MANAGE
