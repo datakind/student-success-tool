@@ -165,6 +165,10 @@ def add_features(
                 num_courses_in_study_area,
                 study_area_col="student_program_of_study_area_year_1",
             ),
+            "num_courses_in_term_program_of_study_area": ft.partial(
+                num_courses_in_study_area,
+                study_area_col="term_program_of_study_area",
+            ),
         }
         | {
             fc_col: ft.partial(compute_frac_courses, numer_col=nc_col)
