@@ -149,6 +149,21 @@ def standardize_cohort_dataset(df: pd.DataFrame) -> pd.DataFrame:
                 "first_associates_or_certificate_at_other_institution_locale",
             ],
         )
+        # as pdp adds more raw data columns, we'll want to ensure their presence here
+        # so that feature generation code doesn't become a cascading mess of "if" checks
+        .pipe(
+            add_empty_cols_if_missing,
+            col_val_dtypes={
+                "years_to_latest_associates_at_cohort_inst": (None, "Int8"),
+                "years_to_latest_certificate_at_cohort_inst": (None, "Int8"),
+                "years_to_latest_associates_at_other_inst": (None, "Int8"),
+                "years_to_latest_certificate_at_other_inst": (None, "Int8"),
+                "first_year_to_associates_at_cohort_inst": (None, "Int8"),
+                "first_year_to_certificate_at_cohort_inst": (None, "Int8"),
+                "first_year_to_associates_at_other_inst": (None, "Int8"),
+                "first_year_to_certificate_at_other_inst": (None, "Int8"),
+            },
+        )
     )
     return df_trf
 

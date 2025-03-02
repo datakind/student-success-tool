@@ -72,6 +72,28 @@ def test_infer_num_terms_in_year(series, exp):
                     "number_of_credits_attempted_year_1": [10.0, 5.0],
                     "number_of_credits_earned_year_1": [10.0, 5.0],
                     "gpa_group_year_1": [3.0, 4.0],
+                    "years_to_latest_associates_at_cohort_inst": [pd.NA, pd.NA],
+                    "years_to_latest_certificate_at_cohort_inst": [pd.NA, pd.NA],
+                    "years_to_latest_associates_at_other_inst": [pd.NA, pd.NA],
+                    "years_to_latest_certificate_at_other_inst": [pd.NA, pd.NA],
+                    "first_year_to_associates_at_cohort_inst": [pd.NA, pd.NA],
+                    "first_year_to_certificate_at_cohort_inst": [pd.NA, pd.NA],
+                    "first_year_to_associates_at_other_inst": [pd.NA, pd.NA],
+                    "first_year_to_certificate_at_other_inst": [pd.NA, pd.NA],
+                }
+            ).astype(
+                {
+                    col: "Int8"
+                    for col in [
+                        "years_to_latest_associates_at_cohort_inst",
+                        "years_to_latest_certificate_at_cohort_inst",
+                        "years_to_latest_associates_at_other_inst",
+                        "years_to_latest_certificate_at_other_inst",
+                        "first_year_to_associates_at_cohort_inst",
+                        "first_year_to_certificate_at_cohort_inst",
+                        "first_year_to_associates_at_other_inst",
+                        "first_year_to_certificate_at_other_inst",
+                    ]
                 }
             ),
         ),
