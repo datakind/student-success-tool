@@ -1,3 +1,4 @@
+import datetime
 import functools as ft
 import logging
 import re
@@ -184,6 +185,33 @@ def standardize_course_dataset(df: pd.DataFrame) -> pd.DataFrame:
                 "enrollment_record_at_other_institution_s_locale_s",
             ],
         )
+        # as pdp adds more raw data columns, we'll want to ensure their presence here
+        # so that feature generation code doesn't become a cascading mess of "if" checks
+        .pipe(
+            add_empty_cols_if_missing,
+            col_value_dtypes={"term_program_of_study": (None, "string")},
+        )
+    )
+
+
+def add_empty_cols_if_missing(
+    df: pd.DataFrame,
+    *,
+    col_value_dtypes: dict[
+        str, tuple[t.Optional[str | bool | int | float | datetime.datetime], str]
+    ],
+) -> pd.DataFrame:
+    """
+    Add empty columns to ``df`` with names given by keys in ``col_value_dtypes``
+    matched to values representing the null value and underlying dtype assigned to it
+    -- provided the columns aren't already present in the dataframe.
+    """
+    return df.assign(
+        **{
+            col: pd.Series(data=value, index=df.index, dtype=dtype)
+            for col, (value, dtype) in col_value_dtypes.items()
+            if col not in df.columns
+        }
     )
 
 

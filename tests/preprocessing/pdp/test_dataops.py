@@ -132,6 +132,7 @@ def test_standardize_cohort_dataset(df, exp):
                     "course_type": ["CU", "CU", "CC"],
                     "grade": ["4", "1", "W"],
                     "core_course": ["Y", "N", "Y"],
+                    "term_program_of_study": [pd.NA, pd.NA, pd.NA],
                 }
             ),
         ),
