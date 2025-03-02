@@ -145,6 +145,37 @@ def test_standardize_course_dataset(df, exp):
 
 
 @pytest.mark.parametrize(
+    ["df", "col_val_dtypes", "exp"],
+    [
+        (
+            pd.DataFrame(),
+            {"a": (None, "Int8")},
+            pd.DataFrame(columns=["a"], dtype="Int8"),
+        ),
+        (
+            pd.DataFrame({"a": [1, 2, 3]}),
+            {"b": (None, "string")},
+            pd.DataFrame({"a": [1, 2, 3], "b": [pd.NA, pd.NA, pd.NA]}).astype(
+                {"b": "string"}
+            ),
+        ),
+        (
+            pd.DataFrame({"a": [1, 2, 3]}),
+            {"a": (None, "Int8"), "b": ("NA", "string")},
+            pd.DataFrame({"a": [1, 2, 3], "b": ["NA", "NA", "NA"]}).astype(
+                {"b": "string"}
+            ),
+        ),
+    ],
+)
+def test_add_empty_cols_if_missing(df, col_val_dtypes, exp):
+    obs = preprocessing.pdp.dataops.add_empty_cols_if_missing(
+        df, col_val_dtypes=col_val_dtypes
+    )
+    assert pd.testing.assert_frame_equal(obs, exp) is None
+
+
+@pytest.mark.parametrize(
     ["df", "exp"],
     [
         (
