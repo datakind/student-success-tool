@@ -1,11 +1,14 @@
 # ruff: noqa: F821
 # mypy: ignore-errors
 import functools as ft
+import logging
 import typing as t
 
 import pandas as pd
 import pandera as pda
 import pandera.typing as pt
+
+LOGGER = logging.getLogger(__name__)
 
 StudentAgeField = ft.partial(
     pda.Field,
@@ -65,7 +68,7 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
         - https://pandera.readthedocs.io/en/stable/dataframe_models.html
     """
 
-    student_guid: pt.Series["string"]
+    student_id: pt.Series["string"]
     institution_id: pt.Series["string"]
     cohort: pt.Series["string"]
     cohort_term: pt.Series[pd.CategoricalDtype] = TermField()
@@ -296,6 +299,20 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
         YearsToOfField(nullable=True)
     )
 
+    @pda.dataframe_parser
+    def rename_student_id_col(cls, df):
+        if "study_id" in df.columns:
+            LOGGER.info("renaming 'study_id' column => 'student_id'")
+            df = df.rename(columns={"study_id": "student_id"}).astype(
+                {"student_id": "string"}
+            )
+        elif "student_guid" in df.columns:
+            LOGGER.info("renaming 'student_guid' column => 'student_id'")
+            df = df.rename(columns={"student_guid": "student_id"}).astype(
+                {"student_id": "string"}
+            )
+        return df
+
     @pda.parser("enrollment_intensity_first_term")
     def set_enrollment_intensity_first_term_categories(cls, series):
         return series.cat.set_categories(["FULL-TIME", "PART-TIME"])
@@ -360,8 +377,9 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
 
     class Config:
         coerce = True
-        strict = True
+        # "strict" parsing is disabled so we can rename raw identifier cols to student_id
+        strict = False
         unique_column_names = True
         add_missing_columns = False
         drop_invalid_rows = False
-        unique = ["student_guid"]
+        unique = ["student_id"]
