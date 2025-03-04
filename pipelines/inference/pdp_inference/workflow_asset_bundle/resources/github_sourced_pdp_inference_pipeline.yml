@@ -33,10 +33,23 @@ resources:
         - task_key: data_validation
           depends_on:
             - task_key: data_preprocessing
-          notebook_task:
-            notebook_path: pipelines/tasks/pdp_data_validation/pdp_data_validation
+          spark_python_task:
+            python_file: pipelines/tasks/data_validation/data_validation_task.py
+            parameters:
+              - --input_table_path
+              - "{{tasks.data_preprocessing.values.processed_dataset_path}}"
+              - --input_schema_path
+              - /Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_bronze/schema # TODO(samroon2): Update once finalized.
+              - --output_artifact_path
+              - "{{job.parameters.pipeline_root_dir}}"
+              - --environment
+              - SERVING
+              - "{{job.parameters.fail_on_anomalies}}"
             source: GIT
           job_cluster_key: pdp-inference-pipeline-cluster
+          libraries:
+            - pypi:
+                package: tensorflow_data_validation==1.16.1
         - task_key: inference
           depends_on:
             - task_key: data_validation
@@ -96,6 +109,8 @@ resources:
           default: "{{job.run_id}}"
         - name: DB_workspace
           default: dev_sst_02
+        - name: fail_on_anomalies
+          default: --fail_on_anomalies_false
         - name: gcp_bucket_name
           default: dev_6782b2f451f84c17ae6e14e918432b65
         - name: model_name
@@ -104,6 +119,8 @@ resources:
           default: sklearn
         - name: notification_email
           default: ${var.end_user_notification_email}
+        - name: pipeline_root_dir
+          default: "{{job.run_id}}"
         - name: version_id
           default: "1"
       permissions:
