@@ -67,11 +67,13 @@ def read_raw_course_data(
         if file_path
         else read.from_delta_table(table_path, spark_session)  # type: ignore
     )
+    # apply to the data what pandera calls "parsers" before validation
+    # ideally, all these operations would be dataframe parsers on the schema itself
+    # but pandera applies core before custom parsers under the hood :/
     df = (
-        # make minimal changes before parsing/validating via schema
-        # standardize column names, for convenience/consistency
+        # standardize column names
         df.rename(columns=utils.convert_to_snake_case)
-        # basically, any operations needed for dtype coercion to work correctly
+        # standardize certain column values
         .assign(
             # uppercase string values for some cols to avoid case inconsistency later on
             **{
@@ -140,11 +142,13 @@ def read_raw_cohort_data(
         if file_path
         else read.from_delta_table(table_path, spark_session)  # type: ignore
     )
+    # apply to the data what pandera calls "parsers" before validation
+    # ideally, all these operations would be dataframe parsers on the schema itself
+    # but pandera applies core before custom parsers under the hood :/
     df = (
-        # make minimal changes before parsing/validating via schema
-        # standardize column names, for convenience/consistency
+        # standardize column names
         df.rename(columns=utils.convert_to_snake_case)
-        # basically, any operations needed for dtype coercion to work correctly
+        # standardize column values
         .assign(
             # uppercase string values for some cols to avoid case inconsistency later on
             # for practical reasons, this is the only place where it's easy to do so
