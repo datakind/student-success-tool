@@ -11,7 +11,7 @@ def compute_target(
     *,
     intensity_time_limits: dict[str, tuple[float, t.Literal["year", "term"]]],
     num_terms_in_year: int = 4,
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     enrollment_intensity_col: str = "student_term_enrollment_intensity",
     years_to_degree_col: str = "first_year_to_bachelors_at_cohort_inst",
     enrollment_year_col: str = "year_of_enrollment_at_cohort_inst",

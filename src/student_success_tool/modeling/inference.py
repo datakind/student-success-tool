@@ -132,7 +132,7 @@ def calculate_shap_values(
     *,
     feature_names: list[str],
     fillna_values: pd.Series,
-    student_id_col: str = "student_guid",
+    student_id_col: str = "student_id",
 ) -> pd.DataFrame:
     """
     Compute SHAP values for the features in ``df`` using ``explainer`` and return result
