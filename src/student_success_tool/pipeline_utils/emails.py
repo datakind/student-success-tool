@@ -90,7 +90,7 @@ def send_inference_completion_email(
 
 
 def send_inference_kickoff_email(
-    sender_email: list[str], receiver_email_list: list[str], cc_email_list: list[str], username: str, password: str
+    sender_email: str, receiver_email_list: list[str], cc_email_list: list[str], username: str, password: str
 ) -> None:
     """Send email with kickoff of inference run message.
 
