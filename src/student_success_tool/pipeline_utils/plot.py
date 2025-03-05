@@ -2,6 +2,7 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import shap
 
+
 def plot_shap_beeswarm(shap_values):
     # Define the color palette
     start_color = (0.34, 0.79, 0.55)  # Green
@@ -48,7 +49,7 @@ def plot_shap_beeswarm(shap_values):
         shrink=0.5,
         aspect=20,
         ticks=[],
-        pad=0.02
+        pad=0.02,
     )
     cbar.outline.set_visible(False)
     cbar.set_label("Feature Value", loc="center", labelpad=10)
