@@ -54,49 +54,6 @@ LocaleField = ft.partial(
     dtype_kwargs={"categories": ["URBAN", "SUBURB", "TOWN/RURAL"]},
 )
 
-class RawPDPCourseDataSchema(pda.DataFrameModel):
-    academic_year: pt.Series["string"] = pda.Field(
-        nullable=True,  # outstanding question with PDP: resolve these identifiers that shouldn't be null https://app.asana.com/0/1206276166513511/1208162898419245/f
-    )
-    academic_term: pt.Series[pd.CategoricalDtype] = pda.Field(
-        nullable=True,
-        dtype_kwargs={
-            "categories": ["FALL", "WINTER", "SPRING", "SUMMER"],
-            "ordered": True,  # confirmed by looking at the Course Begin Date that the academic year starts in the Fall
-        },
-    )
-    course_prefix: pt.Series["string"] = pda.Field(nullable=True)
-    course_number: pt.Series["string"] = pda.Field(
-        nullable=True,
-        # join a list of possible patterns for readability
-        str_matches="|".join(
-            [
-                "^\d{1,4}$",  # 1-4 digits
-                "^\d{3}[A-Z]$",  # 3 digits + 1 capital letter
-                "^\d{2}[A-Z]{2}$",  # 2 digits + 2 capital letters
-                "^[A-Z]{2}\d{2}$",  # 2 capital letters + 2 digits
-            ]
-        ),
-    )
-    section_id: pt.Series["string"] = pda.Field(nullable=True)
-    course_name: pt.Series["string"] = pda.Field(nullable=True)
-    course_cip: pt.Series["string"] = pda.Field(nullable=True)
-    course_type: pt.Series[pd.CategoricalDtype] = pda.Field(
-        nullable=True,
-        dtype_kwargs={
-            "categories": ["CU", "CG", "CC", "CD", "EL", "AB", "GE", "NC", "O"]
-        },
-    )
-    co_requisite_course: pt.Series[pd.CategoricalDtype] = pda.Field(
-        nullable=True, dtype_kwargs={"categories": ["Y", "N"]}
-    )
-    course_begin_date: pt.Series["datetime64[ns]"] = pda.Field(nullable=True)
-    course_end_date: pt.Series["datetime64[ns]"] = pda.Field(nullable=True)
-    course_instructor_rank: pt.Series[pd.CategoricalDtype] = pda.Field(
-        nullable=True,
-        dtype_kwargs={"categories": ["-1.0", "1", "2", "3", "4", "5", "6", "7"]},
-    )
-
 class RawPDPCohortDataSchema(pda.DataFrameModel):
     """
     Schema (aka ``DataFrameModel``) for raw PDP cohort data that validates columns,
