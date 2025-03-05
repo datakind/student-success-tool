@@ -23,13 +23,13 @@ INFERENCE_KICKOFF_MESSAGE = """\
 
 
 def send_email(
-    sender_email,
-    receiver_email_list,
-    cc_email_list,
-    subject,
-    body,
-    mandrill_username,
-    mandrill_password,
+    sender_email: str,
+    receiver_email_list: list[str],
+    cc_email_list: list[str],
+    subject: str,
+    body: str,
+    mandrill_username: str,
+    mandrill_password: str,
 ) -> None:
     """Send email.
 
@@ -64,7 +64,7 @@ def send_email(
 
 
 def send_inference_completion_email(
-    sender_email, receiver_email_list, cc_email_list, username, password
+    sender_email: str, receiver_email_list: list[str], cc_email_list: list[str], username: str, password: str
 ) -> None:
     """Send email with completion of inference run message.
 
@@ -90,7 +90,7 @@ def send_inference_completion_email(
 
 
 def send_inference_kickoff_email(
-    sender_email, receiver_email_list, cc_email_list, username, password
+    sender_email: list[str], receiver_email_list: list[str], cc_email_list: list[str], username: str, password: str
 ) -> None:
     """Send email with kickoff of inference run message.
 
