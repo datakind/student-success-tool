@@ -1,0 +1,116 @@
+institution_id = "metro-state-uni-denver"
+institution_name = "Metropolitan State University Denver"
+
+student_id_col = "student_guid"
+target_col = "target"
+split_col = "split_col"
+sample_weight_col = "sample_weight"
+student_group_cols = ['race', 'first_gen','ethnicity','pell_status_first_year','gender','student_age']
+pred_col = "pred"
+pos_label = true
+random_state = 12345
+
+[datasets.labeled]
+preprocessed = { table_path = "sst_dev.metro_state_uni_denver_silver.training_data" }
+
+[preprocessing]
+splits = { train = 0.6, test = 0.2, validate = 0.2 }
+sample_class_weight = "balanced"
+
+[preprocessing.features]
+# min_passing_grade = 1.7
+# min_num_credits_full_time = 12
+# key_course_subject_areas = ["24", "51"]
+key_course_ids = [
+  # requested in preliminary modeling call, not via email
+  "COMPUTER_SCIENCE1050",
+  # the remaining general studies courses were requested via email
+  "ENGLISH1010", "ENGLISH1020", "SOCIOLOGY1020", # ENG 1010, 1020, SOC 1020
+  "MATHEMATICAL_SCIENCE1080", "MATHEMATICAL_SCIENCE1081", "MATHEMATICAL_SCIENCE1111",
+  "MATHEMATICAL_SCIENCE1210", # MTH 1080, 1081, 1111, 1210
+  # HIS 1030, 1040, 1045, 1210, 1940
+  "HISTORY1030", "HISTORY1040", "HISTORY1045", "HISTORY1210", "HISTORY1940",
+  # BIO 1080, AST 1040, PHY 1000, GEL 1010
+  "BIOLOGY1080", "ASTRONOMY1040", "PHYSICS1000", "GEOLOGY1010",
+  # PSY 1001, PHI 1010, 1030, COM 1010
+  "PSYCHOLOGY1001", "PHILOSOPHY1010", "PHILOSOPHY1030", "COMMUNICATION_STUDIES1010",
+  # ANT 1310, SPA 1010, JPS 1010, FRE 1010, ITA 1010, GER 1010
+  "ANTHROPOLOGY1310", "SPANISH1010", "JAPANESE1010", "FRENCH1010", "ITALIAN1010", "GERMAN1010"]
+
+dropped_cols = [
+  # data we have incorporated into other features
+  'credential_type_sought_year_1', # all Bachelors
+  'pct_credits_earned_of_attempted_year_1',
+  'pct_credits_earned_of_attempted_year_2',
+  'pct_credits_earned_of_attempted_year_3',
+  'persistence', 'retention',
+  # covered by academic term/year
+  'term_id', 'term_is_fall_spring',
+  'term_rank',
+  # covered by time variable and year_of_enrollment
+  'cohort',
+
+  # remove other future data to prevent leakage
+  'years_to_bachelors_at_cohort_inst',
+  'first_year_to_bachelors_at_cohort_inst',
+
+  # data with potential leakage to be safe - we aren't confident if these are data points known prior to the credit checkpoint or not
+  'first_year_to_associates_or_certificate_at_cohort_inst',
+  'first_year_to_associates_or_certificate_at_other_inst',
+  'first_year_to_bachelor_at_other_inst',
+  'pct_credits_earned_of_attempted_year_4',
+  'years_of_last_enrollment_at_cohort_institution',
+  'years_of_last_enrollment_at_other_institution',
+  'years_to_associates_or_certificate_at_cohort_inst',
+  'years_to_associates_or_certificate_at_other_inst',
+  'years_to_bachelor_at_other_inst',
+
+  # categoricals with only 0 or one value -- TODO: add to feature selection functionality
+  'english_placement', 'dual_and_summer_enrollment', 'math_placement',
+  'institution_id', 'special_program', 'reading_placement', 'foreign_language_completion',
+
+  # high cardinality categoricals -- TODO: add to feature selection functionality
+  'course_ids', 'course_subjects', 'course_subject_areas',
+
+  # redundant categoricals
+  'program_of_study_year_1', 'student_program_of_study_area_year_1', # have the term level program of study & if the student changed
+]
+
+[preprocessing.target.params]
+min_num_credits_checkin = 30.0
+min_num_credits_target = 60.0
+student_criteria = { enrollment_type = "FIRST-TIME", enrollment_intensity_first_term = ["FULL-TIME", "PART-TIME"], credential_type_sought_year_1 = "Associate's Degree" }
+intensity_time_limits = [ ["FULL-TIME", 3.0, "year"], ["PART-TIME", 6.0, "year"] ]
+
+[modeling.feature_selection]
+incomplete_threshold = 0.5
+low_variance_threshold = 0.0
+collinear_threshold = 25.0
+non_feature_cols = ['target','student_guid']
+force_include_cols = [
+  'enrollment_type',
+  # these variables help define the outcome, this should help accuracy
+  'num_credits_earned_cumsum', 'enrollment_intensity_first_term',
+  'year_of_enrollment_at_cohort_inst', # to handle re-admits & cohort
+  'frac_courses_enrolled_at_other_institution_s_Y', # to replace num_courses alternative
+  'section_num_students_enrolled_mean', # to replace sections_num_students_passed
+
+  # after preliminary modeling call, add some other features
+  'frac_credits_earned', 'frac_sections_students_passed', 'cumnum_repeated_course_ids',
+
+  # and force-include the new features we created
+  'num_courses_key_general_studies'
+]
+selected_features_baseline = [
+  'cumfrac_fall_spring_terms_unenrolled', 'student_program_of_study_changed_first_year', 'num_credits_earned_cummin', 'term_is_while_student_enrolled_at_other_inst', 'course_level_std', 'academic_term',  'student_program_of_study_area_term_1', 'num_courses_delivery_method_O_cumfrac', 'section_num_students_enrolled_std', 'num_courses_course_level_8_cumfrac', 'student_program_of_study_area_changed_first_year', 'course_subject_area_nunique', 'student_pass_rate_above_sections_avg', 'student_completion_rate_above_sections_avg', 'num_courses_delivery_method_H_cumfrac', 'cohort_term', 'term_in_peak_covid', 'term_is_while_student_enrolled_at_other_inst_cumsum', 'term_in_peak_covid_cumsum', 'program_of_study_term_1', 'num_courses_course_level_4_cumfrac', 'enrollment_type', 'num_credits_earned_cumsum', 'enrollment_intensity_first_term', 'year_of_enrollment_at_cohort_inst', 'frac_courses_enrolled_at_other_institution_s_Y', 'section_num_students_enrolled_mean',
+  'target', 'student_guid',
+
+  # demographics for bias testing
+  'race', 'first_gen','ethnicity','pell_status_first_year','gender','student_age'
+]
+
+[modeling.training]
+# exclude_frameworks = ["xgboost", "lightgbm"]
+primary_metric = "log_loss"
+timeout_minutes = 20
+
