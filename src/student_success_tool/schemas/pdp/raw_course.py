@@ -51,9 +51,7 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
             "categories": ["CU", "CG", "CC", "CD", "EL", "AB", "GE", "NC", "O"]
         },
     )
-    math_or_english_gateway: pt.Series[pd.CategoricalDtype] = pda.Field(
-        nullable=True, dtype_kwargs={"categories": ["M", "E", "NA"]}
-    )
+    math_or_english_gateway: pt.Series[pd.CategoricalDtype] = pda.Field(nullable=True)
     co_requisite_course: pt.Series[pd.CategoricalDtype] = pda.Field(
         nullable=True, dtype_kwargs={"categories": ["Y", "N"]}
     )
@@ -69,9 +67,7 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
         nullable=True, dtype_kwargs={"categories": ["Y", "N"]}
     )
     core_course_type: pt.Series["string"] = pda.Field(nullable=True)
-    core_competency_completed: pt.Series[pd.CategoricalDtype] = pda.Field(
-        nullable=True, dtype_kwargs={"categories": ["Y", "N"]}
-    )
+    core_competency_completed: pt.Series[pd.CategoricalDtype] = pda.Field(nullable=True)
     enrolled_at_other_institution_s: pt.Series[pd.CategoricalDtype] = pda.Field(
         nullable=True, dtype_kwargs={"categories": ["Y", "N"]}
     )
@@ -115,6 +111,14 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
     def strip_and_uppercase_strings(cls, series):
         return series.str.strip().str.upper()
 
+    @pda.parser("math_or_english_gateway")
+    def set_math_or_english_gateway_categories(cls, series):
+        return _strip_upper_strings_to_cats(series).cat.set_categories(["E", "M", "NA"])
+
+    @pda.parser("core_competency_completed")
+    def set_core_competency_completed_categories(cls, series):
+        return _strip_upper_strings_to_cats(series).cat.set_categories(["Y", "N"])
+
     @pda.parser("course_instructor_rank")
     def set_course_instructor_rank_categories(cls, series):
         return series.cat.set_categories(["1", "2", "3", "4", "5", "6", "7"])
@@ -144,3 +148,7 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
             "course_number",
             "section_id",
         ]
+
+
+def _strip_upper_strings_to_cats(series: pd.Series) -> pd.Series:
+    return series.str.strip().str.upper().astype("category")
