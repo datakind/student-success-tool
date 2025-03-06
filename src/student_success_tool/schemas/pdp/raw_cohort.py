@@ -10,33 +10,6 @@ import pandera.typing as pt
 
 LOGGER = logging.getLogger(__name__)
 
-StudentAgeField = ft.partial(
-    pda.Field,
-    dtype_kwargs={
-        "categories": ["20 AND YOUNGER", ">20 - 24", "OLDER THAN 24"],
-        "ordered": True,
-    },
-)
-RaceField = ft.partial(
-    pda.Field,
-    dtype_kwargs={
-        "categories": [
-            "NONRESIDENT ALIEN",
-            "AMERICAN INDIAN OR ALASKA NATIVE",
-            "ASIAN",
-            "BLACK OR AFRICAN AMERICAN",
-            "NATIVE HAWAIIAN OR OTHER PACIFIC ISLANDER",
-            "WHITE",
-            "HISPANIC",
-            "TWO OR MORE RACES",
-            "UNKNOWN",
-        ],
-    },
-)
-EthnicityField = ft.partial(pda.Field, dtype_kwargs={"categories": ["H", "N", "UK"]})
-GenderField = ft.partial(
-    pda.Field, dtype_kwargs={"categories": ["M", "F", "P", "X", "UK"]}
-)
 TermField = ft.partial(
     pda.Field,
     dtype_kwargs={
@@ -72,7 +45,6 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     institution_id: pt.Series["string"]
     cohort: pt.Series["string"]
     cohort_term: pt.Series[pd.CategoricalDtype] = TermField()
-    student_age: pt.Series[pd.CategoricalDtype] = StudentAgeField()
     enrollment_type: pt.Series[pd.CategoricalDtype] = pda.Field(
         dtype_kwargs={"categories": ["FIRST-TIME", "RE-ADMIT", "TRANSFER-IN"]},
     )
@@ -88,12 +60,11 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     dual_and_summer_enrollment: pt.Series[pd.CategoricalDtype] = pda.Field(
         nullable=True
     )
-    race: pt.Series[pd.CategoricalDtype] = RaceField()
-    ethnicity: pt.Series[pd.CategoricalDtype] = EthnicityField()
-    gender: pt.Series[pd.CategoricalDtype] = GenderField()
-    first_gen: pt.Series[pd.CategoricalDtype] = pda.Field(
-        nullable=True, dtype_kwargs={"categories": ["P", "C", "A", "B"]}
-    )
+    student_age: pt.Series[pd.StringDtype] = pda.Field(nullable=True)
+    race: pt.Series[pd.StringDtype] = pda.Field(nullable=True)
+    ethnicity: pt.Series[pd.StringDtype] = pda.Field(nullable=True)
+    gender: pt.Series[pd.StringDtype] = pda.Field(nullable=True)
+    first_gen: pt.Series[pd.StringDtype] = pda.Field(nullable=True)
     # NOTE: categories set in a parser, which forces "UK" values to null
     pell_status_first_year: pt.Series[pd.CategoricalDtype] = pda.Field(nullable=True)
     attendance_status_term_1: pt.Series[pd.CategoricalDtype] = pda.Field(
@@ -312,6 +283,17 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
                 {"student_id": "string"}
             )
         return df
+
+    @pda.parser(
+        "student_age",
+        "race",
+        "ethnicity",
+        "gender",
+        "first_gen",
+        "credential_type_sought_year_1",
+    )
+    def strip_and_uppercase_strings(cls, series):
+        return series.str.strip().str.upper()
 
     @pda.parser("enrollment_intensity_first_term")
     def set_enrollment_intensity_first_term_categories(cls, series):
