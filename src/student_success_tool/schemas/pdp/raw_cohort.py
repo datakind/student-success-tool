@@ -59,28 +59,8 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     first_gen: pt.Series[pd.StringDtype] = pda.Field(nullable=True)
     # NOTE: categories set in a parser, which forces "UK" values to null
     pell_status_first_year: pt.Series[pd.CategoricalDtype] = pda.Field(nullable=True)
-            ]
-        },
-    )
-    credential_type_sought_year_1: pt.Series[pd.CategoricalDtype] = pda.Field(
-        dtype_kwargs={
-            "categories": [
-                "Less than one-year certificate, less than Associate degree",
-                "One to two year certificate, less than Associate degree",
-                "Two to four year certificate, less than Bachelor's degree",
-                "Undergraduate Certificate or Diploma Program",
-                "Associate Degree",
-                "Bachelor's Degree",
-                "Post Baccalaureate Certificate",
-                "Master's Degree",
-                "Doctoral Degree",
-                "First Professional Degree",
-                "Graduate/Professional Certificate",
-                "Non- Credential Program (Preparatory Coursework/Teach Certification)",
-                "Missing",
-            ]
-        },
-    )
+    attendance_status_term_1: pt.Series[pd.StringDtype] = pda.Field(nullable=True)
+    credential_type_sought_year_1: pt.Series[pd.StringDtype] = pda.Field(nullable=True)
     program_of_study_term_1: pt.Series["string"] = pda.Field(nullable=True)
     gpa_group_term_1: pt.Series["Float32"] = GPAField()
     gpa_group_year_1: pt.Series["Float32"] = GPAField()
@@ -209,21 +189,21 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     first_associates_or_certificate_at_other_institution_carnegie: pt.Series[
         "string"
     ] = pda.Field(nullable=True)
-    most_recent_bachelors_at_other_institution_locale: pt.Series[
-        pd.CategoricalDtype
-    ] = LocaleField()
+    most_recent_bachelors_at_other_institution_locale: pt.Series[pd.StringDtype] = (
+        pda.Field(nullable=True)
+    )
     most_recent_associates_or_certificate_at_other_institution_locale: pt.Series[
-        pd.CategoricalDtype
-    ] = LocaleField()
+        pd.StringDtype
+    ] = pda.Field(nullable=True)
     most_recent_last_enrollment_at_other_institution_locale: pt.Series[
-        pd.CategoricalDtype
-    ] = LocaleField()
-    first_bachelors_at_other_institution_locale: pt.Series[pd.CategoricalDtype] = (
-        LocaleField()
+        pd.StringDtype
+    ] = pda.Field(nullable=True)
+    first_bachelors_at_other_institution_locale: pt.Series[pd.StringDtype] = pda.Field(
+        nullable=True
     )
     first_associates_or_certificate_at_other_institution_locale: pt.Series[
-        pd.CategoricalDtype
-    ] = LocaleField()
+        pd.StringDtype
+    ] = pda.Field(nullable=True)
     # added in 2025-01
     years_to_latest_associates_at_cohort_inst: t.Optional[pt.Series["Int8"]] = (
         YearsToOfField(nullable=True)
@@ -271,6 +251,11 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
         "gender",
         "first_gen",
         "credential_type_sought_year_1",
+        "most_recent_bachelors_at_other_institution_locale",
+        "most_recent_associates_or_certificate_at_other_institution_locale",
+        "most_recent_last_enrollment_at_other_institution_locale",
+        "first_bachelors_at_other_institution_locale",
+        "first_associates_or_certificate_at_other_institution_locale",
     )
     def strip_and_uppercase_strings(cls, series):
         return series.str.strip().str.upper()
