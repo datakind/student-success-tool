@@ -35,7 +35,7 @@ dev = [
     "jupyterlab~=4.2",
     "mypy~=1.11",
     "pytest~=8.3",
-    "ruff~=0.9.0",
+    "ruff~=0.8",
 ]
 
 [build-system]
@@ -80,7 +80,7 @@ filterwarnings = ["ignore::DeprecationWarning"]
 testpaths = ["tests"]
 
 [tool.mypy]
-files = ["src"]
+files = ["src", "pipelines"]
 python_version = "3.10"
 pretty = true
 allow_redefinition = true
