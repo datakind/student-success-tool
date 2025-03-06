@@ -24,11 +24,6 @@ CompletedDevOrGatewayField = ft.partial(
     pda.Field, nullable=True, dtype_kwargs={"categories": ["C", "D", "NA"]}
 )
 YearsToOfField = ft.partial(pda.Field, ge=0, le=8)
-LocaleField = ft.partial(
-    pda.Field,
-    nullable=True,
-    dtype_kwargs={"categories": ["URBAN", "SUBURB", "TOWN/RURAL"]},
-)
 
 
 class RawPDPCohortDataSchema(pda.DataFrameModel):
@@ -45,10 +40,7 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     institution_id: pt.Series["string"]
     cohort: pt.Series["string"]
     cohort_term: pt.Series[pd.CategoricalDtype] = TermField()
-    enrollment_type: pt.Series[pd.CategoricalDtype] = pda.Field(
-        dtype_kwargs={"categories": ["FIRST-TIME", "RE-ADMIT", "TRANSFER-IN"]},
-    )
-    # NOTE: categories set in a parser, which forces "UK" / "UNKNOWN" values to null
+    enrollment_type: pt.Series[pd.CategoricalDtype]
     enrollment_intensity_first_term: pt.Series[pd.CategoricalDtype] = pda.Field(
         nullable=True
     )
@@ -67,18 +59,6 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     first_gen: pt.Series[pd.StringDtype] = pda.Field(nullable=True)
     # NOTE: categories set in a parser, which forces "UK" values to null
     pell_status_first_year: pt.Series[pd.CategoricalDtype] = pda.Field(nullable=True)
-    attendance_status_term_1: pt.Series[pd.CategoricalDtype] = pda.Field(
-        dtype_kwargs={
-            "categories": [
-                "First-Time Full-Time",
-                "First-Time Part-Time",
-                "First-Time Unknown",
-                "Transfer-In Full-Time",
-                "Transfer-In Part-Time",
-                "Transfer-In Unknown",
-                "Re-admit Full-Time",
-                "Re-admit Part-Time",
-                "Re-admit Unknown",
             ]
         },
     )

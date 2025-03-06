@@ -77,7 +77,6 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
     course_instructor_employment_status: t.Optional[pt.Series[pd.CategoricalDtype]] = (
         pda.Field(nullable=True, dtype_kwargs={"categories": ["PT", "FT"]})
     )
-    # NOTE: categories set in a parser, which forces "-1" / "-1.0" values to null
     course_instructor_rank: t.Optional[pt.Series[pd.CategoricalDtype]] = pda.Field(
         nullable=True
     )
@@ -107,7 +106,14 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
             )
         return df
 
-    @pda.parser("student_age", "race", "ethnicity", "gender")
+    @pda.parser(
+        "student_age",
+        "race",
+        "ethnicity",
+        "gender",
+        "enrollment_record_at_other_institution_s_state_s",
+        "enrollment_record_at_other_institution_s_locale_s",
+    )
     def strip_and_uppercase_strings(cls, series):
         return series.str.strip().str.upper()
 
