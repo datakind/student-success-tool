@@ -92,7 +92,7 @@ def select_top_features_for_display(
             abs(top_features_df[f"Feature_{i}_Importance"])
             > abs(top_features_df[f"Feature_{i + 1}_Importance"])
         )
-        for i in range(1, 5)
+        for i in range(1, n_features)
     ), "Final output has invalid SHAP values across top 5 ranked features."
     # Round after assertion check
     importance_cols = [f"Feature_{i}_Importance" for i in range(1, n_features + 1)]
