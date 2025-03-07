@@ -88,8 +88,8 @@ def select_top_features_for_display(
     # Ensure top features are in strictly descending order of importance for each student
     assert all(
         all(
-            abs(top_features_df.loc[i, f"Feature_{j+1}_Importance"]) 
-            > abs(top_features_df.loc[i, f"Feature_{j+2}_Importance"])
+            abs(top_features_df.loc[i, f"Feature_{j + 1}_Importance"]) 
+            > abs(top_features_df.loc[i, f"Feature_{j + 2}_Importance"])
             for j in range(n_features - 1)
         )
         for i in range(len(top_features_df))
