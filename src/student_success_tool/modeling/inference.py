@@ -84,7 +84,14 @@ def select_top_features_for_display(
             }
 
         top_features_info.append(student_output)
-    return pd.DataFrame(top_features_info)
+    
+    top_features_df = pd.DataFrame(top_features_info)
+
+    # Ensure top features are in descending order of importance
+    assert (all(abs(top_features_df[f'Feature_{i}_Importance']) >= abs(top_features_df[f'Feature_{i+1}_Importance'])) 
+            for i in range(1, 5)), "Final output has invalid SHAP values across top 5 ranked features."
+    
+    return top_features_df
 
 
 def calculate_shap_values_spark_udf(
