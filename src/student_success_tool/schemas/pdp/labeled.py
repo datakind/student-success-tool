@@ -14,7 +14,7 @@ class PDPLabeledDataSchema(pda.DataFrameModel):
     also included, but *which* features will vary by school / model.
     """
 
-    student_guid: pt.Series["string"]
+    student_id: pt.Series["string"]
     target: pt.Series["boolean"]
     split: t.Optional[pt.Series[pd.CategoricalDtype]] = pda.Field(
         dtype_kwargs={"categories": ["train", "test", "validate"]}
@@ -25,4 +25,4 @@ class PDPLabeledDataSchema(pda.DataFrameModel):
         unique_column_names = True
         add_missing_columns = False
         drop_invalid_rows = False
-        unique = ["student_guid"]
+        unique = ["student_id"]

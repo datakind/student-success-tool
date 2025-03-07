@@ -213,7 +213,7 @@ class PDPProjectConfig(pyd.BaseModel):
     )
 
     # shared parameters
-    student_id_col: str = "student_guid"
+    student_id_col: str = "student_id"
     target_col: str = "target"
     split_col: t.Optional[str] = "split"
     sample_weight_col: t.Optional[str] = "sample_weight"

@@ -13,7 +13,7 @@ LOGGER = logging.getLogger(__name__)
 def select_students_by_attributes(
     df: pd.DataFrame,
     *,
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     **criteria: object | Collection[object],
 ) -> pd.DataFrame:
     """
@@ -69,7 +69,7 @@ def select_students_by_attributes(
 def select_students_by_second_year_data(
     df: pd.DataFrame,
     *,
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     cohort_id_col: str = "cohort_id",
     term_id_col: str = "term_id",
 ) -> pd.DataFrame:
@@ -117,7 +117,7 @@ def select_students_with_max_target_term_in_dataset(
     intensity_time_limits: dict[str, tuple[float, t.Literal["year", "term"]]],
     max_term_rank: int | t.Literal["infer"] = "infer",
     num_terms_in_year: int = 4,
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     enrollment_intensity_col: str = "student_term_enrollment_intensity",
     term_rank_col: str = "term_rank",
 ) -> pd.DataFrame:
