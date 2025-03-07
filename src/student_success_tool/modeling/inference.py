@@ -90,7 +90,7 @@ def select_top_features_for_display(
         all(
             abs(top_features_df.loc[i, f"Feature_{j}_Importance"])
             > abs(top_features_df.loc[i, f"Feature_{j + 1}_Importance"])
-            for j in range(1, n_features + 1)
+            for j in range(1, n_features)
         )
         for i in range(len(top_features_df))
     ), (
