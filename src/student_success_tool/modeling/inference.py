@@ -80,7 +80,7 @@ def select_top_features_for_display(
             student_output |= {
                 f"Feature_{feature_rank}_Name": feature_name,
                 f"Feature_{feature_rank}_Value": feature_value,
-                f"Feature_{feature_rank}_Importance": round(shap_value, 2),
+                f"Feature_{feature_rank}_Importance": shap_value,
             }
 
         top_features_info.append(student_output)
@@ -89,10 +89,12 @@ def select_top_features_for_display(
     assert (
         all(
             abs(top_features_df[f"Feature_{i}_Importance"])
-            >= abs(top_features_df[f"Feature_{i + 1}_Importance"])
+            > abs(top_features_df[f"Feature_{i + 1}_Importance"])
         )
         for i in range(1, 5)
     ), "Final output has invalid SHAP values across top 5 ranked features."
+    # Round after assertion check 
+    top_features_df[importance_cols] = top_features_df[[f"Feature_{i}_Importance" for i in range(1, n_features + 1)]].round(2)
     return top_features_df
 
 
