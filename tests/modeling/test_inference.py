@@ -87,7 +87,7 @@ def explainer():
             pd.Series([1, 2, 3]),
             [0.9, 0.1, 0.5],
             np.array(
-                [[0.5, 0.5, 0.666, 0.665], [0.0, 0, -1.4, 1.4], [0.25, 0.75, 0.0, -0.5]]
+                [[0.5, 0.5, 0.666, 0.665], [0.0, 0, 0, 0], [0.25, 0.75, 0.0, -0.5]]
             ),
             3,
             0.5,
@@ -109,7 +109,7 @@ def test_select_top_features_for_display(
     expect_assertion_error,
 ):
     if expect_assertion_error:
-        with pytest.raises(AssertionError, match="Final output has invalid SHAP values"):
+        with pytest.raises(AssertionError, match="Final output has invalid SHAP values across top 5 ranked features."):
             select_top_features_for_display(
                 features,
                 unique_ids,
