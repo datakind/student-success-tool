@@ -74,7 +74,7 @@ def explainer():
             ),
             False,  # No assertion error expected
         ),
-        # Checj 2: Invalid SHAP values (not in descending order) —> AssertionError
+        # Check 2: Invalid SHAP values (not in descending order) —> AssertionError
         (
             pd.DataFrame(
                 {

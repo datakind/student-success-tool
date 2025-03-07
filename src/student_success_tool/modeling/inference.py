@@ -86,6 +86,7 @@ def select_top_features_for_display(
         top_features_info.append(student_output)
     top_features_df = pd.DataFrame(top_features_info)
     # Ensure top features are in descending order of importance
+    print(top_features_df)
     assert (
         all(
             abs(top_features_df[f"Feature_{i}_Importance"])
