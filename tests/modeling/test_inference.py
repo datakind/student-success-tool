@@ -109,7 +109,10 @@ def test_select_top_features_for_display(
     expect_assertion_error,
 ):
     if expect_assertion_error:
-        with pytest.raises(AssertionError, match="Final output has invalid SHAP values across top 3 ranked features for one or more students."):
+        with pytest.raises(
+            AssertionError, 
+            match="Final output has invalid SHAP values across top 3 ranked features for one or more students."
+        ):
             select_top_features_for_display(
                 features,
                 unique_ids,
