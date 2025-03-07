@@ -86,14 +86,16 @@ def select_top_features_for_display(
         top_features_info.append(student_output)
     top_features_df = pd.DataFrame(top_features_info)
     # Ensure top features are in descending order of importance
-    print(top_features_df)
+    print(top_features_df['Feature_1_Importance'])
+    print(top_features_df['Feature_2_Importance'])
+    print(top_features_df['Feature_3_Importance'])
     assert (
         all(
             abs(top_features_df[f"Feature_{i}_Importance"])
             > abs(top_features_df[f"Feature_{i + 1}_Importance"])
         )
         for i in range(1, n_features)
-    ), "Final output has invalid SHAP values across top 5 ranked features."
+    ), f"Final output has invalid SHAP values across top {n_features} ranked features."
     # Round after assertion check
     importance_cols = [f"Feature_{i}_Importance" for i in range(1, n_features + 1)]
     top_features_df[importance_cols] = top_features_df[importance_cols].round(2) 
