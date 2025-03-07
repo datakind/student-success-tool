@@ -21,10 +21,6 @@ def explainer():
     return DummyKernelExplainer()
 
 
-import pytest
-import pandas as pd
-import numpy as np
-
 @pytest.mark.parametrize(
     [
         "features",
@@ -38,7 +34,7 @@ import numpy as np
         "expect_assertion_error",
     ],
     [
-        # Check #1: Valid SHAP values (descending order) 
+        # Check 1: Valid SHAP values (descending order) 
         (
             pd.DataFrame(
                 {
@@ -51,7 +47,7 @@ import numpy as np
             pd.Series([1, 2, 3]),
             [0.9, 0.1, 0.5],
             np.array(
-                [[1.0, 0.9, 0.8, 0.7], [0.0, -1.0, 0.9, -0.8], [0.75, 0.25, 0.0, -0.5]]
+                [[1.0, 0.9, 0.8, 0.7], [0.0, -1.0, 0.9, -0.8], [0.25, 0.0, -0.5, 0.75]]
             ),
             3,
             0.5,
@@ -68,17 +64,17 @@ import numpy as np
                     "Feature_1_Name": ["feature #1", "feature #2", "x4"],
                     "Feature_1_Value": ["val1", "False", "3"],
                     "Feature_1_Importance": [1.0, -1.0, 0.75],
-                    "Feature_2_Name": ["feature #2", "feature #3", "feature #1"],
-                    "Feature_2_Value": ["True", "1.0001", "val3"],
-                    "Feature_2_Importance": [0.9, 0.9, 0.25],
-                    "Feature_3_Name": ["feature #3", "x4", "x3"],
-                    "Feature_3_Value": ["2.0", "2", "0.5"],
-                    "Feature_3_Importance": [0.8, -0.8, 0.0],
+                    "Feature_2_Name": ["feature #2", "feature #3", "feature #3"],
+                    "Feature_2_Value": ["True", "1.0", "0.5"],
+                    "Feature_2_Importance": [0.9, 0.9, -0.5],
+                    "Feature_3_Name": ["feature #3", "x4", "feature #1"],
+                    "Feature_3_Value": ["2.0", "2", "val3"],
+                    "Feature_3_Importance": [0.8, -0.8, 0.25],
                 }
             ),
             False,  # No assertion error expected
         ),
-        # Check #2: Invalid SHAP values (not in descending order) —> AssertionError
+        # Checj 2: Invalid SHAP values (not in descending order) —> AssertionError
         (
             pd.DataFrame(
                 {
@@ -143,7 +139,8 @@ def test_select_top_features_for_display(
             features_table=features_table,
         )
         assert isinstance(obs, pd.DataFrame) and not obs.empty
-        pd.testing.assert_frame_equal(obs, exp)
+        assert pd.testing.assert_frame_equal(obs, exp) is None
+
 
 @pytest.mark.parametrize(
     ["df", "feature_names", "fillna_values", "student_id_col", "exp_shape"],
