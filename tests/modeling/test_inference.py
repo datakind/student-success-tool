@@ -99,13 +99,13 @@ def explainer():
                     "Support Needed": [True, False, True],
                     "Feature_1_Name": ["feature #1", "feature #2", "x4"],
                     "Feature_1_Value": ["val1", "False", "3"],
-                    "Feature_1_Importance": [1.0, 0.6, 0.75],
+                    "Feature_1_Importance": [0.2, 0.4, 0.75],
                     "Feature_2_Name": ["feature #2", "feature #3", "feature #3"],
                     "Feature_2_Value": ["True", "1.0", "0.5"],
-                    "Feature_2_Importance": [0.3, 0.9, -1.0],
+                    "Feature_2_Importance": [0.5, 0.8, -1.0],
                     "Feature_3_Name": ["feature #3", "x4", "feature #1"],
                     "Feature_3_Value": ["2.0", "2", "val3"],
-                    "Feature_3_Importance": [0.8, -0.1, 0.5],
+                    "Feature_3_Importance": [0.7, -0.1, 0.5],
                 }
             ),
             True,  # Assertion error expected because SHAP values are out of order
