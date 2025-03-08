@@ -8,6 +8,29 @@ import pyspark.sql
 from ... import utils
 from .. import read
 
+try:
+    import pandera as pda
+except ModuleNotFoundError:
+    import sys
+    import types
+
+    m1 = types.ModuleType("pandera")
+    m2 = types.ModuleType("pandera.typing")
+    sys.modules[m1.__name__] = m1
+    sys.modules[m2.__name__] = m2
+    import pandera as pda
+    import pandera.typing as pt
+
+    class DataFrameModel: ...
+
+    def Field(): ...
+
+    class Series: ...
+
+    pda.DataFrameModel = DataFrameModel  # type: ignore
+    pda.Field = Field  # type: ignore
+    pt.Series = Series  # type: ignore
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -15,7 +38,7 @@ def read_raw_course_data(
     *,
     table_path: t.Optional[str] = None,
     file_path: t.Optional[str] = None,
-    schema: t.Optional[type["pda.DataFrameModel"]] = None,  # type: ignore
+    schema: t.Optional[type[pda.DataFrameModel]] = None,
     dttm_format: str = "%Y%m%d",
     converter_func: t.Optional[t.Callable[[pd.DataFrame], pd.DataFrame]] = None,
     spark_session: t.Optional[pyspark.sql.SparkSession] = None,
@@ -92,7 +115,7 @@ def read_raw_cohort_data(
     *,
     table_path: t.Optional[str] = None,
     file_path: t.Optional[str] = None,
-    schema: t.Optional[type["pda.DataFrameModel"]] = None,  # type: ignore
+    schema: t.Optional[type[pda.DataFrameModel]] = None,
     converter_func: t.Optional[t.Callable[[pd.DataFrame], pd.DataFrame]] = None,
     spark_session: t.Optional[pyspark.sql.SparkSession] = None,
     **kwargs: object,
@@ -183,7 +206,7 @@ def read_raw_cohort_data(
 def _maybe_convert_maybe_validate_data(
     df: pd.DataFrame,
     converter_func: t.Optional[t.Callable[[pd.DataFrame], pd.DataFrame]] = None,
-    schema: t.Optional[type["pda.DataFrameModel"]] = None,  # type: ignore
+    schema: t.Optional[type[pda.DataFrameModel]] = None,
 ) -> pd.DataFrame:
     # HACK: we're hiding this pandera import here so databricks doesn't know about it
     # pandera v0.23+ pulls in pandas v2.1+ while databricks runtimes are stuck in v1.5

@@ -96,3 +96,24 @@ def convert_intensity_time_limits(
             for intensity, (num, unit) in intensity_time_limits.items()
         }
     return intensity_nums
+
+
+def mock_pandera():
+    import sys
+    import types
+
+    m1 = types.ModuleType("pandera")
+    m2 = types.ModuleType("pandera.typing")
+
+    sys.modules[m1.__name__] = m1
+    sys.modules[m2.__name__] = m2
+
+    class DataFrameModel: ...
+
+    def Field(): ...
+
+    class Series: ...
+
+    m1.DataFrameModel = DataFrameModel  # type: ignore
+    m1.Field = Field  # type: ignore
+    m2.Series = Series  # type: ignore
