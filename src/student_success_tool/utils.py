@@ -121,6 +121,13 @@ def mock_pandera():
 
         return _wrapper
 
+    def dataframe_check(_fn=None, **check_kwargs):
+        def _wrapper(fn): ...
+
+        if _fn:
+            return _wrapper(_fn)
+        return _wrapper
+
     def check(*fields, regex=False, **check_kwargs):
         def _wrapper(fn): ...
 
@@ -132,6 +139,7 @@ def mock_pandera():
     m1.Field = Field  # type: ignore
     m1.dataframe_parser = dataframe_parser  # type: ignore
     m1.parser = parser  # type: ignore
+    m1.dataframe_check = dataframe_check  # type: ignore
     m1.check = check  # type: ignore
     m2.Series = Series  # type: ignore
 
