@@ -2701,7 +2701,7 @@ requires-dist = [
     { name = "mlflow", specifier = "~=2.13" },
     { name = "numpy", specifier = "~=1.26" },
     { name = "pandas", specifier = "~=2.1" },
-    { name = "pandera", specifier = "~=0.23" },
+    { name = "pandera", specifier = "~=0.23.0" },
     { name = "pyarrow", specifier = "~=16.0" },
     { name = "pydantic", specifier = "~=2.10" },
     { name = "pyyaml", specifier = "~=6.0" },
