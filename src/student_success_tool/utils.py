@@ -121,6 +121,11 @@ def mock_pandera():
 
         return _wrapper
 
+    def check(*fields, regex: bool = False, **check_kwargs):
+        def _wrapper(fn): ...
+
+        return _wrapper
+
     class Series(t.Generic[GenericDtype]): ...
 
     m1.DataFrameModel = DataFrameModel  # type: ignore
