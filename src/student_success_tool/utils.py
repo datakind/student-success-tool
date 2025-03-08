@@ -109,7 +109,8 @@ def mock_pandera():
 
     def Field(): ...
 
-    class Series: ...
+    class Series:
+        def __getitem__(self, item): ...
 
     m1.DataFrameModel = DataFrameModel  # type: ignore
     m1.Field = Field  # type: ignore
