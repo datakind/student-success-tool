@@ -3,8 +3,6 @@ import logging
 import typing as t
 
 import pandas as pd
-import pandera as pda
-import pandera.errors
 import pyspark.sql
 
 from ... import utils
@@ -17,7 +15,7 @@ def read_raw_course_data(
     *,
     table_path: t.Optional[str] = None,
     file_path: t.Optional[str] = None,
-    schema: t.Optional[type[pda.DataFrameModel]] = None,
+    schema: t.Optional[type["pda.DataFrameModel"]] = None,  # noqa: F821
     dttm_format: str = "%Y%m%d",
     converter_func: t.Optional[t.Callable[[pd.DataFrame], pd.DataFrame]] = None,
     spark_session: t.Optional[pyspark.sql.SparkSession] = None,
@@ -94,7 +92,7 @@ def read_raw_cohort_data(
     *,
     table_path: t.Optional[str] = None,
     file_path: t.Optional[str] = None,
-    schema: t.Optional[type[pda.DataFrameModel]] = None,
+    schema: t.Optional[type["pda.DataFrameModel"]] = None,  # noqa: F821
     converter_func: t.Optional[t.Callable[[pd.DataFrame], pd.DataFrame]] = None,
     spark_session: t.Optional[pyspark.sql.SparkSession] = None,
     **kwargs: object,
@@ -185,8 +183,13 @@ def read_raw_cohort_data(
 def _maybe_convert_maybe_validate_data(
     df: pd.DataFrame,
     converter_func: t.Optional[t.Callable[[pd.DataFrame], pd.DataFrame]] = None,
-    schema: t.Optional[type[pda.DataFrameModel]] = None,
+    schema: t.Optional[type["pda.DataFrameModel"]] = None,  # noqa: F821
 ) -> pd.DataFrame:
+    # HACK: we're hiding this pandera import here so databricks doesn't know about it
+    # pandera v0.23+ pulls in pandas v2.1+ while databricks runtimes are stuck in v1.5
+    # resulting in super dumb dependency errors when loading automl trained models
+    import pandera.errors
+
     if converter_func is not None:
         LOGGER.info("applying %s converter to raw data", converter_func)
         df = converter_func(df)
