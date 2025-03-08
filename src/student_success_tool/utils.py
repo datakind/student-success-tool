@@ -99,6 +99,16 @@ def convert_intensity_time_limits(
 
 
 def mock_pandera():
+    """
+    Databricks doesn't include ``pandera`` in its runtimes, and it's also very picky
+    about which packages are installed when training and/or loading models with AutoML
+    and mlflow. However, we need ``pandera`` to be available in order for this package
+    to import, since it's used at the module-level for data schema validation.
+
+    So, here we mock out functionality used in our data schemas in such a way that
+    this package can import without error, even if ``pandera`` isn't actually installed,
+    as we're forced to do in certain Databricks notebooks. Yes, this sucks!
+    """
     import sys
     import types
 
