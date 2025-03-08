@@ -144,7 +144,6 @@ class ModelInferenceTask:
             feature_names = model.named_steps["column_selector"].get_params()["cols"]
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(data=X, columns=feature_names)
-
         pred_probs = model.predict_proba(X)
         if pos_label is not None:
             return pred_probs[:, model.classes_.tolist().index(pos_label)]

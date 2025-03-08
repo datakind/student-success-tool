@@ -27,7 +27,6 @@ def main():
             logging.warning("Processed dataset table path not found.")
 
         logging.info("Data validation script execution.")
-
         # TODO: Implement actual data validation logic here.
         # Example:
         # if processed_dataset_table_path:
