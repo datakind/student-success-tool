@@ -1,3 +1,5 @@
+import collections
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -11,6 +13,10 @@ from student_success_tool.modeling.inference import (
 
 
 class DummyKernelExplainer:
+    def __call__(self, X):
+        Explanation = collections.namedtuple("Explanation", ["values", "feature_names"])
+        return Explanation(np.random.rand(len(X), len(X.columns)) * 0.1, X.columns)
+
     def shap_values(self, X):
         # for simplicity, return random numbers of the proper shape
         return np.random.rand(len(X), len(X.columns)) * 0.1
