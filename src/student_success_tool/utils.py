@@ -105,12 +105,13 @@ def mock_pandera():
     m1 = types.ModuleType("pandera")
     m2 = types.ModuleType("pandera.typing")
 
+    GenericDtype = t.TypeVar("GenericDtype")
+
     class DataFrameModel: ...
 
     def Field(): ...
 
-    class Series:
-        def __getitem__(self, item): ...
+    class Series(t.Generic[GenericDtype]): ...
 
     m1.DataFrameModel = DataFrameModel  # type: ignore
     m1.Field = Field  # type: ignore
