@@ -3,12 +3,19 @@ import logging
 import typing as t
 
 import pandas as pd
-import pandera as pda
-import pandera.errors
 import pyspark.sql
 
 from ... import utils
 from .. import read
+
+try:
+    import pandera as pda
+except ModuleNotFoundError:
+    from ... import utils
+
+    utils.mock_pandera()
+
+    import pandera as pda
 
 LOGGER = logging.getLogger(__name__)
 
@@ -187,6 +194,11 @@ def _maybe_convert_maybe_validate_data(
     converter_func: t.Optional[t.Callable[[pd.DataFrame], pd.DataFrame]] = None,
     schema: t.Optional[type[pda.DataFrameModel]] = None,
 ) -> pd.DataFrame:
+    # HACK: we're hiding this pandera import here so databricks doesn't know about it
+    # pandera v0.23+ pulls in pandas v2.1+ while databricks runtimes are stuck in v1.5
+    # resulting in super dumb dependency errors when loading automl trained models
+    import pandera.errors
+
     if converter_func is not None:
         LOGGER.info("applying %s converter to raw data", converter_func)
         df = converter_func(df)
