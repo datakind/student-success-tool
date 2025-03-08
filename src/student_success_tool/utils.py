@@ -111,10 +111,13 @@ def mock_pandera():
 
     def Field(**kwargs): ...
 
+    def dataframe_parser(_fn=None, **parser_kwargs): ...
+
     class Series(t.Generic[GenericDtype]): ...
 
     m1.DataFrameModel = DataFrameModel  # type: ignore
     m1.Field = Field  # type: ignore
+    m1.dataframe_parser = dataframe_parser  # type: ignore
     m2.Series = Series  # type: ignore
 
     sys.modules[m1.__name__] = m1
