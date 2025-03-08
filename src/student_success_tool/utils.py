@@ -121,7 +121,7 @@ def mock_pandera():
 
         return _wrapper
 
-    def check(*fields, regex: bool = False, **check_kwargs):
+    def check(*fields, regex=False, **check_kwargs):
         def _wrapper(fn): ...
 
         return _wrapper
@@ -132,6 +132,7 @@ def mock_pandera():
     m1.Field = Field  # type: ignore
     m1.dataframe_parser = dataframe_parser  # type: ignore
     m1.parser = parser  # type: ignore
+    m1.check = check  # type: ignore
     m2.Series = Series  # type: ignore
 
     sys.modules[m1.__name__] = m1
