@@ -3,8 +3,17 @@
 import typing as t
 
 import pandas as pd
-import pandera as pda
-import pandera.typing as pt
+
+try:
+    import pandera as pda
+    import pandera.typing as pt
+except ModuleNotFoundError:
+    from ... import utils
+
+    utils.mock_pandera()
+
+    import pandera as pda
+    import pandera.typing as pt
 
 
 class PDPLabeledDataSchema(pda.DataFrameModel):

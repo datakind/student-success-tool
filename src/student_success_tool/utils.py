@@ -105,9 +105,6 @@ def mock_pandera():
     m1 = types.ModuleType("pandera")
     m2 = types.ModuleType("pandera.typing")
 
-    sys.modules[m1.__name__] = m1
-    sys.modules[m2.__name__] = m2
-
     class DataFrameModel: ...
 
     def Field(): ...
@@ -117,3 +114,6 @@ def mock_pandera():
     m1.DataFrameModel = DataFrameModel  # type: ignore
     m1.Field = Field  # type: ignore
     m2.Series = Series  # type: ignore
+
+    sys.modules[m1.__name__] = m1
+    sys.modules[m2.__name__] = m2

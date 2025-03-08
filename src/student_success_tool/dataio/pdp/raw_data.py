@@ -11,25 +11,11 @@ from .. import read
 try:
     import pandera as pda
 except ModuleNotFoundError:
-    import sys
-    import types
+    from ... import utils
 
-    m1 = types.ModuleType("pandera")
-    m2 = types.ModuleType("pandera.typing")
-    sys.modules[m1.__name__] = m1
-    sys.modules[m2.__name__] = m2
+    utils.mock_pandera()
+
     import pandera as pda
-    import pandera.typing as pt
-
-    class DataFrameModel: ...
-
-    def Field(): ...
-
-    class Series: ...
-
-    pda.DataFrameModel = DataFrameModel  # type: ignore
-    pda.Field = Field  # type: ignore
-    pt.Series = Series  # type: ignore
 
 LOGGER = logging.getLogger(__name__)
 
