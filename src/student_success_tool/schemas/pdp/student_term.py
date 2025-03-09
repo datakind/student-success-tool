@@ -4,8 +4,17 @@ import functools as ft
 import typing as t
 
 import pandas as pd
-import pandera as pda
-import pandera.typing as pt
+
+try:
+    import pandera as pda
+    import pandera.typing as pt
+except ModuleNotFoundError:
+    from ... import utils
+
+    utils.mock_pandera()
+
+    import pandera as pda
+    import pandera.typing as pt
 
 # TODO: re-use existing fields from raw data schemas?
 
@@ -26,7 +35,7 @@ NumCreditsGt0Field = ft.partial(pda.Field, nullable=True, ge=0.0)
 
 
 class PDPStudentTermsDataSchema(pda.DataFrameModel):
-    student_guid: pt.Series["string"]
+    student_id: pt.Series["string"]
     term_id: pt.Series["string"]
     institution_id: pt.Series["string"]
     academic_year: pt.Series["string"]
@@ -215,4 +224,4 @@ class PDPStudentTermsDataSchema(pda.DataFrameModel):
         unique_column_names = True
         add_missing_columns = False
         drop_invalid_rows = False
-        unique = ["student_guid", "term_id"]
+        unique = ["student_id", "term_id"]

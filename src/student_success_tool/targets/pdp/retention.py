@@ -6,7 +6,7 @@ from ... import utils
 def compute_target(
     df: pd.DataFrame,
     *,
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     retention_col: str = "retention",
     na_value: bool = False,
 ) -> pd.Series:

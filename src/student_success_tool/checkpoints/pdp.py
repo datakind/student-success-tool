@@ -12,7 +12,7 @@ def nth_student_terms(
     df: pd.DataFrame,
     *,
     n: int,
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:
@@ -46,7 +46,7 @@ def nth_student_terms(
 def first_student_terms(
     df: pd.DataFrame,
     *,
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:
@@ -75,7 +75,7 @@ def first_student_terms(
 def last_student_terms(
     df: pd.DataFrame,
     *,
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:
@@ -106,7 +106,7 @@ def first_student_terms_at_num_credits_earned(
     *,
     min_num_credits: float,
     num_credits_col: str = "num_credits_earned_cumsum",
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:
@@ -142,7 +142,7 @@ def first_student_terms_within_cohort(
     df: pd.DataFrame,
     *,
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:
@@ -179,7 +179,7 @@ def last_student_terms_in_enrollment_year(
     *,
     enrollment_year: int,
     enrollment_year_col: str = "year_of_enrollment_at_cohort_inst",
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:

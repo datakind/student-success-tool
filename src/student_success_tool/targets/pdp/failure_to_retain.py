@@ -14,7 +14,7 @@ def make_labeled_dataset(
     *,
     student_criteria: dict[str, object | Collection[object]],
     exclude_pre_cohort_terms: bool = True,
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     cohort_id_col: str = "cohort_id",
     term_id_col: str = "term_id",
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
@@ -68,7 +68,7 @@ def make_labeled_dataset(
 def compute_target_variable(
     df: pd.DataFrame,
     *,
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     retention_col: str = "retention",
 ) -> pd.Series:
     """
@@ -96,7 +96,7 @@ def select_eligible_students(
     df: pd.DataFrame,
     *,
     student_criteria: dict[str, object | Collection[object]],
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     cohort_id_col: str = "cohort_id",
     term_id_col: str = "term_id",
 ) -> pd.DataFrame:

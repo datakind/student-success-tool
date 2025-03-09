@@ -69,12 +69,12 @@ def make_student_term_dataset(
     df_student_terms = (
         features.pdp.student_term.aggregate_from_course_level_features(
             df_courses_plus,
-            student_term_id_cols=["student_guid", "term_id"],
+            student_term_id_cols=["student_id", "term_id"],
             min_passing_grade=min_passing_grade,
             key_course_subject_areas=key_course_subject_areas,
             key_course_ids=key_course_ids,
         )
-        .merge(df_students, how="inner", on=["institution_id", "student_guid"])
+        .merge(df_students, how="inner", on=["institution_id", "student_id"])
         .pipe(
             features.pdp.student_term.add_features,
             min_num_credits_full_time=min_num_credits_full_time,
@@ -83,7 +83,7 @@ def make_student_term_dataset(
     df_student_terms_plus = (
         features.pdp.cumulative.add_features(
             df_student_terms,
-            student_id_cols=["institution_id", "student_guid"],
+            student_id_cols=["institution_id", "student_id"],
             sort_cols=["academic_year", "academic_term"],
         )
         # NOTE: it's important to standardize column names here to avoid name mismatches
