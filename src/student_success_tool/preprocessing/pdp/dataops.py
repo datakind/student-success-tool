@@ -19,6 +19,7 @@ def make_student_term_dataset(
     min_passing_grade: float = constants.DEFAULT_MIN_PASSING_GRADE,
     min_num_credits_full_time: float = constants.DEFAULT_MIN_NUM_CREDITS_FULL_TIME,
     course_level_pattern: str = constants.DEFAULT_COURSE_LEVEL_PATTERN,
+    core_terms: set[str] = constants.DEFAULT_CORE_TERMS,
     peak_covid_terms: set[tuple[str, str]] = constants.DEFAULT_PEAK_COVID_TERMS,
     key_course_subject_areas: t.Optional[list[str]] = None,
     key_course_ids: t.Optional[list[str]] = None,
@@ -36,6 +37,9 @@ def make_student_term_dataset(
         min_num_credits_full_time: Minimum number of credits *attempted* per term
             for a student's enrollment intensity to be considered "full-time".
             Default value is 12.0.
+        core_terms: Set of terms that together comprise the "core" of the academic year,
+            in contrast with additional, usually shorter terms that may take place
+            between core terms. Default value is {"FALL", "SPRING"}.
         course_level_pattern
         peak_covid_terms
         key_course_subject_areas
