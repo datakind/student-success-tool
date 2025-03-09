@@ -38,11 +38,11 @@ def select_students_by_attributes(
     if not criteria:
         raise ValueError("one or more selection criteria must be specified")
 
-    student_id_cols = utils.to_list(student_id_cols)
+    student_id_cols = utils.types.to_list(student_id_cols)
     nuq_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
     is_selecteds = [
         df[key].isin(set(val))  # type: ignore
-        if utils.is_collection_but_not_string(val)
+        if utils.types.is_collection_but_not_string(val)
         else df[key].eq(val).fillna(value=False)  # type: ignore
         for key, val in criteria.items()
     ]
@@ -87,7 +87,7 @@ def select_students_by_second_year_data(
 
     TODO: maybe combine this with more general function below?
     """
-    student_id_cols = utils.to_list(student_id_cols)
+    student_id_cols = utils.types.to_list(student_id_cols)
     nuq_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
     max_academic_year = _extract_year_from_id(df[term_id_col]).max()
     df_selected = (
@@ -154,7 +154,7 @@ def select_students_with_max_target_term_in_dataset(
         max_term_rank = int(df[term_rank_col].max())
     assert isinstance(max_term_rank, int)  # type guard
 
-    student_id_cols = utils.to_list(student_id_cols)
+    student_id_cols = utils.types.to_list(student_id_cols)
     nuq_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
     df_ckpt = (
         checkpoint.copy(deep=True)
@@ -164,7 +164,7 @@ def select_students_with_max_target_term_in_dataset(
     if df_ckpt.groupby(by=student_id_cols).size().gt(1).any():
         raise ValueError("checkpoint df must include exactly 1 row per student")
 
-    intensity_num_terms = utils.convert_intensity_time_limits(
+    intensity_num_terms = utils.misc.convert_intensity_time_limits(
         "term", intensity_time_limits, num_terms_in_year=num_terms_in_year
     )
     if "*" in intensity_num_terms:

@@ -214,7 +214,7 @@ def add_term_diff_features(
         term_num_col
     """
     LOGGER.info("computing term diff features ...")
-    student_id_cols = utils.to_list(student_id_cols)
+    student_id_cols = utils.types.to_list(student_id_cols)
     df_grped = (
         df.loc[:, student_id_cols + [term_num_col] + cols]
         .groupby(by=student_id_cols)

@@ -105,7 +105,7 @@ def compute_target_variable(
         term_col
         term_rank_col
     """
-    student_id_cols = utils.to_list(student_id_cols)
+    student_id_cols = utils.types.to_list(student_id_cols)
     include_cols = [enrollment_intensity_col]
     # we want a target for every student in input df; this will ensure it
     df_distinct_students = df[student_id_cols].drop_duplicates(ignore_index=True)

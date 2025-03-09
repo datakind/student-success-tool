@@ -13,7 +13,7 @@ try:
 except ModuleNotFoundError:
     from ... import utils
 
-    utils.mock_pandera()
+    utils.databricks.mock_pandera()
 
     import pandera as pda
 
@@ -79,7 +79,7 @@ def read_raw_course_data(
     # but pandera applies core before custom parsers under the hood :/
     df = (
         # standardize column names
-        df.rename(columns=utils.convert_to_snake_case)
+        df.rename(columns=utils.misc.convert_to_snake_case)
         # standardize certain column values
         .assign(
             # uppercase string values for some cols to avoid case inconsistency later on
@@ -154,7 +154,7 @@ def read_raw_cohort_data(
     # but pandera applies core before custom parsers under the hood :/
     df = (
         # standardize column names
-        df.rename(columns=utils.convert_to_snake_case)
+        df.rename(columns=utils.misc.convert_to_snake_case)
         # standardize column values
         .assign(
             # uppercase string values for some cols to avoid case inconsistency later on

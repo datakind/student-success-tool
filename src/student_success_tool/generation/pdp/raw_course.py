@@ -102,7 +102,8 @@ class Provider(BaseProvider):
         }
         if normalize_col_names:
             record = {
-                utils.convert_to_snake_case(key): val for key, val in record.items()
+                utils.misc.convert_to_snake_case(key): val
+                for key, val in record.items()
             }
         return record
 

@@ -45,7 +45,7 @@ def compute_target(
         num_credits_col
         term_rank_col
     """
-    student_id_cols = utils.to_list(student_id_cols)
+    student_id_cols = utils.types.to_list(student_id_cols)
     # we want a target for every student in input df; this will ensure it
     df_distinct_students = df[student_id_cols].drop_duplicates(ignore_index=True)
     df_ckpt = (
@@ -72,7 +72,7 @@ def compute_target(
         suffixes=("_ckpt", "_tgt"),
     )
     # convert from year limits to term limits, as needed
-    intensity_num_terms = utils.convert_intensity_time_limits(
+    intensity_num_terms = utils.misc.convert_intensity_time_limits(
         "term", intensity_time_limits, num_terms_in_year=num_terms_in_year
     )
     # compute all intensity/term boolean arrays separately

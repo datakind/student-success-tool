@@ -17,7 +17,7 @@ from student_success_tool import utils
     ],
 )
 def test_to_list(val, exp):
-    obs = utils.to_list(val)
+    obs = utils.types.to_list(val)
     assert obs == exp
 
 
@@ -32,7 +32,7 @@ def test_to_list(val, exp):
     ],
 )
 def test_is_collection_but_not_string(value, exp):
-    obs = utils.is_collection_but_not_string(value)
+    obs = utils.types.is_collection_but_not_string(value)
     assert isinstance(obs, bool)
     assert obs == exp
 
@@ -45,7 +45,7 @@ def test_is_collection_but_not_string(value, exp):
     ],
 )
 def test_unique_elements_in_order(eles, exp):
-    obs = utils.unique_elements_in_order(eles)
+    obs = utils.misc.unique_elements_in_order(eles)
     assert isinstance(obs, Iterable)
     assert list(obs) == exp
 
@@ -60,5 +60,5 @@ def test_unique_elements_in_order(eles, exp):
     ],
 )
 def test_convert_to_snake_case(val, exp):
-    obs = utils.convert_to_snake_case(val)
+    obs = utils.misc.convert_to_snake_case(val)
     assert obs == exp
