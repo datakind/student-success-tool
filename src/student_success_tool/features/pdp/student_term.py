@@ -54,7 +54,9 @@ def aggregate_from_course_level_features(
         term_start_dt=("term_start_dt", "first"),
         term_rank=("term_rank", "first"),
         term_rank_core=("term_rank_core", "first"),
+        term_rank_noncore=("term_rank_noncore", "first"),
         term_is_core=("term_is_core", "first"),
+        term_is_noncore=("term_is_noncore", "first"),
         term_in_peak_covid=("term_in_peak_covid", "first"),
         term_program_of_study=("term_program_of_study", "first"),
     )

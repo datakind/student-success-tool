@@ -160,6 +160,7 @@ cumnum_repeated_course_subjects = { name = "number of course subjects repeated s
 cumnum_repeated_course_subject_areas = { name = "number of course subject areas repeated so far" }
 cumnum_terms_enrolled = { name = "number of terms enrolled so far" }
 cumnum_core_terms_enrolled = { name = "number of 'core' terms enrolled so far" }
+cumnum_noncore_terms_enrolled = { name = "number of 'non-core' terms enrolled so far" }
 term_in_peak_covid_cumsum = { name = "number of terms so far that occurred in 'peak' COVID" }
 term_is_while_student_enrolled_at_other_inst_cumsum = { name = "number of terms so far that occurred while student was enrolled at another institution" }
 term_is_pre_cohort_cumsum = { name = "number of terms so far that occurred before student's cohort (enrollment) term" }

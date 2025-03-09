@@ -79,12 +79,15 @@ from student_success_tool.features.pdp import term
                     ),
                     "term_rank": [1, 1, 2, 3, 0, 4],
                     "term_rank_core": [1, 1, pd.NA, 2, 0, pd.NA],
+                    "term_rank_noncore": [pd.NA, pd.NA, 0, pd.NA, pd.NA, 1],
                     "term_in_peak_covid": [False, False, False, True, False, False],
                     "term_is_core": [True, True, False, True, True, False],
+                    "term_is_noncore": [False, False, True, False, False, True],
                 }
             ).astype(
                 {
                     "term_rank_core": "Int8",
+                    "term_rank_noncore": "Int8",
                     "academic_term": pd.CategoricalDtype(
                         ["FALL", "WINTER", "SPRING", "SUMMER"], ordered=True
                     ),
@@ -155,23 +158,23 @@ def test_term_in_peak_covid(df, year_col, term_col, peak_covid_terms, exp):
 
 
 @pytest.mark.parametrize(
-    ["df", "core_terms", "term_col", "exp"],
+    ["df", "terms_subset", "term_col", "exp"],
     [
         (
             pd.DataFrame({"term": ["FALL", "WINTER", "SPRING", "SUMMER"]}),
             {"FALL", "SPRING"},
             "term",
-            pd.Series([True, False, True, False], name="term_is_core", dtype="boolean"),
+            pd.Series([True, False, True, False], dtype="boolean"),
         ),
         (
             pd.DataFrame({"term": ["FALL", "WINTER", "SPRING", "SUMMER"]}),
             {"FALL", "WINTER", "SPRING"},
             "term",
-            pd.Series([True, True, True, False], name="term_is_core", dtype="boolean"),
+            pd.Series([True, True, True, False], dtype="boolean"),
         ),
     ],
 )
-def test_term_is_core(df, core_terms, term_col, exp):
-    obs = term.term_is_core(df, core_terms=core_terms, term_col=term_col)
+def test_term_in_subset(df, terms_subset, term_col, exp):
+    obs = term.term_in_subset(df, terms_subset=terms_subset, term_col=term_col)
     assert isinstance(obs, pd.Series)
-    assert pd.testing.assert_series_equal(obs, exp) is None
+    assert pd.testing.assert_series_equal(obs, exp, check_names=False) is None

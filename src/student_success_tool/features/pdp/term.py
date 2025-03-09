@@ -36,6 +36,7 @@ def add_features(
             occurring during "peak" COVID; for example, ``("2020-21", "SPRING")`` .
     """
     LOGGER.info("adding term features ...")
+    noncore_terms: set[types.TermType] = set(df[term_col].unique()) - set(core_terms)
     df_term = (
         _get_unique_sorted_terms_df(df, year_col=year_col, term_col=term_col)
         # only need to compute features on unique terms, rather than at course-level
@@ -55,6 +56,12 @@ def add_features(
                 term_col=term_col,
                 terms_subset=core_terms,
             ),
+            term_rank_noncore=ft.partial(
+                term_rank,
+                year_col=year_col,
+                term_col=term_col,
+                terms_subset=noncore_terms,
+            ),
             term_in_peak_covid=ft.partial(
                 term_in_peak_covid,
                 year_col=year_col,
@@ -63,7 +70,10 @@ def add_features(
             ),
             # yes, this is silly, but it helps a tricky feature computation later on
             term_is_core=ft.partial(
-                term_is_core, core_terms=core_terms, term_col=term_col
+                term_in_subset, terms_subset=core_terms, term_col=term_col
+            ),
+            term_is_noncore=ft.partial(
+                term_in_subset, terms_subset=noncore_terms, term_col=term_col
             ),
         )
     )
@@ -111,10 +121,10 @@ def term_in_peak_covid(
     )
 
 
-def term_is_core(
-    df: pd.DataFrame, core_terms: set[types.TermType], term_col: str = "academic_term"
+def term_in_subset(
+    df: pd.DataFrame, terms_subset: set[types.TermType], term_col: str = "academic_term"
 ) -> pd.Series:
-    return df[term_col].isin(core_terms).astype("boolean").rename("term_is_core")
+    return df[term_col].isin(terms_subset).astype("boolean")
 
 
 def _get_unique_sorted_terms_df(
