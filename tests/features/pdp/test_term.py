@@ -78,6 +78,7 @@ from student_success_tool.features.pdp import term
                         ],
                     ),
                     "term_rank": [1, 1, 2, 3, 0, 4],
+                    "term_rank_core": [1, 1, pd.NA, 2, 0, pd.NA],
                     "term_rank_fall_spring": [1, 1, pd.NA, 2, 0, pd.NA],
                     "term_in_peak_covid": [False, False, False, True, False, False],
                     "term_is_core": [True, True, False, True, True, False],
@@ -85,6 +86,7 @@ from student_success_tool.features.pdp import term
                 }
             ).astype(
                 {
+                    "term_rank_core": "Int8",
                     "term_rank_fall_spring": "Int8",
                     "academic_term": pd.CategoricalDtype(
                         ["FALL", "WINTER", "SPRING", "SUMMER"], ordered=True

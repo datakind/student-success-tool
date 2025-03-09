@@ -1,6 +1,7 @@
 import functools as ft
 import logging
 import typing as t
+from collections.abc import Collection
 
 import pandas as pd
 
@@ -44,6 +45,12 @@ def add_features(
                 first_term_of_year=first_term_of_year,
             ),
             term_rank=ft.partial(term_rank, year_col=year_col, term_col=term_col),
+            term_rank_core=ft.partial(
+                term_rank,
+                year_col=year_col,
+                term_col=term_col,
+                terms_subset=core_terms,
+            ),
             term_rank_fall_spring=ft.partial(
                 term_rank,
                 year_col=year_col,
@@ -71,7 +78,7 @@ def term_rank(
     *,
     year_col: str = "academic_year",
     term_col: str = "academic_term",
-    terms_subset: t.Optional[list[str]] = None,
+    terms_subset: t.Optional[Collection[str]] = None,
 ) -> pd.Series:
     df_terms = (
         _get_unique_sorted_terms_df(df, year_col=year_col, term_col=term_col)

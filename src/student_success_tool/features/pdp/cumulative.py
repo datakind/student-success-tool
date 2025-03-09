@@ -189,6 +189,7 @@ def add_cumfrac_terms_unenrolled_features(
     df_grped = df.groupby(by=student_id_cols, as_index=False, sort=False)
     df_min_term_ranks = df_grped.agg(
         min_student_term_rank=("term_rank", "min"),
+        min_student_term_rank_core=("term_rank_core", "min"),
         min_student_term_rank_fall_spring=("term_rank_fall_spring", "min"),
     )
     return pd.merge(df, df_min_term_ranks, on=student_id_cols, how="inner").assign(
@@ -197,6 +198,12 @@ def add_cumfrac_terms_unenrolled_features(
             term_rank_col="term_rank",
             min_student_term_rank_col="min_student_term_rank",
             cumnum_terms_enrolled_col="cumnum_terms_enrolled",
+        ),
+        cumfrac_core_terms_unenrolled=ft.partial(
+            _compute_cumfrac_terms_unenrolled,
+            term_rank_col="term_rank_core",
+            min_student_term_rank_col="min_student_term_rank_core",
+            cumnum_terms_enrolled_col="cumnum_core_terms_enrolled",
         ),
         cumfrac_fall_spring_terms_unenrolled=ft.partial(
             _compute_cumfrac_terms_unenrolled,

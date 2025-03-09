@@ -44,10 +44,13 @@ def df():
                 ["02"],
             ],
             "term_rank": [1, 3, 4, 5, 9],
+            "term_rank_core": [1, 2, pd.NA, 3, 5],
             "term_rank_fall_spring": [1, 2, pd.NA, 3, 5],
             "term_is_pre_cohort": [True, False, False, False, False],
         }
-    ).astype({"term_rank": "Int8", "term_rank_fall_spring": "Int8"})
+    ).astype(
+        {"term_rank": "Int8", "term_rank_core": "Int8", "term_rank_fall_spring": "Int8"}
+    )
 
 
 @pytest.fixture(scope="module")
@@ -140,15 +143,19 @@ def test_cumnum_unique_and_repeated_features(df_grped, cols, exp):
         pd.DataFrame(
             {
                 "min_student_term_rank": [1, 1, 1, 1, 1],
+                "min_student_term_rank_core": [1, 1, 1, 1, 1],
                 "min_student_term_rank_fall_spring": [1, 1, 1, 1, 1],
                 "cumfrac_terms_unenrolled": [0.0, 0.333, 0.25, 0.2, 0.444],
+                "cumfrac_core_terms_unenrolled": [0.0, 0.0, pd.NA, 0.0, 0.2],
                 "cumfrac_fall_spring_terms_unenrolled": [0.0, 0.0, pd.NA, 0.0, 0.2],
             }
         ).astype(
             {
                 "min_student_term_rank": "Int8",
+                "min_student_term_rank_core": "Int8",
                 "min_student_term_rank_fall_spring": "Int8",
                 "cumfrac_terms_unenrolled": "Float32",
+                "cumfrac_core_terms_unenrolled": "Float32",
                 "cumfrac_fall_spring_terms_unenrolled": "Float32",
             }
         ),
@@ -158,6 +165,7 @@ def test_add_cumfrac_terms_unenrolled_features(df, exp_new):
     # HACK: let's add the couple cumulative feature pre-requisites here
     df = df.assign(
         cumnum_terms_enrolled=pd.Series([1.0, 2.0, 3.0, 4.0, 5.0]),
+        cumnum_core_terms_enrolled=pd.Series([1.0, 2.0, 2.0, 3.0, 4.0]),
         cumnum_fall_spring_terms_enrolled=pd.Series([1.0, 2.0, 2.0, 3.0, 4.0]),
     )
     obs = cumulative.add_cumfrac_terms_unenrolled_features(
