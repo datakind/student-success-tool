@@ -39,7 +39,9 @@ def make_student_term_dataset(
             Default value is 12.0.
         core_terms: Set of terms that together comprise the "core" of the academic year,
             in contrast with additional, usually shorter terms that may take place
-            between core terms. Default value is {"FALL", "SPRING"}.
+            between core terms. Default value is {"FALL", "SPRING"}, which typically
+            corresponds to a semester system; for schools on a trimester calendary,
+            {"FALL", "WINTER", "SPRING"} is probably what you want.
         course_level_pattern
         peak_covid_terms
         key_course_subject_areas
@@ -63,6 +65,7 @@ def make_student_term_dataset(
         .pipe(
             features.pdp.term.add_features,
             first_term_of_year=first_term_of_year,
+            core_terms=core_terms,  # type: ignore
             peak_covid_terms=peak_covid_terms,
         )
         .pipe(

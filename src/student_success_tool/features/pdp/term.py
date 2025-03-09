@@ -27,7 +27,11 @@ def add_features(
     Args:
         df
         first_term_of_year
-        core_terms
+        core_terms: Set of terms that together comprise the "core" of the academic year,
+            in contrast with additional, usually shorter terms that may take place
+            between core terms. Default value is {"FALL", "SPRING"}, which typically
+            corresponds to a semester system; for schools on a trimester calendary,
+            {"FALL", "WINTER", "SPRING"} is probably what you want.
         peak_covid_terms: Set of (year, term) pairs considered by the institution as
             occurring during "peak" COVID; for example, ``("2020-21", "SPRING")`` .
     """
