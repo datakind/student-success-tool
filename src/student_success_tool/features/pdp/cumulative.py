@@ -32,6 +32,7 @@ def add_features(
             col_aggs=[
                 ("term_id", "count"),
                 ("term_in_peak_covid", "sum"),
+                ("term_is_core", "sum"),
                 ("term_is_fall_spring", "sum"),
                 ("term_is_while_student_enrolled_at_other_inst", "sum"),
                 ("term_is_pre_cohort", "sum"),
@@ -45,10 +46,17 @@ def add_features(
             ],
         )
         # rename/dtype special cols for clarity in downstream calcs
-        .astype({"term_id_cumcount": "Int8", "term_is_fall_spring_cumsum": "Int8"})
+        .astype(
+            {
+                "term_id_cumcount": "Int8",
+                "term_is_core_cumsum": "Int8",
+                "term_is_fall_spring_cumsum": "Int8",
+            }
+        )
         .rename(
             columns={
                 "term_id_cumcount": "cumnum_terms_enrolled",
+                "term_is_core_cumsum": "cumnum_core_terms_enrolled",
                 "term_is_fall_spring_cumsum": "cumnum_fall_spring_terms_enrolled",
             }
         )
