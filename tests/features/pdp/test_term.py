@@ -79,15 +79,12 @@ from student_success_tool.features.pdp import term
                     ),
                     "term_rank": [1, 1, 2, 3, 0, 4],
                     "term_rank_core": [1, 1, pd.NA, 2, 0, pd.NA],
-                    "term_rank_fall_spring": [1, 1, pd.NA, 2, 0, pd.NA],
                     "term_in_peak_covid": [False, False, False, True, False, False],
                     "term_is_core": [True, True, False, True, True, False],
-                    "term_is_fall_spring": [True, True, False, True, True, False],
                 }
             ).astype(
                 {
                     "term_rank_core": "Int8",
-                    "term_rank_fall_spring": "Int8",
                     "academic_term": pd.CategoricalDtype(
                         ["FALL", "WINTER", "SPRING", "SUMMER"], ordered=True
                     ),
@@ -178,19 +175,3 @@ def test_term_is_core(df, core_terms, term_col, exp):
     obs = term.term_is_core(df, core_terms=core_terms, term_col=term_col)
     assert isinstance(obs, pd.Series)
     assert pd.testing.assert_series_equal(obs, exp) is None
-
-
-@pytest.mark.parametrize(
-    ["df", "term_col", "exp"],
-    [
-        (
-            pd.DataFrame({"term": ["FALL", "WINTER", "SPRING", "SUMMER"]}),
-            "term",
-            pd.Series([True, False, True, False], dtype="bool"),
-        )
-    ],
-)
-def test_term_is_fall_spring(df, term_col, exp):
-    obs = term.term_is_fall_spring(df, term_col=term_col)
-    assert isinstance(obs, pd.Series) and not obs.empty
-    assert obs.equals(exp) or obs.compare(exp).empty

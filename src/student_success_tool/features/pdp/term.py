@@ -51,23 +51,16 @@ def add_features(
                 term_col=term_col,
                 terms_subset=core_terms,
             ),
-            term_rank_fall_spring=ft.partial(
-                term_rank,
-                year_col=year_col,
-                term_col=term_col,
-                terms_subset=["FALL", "SPRING"],
-            ),
             term_in_peak_covid=ft.partial(
                 term_in_peak_covid,
                 year_col=year_col,
                 term_col=term_col,
                 peak_covid_terms=peak_covid_terms,
             ),
+            # yes, this is silly, but it helps a tricky feature computation later on
             term_is_core=ft.partial(
                 term_is_core, core_terms=core_terms, term_col=term_col
             ),
-            # yes, this is silly, but it helps a tricky feature computation later on
-            term_is_fall_spring=ft.partial(term_is_fall_spring, term_col=term_col),
         )
     )
     return pd.merge(df, df_term, on=[year_col, term_col], how="inner")
@@ -118,13 +111,6 @@ def term_is_core(
     df: pd.DataFrame, core_terms: set[types.TermType], term_col: str = "academic_term"
 ) -> pd.Series:
     return df[term_col].isin(core_terms).astype("boolean").rename("term_is_core")
-
-
-def term_is_fall_spring(
-    df: pd.DataFrame, *, term_col: str = "academic_term"
-) -> pd.Series:
-    # TODO: retire this feature, in favor of ``term_is_core``
-    return df[term_col].isin(["FALL", "SPRING"])
 
 
 def _get_unique_sorted_terms_df(

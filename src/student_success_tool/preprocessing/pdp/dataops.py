@@ -255,8 +255,6 @@ def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
                 "term_rank",
                 "term_rank_core",
                 "term_is_core",
-                "term_rank_fall_spring",
-                "term_is_fall_spring",
                 # columns used to derive other features, but not features themselves
                 # "grade",  # TODO: should this be course_grade?
                 "course_ids",
@@ -264,7 +262,6 @@ def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
                 "course_subject_areas",
                 "min_student_term_rank",
                 "min_student_term_core",
-                "min_student_term_rank_fall_spring",
                 "sections_num_students_enrolled",
                 "sections_num_students_passed",
                 "sections_num_students_completed",
