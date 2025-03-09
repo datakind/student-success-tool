@@ -80,9 +80,26 @@ resources:
               - SERVING
               - "{{job.parameters.fail_on_anomalies}}"
           job_cluster_key: pdp-inference-pipeline-cluster
-          libraries:
-            - pypi:
-                package: tensorflow_data_validation==1.16.1
+        # - task_key: data_validation
+        #   depends_on:
+        #     - task_key: data_preprocessing
+        #   spark_python_task:
+        #     python_file: /Workspace/Users/pedro.melendez@datakind.org/python-refactor-pipeline/pipelines/tasks/data_validation/data_validation_task.py
+        #     source: GIT
+        #     parameters:
+        #       - --input_table_path
+        #       - "{{tasks.data_preprocessing.values.processed_dataset_path}}"
+        #       - --input_schema_path
+        #       - /Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_bronze/schema # TODO(samroon2): Update once finalized.
+        #       - --output_artifact_path
+        #       - "{{job.parameters.job_root_dir}}"
+        #       - --environment
+        #       - SERVING
+        #       - "{{job.parameters.fail_on_anomalies}}"
+        #   job_cluster_key: pdp-inference-pipeline-cluster
+        #   libraries:
+        #     - pypi:
+        #         package: tensorflow_data_validation==1.16.1
         - task_key: inference
           depends_on:
             - task_key: data_validation
