@@ -13,10 +13,11 @@ LOGGER = logging.getLogger(__name__)
 def add_features(
     df: pd.DataFrame,
     *,
+    first_term_of_year: types.TermType = constants.DEFAULT_FIRST_TERM_OF_YEAR,  # type: ignore
+    core_terms: set[types.TermType] = constants.DEFAULT_CORE_TERMS,  # type: ignore
+    peak_covid_terms: set[tuple[str, str]] = constants.DEFAULT_PEAK_COVID_TERMS,
     year_col: str = "academic_year",
     term_col: str = "academic_term",
-    first_term_of_year: types.TermType = constants.DEFAULT_FIRST_TERM_OF_YEAR,  # type: ignore
-    peak_covid_terms: set[tuple[str, str]] = constants.DEFAULT_PEAK_COVID_TERMS,
 ) -> pd.DataFrame:
     """
     Compute term-level features from pdp course dataset,
@@ -24,6 +25,8 @@ def add_features(
 
     Args:
         df
+        first_term_of_year
+        core_terms
         peak_covid_terms: Set of (year, term) pairs considered by the institution as
             occurring during "peak" COVID; for example, ``("2020-21", "SPRING")`` .
     """
@@ -52,6 +55,9 @@ def add_features(
                 year_col=year_col,
                 term_col=term_col,
                 peak_covid_terms=peak_covid_terms,
+            ),
+            term_is_core=ft.partial(
+                term_is_core, core_terms=core_terms, term_col=term_col
             ),
             # yes, this is silly, but it helps a tricky feature computation later on
             term_is_fall_spring=ft.partial(term_is_fall_spring, term_col=term_col),
@@ -101,9 +107,16 @@ def term_in_peak_covid(
     )
 
 
+def term_is_core(
+    df: pd.DataFrame, core_terms: set[types.TermType], term_col: str = "academic_term"
+) -> pd.Series:
+    return df[term_col].isin(core_terms).astype("boolean").rename("term_is_core")
+
+
 def term_is_fall_spring(
     df: pd.DataFrame, *, term_col: str = "academic_term"
 ) -> pd.Series:
+    # TODO: retire this feature, in favor of ``term_is_core``
     return df[term_col].isin(["FALL", "SPRING"])
 
 
