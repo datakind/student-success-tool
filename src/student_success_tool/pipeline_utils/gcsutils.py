@@ -15,6 +15,7 @@ def save_file(
     """Save file from databricks volume to a GCP bucket path.
 
     Args:
+      bucket: The bucket object.
       src_volume_filepath: The source filepath to the Databricks volume.
       dest_bucket_pathname: The destination filepath in GCP.
 
@@ -75,7 +76,8 @@ def publish_inference_output_files(
     # The top level volume directory can include other files like pngs etc. that are part
     # of the published set of files. So we still need to iterate over these files.
     for f in dbutils.fs.ls(volume_path_top_level):
-        files_to_move.append(f"{volume_path_top_level}/{f.name}")
+        if f.name.endswith(".png"):
+            files_to_move.append(f"{volume_path_top_level}/{f.name}")
 
     for f in files_to_move:
         save_file(
