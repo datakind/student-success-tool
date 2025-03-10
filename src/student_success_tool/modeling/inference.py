@@ -100,7 +100,8 @@ def select_top_features_for_display(
     top_features_df = top_features_df.assign(
         **{
             f"Feature_{i}_Importance": lambda df: df[f"Feature_{i}_Importance"].round(2)
-            for i in range(1, n_features + 1)]
+            for i in range(1, n_features + 1)
+        }
     )
     return top_features_df
 
