@@ -3,12 +3,19 @@ import logging
 import typing as t
 
 import pandas as pd
-import pandera as pda
-import pandera.errors
 import pyspark.sql
 
 from ... import utils
 from .. import read
+
+try:
+    import pandera as pda
+except ModuleNotFoundError:
+    from ... import utils
+
+    utils.mock_pandera()
+
+    import pandera as pda
 
 LOGGER = logging.getLogger(__name__)
 
@@ -67,11 +74,13 @@ def read_raw_course_data(
         if file_path
         else read.from_delta_table(table_path, spark_session)  # type: ignore
     )
+    # apply to the data what pandera calls "parsers" before validation
+    # ideally, all these operations would be dataframe parsers on the schema itself
+    # but pandera applies core before custom parsers under the hood :/
     df = (
-        # make minimal changes before parsing/validating via schema
-        # standardize column names, for convenience/consistency
+        # standardize column names
         df.rename(columns=utils.convert_to_snake_case)
-        # basically, any operations needed for dtype coercion to work correctly
+        # standardize certain column values
         .assign(
             # uppercase string values for some cols to avoid case inconsistency later on
             **{
@@ -85,10 +94,6 @@ def read_raw_course_data(
             }
         )
     )
-    # HACK!
-    if "study_id" in df.columns:
-        df = df.rename(columns={"study_id": "student_guid"})
-        LOGGER.warning("renaming raw column: 'study_id' => 'student_guid'")
     return _maybe_convert_maybe_validate_data(df, converter_func, schema)
 
 
@@ -144,11 +149,13 @@ def read_raw_cohort_data(
         if file_path
         else read.from_delta_table(table_path, spark_session)  # type: ignore
     )
+    # apply to the data what pandera calls "parsers" before validation
+    # ideally, all these operations would be dataframe parsers on the schema itself
+    # but pandera applies core before custom parsers under the hood :/
     df = (
-        # make minimal changes before parsing/validating via schema
-        # standardize column names, for convenience/consistency
+        # standardize column names
         df.rename(columns=utils.convert_to_snake_case)
-        # basically, any operations needed for dtype coercion to work correctly
+        # standardize column values
         .assign(
             # uppercase string values for some cols to avoid case inconsistency later on
             # for practical reasons, this is the only place where it's easy to do so
@@ -179,10 +186,6 @@ def read_raw_cohort_data(
             }
         )
     )
-    # HACK!
-    if "study_id" in df.columns:
-        df = df.rename(columns={"study_id": "student_guid"})
-        LOGGER.warning("renaming raw column: 'study_id' => 'student_guid'")
     return _maybe_convert_maybe_validate_data(df, converter_func, schema)
 
 
@@ -191,6 +194,11 @@ def _maybe_convert_maybe_validate_data(
     converter_func: t.Optional[t.Callable[[pd.DataFrame], pd.DataFrame]] = None,
     schema: t.Optional[type[pda.DataFrameModel]] = None,
 ) -> pd.DataFrame:
+    # HACK: we're hiding this pandera import here so databricks doesn't know about it
+    # pandera v0.23+ pulls in pandas v2.1+ while databricks runtimes are stuck in v1.5
+    # resulting in super dumb dependency errors when loading automl trained models
+    import pandera.errors
+
     if converter_func is not None:
         LOGGER.info("applying %s converter to raw data", converter_func)
         df = converter_func(df)

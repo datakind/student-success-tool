@@ -147,7 +147,7 @@ def calculate_shap_values(
     *,
     feature_names: list[str],
     fillna_values: pd.Series,
-    student_id_col: str = "student_guid",
+    student_id_col: str = "student_id",
 ) -> pd.DataFrame:
     """
     Compute SHAP values for the features in ``df`` using ``explainer`` and return result
@@ -165,12 +165,12 @@ def calculate_shap_values(
         https://shap.readthedocs.io/en/stable/generated/shap.KernelExplainer.html
     """
     # preserve student ids
-    student_ids = df.loc[:, student_id_col]
+    student_ids = df.loc[:, student_id_col].reset_index(drop=True)
     # impute missing values and run shap values using just features
     features_imp = df.loc[:, feature_names].fillna(fillna_values)
-    shap_values = explainer.shap_values(features_imp)
+    explanation = explainer(features_imp)
     return (
-        pd.DataFrame(data=shap_values, columns=feature_names)
+        pd.DataFrame(data=explanation.values, columns=explanation.feature_names)
         # reattach student ids to their shap values
         .assign(**{student_id_col: student_ids})
     )

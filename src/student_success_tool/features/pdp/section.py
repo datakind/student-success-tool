@@ -38,7 +38,7 @@ def add_features(df: pd.DataFrame, *, section_id_cols: list[str]) -> pd.DataFram
     return pd.merge(df, df_section, on=section_id_cols, how="left")
 
 
-def section_num_students_enrolled_col_agg(col: str = "student_guid") -> pd.NamedAgg:
+def section_num_students_enrolled_col_agg(col: str = "student_id") -> pd.NamedAgg:
     return pd.NamedAgg(col, "count")
 
 

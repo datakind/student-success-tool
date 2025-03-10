@@ -199,7 +199,7 @@ def add_term_diff_features(
     *,
     cols: list[str],
     max_term_num: int = 4,
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     term_num_col: str = "cumnum_terms_enrolled",
 ) -> pd.DataFrame:
     """

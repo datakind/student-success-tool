@@ -13,7 +13,7 @@ LOGGER = logging.getLogger(__name__)
 def select_students_by_criteria(
     df: pd.DataFrame,
     *,
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     **criteria: object | Collection[object],
 ) -> pd.DataFrame:
     """
@@ -72,7 +72,7 @@ def select_students_by_time_left(
     intensity_time_lefts: list[tuple[str, float, t.Literal["year", "term"]]],
     max_term_rank: int,
     num_terms_in_year: int = 4,
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     enrollment_intensity_col: str = "enrollment_intensity_first_term",
     term_rank_col: str = "term_rank",
 ) -> pd.DataFrame:
@@ -138,7 +138,7 @@ def select_students_by_time_left(
 def select_students_by_next_year_course_data(
     df: pd.DataFrame,
     *,
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     cohort_id_col: str = "cohort_id",
     term_id_col: str = "term_id",
 ) -> pd.DataFrame:
@@ -175,7 +175,7 @@ def select_students_by_next_year_course_data(
 def get_first_student_terms(
     df: pd.DataFrame,
     *,
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:
@@ -212,7 +212,7 @@ def get_first_student_terms_at_num_credits_earned(
     df: pd.DataFrame,
     *,
     min_num_credits: float,
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     num_credits_col: str = "num_credits_earned_cumsum",
     include_cols: t.Optional[list[str]] = None,
@@ -242,7 +242,7 @@ def get_first_student_terms_at_num_credits_earned(
 def get_first_student_terms_within_cohort(
     df: pd.DataFrame,
     *,
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
@@ -288,7 +288,7 @@ def get_nth_student_terms(
     df: pd.DataFrame,
     *,
     n: int,
-    student_id_cols: str | list[str] = "student_guid",
+    student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
