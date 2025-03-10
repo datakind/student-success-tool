@@ -97,8 +97,11 @@ def select_top_features_for_display(
         f"Final output has invalid SHAP values across top {n_features} ranked features for one or more students."
     )
     # Round after assertion check
-    importance_cols = [f"Feature_{i}_Importance" for i in range(1, n_features + 1)]
-    top_features_df[importance_cols] = top_features_df[importance_cols].round(2)
+    top_features_df = top_features_df.assign(
+        **{
+            f"Feature_{i}_Importance": lambda df: df[f"Feature_{i}_Importance"].round(2)
+            for i in range(1, n_features + 1)]
+    )
     return top_features_df
 
 
