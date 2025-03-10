@@ -80,11 +80,26 @@ def select_top_features_for_display(
             student_output |= {
                 f"Feature_{feature_rank}_Name": feature_name,
                 f"Feature_{feature_rank}_Value": feature_value,
-                f"Feature_{feature_rank}_Importance": round(shap_value, 2),
+                f"Feature_{feature_rank}_Importance": shap_value,
             }
 
         top_features_info.append(student_output)
-    return pd.DataFrame(top_features_info)
+    top_features_df = pd.DataFrame(top_features_info)
+    # Ensure top features are in strictly descending order of importance for each student
+    assert all(
+        all(
+            abs(top_features_df.loc[i, f"Feature_{j}_Importance"])
+            > abs(top_features_df.loc[i, f"Feature_{j + 1}_Importance"])
+            for j in range(1, n_features)
+        )
+        for i in range(len(top_features_df))
+    ), (
+        f"Final output has invalid SHAP values across top {n_features} ranked features for one or more students."
+    )
+    # Round after assertion check
+    importance_cols = [f"Feature_{i}_Importance" for i in range(1, n_features + 1)]
+    top_features_df[importance_cols] = top_features_df[importance_cols].round(2)
+    return top_features_df
 
 
 def calculate_shap_values_spark_udf(
