@@ -217,6 +217,7 @@ class DataIngestionTask:
         # Setting task variables for downstream tasks
         dbutils.jobs.taskValues.set(key="course_dataset_validated_path", value=course_dataset_validated_path)
         dbutils.jobs.taskValues.set(key="cohort_dataset_validated_path", value=cohort_dataset_validated_path)
+        dbutils.jobs.taskValues.set(key="job_root_dir", value=self.args.job_root_dir)
 
 def parse_arguments() -> argparse.Namespace:
     """
