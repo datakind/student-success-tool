@@ -19,33 +19,6 @@ except ModuleNotFoundError:
 
 LOGGER = logging.getLogger(__name__)
 
-StudentAgeField = ft.partial(
-    pda.Field,
-    dtype_kwargs={
-        "categories": ["20 AND YOUNGER", ">20 - 24", "OLDER THAN 24"],
-        "ordered": True,
-    },
-)
-RaceField = ft.partial(
-    pda.Field,
-    dtype_kwargs={
-        "categories": [
-            "NONRESIDENT ALIEN",
-            "AMERICAN INDIAN OR ALASKA NATIVE",
-            "ASIAN",
-            "BLACK OR AFRICAN AMERICAN",
-            "NATIVE HAWAIIAN OR OTHER PACIFIC ISLANDER",
-            "WHITE",
-            "HISPANIC",
-            "TWO OR MORE RACES",
-            "UNKNOWN",
-        ],
-    },
-)
-EthnicityField = ft.partial(pda.Field, dtype_kwargs={"categories": ["H", "N", "UK"]})
-GenderField = ft.partial(
-    pda.Field, dtype_kwargs={"categories": ["M", "F", "P", "X", "UK"]}
-)
 TermField = ft.partial(
     pda.Field,
     dtype_kwargs={
@@ -68,10 +41,10 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
 
     student_id: pt.Series["string"]
     institution_id: pt.Series["string"]
-    student_age: pt.Series[pd.CategoricalDtype] = StudentAgeField()
-    race: pt.Series[pd.CategoricalDtype] = RaceField()
-    ethnicity: pt.Series[pd.CategoricalDtype] = EthnicityField()
-    gender: pt.Series[pd.CategoricalDtype] = GenderField()
+    student_age: pt.Series[pd.StringDtype] = pda.Field(nullable=True)
+    race: pt.Series[pd.StringDtype] = pda.Field(nullable=True)
+    ethnicity: pt.Series[pd.StringDtype] = pda.Field(nullable=True)
+    gender: pt.Series[pd.StringDtype] = pda.Field(nullable=True)
     cohort: pt.Series["string"]
     cohort_term: pt.Series[pd.CategoricalDtype] = TermField()
     academic_year: pt.Series["string"] = pda.Field(nullable=True)
@@ -87,9 +60,7 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
             "categories": ["CU", "CG", "CC", "CD", "EL", "AB", "GE", "NC", "O"]
         },
     )
-    math_or_english_gateway: pt.Series[pd.CategoricalDtype] = pda.Field(
-        nullable=True, dtype_kwargs={"categories": ["M", "E", "NA"]}
-    )
+    math_or_english_gateway: pt.Series[pd.CategoricalDtype] = pda.Field(nullable=True)
     co_requisite_course: pt.Series[pd.CategoricalDtype] = pda.Field(
         nullable=True, dtype_kwargs={"categories": ["Y", "N"]}
     )
@@ -105,9 +76,7 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
         nullable=True, dtype_kwargs={"categories": ["Y", "N"]}
     )
     core_course_type: pt.Series["string"] = pda.Field(nullable=True)
-    core_competency_completed: pt.Series[pd.CategoricalDtype] = pda.Field(
-        nullable=True, dtype_kwargs={"categories": ["Y", "N"]}
-    )
+    core_competency_completed: pt.Series[pd.CategoricalDtype] = pda.Field(nullable=True)
     enrolled_at_other_institution_s: pt.Series[pd.CategoricalDtype] = pda.Field(
         nullable=True, dtype_kwargs={"categories": ["Y", "N"]}
     )
@@ -117,7 +86,6 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
     course_instructor_employment_status: t.Optional[pt.Series[pd.CategoricalDtype]] = (
         pda.Field(nullable=True, dtype_kwargs={"categories": ["PT", "FT"]})
     )
-    # NOTE: categories set in a parser, which forces "-1" / "-1.0" values to null
     course_instructor_rank: t.Optional[pt.Series[pd.CategoricalDtype]] = pda.Field(
         nullable=True
     )
@@ -146,6 +114,25 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
                 {"student_id": "string"}
             )
         return df
+
+    @pda.parser(
+        "student_age",
+        "race",
+        "ethnicity",
+        "gender",
+        "enrollment_record_at_other_institution_s_state_s",
+        "enrollment_record_at_other_institution_s_locale_s",
+    )
+    def strip_and_uppercase_strings(cls, series):
+        return series.str.strip().str.upper()
+
+    @pda.parser("math_or_english_gateway")
+    def set_math_or_english_gateway_categories(cls, series):
+        return _strip_upper_strings_to_cats(series).cat.set_categories(["E", "M", "NA"])
+
+    @pda.parser("core_competency_completed")
+    def set_core_competency_completed_categories(cls, series):
+        return _strip_upper_strings_to_cats(series).cat.set_categories(["Y", "N"])
 
     @pda.parser("course_instructor_rank")
     def set_course_instructor_rank_categories(cls, series):
@@ -176,3 +163,7 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
             "course_number",
             "section_id",
         ]
+
+
+def _strip_upper_strings_to_cats(series: pd.Series) -> pd.Series:
+    return series.str.strip().str.upper().astype("category")
