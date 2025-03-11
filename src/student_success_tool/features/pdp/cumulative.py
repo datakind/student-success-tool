@@ -66,7 +66,12 @@ def add_features(
         .pipe(add_cumfrac_terms_unenrolled_features, student_id_cols=student_id_cols)
         .pipe(
             add_term_diff_features,
-            cols=["num_courses", "num_credits_earned", "course_grade_numeric_mean"],
+            cols=[
+                "num_courses",
+                "num_credits_earned",
+                "course_grade_numeric_mean",
+                "course_level_mean",
+            ],
             max_term_num=4,
             student_id_cols=student_id_cols,
         )

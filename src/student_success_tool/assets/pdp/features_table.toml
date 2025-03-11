@@ -99,6 +99,7 @@ frac_credits_earned = { name = "fraction of credits earned this term" }
 student_term_enrollment_intensity = { name = "student's enrollment intensity this term" }
 num_courses_in_program_of_study_area_term_1 = { name = "number of courses taken this term in student's first-term program of study area" }
 num_courses_in_program_of_study_area_year_1 = { name = "number of courses taken this term in student's first-year program of study area" }
+num_courses_in_term_program_of_study_area = { name = "number of courses taken this term in student's current program of study area" }
 frac_courses_passed = { name = "fraction of courses passed this term" }
 frac_courses_completed = { name = "fraction of courses completed this term" }
 frac_courses_core_course_y = { name = "fraction of core courses taken this term" }
@@ -234,6 +235,7 @@ cumfrac_fall_spring_terms_unenrolled = { name = "fraction of skipped fall/spring
 num_courses_diff_prev_term = { name = "change in number of courses taken this term compared to previous term" }
 num_credits_earned_diff_prev_term = { name = "change in number of credits earned this term compared to previous term" }
 course_grade_numeric_mean_diff_prev_term = { name = "change in avg. numeric grade this term compared to previous term" }
+course_level_mean_diff_prev_term = { name = "change in avg. course level this term compared to previous term" }
 num_courses_diff_term_1_to_term_2 = { name = "change in number of courses taken in term 2 compared to term 1" }
 num_courses_diff_term_2_to_term_3 = { name = "change in number of courses taken in term 3 compared to term 2" }
 num_courses_diff_term_3_to_term_4 = { name = "change in number of courses taken in term 4 compared to term 3" }
@@ -243,3 +245,6 @@ num_credits_earned_diff_term_3_to_term_4 = { name = "chang ein number of credits
 course_grade_numeric_mean_diff_term_1_to_term_2 = { name = "change in avg. numeric grade in term 2 compared to term 1" }
 course_grade_numeric_mean_diff_term_2_to_term_3 = { name = "change in avg. numeric grade in term 3 compared to term 2" }
 course_grade_numeric_mean_diff_term_3_to_term_4 = { name = "change in avg. numeric grade in term 4 compared to term 3" }
+course_level_mean_diff_term_1_to_term_2 = { name = "change in avg. course level in term 2 compared to term 1" }
+course_level_mean_diff_term_2_to_term_3 = { name = "change in avg. course level in term 3 compared to term 2" }
+course_level_mean_diff_term_3_to_term_4 = { name = "change in avg. course level in term 4 compared to term 3" }

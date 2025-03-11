@@ -1,3 +1,4 @@
+import datetime
 import functools as ft
 import logging
 import re
@@ -148,6 +149,21 @@ def standardize_cohort_dataset(df: pd.DataFrame) -> pd.DataFrame:
                 "first_associates_or_certificate_at_other_institution_locale",
             ],
         )
+        # as pdp adds more raw data columns, we'll want to ensure their presence here
+        # so that feature generation code doesn't become a cascading mess of "if" checks
+        .pipe(
+            add_empty_cols_if_missing,
+            col_val_dtypes={
+                "years_to_latest_associates_at_cohort_inst": (None, "Int8"),
+                "years_to_latest_certificate_at_cohort_inst": (None, "Int8"),
+                "years_to_latest_associates_at_other_inst": (None, "Int8"),
+                "years_to_latest_certificate_at_other_inst": (None, "Int8"),
+                "first_year_to_associates_at_cohort_inst": (None, "Int8"),
+                "first_year_to_certificate_at_cohort_inst": (None, "Int8"),
+                "first_year_to_associates_at_other_inst": (None, "Int8"),
+                "first_year_to_certificate_at_other_inst": (None, "Int8"),
+            },
+        )
     )
     return df_trf
 
@@ -184,6 +200,33 @@ def standardize_course_dataset(df: pd.DataFrame) -> pd.DataFrame:
                 "enrollment_record_at_other_institution_s_locale_s",
             ],
         )
+        # as pdp adds more raw data columns, we'll want to ensure their presence here
+        # so that feature generation code doesn't become a cascading mess of "if" checks
+        .pipe(
+            add_empty_cols_if_missing,
+            col_val_dtypes={"term_program_of_study": (None, "string")},
+        )
+    )
+
+
+def add_empty_cols_if_missing(
+    df: pd.DataFrame,
+    *,
+    col_val_dtypes: dict[
+        str, tuple[t.Optional[str | bool | int | float | datetime.datetime], str]
+    ],
+) -> pd.DataFrame:
+    """
+    Add empty columns to ``df`` with names given by keys in ``col_val_dtypes``
+    matched to values representing the null value and underlying dtype assigned to it
+    -- provided the columns aren't already present in the dataframe.
+    """
+    return df.assign(
+        **{
+            col: pd.Series(data=val, index=df.index, dtype=dtype)
+            for col, (val, dtype) in col_val_dtypes.items()
+            if col not in df.columns
+        }
     )
 
 
