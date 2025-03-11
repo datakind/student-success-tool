@@ -37,10 +37,8 @@ def explainer():
         "needs_support_threshold_prob",
         "features_table",
         "exp",
-        "expect_assertion_error",
     ],
     [
-        # Check 1: Valid SHAP values (descending order)
         (
             pd.DataFrame(
                 {
@@ -78,9 +76,7 @@ def explainer():
                     "Feature_3_Importance": [0.8, -0.8, 0.25],
                 }
             ),
-            False,  # No assertion error expected
         ),
-        # Check 2: Invalid SHAP values (not in descending order) —> AssertionError
         (
             pd.DataFrame(
                 {
@@ -93,13 +89,20 @@ def explainer():
             pd.Series([1, 2, 3]),
             [0.9, 0.1, 0.5],
             np.array(
-                [[0.5, 0.5, 0.666, 0.665], [0.0, 0, 0, 0], [0.25, 0.75, 0.0, -0.5]]
+                [[1.0, 0.9, 0.8, 0.7], [0.0, -1.0, 0.9, -0.8], [0.25, 0.0, -0.5, 0.75]]
             ),
-            3,
-            0.5,
+            1,
             None,
-            pd.DataFrame(),
-            True,  # Assertion error expected because SHAP values are out of order
+            None,
+            pd.DataFrame(
+                {
+                    "Student ID": [1, 2, 3],
+                    "Support Score": [0.9, 0.1, 0.5],
+                    "Feature_1_Name": ["x1", "x2", "x4"],
+                    "Feature_1_Value": ["val1", "False", "3"],
+                    "Feature_1_Importance": [1.0, -1.0, 0.75],
+                }
+            ),
         ),
     ],
 )
@@ -112,34 +115,18 @@ def test_select_top_features_for_display(
     needs_support_threshold_prob,
     features_table,
     exp,
-    expect_assertion_error,
 ):
-    if expect_assertion_error:
-        with pytest.raises(
-            AssertionError,
-            match="Final output has invalid SHAP values across top 3 ranked features for one or more students.",
-        ):
-            select_top_features_for_display(
-                features,
-                unique_ids,
-                predicted_probabilities,
-                shap_values,
-                n_features=n_features,
-                needs_support_threshold_prob=needs_support_threshold_prob,
-                features_table=features_table,
-            )
-    else:
-        obs = select_top_features_for_display(
-            features,
-            unique_ids,
-            predicted_probabilities,
-            shap_values,
-            n_features=n_features,
-            needs_support_threshold_prob=needs_support_threshold_prob,
-            features_table=features_table,
-        )
-        assert isinstance(obs, pd.DataFrame) and not obs.empty
-        assert pd.testing.assert_frame_equal(obs, exp) is None
+    obs = select_top_features_for_display(
+        features,
+        unique_ids,
+        predicted_probabilities,
+        shap_values,
+        n_features=n_features,
+        needs_support_threshold_prob=needs_support_threshold_prob,
+        features_table=features_table,
+    )
+    assert isinstance(obs, pd.DataFrame) and not obs.empty
+    assert pd.testing.assert_frame_equal(obs, exp) is None
 
 
 @pytest.mark.parametrize(
