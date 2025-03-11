@@ -34,18 +34,6 @@ def test_infer_first_term_of_year(series, exp):
 
 
 @pytest.mark.parametrize(
-    ["series", "exp"],
-    [
-        (pd.Series(["WI", "SP", "FA", "SU"], dtype="category"), 4),
-        (pd.Series(["SU", "FA", "WI"], dtype="category"), 3),
-    ],
-)
-def test_infer_num_terms_in_year(series, exp):
-    obs = preprocessing.pdp.dataops.infer_num_terms_in_year(series)
-    assert obs == exp
-
-
-@pytest.mark.parametrize(
     ["df", "exp"],
     [
         (

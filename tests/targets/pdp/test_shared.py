@@ -378,3 +378,15 @@ def test_get_first_student_terms_within_cohort(test_df, include_cols, exp):
     )
     assert isinstance(obs, pd.DataFrame)
     assert obs.equals(exp) or obs.compare(exp).empty
+
+
+@pytest.mark.parametrize(
+    ["series", "exp"],
+    [
+        (pd.Series(["WI", "SP", "FA", "SU"], dtype="category"), 4),
+        (pd.Series(["SU", "FA", "WI"], dtype="category"), 3),
+    ],
+)
+def test_infer_num_terms_in_year(series, exp):
+    obs = shared.infer_num_terms_in_year(series)
+    assert obs == exp

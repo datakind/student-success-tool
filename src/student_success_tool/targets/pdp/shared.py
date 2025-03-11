@@ -333,6 +333,22 @@ def get_nth_student_terms(
     )
 
 
+def infer_num_terms_in_year(s: pd.Series) -> int:
+    """
+    Infer the number of terms in the (academic) year by the number of its categorical values.
+    """
+    if isinstance(s.dtype, pd.CategoricalDtype):
+        num_terms_in_year = len(s.cat.categories)
+        LOGGER.info("%s inferred as the number of term in the year", num_terms_in_year)
+        return num_terms_in_year
+    else:
+        raise ValueError(
+            f"'{s.name}' series is not a categorical: {s.dtype=} ..."
+            "so the number of term in the academic year can't be inferred. "
+            "Update the raw course data schema to properly set its categories!"
+        )
+
+
 def _log_eligible_selection(
     nunique_students_in: int, nunique_students_out: int, case: str
 ) -> None:

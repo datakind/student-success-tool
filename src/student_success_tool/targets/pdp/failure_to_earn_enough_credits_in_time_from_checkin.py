@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 
 from ... import utils
-from ...preprocessing.pdp import dataops
 from . import shared
 
 LOGGER = logging.getLogger(__name__)
@@ -132,7 +131,7 @@ def compute_target_variable(
         how="left",
         suffixes=("_checkin", "_target"),
     )
-    num_terms_in_year = dataops.infer_num_terms_in_year(df[term_col])
+    num_terms_in_year = shared.infer_num_terms_in_year(df[term_col])
     intensity_num_terms = shared._compute_intensity_num_terms(
         intensity_time_lefts, num_terms_in_year
     )
@@ -204,7 +203,7 @@ def select_eligible_students(
         df, student_id_cols=student_id_cols, **student_criteria
     )
     max_term_rank = df[term_rank_col].max()
-    num_terms_in_year = dataops.infer_num_terms_in_year(df[term_col])
+    num_terms_in_year = shared.infer_num_terms_in_year(df[term_col])
     df_ref = shared.get_first_student_terms_at_num_credits_earned(
         df,
         min_num_credits=min_num_credits_checkin,
