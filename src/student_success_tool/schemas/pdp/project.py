@@ -29,6 +29,14 @@ class FeaturesConfig(pyd.BaseModel):
             "from a PDP course_number field"
         ),
     )
+    core_terms: set[str] = pyd.Field(
+        default=constants.DEFAULT_CORE_TERMS,
+        description=(
+            "Set of terms that together comprise the 'core' of the academic year, "
+            "in contrast with additional, usually shorter terms that may take place "
+            "between core terms"
+        ),
+    )
     peak_covid_terms: set[tuple[str, str]] = pyd.Field(
         default=constants.DEFAULT_PEAK_COVID_TERMS,
         description=(

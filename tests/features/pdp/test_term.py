@@ -5,7 +5,7 @@ from student_success_tool.features.pdp import term
 
 
 @pytest.mark.parametrize(
-    ["df", "first_term_of_year", "peak_covid_terms", "exp"],
+    ["df", "first_term_of_year", "core_terms", "peak_covid_terms", "exp"],
     [
         (
             pd.DataFrame(
@@ -37,6 +37,7 @@ from student_success_tool.features.pdp import term
                 }
             ),
             "FALL",
+            {"FALL", "SPRING"},
             {("2020-21", "SPRING"), ("2021-22", "FALL")},
             pd.DataFrame(
                 {
@@ -66,29 +67,44 @@ from student_success_tool.features.pdp import term
                         "2019-20 FALL",
                         "2022-23 SUMMER",
                     ],
-                    "term_start_dt": [
-                        "2020-09-01",
-                        "2020-09-01",
-                        "2021-01-01",
-                        "2021-02-01",
-                        "2019-09-01",
-                        "2023-06-01",
-                    ],
+                    "term_start_dt": pd.to_datetime(
+                        [
+                            "2020-09-01",
+                            "2020-09-01",
+                            "2021-01-01",
+                            "2021-02-01",
+                            "2019-09-01",
+                            "2023-06-01",
+                        ],
+                    ),
                     "term_rank": [1, 1, 2, 3, 0, 4],
-                    "term_rank_fall_spring": [1, 1, pd.NA, 2, 0, pd.NA],
+                    "term_rank_core": [1, 1, pd.NA, 2, 0, pd.NA],
+                    "term_rank_noncore": [pd.NA, pd.NA, 0, pd.NA, pd.NA, 1],
                     "term_in_peak_covid": [False, False, False, True, False, False],
-                    "term_is_fall_spring": [True, True, False, True, True, False],
+                    "term_is_core": [True, True, False, True, True, False],
+                    "term_is_noncore": [False, False, True, False, False, True],
                 }
-            ).astype({"term_rank_fall_spring": "Int8"}),
+            ).astype(
+                {
+                    "term_rank_core": "Int8",
+                    "term_rank_noncore": "Int8",
+                    "academic_term": pd.CategoricalDtype(
+                        ["FALL", "WINTER", "SPRING", "SUMMER"], ordered=True
+                    ),
+                }
+            ),
         ),
     ],
 )
-def test_add_term_features(df, first_term_of_year, peak_covid_terms, exp):
+def test_add_term_features(df, first_term_of_year, core_terms, peak_covid_terms, exp):
     obs = term.add_features(
-        df, first_term_of_year=first_term_of_year, peak_covid_terms=peak_covid_terms
+        df,
+        first_term_of_year=first_term_of_year,
+        core_terms=core_terms,
+        peak_covid_terms=peak_covid_terms,
     )
-    assert isinstance(obs, pd.DataFrame) and not obs.empty
-    assert obs.equals(exp) or obs.compare(exp).empty
+    assert isinstance(obs, pd.DataFrame)
+    assert pd.testing.assert_frame_equal(obs, exp, check_dtype=False) is None
 
 
 @pytest.mark.parametrize(
@@ -142,16 +158,23 @@ def test_term_in_peak_covid(df, year_col, term_col, peak_covid_terms, exp):
 
 
 @pytest.mark.parametrize(
-    ["df", "term_col", "exp"],
+    ["df", "terms_subset", "term_col", "exp"],
     [
         (
             pd.DataFrame({"term": ["FALL", "WINTER", "SPRING", "SUMMER"]}),
+            {"FALL", "SPRING"},
             "term",
-            pd.Series([True, False, True, False], dtype="bool"),
-        )
+            pd.Series([True, False, True, False], dtype="boolean"),
+        ),
+        (
+            pd.DataFrame({"term": ["FALL", "WINTER", "SPRING", "SUMMER"]}),
+            {"FALL", "WINTER", "SPRING"},
+            "term",
+            pd.Series([True, True, True, False], dtype="boolean"),
+        ),
     ],
 )
-def test_term_is_fall_spring(df, term_col, exp):
-    obs = term.term_is_fall_spring(df, term_col=term_col)
-    assert isinstance(obs, pd.Series) and not obs.empty
-    assert obs.equals(exp) or obs.compare(exp).empty
+def test_term_in_subset(df, terms_subset, term_col, exp):
+    obs = term.term_in_subset(df, terms_subset=terms_subset, term_col=term_col)
+    assert isinstance(obs, pd.Series)
+    assert pd.testing.assert_series_equal(obs, exp, check_names=False) is None

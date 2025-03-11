@@ -19,6 +19,7 @@ def make_student_term_dataset(
     min_passing_grade: float = constants.DEFAULT_MIN_PASSING_GRADE,
     min_num_credits_full_time: float = constants.DEFAULT_MIN_NUM_CREDITS_FULL_TIME,
     course_level_pattern: str = constants.DEFAULT_COURSE_LEVEL_PATTERN,
+    core_terms: set[str] = constants.DEFAULT_CORE_TERMS,
     peak_covid_terms: set[tuple[str, str]] = constants.DEFAULT_PEAK_COVID_TERMS,
     key_course_subject_areas: t.Optional[list[str]] = None,
     key_course_ids: t.Optional[list[str]] = None,
@@ -36,6 +37,11 @@ def make_student_term_dataset(
         min_num_credits_full_time: Minimum number of credits *attempted* per term
             for a student's enrollment intensity to be considered "full-time".
             Default value is 12.0.
+        core_terms: Set of terms that together comprise the "core" of the academic year,
+            in contrast with additional, usually shorter terms that may take place
+            between core terms. Default value is {"FALL", "SPRING"}, which typically
+            corresponds to a semester system; for schools on a trimester calendary,
+            {"FALL", "WINTER", "SPRING"} is probably what you want.
         course_level_pattern
         peak_covid_terms
         key_course_subject_areas
@@ -59,6 +65,7 @@ def make_student_term_dataset(
         .pipe(
             features.pdp.term.add_features,
             first_term_of_year=first_term_of_year,
+            core_terms=core_terms,  # type: ignore
             peak_covid_terms=peak_covid_terms,
         )
         .pipe(
@@ -249,15 +256,18 @@ def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
                 # "cohort_term",  # keeping this to see if useful
                 "cohort_id",
                 "term_rank",
-                "term_rank_fall_spring",
-                "term_is_fall_spring",
+                "term_rank_core",
+                "term_is_core",
+                "term_rank_noncore",
+                "term_is_noncore",
                 # columns used to derive other features, but not features themselves
                 # "grade",  # TODO: should this be course_grade?
                 "course_ids",
                 "course_subjects",
                 "course_subject_areas",
                 "min_student_term_rank",
-                "min_student_term_rank_fall_spring",
+                "min_student_term_core",
+                "min_student_term_noncore",
                 "sections_num_students_enrolled",
                 "sections_num_students_passed",
                 "sections_num_students_completed",
