@@ -3,10 +3,11 @@ Utility functions that interact with Google Cloud Storage.
 For instance, copying files from Databricks volumes into GCP buckets.
 """
 
+import os
+
+from databricks.sdk.runtime import dbutils  # noqa: F401
 from google.cloud import storage
 from google.cloud.storage.bucket import Bucket
-from databricks.sdk.runtime import dbutils  # noqa: F401
-import os
 
 
 def save_file(
