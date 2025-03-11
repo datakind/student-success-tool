@@ -27,7 +27,7 @@ def compute_target(
     References:
         - https://help.studentclearinghouse.org/pdp/knowledge-base/cohort-level-analysis-ready-file-data-dictionary/
     """
-    student_id_cols = utils.to_list(student_id_cols)
+    student_id_cols = utils.types.to_list(student_id_cols)
     return (
         df[student_id_cols + [retention_col]]
         # we only want only one row per student

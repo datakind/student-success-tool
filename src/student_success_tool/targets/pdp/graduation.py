@@ -42,7 +42,7 @@ def compute_target(
             at the cohort inst as of the given row, used to filter rows to pre-graduation
             when determining students' most common enrollment intensity.
     """
-    student_id_cols = utils.to_list(student_id_cols)
+    student_id_cols = utils.types.to_list(student_id_cols)
     # we want a target for every student in input df; this will ensure it
     df_distinct_students = df[student_id_cols].drop_duplicates(ignore_index=True)
     # get most common intensity value per student across all pre-graduation terms
@@ -68,7 +68,7 @@ def compute_target(
         on=student_id_cols,
     )
     # convert from term limits to year limits, as needed
-    intensity_num_years = utils.convert_intensity_time_limits(
+    intensity_num_years = utils.misc.convert_intensity_time_limits(
         "year", intensity_time_limits, num_terms_in_year=num_terms_in_year
     )
     # compute all intensity/year boolean arrays separately

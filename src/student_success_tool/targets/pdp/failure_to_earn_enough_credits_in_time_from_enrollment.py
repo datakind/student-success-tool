@@ -99,7 +99,7 @@ def compute_target_variable(
         term_col
         term_rank_col
     """
-    student_id_cols = utils.to_list(student_id_cols)
+    student_id_cols = utils.types.to_list(student_id_cols)
     include_cols = [enrollment_intensity_col]
     # we want a target for every student in input df; this will ensure it
     df_distinct_students = df[student_id_cols].drop_duplicates(ignore_index=True)
@@ -198,7 +198,7 @@ def select_eligible_students(
         sort_cols=term_rank_col,
         num_credits_col=num_credits_col,
         include_cols=[],
-    ).loc[:, utils.to_list(student_id_cols)]
+    ).loc[:, utils.types.to_list(student_id_cols)]
     nuq_students_checkin = len(df_students_by_num_creds)
     shared._log_eligible_selection(
         nuq_students_in, nuq_students_checkin, "check-in credits earned"
