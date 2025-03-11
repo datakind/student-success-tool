@@ -159,7 +159,8 @@ cumnum_repeated_course_ids = { name = "number of courses repeated so far" }
 cumnum_repeated_course_subjects = { name = "number of course subjects repeated so far" }
 cumnum_repeated_course_subject_areas = { name = "number of course subject areas repeated so far" }
 cumnum_terms_enrolled = { name = "number of terms enrolled so far" }
-cumnum_fall_spring_terms_enrolled = { name = "number of fall or spring terms enrolled so far" }
+cumnum_core_terms_enrolled = { name = "number of 'core' terms enrolled so far" }
+cumnum_noncore_terms_enrolled = { name = "number of 'non-core' terms enrolled so far" }
 term_in_peak_covid_cumsum = { name = "number of terms so far that occurred in 'peak' COVID" }
 term_is_while_student_enrolled_at_other_inst_cumsum = { name = "number of terms so far that occurred while student was enrolled at another institution" }
 term_is_pre_cohort_cumsum = { name = "number of terms so far that occurred before student's cohort (enrollment) term" }
@@ -231,7 +232,7 @@ num_courses_grade_above_section_avg_cumfrac = { name = "fraction of courses so f
 num_courses_in_program_of_study_area_term_1_cumfrac = { name = "number of courses taken so far in student's first-term program of study area" }
 num_courses_in_program_of_study_area_year_1_cumfrac = { name = "number of courses taken so far in student's first-year program of study area" }
 cumfrac_terms_unenrolled = { name = "fraction of skipped terms so far" }
-cumfrac_fall_spring_terms_unenrolled = { name = "fraction of skipped fall/spring terms so far" }
+cumfrac_core_terms_unenrolled = { name = "fraction of skipped 'core' terms so far" }
 num_courses_diff_prev_term = { name = "change in number of courses taken this term compared to previous term" }
 num_credits_earned_diff_prev_term = { name = "change in number of credits earned this term compared to previous term" }
 course_grade_numeric_mean_diff_prev_term = { name = "change in avg. numeric grade this term compared to previous term" }

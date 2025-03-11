@@ -43,8 +43,8 @@ class PDPStudentTermsDataSchema(pda.DataFrameModel):
     term_start_dt: pt.Series["datetime64[ns]"]
     term_rank: pt.Series["int8"]
     term_in_peak_covid: pt.Series["bool"]
-    term_rank_fall_spring: pt.Series["Int8"] = pda.Field(nullable=True)
-    term_is_fall_spring: pt.Series["bool"]
+    term_rank_core: pt.Series["Int8"] = pda.Field(nullable=True)
+    term_is_core: pt.Series["bool"]
     num_courses: pt.Series["int8"]
     num_courses_passed: pt.Series["int8"]
     num_courses_completed: pt.Series["int8"]
