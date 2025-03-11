@@ -333,6 +333,14 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
         "first_year_to_bachelors_at_cohort_inst",
         "first_year_to_associates_or_certificate_at_other_inst",
         "first_year_to_bachelor_at_other_inst",
+        "years_to_latest_associates_at_cohort_inst",
+        "years_to_latest_certificate_at_cohort_inst",
+        "years_to_latest_associates_at_other_inst",
+        "years_to_latest_certificate_at_other_inst",
+        "first_year_to_associates_at_cohort_inst",
+        "first_year_to_certificate_at_cohort_inst",
+        "first_year_to_associates_at_other_inst",
+        "first_year_to_certificate_at_other_inst",
     )
     def set_zero_year_values_to_null(cls, series):
         return series.mask(series.eq(0), pd.NA).astype("Int8")

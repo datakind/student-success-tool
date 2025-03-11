@@ -56,6 +56,7 @@ def aggregate_from_course_level_features(
         term_in_peak_covid=("term_in_peak_covid", "first"),
         term_rank_fall_spring=("term_rank_fall_spring", "first"),
         term_is_fall_spring=("term_is_fall_spring", "first"),
+        term_program_of_study=("term_program_of_study", "first"),
     )
     # various aggregations, with an eye toward cumulative features downstream
     df_aggs = df_grped.agg(
@@ -150,6 +151,7 @@ def add_features(
             "year_of_enrollment_at_cohort_inst": year_of_enrollment_at_cohort_inst,
             "term_is_pre_cohort": term_is_pre_cohort,
             "term_is_while_student_enrolled_at_other_inst": term_is_while_student_enrolled_at_other_inst,
+            "term_program_of_study_area": term_program_of_study_area,
             "frac_credits_earned": shared.frac_credits_earned,
             "student_term_enrollment_intensity": ft.partial(
                 student_term_enrollment_intensity,
@@ -162,6 +164,10 @@ def add_features(
             "num_courses_in_program_of_study_area_year_1": ft.partial(
                 num_courses_in_study_area,
                 study_area_col="student_program_of_study_area_year_1",
+            ),
+            "num_courses_in_term_program_of_study_area": ft.partial(
+                num_courses_in_study_area,
+                study_area_col="term_program_of_study_area",
             ),
         }
         | {
@@ -218,6 +224,12 @@ def term_is_while_student_enrolled_at_other_inst(
     df: pd.DataFrame, *, col: str = "num_courses_enrolled_at_other_institution_s_Y"
 ) -> pd.Series:
     return df[col].gt(0)
+
+
+def term_program_of_study_area(
+    df: pd.DataFrame, *, col: str = "term_program_of_study"
+) -> pd.Series:
+    return shared.extract_short_cip_code(df[col])
 
 
 def num_courses_in_study_area(

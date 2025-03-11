@@ -72,6 +72,28 @@ def test_infer_num_terms_in_year(series, exp):
                     "number_of_credits_attempted_year_1": [10.0, 5.0],
                     "number_of_credits_earned_year_1": [10.0, 5.0],
                     "gpa_group_year_1": [3.0, 4.0],
+                    "years_to_latest_associates_at_cohort_inst": [pd.NA, pd.NA],
+                    "years_to_latest_certificate_at_cohort_inst": [pd.NA, pd.NA],
+                    "years_to_latest_associates_at_other_inst": [pd.NA, pd.NA],
+                    "years_to_latest_certificate_at_other_inst": [pd.NA, pd.NA],
+                    "first_year_to_associates_at_cohort_inst": [pd.NA, pd.NA],
+                    "first_year_to_certificate_at_cohort_inst": [pd.NA, pd.NA],
+                    "first_year_to_associates_at_other_inst": [pd.NA, pd.NA],
+                    "first_year_to_certificate_at_other_inst": [pd.NA, pd.NA],
+                }
+            ).astype(
+                {
+                    col: "Int8"
+                    for col in [
+                        "years_to_latest_associates_at_cohort_inst",
+                        "years_to_latest_certificate_at_cohort_inst",
+                        "years_to_latest_associates_at_other_inst",
+                        "years_to_latest_certificate_at_other_inst",
+                        "first_year_to_associates_at_cohort_inst",
+                        "first_year_to_certificate_at_cohort_inst",
+                        "first_year_to_associates_at_other_inst",
+                        "first_year_to_certificate_at_other_inst",
+                    ]
                 }
             ),
         ),
@@ -132,6 +154,7 @@ def test_standardize_cohort_dataset(df, exp):
                     "course_type": ["CU", "CU", "CC"],
                     "grade": ["4", "1", "W"],
                     "core_course": ["Y", "N", "Y"],
+                    "term_program_of_study": [pd.NA, pd.NA, pd.NA],
                 }
             ),
         ),
@@ -141,6 +164,37 @@ def test_standardize_course_dataset(df, exp):
     obs = preprocessing.pdp.dataops.standardize_course_dataset(df)
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
+
+
+@pytest.mark.parametrize(
+    ["df", "col_val_dtypes", "exp"],
+    [
+        (
+            pd.DataFrame(),
+            {"a": (None, "Int8")},
+            pd.DataFrame(columns=["a"], dtype="Int8"),
+        ),
+        (
+            pd.DataFrame({"a": [1, 2, 3]}),
+            {"b": (None, "string")},
+            pd.DataFrame({"a": [1, 2, 3], "b": [pd.NA, pd.NA, pd.NA]}).astype(
+                {"b": "string"}
+            ),
+        ),
+        (
+            pd.DataFrame({"a": [1, 2, 3]}),
+            {"a": (None, "Int8"), "b": ("NA", "string")},
+            pd.DataFrame({"a": [1, 2, 3], "b": ["NA", "NA", "NA"]}).astype(
+                {"b": "string"}
+            ),
+        ),
+    ],
+)
+def test_add_empty_cols_if_missing(df, col_val_dtypes, exp):
+    obs = preprocessing.pdp.dataops.add_empty_cols_if_missing(
+        df, col_val_dtypes=col_val_dtypes
+    )
+    assert pd.testing.assert_frame_equal(obs, exp) is None
 
 
 @pytest.mark.parametrize(
