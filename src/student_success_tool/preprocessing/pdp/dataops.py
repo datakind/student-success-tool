@@ -6,7 +6,7 @@ import typing as t
 
 import pandas as pd
 
-from ... import features, types, utils
+from ... import features, utils
 from ...features.pdp import constants
 
 LOGGER = logging.getLogger(__name__)
@@ -97,7 +97,7 @@ def make_student_term_dataset(
         # when features are generated here (on-the-fly) as opposed to read (pre-computed)
         # from a delta table; spark can be configured to behave nicely...
         # but let's not take any chances
-        .rename(columns=utils.convert_to_snake_case)
+        .rename(columns=utils.misc.convert_to_snake_case)
     )
     return df_student_terms_plus
 
@@ -389,7 +389,7 @@ def drop_columns_safely(df: pd.DataFrame, *, cols: list[str]) -> pd.DataFrame:
     return df_trf
 
 
-def infer_first_term_of_year(s: pd.Series) -> types.TermType:
+def infer_first_term_of_year(s: pd.Series) -> utils.types.TermType:
     """
     Infer the first term of the (academic) year by the ordering of its categorical values.
 

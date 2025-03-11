@@ -38,11 +38,11 @@ def select_students_by_criteria(
     if not criteria:
         raise ValueError("one or more eligibility criteria must be specified")
 
-    student_id_cols = utils.to_list(student_id_cols)
+    student_id_cols = utils.types.to_list(student_id_cols)
     nuq_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
     is_eligibles = [
         df[key].isin(set(val))  # type: ignore
-        if utils.is_collection_but_not_string(val)
+        if utils.types.is_collection_but_not_string(val)
         else df[key].eq(val).fillna(value=False)  # type: ignore
         for key, val in criteria.items()
     ]
@@ -111,7 +111,7 @@ def select_students_by_time_left(
         enough time left for their particular enrollment intensity.
         2. Users should also always confirm with the school what to do / how to treat `NaN` intensities in the `enrollment_intensity_first_term` column, because the default in this pipeline drops them! Users should re-code these null values appropriately prior to running the pipeline if seeking to include them in the analysis/modeling dataset!**
     """
-    student_id_cols = utils.to_list(student_id_cols)
+    student_id_cols = utils.types.to_list(student_id_cols)
     nuq_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
     intensity_num_terms = _compute_intensity_num_terms(
         intensity_time_lefts, num_terms_in_year
@@ -153,7 +153,7 @@ def select_students_by_next_year_course_data(
         cohort_id_col
         term_id_col
     """
-    student_id_cols = utils.to_list(student_id_cols)
+    student_id_cols = utils.types.to_list(student_id_cols)
     nuq_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
     max_term_year = (
         df[term_id_col].str.extract(r"^(\d{4})").astype("Int32").max().iat[0]
@@ -189,13 +189,15 @@ def get_first_student_terms(
         sort_cols
         include_cols
     """
-    student_id_cols = utils.to_list(student_id_cols)
-    sort_cols = utils.to_list(sort_cols)
+    student_id_cols = utils.types.to_list(student_id_cols)
+    sort_cols = utils.types.to_list(sort_cols)
     cols = (
         df.columns.tolist()
         if include_cols is None
         else list(
-            utils.unique_elements_in_order(student_id_cols + sort_cols + include_cols)
+            utils.misc.unique_elements_in_order(
+                student_id_cols + sort_cols + include_cols
+            )
         )
     )
     return (
@@ -307,13 +309,15 @@ def get_nth_student_terms(
         term_is_pre_cohort_col
         exclude_pre_cohort_terms
     """
-    student_id_cols = utils.to_list(student_id_cols)
-    sort_cols = utils.to_list(sort_cols)
+    student_id_cols = utils.types.to_list(student_id_cols)
+    sort_cols = utils.types.to_list(sort_cols)
     cols = (
         df.columns.tolist()
         if include_cols is None
         else list(
-            utils.unique_elements_in_order(student_id_cols + sort_cols + include_cols)
+            utils.misc.unique_elements_in_order(
+                student_id_cols + sort_cols + include_cols
+            )
         )
     )
     # exclude rows that are "pre-cohort", so "nth" meets our criteria here

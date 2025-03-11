@@ -20,7 +20,7 @@ def assess_unique_values(data: pd.DataFrame, cols: str | list[str]) -> dict[str,
         data
         cols
     """
-    unique_data = data.loc[:, utils.to_list(cols)]
+    unique_data = data.loc[:, utils.types.to_list(cols)]
     is_duplicated = unique_data.duplicated()
     return {
         "num_uniques": is_duplicated.eq(False).sum(),
@@ -51,8 +51,8 @@ def compute_summary_stats(
         - https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.describe.html
     """
     num_rows = data.shape[0]
-    include = utils.to_list(include) if include is not None else None
-    exclude = utils.to_list(exclude) if exclude is not None else None
+    include = utils.types.to_list(include) if include is not None else None
+    exclude = utils.types.to_list(exclude) if exclude is not None else None
     data_selected = data.select_dtypes(include=include, exclude=exclude)  # type: ignore
     data_described = data_selected.describe(percentiles=percentiles).T.assign(
         null_count=data_selected.isna().sum(),

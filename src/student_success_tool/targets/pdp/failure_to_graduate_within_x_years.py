@@ -93,7 +93,7 @@ def compute_target_variable(
             earned a particular degree (by default, a Bachelor's degree).
         num_terms_in_year: Defined number of terms in one academic year.
     """
-    student_id_cols = utils.to_list(student_id_cols)
+    student_id_cols = utils.types.to_list(student_id_cols)
     include_cols = student_id_cols + [enrollment_intensity_col, years_to_degree_col]
     # we want a target for every student in input df; this will ensure it
     df_distinct_students = df[student_id_cols].drop_duplicates(ignore_index=True)
@@ -191,7 +191,7 @@ def select_eligible_students(
         include_cols=None,
         term_is_pre_cohort_col=term_is_pre_cohort_col,
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
-    ).loc[:, utils.to_list(student_id_cols)]
+    ).loc[:, utils.types.to_list(student_id_cols)]
     nuq_students_checkin = len(df_students_by_checkin)
     shared._log_eligible_selection(
         nuq_students_in, nuq_students_checkin, "check-in point"

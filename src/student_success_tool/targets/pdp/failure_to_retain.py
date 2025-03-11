@@ -77,7 +77,7 @@ def compute_target_variable(
         student_id_cols
         retention_col
     """
-    student_id_cols = utils.to_list(student_id_cols)
+    student_id_cols = utils.types.to_list(student_id_cols)
     return (
         df[student_id_cols + [retention_col]]
         .drop_duplicates(subset=student_id_cols, ignore_index=True)

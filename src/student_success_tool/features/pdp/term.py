@@ -5,7 +5,7 @@ from collections.abc import Collection
 
 import pandas as pd
 
-from ... import types
+from ...utils import types
 from . import constants, shared
 
 LOGGER = logging.getLogger(__name__)

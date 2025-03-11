@@ -13,7 +13,7 @@ try:
 except ModuleNotFoundError:
     from ... import utils
 
-    utils.mock_pandera()
+    utils.databricks.mock_pandera()
 
     import pandera as pda
 
@@ -79,13 +79,13 @@ def read_raw_course_data(
     # but pandera applies core before custom parsers under the hood :/
     df = (
         # standardize column names
-        df.rename(columns=utils.convert_to_snake_case)
+        df.rename(columns=utils.misc.convert_to_snake_case)
         # standardize certain column values
         .assign(
             # uppercase string values for some cols to avoid case inconsistency later on
             **{
                 col: ft.partial(_uppercase_string_values, col=col)
-                for col in ("academic_term", "student_age", "race")
+                for col in ("academic_term",)
             }
             # help pandas to parse non-standard datetimes... read_csv() struggles
             | {
@@ -154,25 +154,14 @@ def read_raw_cohort_data(
     # but pandera applies core before custom parsers under the hood :/
     df = (
         # standardize column names
-        df.rename(columns=utils.convert_to_snake_case)
+        df.rename(columns=utils.misc.convert_to_snake_case)
         # standardize column values
         .assign(
             # uppercase string values for some cols to avoid case inconsistency later on
             # for practical reasons, this is the only place where it's easy to do so
             **{
                 col: ft.partial(_uppercase_string_values, col=col)
-                for col in (
-                    "cohort_term",
-                    "enrollment_type",
-                    "enrollment_intensity_first_term",
-                    "student_age",
-                    "race",
-                    "most_recent_bachelors_at_other_institution_locale",
-                    "most_recent_associates_or_certificate_at_other_institution_locale",
-                    "most_recent_last_enrollment_at_other_institution_locale",
-                    "first_bachelors_at_other_institution_locale",
-                    "first_associates_or_certificate_at_other_institution_locale",
-                )
+                for col in ("cohort_term",)
             }
             # replace "UK" with null in GPA cols, so we can coerce to float via schema
             | {

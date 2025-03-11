@@ -11,7 +11,7 @@ try:
 except ModuleNotFoundError:
     from ... import utils
 
-    utils.mock_pandera()
+    utils.databricks.mock_pandera()
 
     import pandera as pda
     import pandera.typing as pt

@@ -28,7 +28,7 @@ def to_delta_table(
     start_time = time.time()
     LOGGER.info("saving data to %s ...", table_path)
     df_spark = spark_session.createDataFrame(
-        df.rename(columns=utils.convert_to_snake_case)
+        df.rename(columns=utils.misc.convert_to_snake_case)
     )
     (
         pyspark.sql.DataFrameWriterV2(df_spark, table_path)

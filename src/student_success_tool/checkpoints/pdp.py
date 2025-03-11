@@ -28,8 +28,8 @@ def nth_student_terms(
         sort_cols: Column(s) used to sort students' terms, typically chronologically.
         include_cols
     """
-    student_id_cols = utils.to_list(student_id_cols)
-    sort_cols = utils.to_list(sort_cols)
+    student_id_cols = utils.types.to_list(student_id_cols)
+    sort_cols = utils.types.to_list(sort_cols)
     included_cols = _get_included_cols(df, student_id_cols, sort_cols, include_cols)
     df_nth = (
         df.loc[:, included_cols]
@@ -221,6 +221,8 @@ def _get_included_cols(
         df.columns.tolist()
         if include_cols is None
         else list(
-            utils.unique_elements_in_order(student_id_cols + sort_cols + include_cols)
+            utils.misc.unique_elements_in_order(
+                student_id_cols + sort_cols + include_cols
+            )
         )
     )
