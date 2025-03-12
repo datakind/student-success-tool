@@ -92,7 +92,7 @@ resources:
         #       - --input_schema_path
         #       - /Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_bronze/schema # TODO(samroon2): Update once finalized.
         #       - --output_artifact_path
-        #       - "{{job.parameters.job_root_dir}}"
+        #       - "{{tasks.data_ingestion.values.job_root_dir}}"
         #       - --environment
         #       - SERVING
         #       - "{{job.parameters.fail_on_anomalies}}"
