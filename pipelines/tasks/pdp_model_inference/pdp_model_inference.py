@@ -15,8 +15,9 @@ This is a POC script, it is advised to review and tests before using in producti
 import logging
 import os
 import argparse
+from joblib import Parallel, delayed
+from typing import List, Optional
 
-import typing as t
 import functools as ft
 import matplotlib.pyplot as plt
 import mlflow
@@ -51,6 +52,8 @@ class ModelInferenceTask:
         self.args = args
         self.spark_session = self.get_spark_session()
         self.cfg = self.read_config(self.args.toml_file_path)  
+        print(self.args)
+        print(f"{self.args.job_root_dir}/ext/")
 
 
     def get_spark_session(self) -> DatabricksSession | None:
@@ -134,8 +137,8 @@ class ModelInferenceTask:
     def predict_proba(
         X: pd.DataFrame,
         model: mlflow.pyfunc.PyFuncModel,
-        feature_names: t.Optional[list[str]] = None,
-        pos_label: t.Optional[bool | str] = None,
+        feature_names: Optional[List[str]] = None,
+        pos_label: Optional[bool | str] = None,
     ) -> np.ndarray:
         """Predicts probabilities using the provided model.  Handles data prep."""
 
@@ -150,8 +153,47 @@ class ModelInferenceTask:
             return pred_probs[:, model.classes_.tolist().index(pos_label)]
         else:
             return pred_probs
+    
 
+    def parallel_explanations(
+        self,
+        model: mlflow.pyfunc.PyFuncModel,
+        df_features: pd.DataFrame,
+        explainer: shap.Explainer,
+        model_feature_names: List[str],
+        n_jobs: Optional[int] = -1,
+    ) -> shap.Explanation:
+        """
+        Calculates SHAP explanations in parallel using joblib.
 
+        Args:
+            model: mlflow.pyfunc.PyFuncModel.
+            df_features pd.DataFrame: The feature dataset to calculate SHAP values for.
+            explainer (shap.Explainer): The SHAP explainer object.
+            model_feature_names (List[str]): List of feature names corresponding to the columns in `df_features`.
+            n_jobs (Optional[int]): The number of jobs to run in parallel. Defaults to -1 (use all available CPUs).
+
+        Returns:
+            shap.Explanation: The combined SHAP explanation object.
+        """
+
+        logging.info("Calculating SHAP values for %s records", len(df_features))
+
+        chunks = np.array_split(df_features, len(df_features) // 4)
+
+        results = Parallel(n_jobs=n_jobs)(
+            delayed(lambda model, chunk, explainer: explainer(chunk))(model, chunk, explainer)
+            for chunk in chunks
+        )
+
+        combined_values = np.concatenate([r.values for r in results], axis=0)
+        combined_data = np.concatenate([r.data for r in results], axis=0)
+        combined_explanation = shap.Explanation(
+            values=combined_values, data=combined_data, feature_names=model_feature_names
+        )
+        return combined_explanation
+    
+    
     def calculate_shap_values(
         self,
         model: mlflow.pyfunc.PyFuncModel,
@@ -159,6 +201,7 @@ class ModelInferenceTask:
         model_feature_names: list[str]
     ) -> pd.DataFrame | None:
         """Calculates SHAP values."""
+
         try:
             # --- Load features table ---
             features_table = dataio.read_features_table("assets/pdp/features_table.toml")
@@ -189,12 +232,21 @@ class ModelInferenceTask:
                 df_ref,
                 link="identity",
             )
-            shap_values = explainer(df_processed[model_feature_names])
-            return shap_values
+
+            # shap_values = explainer(df_processed[model_feature_names])
+            
+            shap_values_explanation = self.parallel_explanations(
+                model = model, 
+                df_features = df_processed[model_feature_names], 
+                explainer = explainer, 
+                model_feature_names=model_feature_names, 
+                n_jobs = -1
+                )
+
+            return shap_values_explanation
         except Exception as e:
             logging.error("Error during SHAP value calculation: %s", e)
-            return None # Return None instead of raising, to allow other parts to continue.
-
+            raise
 
     def get_top_features_for_display(self, df_serving, unique_ids, df_predicted, shap_values, model_feature_names):
         """
@@ -264,6 +316,7 @@ class ModelInferenceTask:
                 # Specify the folder for the output files to be stored.
                 result_path = f"{self.args.job_root_dir}/ext/"
                 os.makedirs(result_path, exist_ok=True)
+                print('result_path:', result_path)
 
                 # Write the DataFrame to Unity Catalog table
                 self.write_data_to_delta(shap_results, "shap_results_dataset")
@@ -273,6 +326,9 @@ class ModelInferenceTask:
                 spark_df.coalesce(1).write.format("csv").option("header", "true").mode("overwrite").save(result_path + "inference_output")
                 # Write the SHAP chart png to the volume
                 shap_fig.savefig(result_path + "shap_chart.png", bbox_inches="tight")
+            else:
+                logging.error("Empty Shap results, cannot create the SHAP chart and table")
+                raise Exception("Empty Shap results, cannot create the SHAP chart and table")
 
         # --- Write Inference Dataset --- (This was missing, but good to have)
         self.write_data_to_delta(df_processed[model_feature_names], "inference_dataset")
@@ -288,7 +344,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--db_run_id", type=str, required=True, help="Databricks run ID")
     parser.add_argument("--model_name", type=str, required=True, help="Model name")
     parser.add_argument("--model_type", type=str, required=True, help="Model type")
-    parser.add_argument("--job_root_dir", required=True, help="Folder path to store job output files")
+    parser.add_argument("--job_root_dir", required=True, type=str, help="Folder path to store job output files")
     parser.add_argument("--toml_file_path", type=str, required=True, help="Path to configuration file")
     parser.add_argument("--processed_dataset_path", type=str, required=True, help="Path to processed dataset table")
     return parser.parse_args()
