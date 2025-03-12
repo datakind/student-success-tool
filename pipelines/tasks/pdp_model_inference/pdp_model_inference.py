@@ -19,7 +19,6 @@ from joblib import Parallel, delayed
 from typing import List, Optional
 
 import functools as ft
-import matplotlib.pyplot as plt
 import mlflow
 import numpy as np
 import pandas as pd
@@ -33,6 +32,7 @@ from student_success_tool.modeling import inference
 import student_success_tool.modeling as modeling
 from student_success_tool.schemas import pdp as schemas
 from student_success_tool.pipeline_utils.plot import plot_shap_beeswarm
+
 # from pipelines.tasks.utils import emails
 
 
@@ -51,10 +51,9 @@ class ModelInferenceTask:
         """Initializes the ModelInferenceTask."""
         self.args = args
         self.spark_session = self.get_spark_session()
-        self.cfg = self.read_config(self.args.toml_file_path)  
+        self.cfg = self.read_config(self.args.toml_file_path)
         print(self.args)
         print(f"{self.args.job_root_dir}/ext/")
-
 
     def get_spark_session(self) -> DatabricksSession | None:
         """
@@ -70,7 +69,6 @@ class ModelInferenceTask:
             logging.error("Unable to create Spark session.")
             raise
 
-
     def read_config(self, toml_file_path: str) -> schemas.PDPProjectConfig:
         """Reads the institution's model's configuration file."""
         try:
@@ -83,10 +81,8 @@ class ModelInferenceTask:
             logging.error("Error reading configuration file: %e", e)
             raise
 
-
     def load_mlflow_model(self) -> mlflow.pyfunc.PyFuncModel:
         """Loads the MLflow model."""
-        model_schema = f"{self.args.databricks_institution_name}_gold"
         model_uri = f"runs:/{self.cfg.models['graduation'].run_id}/model"
 
         try:
@@ -97,19 +93,24 @@ class ModelInferenceTask:
                 "pyfunc": mlflow.pyfunc.load_model,  # Default
             }.get(self.args.model_type, mlflow.pyfunc.load_model)
             model = load_model_func(model_uri)
-            logging.info("MLflow '%s' model loaded from '%s'", self.args.model_type, model_uri)
+            logging.info(
+                "MLflow '%s' model loaded from '%s'", self.args.model_type, model_uri
+            )
             return model
         except Exception as e:
             logging.error("Error loading MLflow model: %s", e)
             raise  # Critical error; re-raise to halt execution
 
-
-    def predict(self, model: mlflow.pyfunc.PyFuncModel, df: pd.DataFrame) -> pd.DataFrame:
+    def predict(
+        self, model: mlflow.pyfunc.PyFuncModel, df: pd.DataFrame
+    ) -> pd.DataFrame:
         """Performs inference and adds predictions to the DataFrame."""
         try:
-            model_feature_names = model.named_steps["column_selector"].get_params()["cols"]
+            model_feature_names = model.named_steps["column_selector"].get_params()[
+                "cols"
+            ]
         except AttributeError:
-             model_feature_names = model.metadata.get_input_schema().input_names()
+            model_feature_names = model.metadata.get_input_schema().input_names()
 
         df_serving = df[model_feature_names]
 
@@ -128,10 +129,14 @@ class ModelInferenceTask:
 
         try:
             dataio.to_delta_table(df, table_path, spark_session=self.spark_session)
-            logging.info("%s data written to: %s", table_name_suffix.capitalize(), table_path)
+            logging.info(
+                "%s data written to: %s", table_name_suffix.capitalize(), table_path
+            )
         except Exception as e:
-            logging.error("Error writing %s data to Delta Lake: %s", table_name_suffix, e)
-            raise # Critical, prevent further execution.
+            logging.error(
+                "Error writing %s data to Delta Lake: %s", table_name_suffix, e
+            )
+            raise  # Critical, prevent further execution.
 
     @staticmethod
     def predict_proba(
@@ -153,7 +158,6 @@ class ModelInferenceTask:
             return pred_probs[:, model.classes_.tolist().index(pos_label)]
         else:
             return pred_probs
-    
 
     def parallel_explanations(
         self,
@@ -182,36 +186,40 @@ class ModelInferenceTask:
         chunks = np.array_split(df_features, len(df_features) // 4)
 
         results = Parallel(n_jobs=n_jobs)(
-            delayed(lambda model, chunk, explainer: explainer(chunk))(model, chunk, explainer)
+            delayed(lambda model, chunk, explainer: explainer(chunk))(
+                model, chunk, explainer
+            )
             for chunk in chunks
         )
 
         combined_values = np.concatenate([r.values for r in results], axis=0)
         combined_data = np.concatenate([r.data for r in results], axis=0)
         combined_explanation = shap.Explanation(
-            values=combined_values, data=combined_data, feature_names=model_feature_names
+            values=combined_values,
+            data=combined_data,
+            feature_names=model_feature_names,
         )
         return combined_explanation
-    
-    
+
     def calculate_shap_values(
         self,
         model: mlflow.pyfunc.PyFuncModel,
         df_processed: pd.DataFrame,
-        model_feature_names: list[str]
+        model_feature_names: list[str],
     ) -> pd.DataFrame | None:
         """Calculates SHAP values."""
 
         try:
-            # --- Load features table ---
-            features_table = dataio.read_features_table("assets/pdp/features_table.toml")
-
             # --- SHAP Values Calculation ---
             # TODO: Consider saving the explainer during training.
             shap_ref_data_size = 200  # Consider getting from config.
 
-            experiment_id = self.cfg.models["graduation"].experiment_id # Consider refactoring this
-            df_train = modeling.evaluation.extract_training_data_from_model(experiment_id)
+            experiment_id = self.cfg.models[
+                "graduation"
+            ].experiment_id  # Consider refactoring this
+            df_train = modeling.evaluation.extract_training_data_from_model(
+                experiment_id
+            )
             train_mode = df_train.mode().iloc[0]  # Use .iloc[0] for single row
             df_ref = (
                 df_train.sample(
@@ -234,26 +242,30 @@ class ModelInferenceTask:
             )
 
             # shap_values = explainer(df_processed[model_feature_names])
-            
+
             shap_values_explanation = self.parallel_explanations(
-                model = model, 
-                df_features = df_processed[model_feature_names], 
-                explainer = explainer, 
-                model_feature_names=model_feature_names, 
-                n_jobs = -1
-                )
+                model=model,
+                df_features=df_processed[model_feature_names],
+                explainer=explainer,
+                model_feature_names=model_feature_names,
+                n_jobs=-1,
+            )
 
             return shap_values_explanation
         except Exception as e:
             logging.error("Error during SHAP value calculation: %s", e)
             raise
 
-    def get_top_features_for_display(self, df_serving, unique_ids, df_predicted, shap_values, model_feature_names):
+    def get_top_features_for_display(
+        self, df_serving, unique_ids, df_predicted, shap_values, model_feature_names
+    ):
         """
         Selects top features to display and store
         """
         if not self.spark_session:
-            logging.error("Spark session not initialized. Cannot post process shap values.")
+            logging.error(
+                "Spark session not initialized. Cannot post process shap values."
+            )
             return None
 
         # --- Load features table ---
@@ -283,55 +295,66 @@ class ModelInferenceTask:
             logging.error("Error top features to display: %s", e)
             return None
 
-
     def run(self):
         """Executes the model inference pipeline."""
-        df_processed = dataio.from_delta_table(self.args.processed_dataset_path, spark_session=self.spark_session)
+        df_processed = dataio.from_delta_table(
+            self.args.processed_dataset_path, spark_session=self.spark_session
+        )
         unique_ids = df_processed[self.cfg.student_id_col]
-        
+
         model = self.load_mlflow_model()
         model_feature_names = model.named_steps["column_selector"].get_params()["cols"]
-        
-         # --- Email notify users ---
+
+        # --- Email notify users ---
         # Uncomment below once we want to enable CC'ing to DK's email.
         # emails.send_inference_kickoff_email(SENDER_EMAIL, [notif_email], [DK_CC_EMAIL], MANDRILL_USERNAME, MANDRILL_PASSWORD)
         # emails.send_inference_kickoff_email(
         #     SENDER_EMAIL, [notif_email], [], MANDRILL_USERNAME, MANDRILL_PASSWORD
         # )
 
-
         df_predicted = self.predict(model, df_processed)
         self.write_data_to_delta(df_predicted, "predicted_dataset")
 
         # --- SHAP Values Calculation ---
-        shap_values = self.calculate_shap_values(model, df_processed, model_feature_names)
+        shap_values = self.calculate_shap_values(
+            model, df_processed, model_feature_names
+        )
 
         if shap_values is not None:  # Proceed only if SHAP values were calculated
             # --- SHAP Summary Plot ---
             shap_fig = plot_shap_beeswarm(shap_values)
-            
-            shap_results = self.get_top_features_for_display(df_processed, unique_ids, df_predicted, shap_values, model_feature_names)
+
+            shap_results = self.get_top_features_for_display(
+                df_processed, unique_ids, df_predicted, shap_values, model_feature_names
+            )
             # --- Save Results to ext/ folder in Gold volume. ---
             if shap_results is not None:
                 # Specify the folder for the output files to be stored.
                 result_path = f"{self.args.job_root_dir}/ext/"
                 os.makedirs(result_path, exist_ok=True)
-                print('result_path:', result_path)
+                print("result_path:", result_path)
 
                 # Write the DataFrame to Unity Catalog table
                 self.write_data_to_delta(shap_results, "shap_results_dataset")
 
                 # Write the DataFrame to CSV in the specified volume
                 spark_df = self.spark_session.createDataFrame(shap_results)
-                spark_df.coalesce(1).write.format("csv").option("header", "true").mode("overwrite").save(result_path + "inference_output")
+                spark_df.coalesce(1).write.format("csv").option("header", "true").mode(
+                    "overwrite"
+                ).save(result_path + "inference_output")
                 # Write the SHAP chart png to the volume
                 shap_fig.savefig(result_path + "shap_chart.png", bbox_inches="tight")
             else:
-                logging.error("Empty Shap results, cannot create the SHAP chart and table")
-                raise Exception("Empty Shap results, cannot create the SHAP chart and table")
+                logging.error(
+                    "Empty Shap results, cannot create the SHAP chart and table"
+                )
+                raise Exception(
+                    "Empty Shap results, cannot create the SHAP chart and table"
+                )
 
         # --- Write Inference Dataset --- (This was missing, but good to have)
         self.write_data_to_delta(df_processed[model_feature_names], "inference_dataset")
+
 
 def parse_arguments() -> argparse.Namespace:
     """Parses command line arguments."""
@@ -339,15 +362,40 @@ def parse_arguments() -> argparse.Namespace:
         description="Perform model inference for the SST pipeline.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--DB_workspace", type=str, required=True, help="Databricks workspace identifier")
-    parser.add_argument("--databricks_institution_name", type=str, required=True, help="Databricks institution name")
-    parser.add_argument("--db_run_id", type=str, required=True, help="Databricks run ID")
+    parser.add_argument(
+        "--DB_workspace",
+        type=str,
+        required=True,
+        help="Databricks workspace identifier",
+    )
+    parser.add_argument(
+        "--databricks_institution_name",
+        type=str,
+        required=True,
+        help="Databricks institution name",
+    )
+    parser.add_argument(
+        "--db_run_id", type=str, required=True, help="Databricks run ID"
+    )
     parser.add_argument("--model_name", type=str, required=True, help="Model name")
     parser.add_argument("--model_type", type=str, required=True, help="Model type")
-    parser.add_argument("--job_root_dir", required=True, type=str, help="Folder path to store job output files")
-    parser.add_argument("--toml_file_path", type=str, required=True, help="Path to configuration file")
-    parser.add_argument("--processed_dataset_path", type=str, required=True, help="Path to processed dataset table")
+    parser.add_argument(
+        "--job_root_dir",
+        required=True,
+        type=str,
+        help="Folder path to store job output files",
+    )
+    parser.add_argument(
+        "--toml_file_path", type=str, required=True, help="Path to configuration file"
+    )
+    parser.add_argument(
+        "--processed_dataset_path",
+        type=str,
+        required=True,
+        help="Path to processed dataset table",
+    )
     return parser.parse_args()
+
 
 if __name__ == "__main__":
     args = parse_arguments()
