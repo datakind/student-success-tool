@@ -26,7 +26,7 @@ resources:
           job_cluster_key: pdp-inference-pipeline-cluster
           libraries:
             - pypi:
-                package: git+https://github.com/datakind/student-success-tool.git@develop
+                package: git+https://github.com/datakind/student-success-tool.git@${var.pip_install_branch}
         - task_key: data_preprocessing
           depends_on:
             - task_key: data_ingestion
@@ -51,7 +51,7 @@ resources:
           job_cluster_key: pdp-inference-pipeline-cluster
           libraries:
             - pypi:
-                package: git+https://github.com/datakind/student-success-tool.git@develop
+                package: git+https://github.com/datakind/student-success-tool.git@${var.pip_install_branch}
         - task_key: data_validation
           depends_on:
             - task_key: data_preprocessing
@@ -71,7 +71,7 @@ resources:
         #       - --input_schema_path
         #       - /Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_bronze/schema # TODO(samroon2): Update once finalized.
         #       - --output_artifact_path
-        #       - "{{job.parameters.job_root_dir}}"
+        #       - "{{tasks.data_ingestion.values.job_root_dir}}"
         #       - --environment
         #       - SERVING
         #       - "{{job.parameters.fail_on_anomalies}}"
@@ -97,7 +97,7 @@ resources:
               - --model_type
               - "{{job.parameters.model_type}}"
               - --job_root_dir  
-              - "/Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/inference_jobs/{{job.parameters.db_run_id}}"
+              - "{{tasks.data_ingestion.values.job_root_dir}}"
               - --toml_file_path
               - "/Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/configuration_files/{{job.parameters.databricks_institution_name}}_{{job.parameters.model_name}}_configuration_file.toml"
               - --processed_dataset_path
@@ -105,7 +105,7 @@ resources:
           job_cluster_key: pdp-inference-pipeline-cluster
           libraries:
             - pypi:
-                package: git+https://github.com/datakind/student-success-tool.git@develop
+                package: git+https://github.com/datakind/student-success-tool.git@${var.pip_install_branch}
         - task_key: output_publish
           depends_on:
             - task_key: inference
@@ -126,12 +126,12 @@ resources:
           job_cluster_key: pdp-inference-pipeline-cluster
           libraries:
             - pypi:
-                package: git+https://github.com/datakind/student-success-tool.git@develop
+                package: git+https://github.com/datakind/student-success-tool.git@${var.pip_install_branch}
       job_clusters:
         - job_cluster_key: pdp-inference-pipeline-cluster
           new_cluster:
             cluster_name: ""
-            spark_version: 16.1.x-cpu-ml-scala2.12
+            spark_version: 15.4.x-cpu-ml-scala2.12
             spark_conf:
               spark.master: local[*, 4]
               spark.databricks.cluster.profile: singleNode

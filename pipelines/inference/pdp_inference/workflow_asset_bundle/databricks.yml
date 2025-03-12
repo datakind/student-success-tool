@@ -5,7 +5,7 @@ bundle:
   uuid: 99992898-07ae-4641-b086-dd3ba80ffc2f
     
 include:
-  - ../resources/github_sourced_pdp_inference_pipeline.yml
+  - resources/github_sourced_pdp_inference_pipeline.yml
 
 variables:
   DB_workspace:
@@ -24,8 +24,10 @@ variables:
     description: "Service account to execute the pipeline"
   service_principal_run_as:
     description: "Account to run the pipeline"
+  pip_install_branch:
+    description: "SST github Branch used to install SST libraries from"
 
-run_as: 
+run_as:
   service_principal_name: ${var.service_principal_run_as}
     
 targets:
