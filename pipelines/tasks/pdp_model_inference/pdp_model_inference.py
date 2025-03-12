@@ -24,6 +24,8 @@ import numpy as np
 import pandas as pd
 import shap
 from databricks.connect import DatabricksSession
+from databricks.sdk import WorkspaceClient
+from email.headerregistry import Address
 
 
 # Import project-specific modules
@@ -32,8 +34,7 @@ from student_success_tool.modeling import inference
 import student_success_tool.modeling as modeling
 from student_success_tool.schemas import pdp as schemas
 from student_success_tool.pipeline_utils.plot import plot_shap_beeswarm
-
-# from pipelines.tasks.utils import emails
+from student_success_tool.pipeline_utils import emails
 
 
 # Disable mlflow autologging (prevents conflicts in Databricks environments)
@@ -307,9 +308,14 @@ class ModelInferenceTask:
 
         # --- Email notify users ---
         # Uncomment below once we want to enable CC'ing to DK's email.
-        # emails.send_inference_kickoff_email(SENDER_EMAIL, [notif_email], [DK_CC_EMAIL], MANDRILL_USERNAME, MANDRILL_PASSWORD)
+        # Secrets from Databricks
+        w = WorkspaceClient()
+        MANDRILL_USERNAME = w.dbutils.secrets.get(scope="sst", key="MANDRILL_USERNAME")
+        MANDRILL_PASSWORD = w.dbutils.secrets.get(scope="sst", key="MANDRILL_PASSWORD")
+        SENDER_EMAIL = Address("Datakind Info", "help", "datakind.org")
+        emails.send_inference_kickoff_email(SENDER_EMAIL, [self.args.notification_email], [self.args.DK_CC_EMAIL], MANDRILL_USERNAME, MANDRILL_PASSWORD)
         # emails.send_inference_kickoff_email(
-        #     SENDER_EMAIL, [notif_email], [], MANDRILL_USERNAME, MANDRILL_PASSWORD
+        #     SENDER_EMAIL, [notification_email], [], MANDRILL_USERNAME, MANDRILL_PASSWORD
         # )
 
         df_predicted = self.predict(model, df_processed)
@@ -394,6 +400,20 @@ def parse_arguments() -> argparse.Namespace:
         required=True,
         help="Path to processed dataset table",
     )
+    parser.add_argument(
+        "--notification_email",
+        type=str,
+        required=True,
+        help="Insitution's email used for notifications",
+    )
+
+    parser.add_argument(
+        "--DK_CC_EMAIL",
+        type=str,
+        required=True,
+        help="Datakind email address CC'd",
+    )
+
     return parser.parse_args()
 
 

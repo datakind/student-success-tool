@@ -161,7 +161,6 @@ class DataPreparationTask:
         )
 
         df_processed = preprocessing.dataops.clean_up_labeled_dataset_cols_and_vals(df_processed)
-
         return df_processed
 
     def write_data_to_delta(self, df_processed: pd.DataFrame):
