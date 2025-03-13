@@ -38,6 +38,7 @@ CompletedDevField = partial(
     pda.Field, nullable=True, dtype_kwargs={"categories": ["Y", "N"]}
 )
 
+
 class RawPDPCohortDataSchema(pda.DataFrameModel):
     """
     Schema (aka ``DataFrameModel``) for raw PDP cohort data that validates columns,
@@ -113,7 +114,7 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     # completed_dev_math_y_1: pt.Series[pd.CategoricalDtype] = (
     #     CompletedDevOrGatewayField()
     # )
-    
+
     # completed_dev_english_y_1: pt.Series[pd.CategoricalDtype] = (
     #     CompletedDevOrGatewayField()
     # )
