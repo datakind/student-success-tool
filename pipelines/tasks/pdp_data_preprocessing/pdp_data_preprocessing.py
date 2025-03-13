@@ -18,7 +18,7 @@ import mlflow
 import pandas as pd
 
 from databricks.connect import DatabricksSession
-from databricks.sdk.runtime import dbutils 
+from databricks.sdk.runtime import dbutils
 
 import student_success_tool.dataio as dataio
 import student_success_tool.targets.pdp as targets
@@ -45,8 +45,7 @@ class DataPreparationTask:
         """
         self.spark_session = self.get_spark_session()
         self.args = args
-        self.cfg = self.read_config(self.args.toml_file_path)  
-
+        self.cfg = self.read_config(self.args.toml_file_path)
 
     def get_spark_session(self) -> DatabricksSession | None:
         """
@@ -61,8 +60,7 @@ class DataPreparationTask:
         except Exception:
             logging.error("Unable to create Spark session.")
             raise
-    
-    
+
     def read_config(self, toml_file_path: str) -> schemas.PDPProjectConfig:
         """Reads the institution's model's configuration file."""
         try:
@@ -74,9 +72,10 @@ class DataPreparationTask:
         except Exception as e:
             logging.error("Error reading configuration file: %e", e)
             raise
-    
-    
-    def read_data_from_delta(self) -> tuple[pd.DataFrame, pd.DataFrame] | tuple[None, None]:
+
+    def read_data_from_delta(
+        self,
+    ) -> tuple[pd.DataFrame, pd.DataFrame] | tuple[None, None]:
         """
         Reads course and cohort data from Delta Lake tables.
 
@@ -87,13 +86,15 @@ class DataPreparationTask:
         if self.spark_session:
             try:
                 df_course = schemas.RawPDPCourseDataSchema(
-                    dataio.from_delta_table(self.args.course_dataset_validated_path,
+                    dataio.from_delta_table(
+                        self.args.course_dataset_validated_path,
                         spark_session=self.spark_session,
                     )
                 )
 
                 df_cohort = schemas.RawPDPCohortDataSchema(
-                    dataio.from_delta_table(self.args.cohort_dataset_validated_path,
+                    dataio.from_delta_table(
+                        self.args.cohort_dataset_validated_path,
                         spark_session=self.spark_session,
                     )
                 )
@@ -105,8 +106,9 @@ class DataPreparationTask:
             logging.error("Spark session not initialized. Cannot read delta tables.")
             return None, None
 
-
-    def preprocess_data(self, df_course: pd.DataFrame, df_cohort: pd.DataFrame) -> pd.DataFrame:
+    def preprocess_data(
+        self, df_course: pd.DataFrame, df_cohort: pd.DataFrame
+    ) -> pd.DataFrame:
         """
         Preprocesses the data: creates student-term dataset, applies target variable logic.
 
@@ -125,17 +127,18 @@ class DataPreparationTask:
 
         # Read preprocessing features from config
         min_passing_grade = self.cfg.preprocessing.features.min_passing_grade
-        min_num_credits_full_time = self.cfg.preprocessing.features.min_num_credits_full_time
+        min_num_credits_full_time = (
+            self.cfg.preprocessing.features.min_num_credits_full_time
+        )
         course_level_pattern = self.cfg.preprocessing.features.course_level_pattern
-        key_course_subject_areas = self.cfg.preprocessing.features.key_course_subject_areas
+        key_course_subject_areas = (
+            self.cfg.preprocessing.features.key_course_subject_areas
+        )
         key_course_ids = self.cfg.preprocessing.features.key_course_ids
 
         # Read preprocessing target parameters from config
-        min_num_credits_checkin = self.cfg.preprocessing.target.params["min_num_credits_checkin"]
-        min_num_credits_target = self.cfg.preprocessing.target.params["min_num_credits_target"]
         student_criteria = self.cfg.preprocessing.target.student_criteria
         student_id_col = self.cfg.student_id_col
-
 
         # Create student-term dataset
         df_student_terms = preprocessing.dataops.make_student_term_dataset(
@@ -160,7 +163,9 @@ class DataPreparationTask:
             how="inner",
         )
 
-        df_processed = preprocessing.dataops.clean_up_labeled_dataset_cols_and_vals(df_processed)
+        df_processed = preprocessing.dataops.clean_up_labeled_dataset_cols_and_vals(
+            df_processed
+        )
         return df_processed
 
     def write_data_to_delta(self, df_processed: pd.DataFrame):
@@ -171,45 +176,79 @@ class DataPreparationTask:
             df_processed: The processed DataFrame.
         """
         if not self.spark_session:
-            logging.error("Spark session not initialized. Cannot write processed dataset.")
+            logging.error(
+                "Spark session not initialized. Cannot write processed dataset."
+            )
             return
 
         write_schema = f"{self.args.databricks_institution_name}_silver"
         write_table_path = f"{self.args.DB_workspace}.{write_schema}.{self.args.db_run_id}_processed_dataset"
 
         try:
-            dataio.to_delta_table(df_processed, write_table_path, spark_session=self.spark_session)
+            dataio.to_delta_table(
+                df_processed, write_table_path, spark_session=self.spark_session
+            )
             logging.info("Processed dataset written to table: %s", write_table_path)
             return write_table_path
-            
-        
+
         except Exception as e:
             logging.error("Error writing processed data to Delta Lake: %s", e)
             raise
-
 
     def run(self):
         """Executes the data preparation pipeline."""
         df_course, df_cohort = self.read_data_from_delta()
         df_processed = self.preprocess_data(df_course, df_cohort)
         processed_dataset_path = self.write_data_to_delta(df_processed)
-        
+
         # Setting task variables for downstream tasks
-        dbutils.jobs.taskValues.set(key="processed_dataset_path", value=processed_dataset_path)
-        dbutils.jobs.taskValues.set(key="toml_file_path", value=self.args.toml_file_path)
+        dbutils.jobs.taskValues.set(
+            key="processed_dataset_path", value=processed_dataset_path
+        )
+        dbutils.jobs.taskValues.set(
+            key="toml_file_path", value=self.args.toml_file_path
+        )
+
 
 def parse_arguments() -> argparse.Namespace:
     """Parses command line arguments."""
-    parser = argparse.ArgumentParser(description="Prepare data for inference in the SST pipeline.")
-    parser.add_argument("--DB_workspace", type=str, required=True, help="Databricks workspace identifier")
-    parser.add_argument("--databricks_institution_name", type=str, required=True, help="Databricks institution name")
-    parser.add_argument("--db_run_id", type=str, required=True, help="Databricks run ID")
+    parser = argparse.ArgumentParser(
+        description="Prepare data for inference in the SST pipeline."
+    )
+    parser.add_argument(
+        "--DB_workspace",
+        type=str,
+        required=True,
+        help="Databricks workspace identifier",
+    )
+    parser.add_argument(
+        "--databricks_institution_name",
+        type=str,
+        required=True,
+        help="Databricks institution name",
+    )
+    parser.add_argument(
+        "--db_run_id", type=str, required=True, help="Databricks run ID"
+    )
     parser.add_argument("--model_name", type=str, required=True, help="Model name")
-    parser.add_argument("--cohort_dataset_validated_path", type=str, required=True, help="Path to delta table containing cohort dataset")
-    parser.add_argument("--course_dataset_validated_path", type=str, required=True, help="Path to delta table containing course dataset")
-    parser.add_argument("--toml_file_path", type=str, required=True, help="Path to configuration file")
-    
+    parser.add_argument(
+        "--cohort_dataset_validated_path",
+        type=str,
+        required=True,
+        help="Path to delta table containing cohort dataset",
+    )
+    parser.add_argument(
+        "--course_dataset_validated_path",
+        type=str,
+        required=True,
+        help="Path to delta table containing course dataset",
+    )
+    parser.add_argument(
+        "--toml_file_path", type=str, required=True, help="Path to configuration file"
+    )
+
     return parser.parse_args()
+
 
 if __name__ == "__main__":
     args = parse_arguments()

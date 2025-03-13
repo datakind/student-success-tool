@@ -99,9 +99,13 @@ resources:
               - --job_root_dir  
               - "{{tasks.data_ingestion.values.job_root_dir}}"
               - --toml_file_path
-              - "/Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/configuration_files/{{job.parameters.databricks_institution_name}}_{{job.parameters.model_name}}_configuration_file.toml"
+              - "{{tasks.data_preprocessing.values.toml_file_path}}"
               - --processed_dataset_path
               - "{{tasks.data_preprocessing.values.processed_dataset_path}}"
+              - --notification_email
+              - "{{job.parameters.notification_email}}"
+              - --DK_CC_EMAIL
+              - "{{job.parameters.DK_CC_EMAIL}}"
           job_cluster_key: pdp-inference-pipeline-cluster
           libraries:
             - pypi:
@@ -174,9 +178,11 @@ resources:
         - name: model_type
           default: sklearn
         - name: notification_email
-          default: crystal.ren@datakind.org
+          default: ${var.end_user_notification_email}
         - name: version_id
           default: "1"
+        - name: DK_CC_EMAIL
+          default: ${var.datakind_notification_email}
       permissions:
         - group_name: ${var.fellows_group_to_manage_workflow} 
           level: CAN_MANAGE

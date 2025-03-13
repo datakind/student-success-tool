@@ -10,6 +10,7 @@ import logging
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
+
 def main():
     """
     Main function to execute the data validation process.
@@ -19,12 +20,14 @@ def main():
             taskKey="data_preprocessing", key="processed_dataset_path"
         )
         if processed_dataset_table_path:
-            logging.info("Processed dataset table path: %s", processed_dataset_table_path)
+            logging.info(
+                "Processed dataset table path: %s", processed_dataset_table_path
+            )
         else:
             logging.warning("Processed dataset table path not found.")
 
         logging.info("Data validation script execution.")
-        
+
         # TODO: Implement actual data validation logic here.
         # Example:
         # if processed_dataset_table_path:
@@ -37,6 +40,7 @@ def main():
 
     except Exception as e:
         logging.error(f"An error occurred during data validation: {e}")
+
 
 if __name__ == "__main__":
     main()

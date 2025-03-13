@@ -16,6 +16,7 @@ import os
 import argparse
 
 from databricks.connect import DatabricksSession
+from databricks.sdk.runtime import dbutils
 from google.cloud import storage
 
 import student_success_tool.dataio as dataio
@@ -58,9 +59,7 @@ class DataIngestionTask:
             )
             raise
 
-    def download_data_from_gcs(
-        self, internal_pipeline_path: str
-    ) -> tuple[str, str]:
+    def download_data_from_gcs(self, internal_pipeline_path: str) -> tuple[str, str]:
         """
         Downloads course and cohort data from GCS to the internal pipeline directory.
 
@@ -91,7 +90,6 @@ class DataIngestionTask:
             logging.error(f"GCS download error: {e}")
             raise
 
-
     def read_and_validate_data(
         self, fpath_course: str, fpath_cohort: str
     ) -> tuple[schemas.RawPDPCourseDataSchema, schemas.RawPDPCohortDataSchema]:
@@ -115,16 +113,16 @@ class DataIngestionTask:
             )
         except ValueError:
             df_course = dataio.pdp.read_raw_course_data(
-            file_path=fpath_course,
-            schema=schemas.RawPDPCourseDataSchema,
-            dttm_format="%Y%m%d.0",
-        )
+                file_path=fpath_course,
+                schema=schemas.RawPDPCourseDataSchema,
+                dttm_format="%Y%m%d.0",
+            )
         except Exception as e:
             logging.error("Error reading the files: %s", e)
             raise
 
         logging.info("Course data read and schema validated.")
-        
+
         df_cohort = dataio.pdp.read_raw_cohort_data(
             file_path=fpath_cohort, schema=schemas.RawPDPCohortDataSchema
         )
@@ -146,30 +144,45 @@ class DataIngestionTask:
 
         catalog = self.args.DB_workspace
         write_schema = f"{self.args.databricks_institution_name}_bronze"
-        course_dataset_validated_path = f"{catalog}.{write_schema}.{self.args.db_run_id}_course_dataset_validated"
-        cohort_dataset_validated_path = f"{catalog}.{write_schema}.{self.args.db_run_id}_cohort_dataset_validated"
+        course_dataset_validated_path = (
+            f"{catalog}.{write_schema}.{self.args.db_run_id}_course_dataset_validated"
+        )
+        cohort_dataset_validated_path = (
+            f"{catalog}.{write_schema}.{self.args.db_run_id}_cohort_dataset_validated"
+        )
         try:
             dataio.to_delta_table(
-                df_course, 
+                df_course,
                 course_dataset_validated_path,
                 spark_session=self.spark_session,
             )
-            logging.info("Course data written to Delta Lake table: %s.%s.%s_course_dataset_validated", catalog, write_schema, self.args.db_run_id)
+            logging.info(
+                "Course data written to Delta Lake table: %s.%s.%s_course_dataset_validated",
+                catalog,
+                write_schema,
+                self.args.db_run_id,
+            )
 
             dataio.to_delta_table(
                 df_cohort,
                 cohort_dataset_validated_path,
                 spark_session=self.spark_session,
             )
-            logging.info("Cohort data written to Delta Lake table: %s.%s.%s_cohort_dataset_validated", catalog, write_schema, self.args.db_run_id)
+            logging.info(
+                "Cohort data written to Delta Lake table: %s.%s.%s_cohort_dataset_validated",
+                catalog,
+                write_schema,
+                self.args.db_run_id,
+            )
 
             return course_dataset_validated_path, cohort_dataset_validated_path
         except Exception as e:
             logging.error("Error writing to Delta Lake: %s", e)
             raise
-        
 
-    def verify_delta_lake_write(self, course_dataset_validated_path, cohort_dataset_validated_path):
+    def verify_delta_lake_write(
+        self, course_dataset_validated_path, cohort_dataset_validated_path
+    ):
         """
         Verifies the Delta Lake write by reading the data back from the tables.
         """
@@ -197,7 +210,6 @@ class DataIngestionTask:
             logging.error("Error writing to Delta Lake: %s", e)
             raise
 
-
     def run(self):
         """
         Executes the data ingestion task.
@@ -207,13 +219,22 @@ class DataIngestionTask:
 
         fpath_course, fpath_cohort = self.download_data_from_gcs(raw_files_path)
         df_course, df_cohort = self.read_and_validate_data(fpath_course, fpath_cohort)
-        
-        course_dataset_validated_path, cohort_dataset_validated_path = self.write_data_to_delta_lake(df_course, df_cohort)
-        self.verify_delta_lake_write(course_dataset_validated_path, cohort_dataset_validated_path)
+
+        course_dataset_validated_path, cohort_dataset_validated_path = (
+            self.write_data_to_delta_lake(df_course, df_cohort)
+        )
+        self.verify_delta_lake_write(
+            course_dataset_validated_path, cohort_dataset_validated_path
+        )
         # Setting task variables for downstream tasks
-        dbutils.jobs.taskValues.set(key="course_dataset_validated_path", value=course_dataset_validated_path)
-        dbutils.jobs.taskValues.set(key="cohort_dataset_validated_path", value=cohort_dataset_validated_path)
+        dbutils.jobs.taskValues.set(
+            key="course_dataset_validated_path", value=course_dataset_validated_path
+        )
+        dbutils.jobs.taskValues.set(
+            key="cohort_dataset_validated_path", value=cohort_dataset_validated_path
+        )
         dbutils.jobs.taskValues.set(key="job_root_dir", value=self.args.job_root_dir)
+
 
 def parse_arguments() -> argparse.Namespace:
     """
@@ -248,6 +269,7 @@ def parse_arguments() -> argparse.Namespace:
         "--job_root_dir", required=True, help="Folder path to store job output files"
     )
     return parser.parse_args()
+
 
 if __name__ == "__main__":
     args = parse_arguments()

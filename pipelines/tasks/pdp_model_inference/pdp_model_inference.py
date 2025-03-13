@@ -317,7 +317,13 @@ class ModelInferenceTask:
         MANDRILL_USERNAME = w.dbutils.secrets.get(scope="sst", key="MANDRILL_USERNAME")
         MANDRILL_PASSWORD = w.dbutils.secrets.get(scope="sst", key="MANDRILL_PASSWORD")
         SENDER_EMAIL = Address("Datakind Info", "help", "datakind.org")
-        emails.send_inference_kickoff_email(SENDER_EMAIL, [self.args.notification_email], [self.args.DK_CC_EMAIL], MANDRILL_USERNAME, MANDRILL_PASSWORD)
+        emails.send_inference_kickoff_email(
+            SENDER_EMAIL,
+            [self.args.notification_email],
+            [self.args.DK_CC_EMAIL],
+            MANDRILL_USERNAME,
+            MANDRILL_PASSWORD,
+        )
         # emails.send_inference_kickoff_email(
         #     SENDER_EMAIL, [notification_email], [], MANDRILL_USERNAME, MANDRILL_PASSWORD
         # )

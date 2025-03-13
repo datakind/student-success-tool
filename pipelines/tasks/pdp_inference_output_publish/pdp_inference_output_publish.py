@@ -4,7 +4,7 @@ import argparse
 import logging
 
 # TODO uncomment and use the utils after pushing the fix to the repo
-from student_success_tool.pipeline_utils.gcsutils import publish_inference_output_files
+# from student_success_tool.pipeline_utils.gcsutils import publish_inference_output_files
 from student_success_tool.pipeline_utils.emails import send_inference_completion_email
 
 # from student_success_tool.utils.gcs import publish_inference_output_files
@@ -21,6 +21,7 @@ from google.cloud import storage
 from google.cloud.storage.bucket import Bucket
 from databricks.sdk.runtime import dbutils  # noqa: F401
 import os
+
 
 def save_file(
     bucket: Bucket, src_volume_filepath: str, dest_bucket_pathname: str
@@ -99,6 +100,7 @@ def publish_inference_output_files(
             f"{bucket_directory}/{os.path.basename(f)}",
         )
     return status_string
+
 
 def main():
     """Main function."""
