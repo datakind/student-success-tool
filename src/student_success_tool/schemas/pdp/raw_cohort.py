@@ -34,6 +34,9 @@ CompletedDevOrGatewayField = ft.partial(
 )
 YearsToOfField = ft.partial(pda.Field, ge=0, le=8)
 
+CompletedDevField = partial(
+    pda.Field, nullable=True, dtype_kwargs={"categories": ["Y", "N"]}
+)
 
 class RawPDPCohortDataSchema(pda.DataFrameModel):
     """
