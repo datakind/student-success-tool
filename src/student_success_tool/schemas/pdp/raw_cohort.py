@@ -7,7 +7,6 @@ import typing as t
 import pandas as pd
 import pandera as pda
 import pandera.typing as pt
-from functools import partial
 
 LOGGER = logging.getLogger(__name__)
 
@@ -25,10 +24,6 @@ CompletedDevOrGatewayField = ft.partial(
     pda.Field, nullable=True, dtype_kwargs={"categories": ["C", "D", "NA"]}
 )
 YearsToOfField = ft.partial(pda.Field, ge=0, le=8)
-
-CompletedDevField = partial(
-    pda.Field, nullable=True, dtype_kwargs={"categories": ["Y", "N"]}
-)
 
 
 class RawPDPCohortDataSchema(pda.DataFrameModel):
@@ -103,15 +98,13 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     attempted_dev_math_y_1: pt.Series[pd.CategoricalDtype] = pda.Field(nullable=True)
     # NOTE: categories set in a parser, which forces "UK" values to null
     attempted_dev_english_y_1: pt.Series[pd.CategoricalDtype] = pda.Field(nullable=True)
-    # completed_dev_math_y_1: pt.Series[pd.CategoricalDtype] = (
-    #     CompletedDevOrGatewayField()
-    # )
-
-    # completed_dev_english_y_1: pt.Series[pd.CategoricalDtype] = (
-    #     CompletedDevOrGatewayField()
-    # )
+    completed_dev_math_y_1: pt.Series[pd.CategoricalDtype] = (
+        CompletedDevOrGatewayField()
+    )
     completed_dev_math_y_1: pt.Series[pd.CategoricalDtype] = CompletedDevField()
-    completed_dev_english_y_1: pt.Series[pd.CategoricalDtype] = CompletedDevField()
+    completed_dev_english_y_1: pt.Series[pd.CategoricalDtype] = (
+        CompletedDevOrGatewayField()
+    )
     retention: pt.Series["boolean"]
     persistence: pt.Series["boolean"]
     years_to_bachelors_at_cohort_inst: pt.Series["Int8"] = YearsToOfField(nullable=True)
