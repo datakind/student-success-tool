@@ -44,6 +44,7 @@ num_courses_course_instructor_rank_4 = { name = "number of courses taken this te
 num_courses_course_instructor_rank_5 = { name = "number of courses taken this term with an associate professor (rank 5)" }
 num_courses_course_instructor_rank_6 = { name = "number of courses taken this term with a professor (rank 6)" }
 num_courses_course_instructor_rank_7 = { name = "number of courses taken this term with an 'other' instructor (rank 7)" }
+num_courses_course_level_0 = { name = "number of 000-level courses taken this term" }
 num_courses_course_level_1 = { name = "number of 100-level courses taken this term" }
 num_courses_course_level_2 = { name = "number of 200-level courses taken this term" }
 num_courses_course_level_3 = { name = "number of 300-level courses taken this term" }
@@ -132,6 +133,7 @@ frac_courses_course_instructor_rank_4 = { name = "fraction of courses taken this
 frac_courses_course_instructor_rank_5 = { name = "fraction of courses taken this term with an associate professor (rank 5)" }
 frac_courses_course_instructor_rank_6 = { name = "fraction of courses taken this term with a professor (rank 6)" }
 frac_courses_course_instructor_rank_7 = { name = "fraction of courses taken this term with an 'other' instructor (rank 7)" }
+frac_courses_course_level_0 = { name = "fraction of 000-level courses taken this term" }
 frac_courses_course_level_1 = { name = "fraction of 100-level courses taken this term" }
 frac_courses_course_level_2 = { name = "fraction of 200-level courses taken this term" }
 frac_courses_course_level_3 = { name = "fraction of 300-level courses taken this term" }
@@ -213,6 +215,7 @@ num_courses_course_instructor_rank_4_cumfrac = { name = "fraction of courses tak
 num_courses_course_instructor_rank_5_cumfrac = { name = "fraction of courses taken so far with an associate professor (rank 5)" }
 num_courses_course_instructor_rank_6_cumfrac = { name = "fraction of courses taken so far with a professor (rank 6)" }
 num_courses_course_instructor_rank_7_cumfrac = { name = "fraction of courses taken so far with an 'other' instructor (rank 7)" }
+num_courses_course_level_0_cumfrac = { name = "fraction of 000-level courses taken so far" }
 num_courses_course_level_1_cumfrac = { name = "fraction of 100-level courses taken so far" }
 num_courses_course_level_2_cumfrac = { name = "fraction of 200-level courses taken so far" }
 num_courses_course_level_3_cumfrac = { name = "fraction of 300-level courses taken so far" }
