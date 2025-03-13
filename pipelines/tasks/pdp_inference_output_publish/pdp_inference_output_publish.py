@@ -87,6 +87,7 @@ def publish_inference_output_files(
         )
     return status_string
 
+
 def main():
     """Main function."""
     logging.basicConfig(level=logging.INFO)

@@ -44,7 +44,7 @@ run_parameters
 # COMMAND ----------
 
 # TODO(Burton?): figure out if/how this should be used
-# run_parameters = dict(dbutils.notebook.entry_point.getCurrentBindings()) 
+# run_parameters = dict(dbutils.notebook.entry_point.getCurrentBindings())
 # what is the difference?
 run_parameters = dbutils.widgets.getAll()
 
@@ -90,8 +90,6 @@ model_name = dbutils.widgets.get("model_name")
 # from hard-coded notebook variables to shareable, persistent config fields
 # Reading the parameters from the institution's configuration file
 
-
-import student_success_tool.schemas.pdp as schemas
 
 # /Volumes/dev_sst_02/uni_of_crystal_testing_gold/gold_volume/configuration_files/
 # /Volumes/dev_sst_02/uni_of_crystal_testing_gold/gold_volume/configuration_files/uni_of_crystal_testing_latest_enrollment_model_configuration_file.toml
