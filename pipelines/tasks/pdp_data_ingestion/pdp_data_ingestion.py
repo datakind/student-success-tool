@@ -87,10 +87,6 @@ class DataIngestionTask:
             logging.info("Cohort data downloaded from GCS: %s", cohort_file_path)
 
             return course_file_path, cohort_file_path
-
-        except google.cloud.exceptions.NotFound as e:
-            logging.error(f"GCS file not found: {e}")
-            raise
         except Exception as e:
             logging.error(f"GCS download error: {e}")
             raise
