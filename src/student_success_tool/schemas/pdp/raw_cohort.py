@@ -5,17 +5,9 @@ import logging
 import typing as t
 
 import pandas as pd
-
-try:
-    import pandera as pda
-    import pandera.typing as pt
-except ModuleNotFoundError:
-    from ... import utils
-
-    utils.databricks.mock_pandera()
-
-    import pandera as pda
-    import pandera.typing as pt
+import pandera as pda
+import pandera.typing as pt
+from functools import partial
 
 LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +29,7 @@ YearsToOfField = ft.partial(pda.Field, ge=0, le=8)
 CompletedDevField = partial(
     pda.Field, nullable=True, dtype_kwargs={"categories": ["Y", "N"]}
 )
+
 
 class RawPDPCohortDataSchema(pda.DataFrameModel):
     """
@@ -113,7 +106,7 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     # completed_dev_math_y_1: pt.Series[pd.CategoricalDtype] = (
     #     CompletedDevOrGatewayField()
     # )
-    
+
     # completed_dev_english_y_1: pt.Series[pd.CategoricalDtype] = (
     #     CompletedDevOrGatewayField()
     # )
