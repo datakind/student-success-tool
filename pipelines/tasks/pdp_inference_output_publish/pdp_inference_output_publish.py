@@ -4,8 +4,11 @@ import argparse
 import logging
 
 # TODO uncomment and use the utils after pushing the fix to the repo
-# from pipeline_utils.gcsutils import publish_inference_output_files
-# from pipeline_utils.emails import send_inference_completion_email
+from student_success_tool.pipeline_utils.gcsutils import publish_inference_output_files
+from student_success_tool.pipeline_utils.emails import send_inference_completion_email
+
+# from student_success_tool.utils.gcs import publish_inference_output_files
+# from student_success_tool.utils.emails import send_inference_completion_email
 from databricks.sdk import WorkspaceClient
 from email.headerregistry import Address
 

@@ -33,9 +33,15 @@ import student_success_tool.dataio as dataio
 from student_success_tool.modeling import inference
 import student_success_tool.modeling as modeling
 from student_success_tool.schemas import pdp as schemas
+
+# Import that works on develop branch
+# from student_success_tool.modeling.evaluation import plot_shap_beeswarm
+# from student_success_tool.utils import emails
+
+
+# Still using the old locations since we are installing package from branch
 from student_success_tool.pipeline_utils.plot import plot_shap_beeswarm
 from student_success_tool.pipeline_utils import emails
-
 
 # Disable mlflow autologging (prevents conflicts in Databricks environments)
 mlflow.autolog(disable=True)
@@ -53,8 +59,6 @@ class ModelInferenceTask:
         self.args = args
         self.spark_session = self.get_spark_session()
         self.cfg = self.read_config(self.args.toml_file_path)
-        print(self.args)
-        print(f"{self.args.job_root_dir}/ext/")
 
     def get_spark_session(self) -> DatabricksSession | None:
         """
