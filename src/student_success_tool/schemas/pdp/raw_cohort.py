@@ -110,7 +110,6 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     completed_dev_math_y_1: pt.Series[pd.CategoricalDtype] = (
         CompletedDevOrGatewayField()
     )
-    completed_dev_math_y_1: pt.Series[pd.CategoricalDtype] = CompletedDevField()
     completed_dev_english_y_1: pt.Series[pd.CategoricalDtype] = (
         CompletedDevOrGatewayField()
     )
