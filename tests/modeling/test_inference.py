@@ -310,6 +310,15 @@ def test_calculate_shap_values_spark_udf_multiple_batches(
             },
             "number of times course 'engl_101' taken this term",
         ),
+        (
+            "num_courses_course_id_engl_101_cumfrac",
+            {
+                r"num_courses_course_id_(.*)_cumfrac": {
+                    "name": "fraction of times course '{}' taken so far"
+                }
+            },
+            "fraction of times course 'engl_101' taken so far",
+        ),
     ],
 )
 def test_get_mapped_feature_name(feature_col, features_table, exp):
