@@ -16,14 +16,16 @@ import logging
 import argparse
 import mlflow
 import pandas as pd
+import sys
+import importlib
 
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 
 import student_success_tool.dataio as dataio
 import student_success_tool.targets.pdp as targets
-import student_success_tool.schemas.pdp as schemas
 import student_success_tool.preprocessing.pdp as preprocessing
+from student_success_tool.schemas.pdp import PDPProjectConfig
 
 # Disable mlflow autologging (due to Databricks issues during feature selection)
 mlflow.autolog(disable=True)
@@ -61,10 +63,10 @@ class DataPreparationTask:
             logging.error("Unable to create Spark session.")
             raise
 
-    def read_config(self, toml_file_path: str) -> schemas.PDPProjectConfig:
+    def read_config(self, toml_file_path: str):
         """Reads the institution's model's configuration file."""
         try:
-            cfg = dataio.read_config(toml_file_path, schema=schemas.PDPProjectConfig)
+            cfg = dataio.read_config(toml_file_path, schema=PDPProjectConfig)
             return cfg
         except FileNotFoundError:
             logging.error("Configuration file not found at %s", toml_file_path)
@@ -101,10 +103,10 @@ class DataPreparationTask:
                 return df_course, df_cohort
             except Exception as e:
                 logging.error("Error reading data from Delta Lake: %s", e)
-                return None, None
+                raise
         else:
             logging.error("Spark session not initialized. Cannot read delta tables.")
-            return None, None
+            raise
 
     def preprocess_data(
         self, df_course: pd.DataFrame, df_cohort: pd.DataFrame
@@ -121,10 +123,6 @@ class DataPreparationTask:
             The processed DataFrame.  Returns an empty DataFrame if input data is None.
         """
 
-        if df_course is None or df_cohort is None:
-            logging.error("Input dataframes are None")
-            return None
-
         # Read preprocessing features from config
         min_passing_grade = self.cfg.preprocessing.features.min_passing_grade
         min_num_credits_full_time = (
@@ -137,7 +135,7 @@ class DataPreparationTask:
         key_course_ids = self.cfg.preprocessing.features.key_course_ids
 
         # Read preprocessing target parameters from config
-        student_criteria = self.cfg.preprocessing.target.student_criteria
+        student_criteria = self.cfg.preprocessing.target.params['student_criteria']
         student_id_col = self.cfg.student_id_col
 
         # Create student-term dataset
@@ -166,6 +164,7 @@ class DataPreparationTask:
         df_processed = preprocessing.dataops.clean_up_labeled_dataset_cols_and_vals(
             df_processed
         )
+        logging.info("Processed dataset: %s", df_processed.shape)
         return df_processed
 
     def write_data_to_delta(self, df_processed: pd.DataFrame):
@@ -246,11 +245,17 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--toml_file_path", type=str, required=True, help="Path to configuration file"
     )
-
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_arguments()
+    try:
+        sys.path.append(f"/Workspace/Users/pedro.melendez@datakind.org/python-refactor-pipeline/pipelines/tasks/utils/")
+        schemas = importlib.import_module(f'{args.databricks_institution_name}.schemas')
+        logging.info("Running task with custom schema")
+    except:
+        from student_success_tool.schemas import pdp as schemas
+        logging.info("Running task with default schema")
     task = DataPreparationTask(args)
     task.run()
