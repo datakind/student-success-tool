@@ -105,6 +105,7 @@ class DataIngestionTask:
             tuple[schemas.RawPDPCourseDataSchema, schemas.RawPDPCohortDataSchema]:
                 Validated course and cohort data.
         """
+
         # Read data from CSV files into Pandas DataFrames and validate schema
         try:
             df_course = dataio.pdp.read_raw_course_data(
