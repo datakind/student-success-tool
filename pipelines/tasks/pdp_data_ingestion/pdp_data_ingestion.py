@@ -14,13 +14,15 @@ This is a POC script, it is advised to review and tests before using in producti
 import logging
 import os
 import argparse
+import sys
 
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 from google.cloud import storage
 
 import student_success_tool.dataio as dataio
-from student_success_tool.schemas import pdp as schemas
+import importlib
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -92,7 +94,8 @@ class DataIngestionTask:
 
     def read_and_validate_data(
         self, fpath_course: str, fpath_cohort: str
-    ) -> tuple[schemas.RawPDPCourseDataSchema, schemas.RawPDPCohortDataSchema]:
+    ):
+    # -> tuple[schemas.RawPDPCourseDataSchema, schemas.RawPDPCohortDataSchema]:
         """
         Reads course and cohort data from CSV files and validates their schemas.
 
@@ -104,6 +107,8 @@ class DataIngestionTask:
             tuple[schemas.RawPDPCourseDataSchema, schemas.RawPDPCohortDataSchema]:
                 Validated course and cohort data.
         """
+
+
         # Read data from CSV files into Pandas DataFrames and validate schema
         try:
             df_course = dataio.pdp.read_raw_course_data(
@@ -131,8 +136,8 @@ class DataIngestionTask:
 
     def write_data_to_delta_lake(
         self,
-        df_course: schemas.RawPDPCourseDataSchema,
-        df_cohort: schemas.RawPDPCohortDataSchema,
+        df_course,
+        df_cohort,
     ):
         """
         Writes the validated DataFrames to Delta Lake tables in Unity Catalog.
@@ -273,5 +278,14 @@ def parse_arguments() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_arguments()
+    try:
+        sys.path.append(f"/Workspace/Users/pedro.melendez@datakind.org/python-refactor-pipeline/pipelines/tasks/utils/")
+        schemas = importlib.import_module(f'{args.databricks_institution_name}.schemas')
+        logging.info("Running task with custom schema")
+    except:
+        print("Running task with default schema")
+        from student_success_tool.schemas import pdp as schemas
+        logging.info("Running task with default schema")
+        
     task = DataIngestionTask(args)
     task.run()
