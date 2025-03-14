@@ -6,6 +6,7 @@ import pytest
 from pandas.api.types import is_numeric_dtype
 
 from student_success_tool.modeling.inference import (
+    _get_mapped_feature_name,
     calculate_shap_values,
     calculate_shap_values_spark_udf,
     select_top_features_for_display,
@@ -280,3 +281,38 @@ def test_calculate_shap_values_spark_udf_multiple_batches(
     # Check second batch
     shap_df2 = result[1]
     assert shap_df2.shape == expected_shape2
+
+
+@pytest.mark.parametrize(
+    ["feature_col", "features_table", "exp"],
+    [
+        (
+            "academic_term",
+            {"academic_term": {"name": "academic term"}},
+            "academic term",
+        ),
+        ("foo_bar", {"academic_term": {"name": "academic term"}}, "foo_bar"),
+        (
+            "num_courses_course_subject_area_24",
+            {
+                r"num_courses_course_subject_area_(\d+)": {
+                    "name": "number of courses taken in subject area {} this term"
+                }
+            },
+            "number of courses taken in subject area 24 this term",
+        ),
+        (
+            "num_courses_course_id_engl_101",
+            {
+                r"num_courses_course_id_(.*)": {
+                    "name": "number of times course '{}' taken this term"
+                }
+            },
+            "number of times course 'engl_101' taken this term",
+        ),
+    ],
+)
+def test_get_mapped_feature_name(feature_col, features_table, exp):
+    obs = _get_mapped_feature_name(feature_col, features_table)
+    assert isinstance(obs, str)
+    assert obs == exp
