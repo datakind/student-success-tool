@@ -79,7 +79,7 @@ def main():
         APPROVAL_SUBJECT,
         APPROVAL_MESSAGE,
         username,
-        password
+        password,
     )
 
 
