@@ -22,6 +22,7 @@ APPROVAL_MESSAGE = """\
     Your Datakind Student Success Tool inference output has been reviewed by Datakind.
     """
 
+
 def main():
     """Main function."""
     logging.basicConfig(level=logging.INFO)
@@ -60,7 +61,7 @@ def main():
     )
     logging.info("Delete unapproved files for this job from GCP bucket.")
     w = WorkspaceClient()
-    unapproved_path =  f"unapproved/{args.sst_job_id}/"
+    unapproved_path = f"unapproved/{args.sst_job_id}/"
     storage_client = storage.Client()
     bucket = storage_client.bucket(args.external_bucket_name)
     blobs = bucket.list_blobs(prefix=unapproved_path)
@@ -72,10 +73,15 @@ def main():
     password = w.dbutils.secrets.get(scope="sst", key="MANDRILL_PASSWORD")
     logging.info("Sending email notification")
     send_email(
-        sender_email, [args.email_recipient], cc_email_list, APPROVAL_SUBJECT, APPROVAL_MESSAGE, username, password
+        sender_email,
+        [args.email_recipient],
+        cc_email_list,
+        APPROVAL_SUBJECT,
+        APPROVAL_MESSAGE,
+        username,
+        password
     )
 
 
 if __name__ == "__main__":
     main()
-  
