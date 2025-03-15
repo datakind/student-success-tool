@@ -13,18 +13,25 @@ jobs:
         uses: ./.github/actions/setup-python-env
         with:
           python-version: "3.10"
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v45
-        with:
-          files: |
-            **.py
-            **.ipynb
+      # changed-files action is currently compromised! disabling to avoid security vuln
+      # - name: Get changed files
+      #   id: changed-files
+      #   uses: tj-actions/changed-files@v45
+      #   with:
+      #     files: |
+      #       **.py
+      #       **.ipynb
+      # - name: Run linter
+      #   if: steps.changed-files.outputs.any_changed == 'true'
+      #   run: |
+      #     uv tool run ruff check --diff ${{ steps.changed-files.outputs.all_changed_files }}
+      # - name: Run formatter
+      #   if: steps.changed-files.outputs.any_changed == 'true'
+      #   run: |
+      #     uv tool run ruff format --diff ${{ steps.changed-files.outputs.all_changed_files }}
       - name: Run linter
-        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
-          uv tool run ruff check --diff ${{ steps.changed-files.outputs.all_changed_files }}
+          uv tool run ruff check --diff src/
       - name: Run formatter
-        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
-          uv tool run ruff format --diff ${{ steps.changed-files.outputs.all_changed_files }}
+          uv tool run ruff format --diff src/

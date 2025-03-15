@@ -83,7 +83,7 @@ def run_automl_classification(
     experiment_name_components.append(time.strftime("%Y-%m-%dT%H:%M:%S"))
     experiment_name = "_".join(experiment_name_components)
 
-    from databricks import automl  # importing here for mocking in tests
+    from databricks import automl  # type: ignore  # importing here for mocking in tests
 
     LOGGER.info("running experiment: %s ...", experiment_name)
     summary = automl.classify(
