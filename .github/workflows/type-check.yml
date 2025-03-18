@@ -13,17 +13,13 @@ jobs:
         uses: ./.github/actions/setup-python-env
         with:
           python-version: "3.10"
-      # changed-files action is currently compromised! disabling to avoid security vuln
-      # - name: Get changed files
-      #   id: changed-files
-      #   uses: tj-actions/changed-files@v45
-      #   with:
-      #     files: |
-      #       src/**/*.py
-      # - name: Check types
-      #   if: steps.changed-files.outputs.any_changed == 'true'
-      #   run: |
-      #     uv run python -m mypy --install-types --non-interactive ${{ steps.changed-files.outputs.all_changed_files }}
+      - name: Get changed files
+        id: changed-files
+        uses: step-security/changed-files@v45.0.1
+        with:
+          files: |
+            src/**/*.py
       - name: Check types
+        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
-          uv run python -m mypy --install-types --non-interactive src/
+          uv run python -m mypy --install-types --non-interactive ${{ steps.changed-files.outputs.all_changed_files }}

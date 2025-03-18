@@ -11,20 +11,14 @@ jobs:
     permissions:
       pull-requests: read
     steps:
-      # changed-files action is currently compromised! disabling to avoid security vuln
-      # - name: Get changed files
-      #   id: changed-files
-      #   uses: tj-actions/changed-files@v45
-      #   with:
-      #     files: |
-      #       CHANGELOG.md
-      # - name: Ensure changelog updated
-      #   if: steps.changed-files.outputs.any_changed == 'false'
-      #   run: |
-      #     echo "CHANGELOG.md file must be updated with release notes"
-      #     exit 1
-      # temporarily skipping this check
+      - name: Get changed files
+        id: changed-files
+        uses: step-security/changed-files@v45.0.1
+        with:
+          files: |
+            CHANGELOG.md
       - name: Ensure changelog updated
+        if: steps.changed-files.outputs.any_changed == 'false'
         run: |
-          echo "CHANGELOG.md file must be updated with release notes!"
-          exit 0
+          echo "CHANGELOG.md file must be updated with release notes"
+          exit 1
