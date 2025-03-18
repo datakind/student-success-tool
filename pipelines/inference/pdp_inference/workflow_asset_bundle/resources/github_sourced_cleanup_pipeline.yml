@@ -61,9 +61,7 @@ resources:
         - name: file_name_list
           default: "['test.csv']"
       permissions:
-        - group_name: ${var.fellows_group_to_manage_workflow} 
+        - group_name: ${var.group_to_manage_workflow} 
           level: CAN_MANAGE
-        - user_name: ${var.service_account_executer}
+        - user_name: ${var.service_account_user}
           level: CAN_MANAGE_RUN
-        - group_name: ${var.datakind_group_to_manage_workflow} 
-          level: CAN_MANAGE
