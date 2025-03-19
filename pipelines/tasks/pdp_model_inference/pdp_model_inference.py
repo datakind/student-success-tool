@@ -431,11 +431,8 @@ class ModelInferenceTask:
             #     experiment_id
             # )
             
-            
-            training_table_path = self.cfg.models["graduation"].experiment_id
-
             df_train = dataio.from_delta_table(
-            training_table_path, spark_session=self.spark_session
+            self.args.training_table_path, spark_session=self.spark_session
         )
             train_mode = df_train.mode().iloc[0]  # Use .iloc[0] for single row
             df_ref = (
@@ -634,6 +631,13 @@ def parse_arguments() -> argparse.Namespace:
         type=str,
         required=True,
         help="Datakind email address CC'd",
+    )
+
+    parser.add_argument(
+        "--training_table_path",
+        type=str,
+        required=True,
+        help="Path to training dataset table",
     )
 
     return parser.parse_args()
