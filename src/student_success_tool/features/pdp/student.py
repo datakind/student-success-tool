@@ -95,4 +95,4 @@ def change_pell_to_T_F(
     pell_col: str = "pell_status_first_year",
 ) -> pd.Series:
     # Convert 'Y' to True and 'N' to False
-    return df[pell_col] = df[pell_col].map({'Y': True, 'N': False})
+    return df[pell_col].map({'Y': True, 'N': False})
