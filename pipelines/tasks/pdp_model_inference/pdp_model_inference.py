@@ -36,6 +36,9 @@ from student_success_tool.modeling import inference
 import student_success_tool.modeling as modeling
 from student_success_tool.schemas.pdp import PDPProjectConfig
 
+import sklearn as sk
+print(sk.__version__)
+
 # Disable mlflow autologging (prevents conflicts in Databricks environments)
 mlflow.autolog(disable=True)
 
@@ -429,7 +432,7 @@ class ModelInferenceTask:
             # )
             
             
-            training_table_path = f"{self.args.DB_workspace}.{self.args.databricks_institution_name}_gold.{self.cfg.models['graduation'].training_table_name}"
+            training_table_path = self.cfg.models["graduation"].experiment_id
 
             df_train = dataio.from_delta_table(
             training_table_path, spark_session=self.spark_session
