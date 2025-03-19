@@ -393,7 +393,10 @@ class ModelInferenceTask:
 
         logging.info("Calculating SHAP values for %s records", len(df_features))
 
-        chunks = np.array_split(df_features, len(df_features) // 4)
+        chunk_size = 10
+        chuncks_count = max(1, len(df_features) // chunk_size)
+        chunks = np.array_split(df_features, chuncks_count)
+
 
         results = Parallel(n_jobs=n_jobs)(
             delayed(lambda model, chunk, explainer: explainer(chunk))(
@@ -430,12 +433,9 @@ class ModelInferenceTask:
             # df_train = modeling.evaluation.extract_training_data_from_model(
             #     experiment_id
             # )
-            
-            
-            training_table_path = self.cfg.models["graduation"].experiment_id
 
             df_train = dataio.from_delta_table(
-            training_table_path, spark_session=self.spark_session
+            self.args.modeling_table_path, spark_session=self.spark_session
         )
             train_mode = df_train.mode().iloc[0]  # Use .iloc[0] for single row
             df_ref = (
@@ -636,6 +636,13 @@ def parse_arguments() -> argparse.Namespace:
         help="Datakind email address CC'd",
     )
 
+    parser.add_argument(
+            "--modeling_table_path",
+            type=str,
+            required=True,
+            help="Path to training dataset table",
+        )
+    
     return parser.parse_args()
 
 
