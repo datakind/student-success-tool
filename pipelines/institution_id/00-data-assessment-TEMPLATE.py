@@ -399,8 +399,12 @@ df_course.loc[
 # COMMAND ----------
 
 # how many for transfers vs non transfers?
-missing_course = df_course.groupby("student_guid").filter(lambda x: x["course_prefix"].isna().all())
-print(missing_course.groupby('student_guid')['enrolled_at_other_institution_s'].first().value_counts(dropna=False))
+missing_course = df_course.groupby("student_guid").filter(
+    lambda x: x["course_prefix"].isna()
+    .all()
+    )
+
+missing_course.groupby('student_guid')['enrolled_at_other_institution_s'].first().value_counts(dropna=False)
 
 # COMMAND ----------
 
