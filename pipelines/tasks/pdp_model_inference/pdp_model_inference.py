@@ -37,6 +37,10 @@ from student_success_tool.schemas.pdp import PDPProjectConfig
 from student_success_tool.modeling.evaluation import plot_shap_beeswarm
 from student_success_tool.utils import emails
 
+import sklearn as sk
+
+print(sk.__version__)
+
 # Disable mlflow autologging (prevents conflicts in Databricks environments)
 mlflow.autolog(disable=True)
 
