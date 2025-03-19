@@ -382,6 +382,7 @@ _ = msno.matrix(
 
 # COMMAND ----------
 
+# how many total?
 num_missing_course_id = df_course["course_prefix"].isna().sum()
 pct_missing_course_id = 100 * num_missing_course_id / len(df_course)
 print(
@@ -394,6 +395,12 @@ print(
 df_course.loc[
     df_course["course_prefix"].isna(), "enrolled_at_other_institution_s"
 ].value_counts()
+
+# COMMAND ----------
+
+# how many for transfers vs non transfers?
+missing_course = df_course.groupby("student_guid").filter(lambda x: x["course_prefix"].isna().all())
+print(missing_course.groupby('student_guid')['enrolled_at_other_institution_s'].first().value_counts(dropna=False))
 
 # COMMAND ----------
 
@@ -539,6 +546,17 @@ df_course_filtered.shape
 
 # COMMAND ----------
 
+# how many students remain?
+df_course_valid['student_guid'].nunique()
+
+# COMMAND ----------
+
+# filter cohort data respectively 
+df_cohort_filtered = df_cohort.loc[df_cohort["student_guid"].isin(df_course_filtered["student_guid"]), :]
+df_cohort_filtered
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## plots and stats
 
@@ -590,6 +608,102 @@ df_cohort["gpa_group_year_1"].describe()
 
 # COMMAND ----------
 
+# First year GPA by cohort and enrollment type
+# to remove error bars, errorbar=None
+ax = sb.barplot(
+    df_cohort_valid.sort_values(by="cohort").astype(
+        {"gpa_group_year_1": "Float32"}
+    ),
+    x="cohort",
+    y="gpa_group_year_1",
+    estimator="mean",
+    hue="enrollment_type",
+    edgecolor="white",
+)
+
+# Set the ylabel
+ax.set(ylabel="Avg. GPA (Year 1)")
+
+# Move the legend to a different location (e.g., upper left)
+ax.legend(loc="lower left", title="Enrollment Type")
+
+# Show the plot
+plt.show()
+
+# COMMAND ----------
+
+# First year GPA by cohort and credential type sought
+# to remove error bars, errorbar=None
+ax = sb.barplot(
+    df_cohort_valid.sort_values(by="cohort").astype(
+        {"gpa_group_year_1": "Float32"}
+    ),
+    x="cohort",
+    y="gpa_group_year_1",
+    estimator="mean",
+    hue="credential_type_sought_year_1",
+    edgecolor="white",
+)
+
+# Set the ylabel
+ax.set(ylabel="Avg. GPA (Year 1)")
+
+# Move the legend to a different location (e.g., upper left)
+ax.legend(loc="lower left", title="Enrollment Intensity")
+
+# Show the plot
+plt.show()
+
+# COMMAND ----------
+
+df_pct_creds_by_yr = pd.concat(
+    [
+        pd.DataFrame(
+            {
+                "year_of_enrollment": str(yr),
+                "enrollment_type": df_cohort_valid["enrollment_type"],
+                "enrollment_intensity_first_term": df_cohort_valid[
+                    "enrollment_intensity_first_term"
+                ],
+                "pct_credits_earned": (
+                    100
+                    * df_cohort_valid[f"number_of_credits_earned_year_{yr}"]
+                    / df_cohort_valid[f"number_of_credits_attempted_year_{yr}"]
+                ),
+            }
+        )
+        for yr in range(1, 5)
+    ],
+    axis="index",
+    ignore_index=True,
+)
+
+# COMMAND ----------
+
+df_pct_creds_by_yr['pct_credits_earned'] = df_pct_creds_by_yr['pct_credits_earned'].astype("float")
+
+# median values
+print(df_pct_creds_by_yr.groupby('year_of_enrollment')['pct_credits_earned'].median().value_counts(dropna=False))
+
+# mean values
+df_pct_creds_by_yr.groupby('year_of_enrollment')['pct_credits_earned'].mean().value_counts(dropna=False)
+
+# COMMAND ----------
+
+# Plot mean or median, based on above
+(
+    sb.barplot(
+        df_pct_creds_by_yr,
+        x="year_of_enrollment",
+        y="pct_credits_earned",
+        estimator="mean",
+        edgecolor="white",
+        errorbar=None,
+    ).set(xlabel="Year of Enrollment", ylabel="Avg. % Credits Earned")
+)
+
+# COMMAND ----------
+
 ax = sb.histplot(
     df_course.sort_values(by="academic_year"),
     # df_course_filtered.sort_values(by="academic_year"),
@@ -620,6 +734,13 @@ print(f"{num_courses} distinct courses, {num_subjects} distinct subjects")
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC #### Student Demographics:
+
+# COMMAND ----------
+
+# enrollment type by enrollment intensity
+
 ax = sb.histplot(
     df_cohort,
     y="enrollment_type",
@@ -643,11 +764,102 @@ _ = ax.set(xlabel="Number of Students")
 
 # COMMAND ----------
 
+# degree seeking by enrollment type
+
+(
+    sb.histplot(
+        df_cohort,
+        y="enrollment_type",
+        hue="credential_type_sought_year_1",
+        multiple="stack",
+        shrink=0.75,
+        edgecolor="white",
+    ).set(xlabel="Number of Students")
+)
+
+# COMMAND ----------
+
+# student age by enrollment intensity
+
+ax = sb.histplot(
+    df_cohort,
+    y="enrollment_intensity_first_term",
+    hue="student_age",
+    multiple="stack",
+    discrete=True,
+    shrink=0.75,
+    edgecolor="white",
+)
+_ = ax.set(xlabel="Number of Students")
+
+# COMMAND ----------
+
+# student age by gender
 (
     sb.histplot(
         df_cohort,
         y="gender",
         hue="student_age",
+        multiple="stack",
+        shrink=0.75,
+        edgecolor="white",
+    ).set(xlabel="Number of Students")
+)
+
+# COMMAND ----------
+
+# gender by age 
+(
+    sb.histplot(
+        df_cohort[(df_cohort['gender'] == 'F') | (df_cohort['gender'] == 'M')],
+        y="gender",
+        hue="student_age",
+        multiple="stack",
+        shrink=0.75,
+        edgecolor="white",
+    ).set(xlabel="Number of Students")
+)
+
+# COMMAND ----------
+
+# race by pell status
+(
+    sb.histplot(
+        df_cohort,
+        y="race",
+        hue='pell_status_first_year',
+        multiple="stack",
+        shrink=0.75,
+        edgecolor="white",
+    ).set(xlabel="Number of Students")
+)
+
+# COMMAND ----------
+
+# want to see systemic income disparities highlighted across races 
+df_cohort[['race', 'pell_status_first_year']].groupby('race').value_counts(normalize=True, dropna=False).sort_index()*100
+
+# COMMAND ----------
+
+# first gen
+(
+    sb.histplot(
+        df_copy,
+        y="first_gen",
+        multiple="stack",
+        shrink=0.75,
+        edgecolor="white",
+    ).set(xlabel="Number of Students")
+)
+
+# COMMAND ----------
+
+# race by first_gen
+(
+    sb.histplot(
+        df_cohort,
+        y="race",
+        hue="first_gen",
         multiple="stack",
         shrink=0.75,
         edgecolor="white",
@@ -795,5 +1007,3 @@ _ = ax.set_xticklabels(
 # MAGIC - [ ] If you haven't already, add school-specific data schemas and/or preprocessing functions into the appropriate directory in the [`student-success-intervention` repository](https://github.com/datakind/student-success-intervention)
 # MAGIC - [ ] Add file paths for the raw course/cohort datasets to the project config file's `datasets["labeled"].raw_course` and `datasets["labeled"].raw_cohort` blocks
 # MAGIC - [ ] Submit a PR including this notebook and any school-specific files added in order to run it
-
-# COMMAND ----------
