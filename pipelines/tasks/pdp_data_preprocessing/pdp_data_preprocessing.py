@@ -246,9 +246,12 @@ def parse_arguments() -> argparse.Namespace:
         "--toml_file_path", type=str, required=True, help="Path to configuration file"
     )
     parser.add_argument(
-        "--custom_schemas_path", required=False, help="Folder path to store custom schemas folders"
+        "--custom_schemas_path",
+        required=False,
+        help="Folder path to store custom schemas folders",
     )
     return parser.parse_args()
+
 
 if __name__ == "__main__":
     args = parse_arguments()
@@ -258,6 +261,7 @@ if __name__ == "__main__":
         logging.info("Running task with custom schema")
     except Exception:
         from student_success_tool.schemas import pdp as schemas
+
         logging.info("Running task with default schema")
     task = DataProcessingTask(args)
     task.run()

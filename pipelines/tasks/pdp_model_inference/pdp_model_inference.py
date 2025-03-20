@@ -289,7 +289,7 @@ class ModelInferenceTask:
             logging.error("Error reading configuration file: %e", e)
             raise
 
-    def load_mlflow_model(self) -> mlflow.pyfunc.PyFuncModel:
+    def load_mlflow_model(self):
         """Loads the MLflow model."""
         model_uri = f"runs:/{self.cfg.models['graduation'].run_id}/model"
 
@@ -309,9 +309,7 @@ class ModelInferenceTask:
             logging.error("Error loading MLflow model: %s", e)
             raise  # Critical error; re-raise to halt execution
 
-    def predict(
-        self, model: mlflow.pyfunc.PyFuncModel, df: pd.DataFrame
-    ) -> pd.DataFrame:
+    def predict(self, model, df: pd.DataFrame) -> pd.DataFrame:
         """Performs inference and adds predictions to the DataFrame."""
         try:
             model_feature_names = model.named_steps["column_selector"].get_params()[
@@ -349,7 +347,7 @@ class ModelInferenceTask:
     @staticmethod
     def predict_proba(
         X: pd.DataFrame,
-        model: mlflow.pyfunc.PyFuncModel,
+        model,
         feature_names: Optional[List[str]] = None,
         pos_label: Optional[bool | str] = None,
     ) -> np.ndarray:
@@ -369,7 +367,7 @@ class ModelInferenceTask:
 
     def parallel_explanations(
         self,
-        model: mlflow.pyfunc.PyFuncModel,
+        model,
         df_features: pd.DataFrame,
         explainer: shap.Explainer,
         model_feature_names: List[str],
@@ -413,7 +411,7 @@ class ModelInferenceTask:
 
     def calculate_shap_values(
         self,
-        model: mlflow.pyfunc.PyFuncModel,
+        model,
         df_processed: pd.DataFrame,
         model_feature_names: list[str],
     ) -> pd.DataFrame | None:
@@ -587,18 +585,59 @@ def parse_arguments() -> argparse.Namespace:
         description="Perform model inference for the SST pipeline.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--DB_workspace", type=str,required=True, help="Databricks workspace identifier")
-    parser.add_argument("--databricks_institution_name", type=str, required=True, help="Databricks institution name")
-    parser.add_argument("--db_run_id", type=str, required=True, help="Databricks run ID")
+    parser.add_argument(
+        "--DB_workspace",
+        type=str,
+        required=True,
+        help="Databricks workspace identifier",
+    )
+    parser.add_argument(
+        "--databricks_institution_name",
+        type=str,
+        required=True,
+        help="Databricks institution name",
+    )
+    parser.add_argument(
+        "--db_run_id", type=str, required=True, help="Databricks run ID"
+    )
     parser.add_argument("--model_name", type=str, required=True, help="Model name")
     parser.add_argument("--model_type", type=str, required=True, help="Model type")
-    parser.add_argument("--job_root_dir", type=str, required=True, help="Folder path to store job output files")
-    parser.add_argument("--toml_file_path", type=str, required=True, help="Path to configuration file")
-    parser.add_argument("--processed_dataset_path", type=str, required=True, help="Path to processed dataset table")
-    parser.add_argument("--notification_email", type=str, required=True, help="Insitution's email used for notifications")
-    parser.add_argument("--DK_CC_EMAIL", type=str, required=True, help="Datakind email address CC'd")
-    parser.add_argument("--modeling_table_path", type=str, required=True, help="Path to training dataset table")
-    parser.add_argument("--custom_schemas_path", type=str, required=False, help="Folder path to store custom schemas folders")
+    parser.add_argument(
+        "--job_root_dir",
+        type=str,
+        required=True,
+        help="Folder path to store job output files",
+    )
+    parser.add_argument(
+        "--toml_file_path", type=str, required=True, help="Path to configuration file"
+    )
+    parser.add_argument(
+        "--processed_dataset_path",
+        type=str,
+        required=True,
+        help="Path to processed dataset table",
+    )
+    parser.add_argument(
+        "--notification_email",
+        type=str,
+        required=True,
+        help="Insitution's email used for notifications",
+    )
+    parser.add_argument(
+        "--DK_CC_EMAIL", type=str, required=True, help="Datakind email address CC'd"
+    )
+    parser.add_argument(
+        "--modeling_table_path",
+        type=str,
+        required=True,
+        help="Path to training dataset table",
+    )
+    parser.add_argument(
+        "--custom_schemas_path",
+        type=str,
+        required=False,
+        help="Folder path to store custom schemas folders",
+    )
     return parser.parse_args()
 
 
