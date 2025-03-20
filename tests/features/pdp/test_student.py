@@ -45,7 +45,7 @@ from student_success_tool.features.pdp import student
                     ],
                     "diff_gpa_term_1_to_year_1": [-0.5, 0.5],
                     "frac_credits_earned_year_1": [0.8, 1.0],
-                    "pell_status_first_year": [True, False],
+                    "student_is_pell_recipient_first_year": [True, False],
                 }
             ),
         ),
