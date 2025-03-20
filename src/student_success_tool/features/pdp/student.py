@@ -55,7 +55,7 @@ def add_features(
         ),
         student_is_pell_recipient_first_year=ft.partial(
             student_is_pell_recipient_first_year,
-            pell_col="pell_status_first_year"
+            pell_col="pell_status_first_year",
         ),
         diff_gpa_term_1_to_year_1=ft.partial(diff_gpa_term_1_to_year_1),
         **{
@@ -92,5 +92,4 @@ def student_is_pell_recipient_first_year(
     df: pd.DataFrame,
     *,
     pell_col: str = "pell_status_first_year",
-) -> pd.Series:
-    return df[pell_col].map({'Y': True, 'N': False})
+) -> pd.Series: return df[pell_col].map({'Y': True, 'N': False})
