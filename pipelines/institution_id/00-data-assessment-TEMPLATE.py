@@ -557,7 +557,7 @@ df_course_filtered["student_guid"].nunique()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC filter cohort data respectively: 
+# MAGIC Filter cohort data respectively below:  
 
 # COMMAND ----------
 
