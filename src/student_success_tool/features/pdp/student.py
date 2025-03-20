@@ -53,6 +53,10 @@ def add_features(
             term_col="student_program_of_study_area_term_1",
             year_col="student_program_of_study_area_year_1",
         ),
+        student_is_pell_recipient_first_year=ft.partial(
+            student_is_pell_recipient_first_year,
+            pell_col="pell_status_first_year"
+        ),
         diff_gpa_term_1_to_year_1=ft.partial(diff_gpa_term_1_to_year_1),
         **{
             f"frac_credits_earned_year_{yr}": ft.partial(
@@ -62,10 +66,6 @@ def add_features(
             )
             for yr in credits_years
         },
-        student_is_pell_recipient_first_year=ft.partial(
-            student_is_pell_recipient_first_year,
-            pell_col="pell_status_first_year"
-        )
     )
 
 
@@ -89,8 +89,8 @@ def diff_gpa_term_1_to_year_1(
 
 
 def student_is_pell_recipient_first_year(
-    df: pd.DataFrame, 
-    *, 
+    df: pd.DataFrame,
+    *,
     pell_col: str = "pell_status_first_year",
 ) -> pd.Series:
     return df[pell_col].map({'Y': True, 'N': False})
