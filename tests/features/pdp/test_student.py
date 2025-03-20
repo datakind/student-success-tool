@@ -101,6 +101,26 @@ def test_student_program_of_study_changed_term_1_to_year_1(df, term_col, year_co
     [
         (
             pd.DataFrame(
+                {"pell_status_first_year": ["Y", "N", pd.NA]}
+            ),
+            # defaults NA to False - we can check with schools on this! 
+            pd.Series([True, False, False], dtype="float"),
+        )
+    ],
+)
+def student_is_pell_recipient_first_year(df, exp):
+    obs = student.student_is_pell_recipient_first_year(
+        df, pell_coll="pell_status_first_year"
+    )
+    assert isinstance(obs, pd.Series) and not obs.empty
+    assert obs.equals(exp) or obs.compare(exp).empty
+
+
+@pytest.mark.parametrize(
+    ["df", "exp"],
+    [
+        (
+            pd.DataFrame(
                 {"gpa_year_1": [1.0, 2.0, 3.5], "gpa_term_1": [2.0, 1.5, 4.0]}
             ),
             pd.Series([-1.0, 0.5, -0.5], dtype="float"),
