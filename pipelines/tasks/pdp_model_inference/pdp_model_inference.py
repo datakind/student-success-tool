@@ -33,10 +33,10 @@ from email.headerregistry import Address
 # Import project-specific modules
 import student_success_tool.dataio as dataio
 from student_success_tool.modeling import inference
-import student_success_tool.modeling as modeling
 from student_success_tool.schemas.pdp import PDPProjectConfig
 
 import sklearn as sk
+
 print(sk.__version__)
 
 # Disable mlflow autologging (prevents conflicts in Databricks environments)
@@ -180,10 +180,9 @@ def send_inference_kickoff_email(
     )
 
 
-import matplotlib.axes
 import matplotlib.colors as mcolors
-import matplotlib.figure
 import matplotlib.pyplot as plt
+
 
 def plot_shap_beeswarm(shap_values):
     # Define the color palette
@@ -253,7 +252,6 @@ def plot_shap_beeswarm(shap_values):
         transform=cbar.ax.transAxes,
     )
     return plt.gcf()
-
 
 
 class ModelInferenceTask:
@@ -397,7 +395,6 @@ class ModelInferenceTask:
         chuncks_count = max(1, len(df_features) // chunk_size)
         chunks = np.array_split(df_features, chuncks_count)
 
-
         results = Parallel(n_jobs=n_jobs)(
             delayed(lambda model, chunk, explainer: explainer(chunk))(
                 model, chunk, explainer
@@ -435,8 +432,8 @@ class ModelInferenceTask:
             # )
 
             df_train = dataio.from_delta_table(
-            self.args.modeling_table_path, spark_session=self.spark_session
-        )
+                self.args.modeling_table_path, spark_session=self.spark_session
+            )
             train_mode = df_train.mode().iloc[0]  # Use .iloc[0] for single row
             df_ref = (
                 df_train.sample(
@@ -513,7 +510,7 @@ class ModelInferenceTask:
             return None
 
     def run(self):
-        """Executes the model inference pipeline.""" 
+        """Executes the model inference pipeline."""
         df_processed = dataio.from_delta_table(
             self.args.processed_dataset_path, spark_session=self.spark_session
         )
@@ -637,24 +634,25 @@ def parse_arguments() -> argparse.Namespace:
     )
 
     parser.add_argument(
-            "--modeling_table_path",
-            type=str,
-            required=True,
-            help="Path to training dataset table",
-        )
-    
+        "--modeling_table_path",
+        type=str,
+        required=True,
+        help="Path to training dataset table",
+    )
+
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_arguments()
     try:
-        sys.path.append(f"/Workspace/Users/pedro.melendez@datakind.org/python-refactor-pipeline/pipelines/tasks/utils/")
-        schemas = importlib.import_module(f'{args.databricks_institution_name}.schemas')
+        sys.path.append(
+            "/Workspace/Users/pedro.melendez@datakind.org/python-refactor-pipeline/pipelines/tasks/utils/"
+        )
+        schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
         logging.info("Running task with custom schema")
-    except:
+    except Exception:
         print("Running task with default schema")
-        from student_success_tool.schemas import pdp as schemas
         logging.info("Running task with default schema")
     task = ModelInferenceTask(args)
     task.run()

@@ -92,10 +92,8 @@ class DataIngestionTask:
             logging.error(f"GCS download error: {e}")
             raise
 
-    def read_and_validate_data(
-        self, fpath_course: str, fpath_cohort: str
-    ):
-    # -> tuple[schemas.RawPDPCourseDataSchema, schemas.RawPDPCohortDataSchema]:
+    def read_and_validate_data(self, fpath_course: str, fpath_cohort: str):
+        # -> tuple[schemas.RawPDPCourseDataSchema, schemas.RawPDPCohortDataSchema]:
         """
         Reads course and cohort data from CSV files and validates their schemas.
 
@@ -107,7 +105,6 @@ class DataIngestionTask:
             tuple[schemas.RawPDPCourseDataSchema, schemas.RawPDPCohortDataSchema]:
                 Validated course and cohort data.
         """
-
 
         # Read data from CSV files into Pandas DataFrames and validate schema
         try:
@@ -279,13 +276,16 @@ def parse_arguments() -> argparse.Namespace:
 if __name__ == "__main__":
     args = parse_arguments()
     try:
-        sys.path.append(f"/Workspace/Users/pedro.melendez@datakind.org/python-refactor-pipeline/pipelines/tasks/utils/")
-        schemas = importlib.import_module(f'{args.databricks_institution_name}.schemas')
+        sys.path.append(
+            "/Workspace/Users/pedro.melendez@datakind.org/python-refactor-pipeline/pipelines/tasks/utils/"
+        )
+        schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
         logging.info("Running task with custom schema")
-    except:
+    except Exception:
         print("Running task with default schema")
         from student_success_tool.schemas import pdp as schemas
+
         logging.info("Running task with default schema")
-        
+
     task = DataIngestionTask(args)
     task.run()

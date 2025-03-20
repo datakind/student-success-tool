@@ -135,7 +135,7 @@ class DataPreparationTask:
         key_course_ids = self.cfg.preprocessing.features.key_course_ids
 
         # Read preprocessing target parameters from config
-        student_criteria = self.cfg.preprocessing.target.params['student_criteria']
+        student_criteria = self.cfg.preprocessing.target.params["student_criteria"]
         student_id_col = self.cfg.student_id_col
 
         # Create student-term dataset
@@ -251,11 +251,14 @@ def parse_arguments() -> argparse.Namespace:
 if __name__ == "__main__":
     args = parse_arguments()
     try:
-        sys.path.append(f"/Workspace/Users/pedro.melendez@datakind.org/python-refactor-pipeline/pipelines/tasks/utils/")
-        schemas = importlib.import_module(f'{args.databricks_institution_name}.schemas')
+        sys.path.append(
+            "/Workspace/Users/pedro.melendez@datakind.org/python-refactor-pipeline/pipelines/tasks/utils/"
+        )
+        schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
         logging.info("Running task with custom schema")
-    except:
+    except Exception:
         from student_success_tool.schemas import pdp as schemas
+
         logging.info("Running task with default schema")
     task = DataPreparationTask(args)
     task.run()
