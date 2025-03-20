@@ -805,6 +805,7 @@ _ = ax.set(xlabel="Number of Students")
 
 # COMMAND ----------
 
+
 # gender by age 
 (
     sb.histplot(
