@@ -556,7 +556,11 @@ df_course_filtered["student_guid"].nunique()
 
 # COMMAND ----------
 
-# filter cohort data respectively 
+# MAGIC %md
+# MAGIC ### filter cohort data respectively 
+
+# COMMAND ----------
+
 df_cohort_filtered = df_cohort.loc[
     df_cohort["student_guid"].isin(df_course_filtered["student_guid"]), :
 ]
@@ -792,30 +796,31 @@ _ = ax.set(xlabel="Number of Students")
 # COMMAND ----------
 
 # student age by gender
-(
-    sb.histplot(
-        df_cohort,
-        y="gender",
-        hue="student_age",
-        multiple="stack",
-        shrink=0.75,
-        edgecolor="white",
-    ).set(xlabel="Number of Students")
+
+ax = sb.histplot(
+    df_cohort,
+    y="gender",
+    hue="student_age",
+    multiple="stack",
+    shrink=0.75,
+    edgecolor="white",
 )
+
+_ = ax.set(xlabel="Number of Students")
 
 # COMMAND ----------
 
 # student gender by age 
-(
-    sb.histplot(
-        df_cohort[(df_cohort["gender"] == "F") | (df_cohort["gender"] == "M")],
-        y="gender",
-        hue="student_age",
-        multiple="stack",
-        shrink=0.75,
-        edgecolor="white",
-    ).set(xlabel="Number of Students")
+ax = sb.histplot(
+    df_cohort[(df_cohort["gender"] == "F") | (df_cohort["gender"] == "M")],
+    y="gender",
+    hue="student_age",
+    multiple="stack",
+    shrink=0.75,
+    edgecolor="white",
 )
+
+_ = ax.set(xlabel="Number of Students")
 
 # COMMAND ----------
 
@@ -833,7 +838,11 @@ _ = ax.set(xlabel="Number of Students")
 
 # COMMAND ----------
 
-# want to see systemic income disparities highlighted across races 
+# MAGIC %md
+# MAGIC #### want to observe any systemic income disparities highlighted across races 
+
+# COMMAND ----------
+
 df_cohort[["race", "pell_status_first_year"]].groupby("race").value_counts(
     normalize=True, dropna=False
 ).sort_index() * 100
