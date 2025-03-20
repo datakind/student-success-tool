@@ -401,11 +401,11 @@ df_course.loc[
 # how many for transfers vs non transfers?
 missing_course = df_course.groupby("student_guid").filter(
     lambda x: x["course_prefix"].isna().all()
-    )
+)
 
 missing_course.groupby('student_guid')[
     'enrolled_at_other_institution_s'
-    ].first().value_counts(dropna=False)
+].first().value_counts(dropna=False)
 
 # COMMAND ----------
 
@@ -552,7 +552,7 @@ df_course_filtered.shape
 # COMMAND ----------
 
 # how many students remain?
-df_course_filtered['student_guid'].nunique()
+df_course_filtered["student_guid"].nunique()
 
 # COMMAND ----------
 
@@ -616,9 +616,7 @@ df_cohort["gpa_group_year_1"].describe()
 # First year GPA by cohort and enrollment type
 # to remove error bars, errorbar=None
 ax = sb.barplot(
-    df_cohort_valid.sort_values(by="cohort").astype(
-        {"gpa_group_year_1": "Float32"}
-    ),
+    df_cohort_filtered.sort_values(by="cohort").astype({"gpa_group_year_1": "Float32"}),
     x="cohort",
     y="gpa_group_year_1",
     estimator="mean",
@@ -633,9 +631,7 @@ ax.legend(loc="lower left", title="Enrollment Type")
 # First year GPA by cohort and credential type sought
 # to remove error bars, errorbar=None
 ax = sb.barplot(
-    df_cohort_valid.sort_values(by="cohort").astype(
-        {"gpa_group_year_1": "Float32"}
-    ),
+    df_cohort_filtered.sort_values(by="cohort").astype({"gpa_group_year_1": "Float32"}),
     x="cohort",
     y="gpa_group_year_1",
     estimator="mean",
@@ -652,14 +648,14 @@ df_pct_creds_by_yr = pd.concat(
         pd.DataFrame(
             {
                 "year_of_enrollment": str(yr),
-                "enrollment_type": df_cohort_valid["enrollment_type"],
-                "enrollment_intensity_first_term": df_cohort_valid[
+                "enrollment_type": df_cohort_filtered["enrollment_type"],
+                "enrollment_intensity_first_term": df_cohort_filtered[
                     "enrollment_intensity_first_term"
                 ],
                 "pct_credits_earned": (
                     100
-                    * df_cohort_valid[f"number_of_credits_earned_year_{yr}"]
-                    / df_cohort_valid[f"number_of_credits_attempted_year_{yr}"]
+                    * df_cohort_filtered[f"number_of_credits_earned_year_{yr}"]
+                    / df_cohort_filtered[f"number_of_credits_attempted_year_{yr}"]
                 ),
             }
         )
@@ -671,13 +667,21 @@ df_pct_creds_by_yr = pd.concat(
 
 # COMMAND ----------
 
-df_pct_creds_by_yr['pct_credits_earned'] = df_pct_creds_by_yr['pct_credits_earned'].astype("float")
+df_pct_creds_by_yr['pct_credits_earned'] = df_pct_creds_by_yr[
+    "pct_credits_earned"
+].astype("float")
 
 # median values
-print(df_pct_creds_by_yr.groupby('year_of_enrollment')['pct_credits_earned'].median().value_counts(dropna=False))
+print(
+    df_pct_creds_by_yr.groupby('year_of_enrollment')['pct_credits_earned']
+    .median()
+    .value_counts(dropna=False)
+)
 
 # mean values
-df_pct_creds_by_yr.groupby('year_of_enrollment')['pct_credits_earned'].mean().value_counts(dropna=False)
+df_pct_creds_by_yr.groupby('year_of_enrollment')[
+    "pct_credits_earned"
+].mean().value_counts(dropna=False)
 
 # COMMAND ----------
 
@@ -802,7 +806,7 @@ _ = ax.set(xlabel="Number of Students")
 # gender by age 
 (
     sb.histplot(
-        df_cohort[(df_cohort['gender'] == 'F') | (df_cohort['gender'] == 'M')],
+        df_cohort[(df_cohort['gender'] == "F") | (df_cohort['gender'] == "M")],
         y="gender",
         hue="student_age",
         multiple="stack",
@@ -818,7 +822,7 @@ _ = ax.set(xlabel="Number of Students")
     sb.histplot(
         df_cohort,
         y="race",
-        hue='pell_status_first_year',
+        hue="pell_status_first_year",
         multiple="stack",
         shrink=0.75,
         edgecolor="white",
@@ -828,7 +832,9 @@ _ = ax.set(xlabel="Number of Students")
 # COMMAND ----------
 
 # want to see systemic income disparities highlighted across races 
-df_cohort[['race', 'pell_status_first_year']].groupby('race').value_counts(normalize=True, dropna=False).sort_index()*100
+df_cohort[["race", "pell_status_first_year"]].groupby("race").value_counts(
+    normalize=True, dropna=False
+).sort_index()*100
 
 # COMMAND ----------
 
