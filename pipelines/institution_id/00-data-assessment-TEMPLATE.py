@@ -805,8 +805,7 @@ _ = ax.set(xlabel="Number of Students")
 
 # COMMAND ----------
 
-
-# gender by age 
+# student gender by age 
 (
     sb.histplot(
         df_cohort[(df_cohort["gender"] == "F") | (df_cohort["gender"] == "M")],
