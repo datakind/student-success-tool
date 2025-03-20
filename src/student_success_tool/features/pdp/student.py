@@ -62,8 +62,7 @@ def add_features(
             )
             for yr in credits_years
         },
-        # not sure if we want to just re-code the original column here or make a new one and call it something else, ex. pell_grant_recipient
-        pell_status_first_year=ft.partial(
+        student_is_pell_recipient_first_year=ft.partial(
             change_pell_to_T_F, 
             pell_col="pell_status_first_year"
         )
@@ -89,10 +88,9 @@ def diff_gpa_term_1_to_year_1(
     return df[year_col].sub(df[term_col])
 
 
-def change_pell_to_T_F(
+def student_is_pell_recipient_first_year(
     df: pd.DataFrame, 
     *, 
     pell_col: str = "pell_status_first_year",
 ) -> pd.Series:
-    # Convert 'Y' to True and 'N' to False
-    return df[pell_col].map({"Y": True, "N": False}).astype("boolean")
+    return df[pell_col].map({'Y': True, 'N': False})  
