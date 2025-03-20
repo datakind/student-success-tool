@@ -587,68 +587,25 @@ def parse_arguments() -> argparse.Namespace:
         description="Perform model inference for the SST pipeline.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument(
-        "--DB_workspace",
-        type=str,
-        required=True,
-        help="Databricks workspace identifier",
-    )
-    parser.add_argument(
-        "--databricks_institution_name",
-        type=str,
-        required=True,
-        help="Databricks institution name",
-    )
-    parser.add_argument(
-        "--db_run_id", type=str, required=True, help="Databricks run ID"
-    )
+    parser.add_argument("--DB_workspace", type=str,required=True, help="Databricks workspace identifier")
+    parser.add_argument("--databricks_institution_name", type=str, required=True, help="Databricks institution name")
+    parser.add_argument("--db_run_id", type=str, required=True, help="Databricks run ID")
     parser.add_argument("--model_name", type=str, required=True, help="Model name")
     parser.add_argument("--model_type", type=str, required=True, help="Model type")
-    parser.add_argument(
-        "--job_root_dir",
-        required=True,
-        type=str,
-        help="Folder path to store job output files",
-    )
-    parser.add_argument(
-        "--toml_file_path", type=str, required=True, help="Path to configuration file"
-    )
-    parser.add_argument(
-        "--processed_dataset_path",
-        type=str,
-        required=True,
-        help="Path to processed dataset table",
-    )
-    parser.add_argument(
-        "--notification_email",
-        type=str,
-        required=True,
-        help="Insitution's email used for notifications",
-    )
-
-    parser.add_argument(
-        "--DK_CC_EMAIL",
-        type=str,
-        required=True,
-        help="Datakind email address CC'd",
-    )
-
-    parser.add_argument(
-        "--modeling_table_path",
-        type=str,
-        required=True,
-        help="Path to training dataset table",
-    )
-
+    parser.add_argument("--job_root_dir", type=str, required=True, help="Folder path to store job output files")
+    parser.add_argument("--toml_file_path", type=str, required=True, help="Path to configuration file")
+    parser.add_argument("--processed_dataset_path", type=str, required=True, help="Path to processed dataset table")
+    parser.add_argument("--notification_email", type=str, required=True, help="Insitution's email used for notifications")
+    parser.add_argument("--DK_CC_EMAIL", type=str, required=True, help="Datakind email address CC'd")
+    parser.add_argument("--modeling_table_path", type=str, required=True, help="Path to training dataset table")
+    parser.add_argument("--custom_schemas_path", type=str, required=False, help="Folder path to store custom schemas folders")
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_arguments()
     try:
-        sys.path.append(
-            "/Workspace/Users/pedro.melendez@datakind.org/python-refactor-pipeline/pipelines/tasks/utils/"
-        )
+        sys.path.append(args.custom_schemas_path)
         schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
         logging.info("Running task with custom schema")
     except Exception:

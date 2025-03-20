@@ -270,22 +270,21 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--job_root_dir", required=True, help="Folder path to store job output files"
     )
+    parser.add_argument(
+        "--custom_schemas_path", required=False, help="Folder path to store custom schemas folders"
+    )
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_arguments()
     try:
-        sys.path.append(
-            "/Workspace/Users/pedro.melendez@datakind.org/python-refactor-pipeline/pipelines/tasks/utils/"
-        )
+        sys.path.append(args.custom_schemas_path)
         schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
         logging.info("Running task with custom schema")
     except Exception:
         print("Running task with default schema")
         from student_success_tool.schemas import pdp as schemas
-
         logging.info("Running task with default schema")
-
     task = DataIngestionTask(args)
     task.run()

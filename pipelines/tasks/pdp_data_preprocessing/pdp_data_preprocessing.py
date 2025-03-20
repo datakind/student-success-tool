@@ -1,5 +1,5 @@
 """
-This script prepares data for inference in the Student Success Tool (SST) pipeline.
+This script performs the data preprocessing step for inference in the Student Success Tool (SST) pipeline.
 
 It reads validated course and cohort data from Delta Lake tables, creates a student-term
 dataset, applies target variable logic, and saves the processed dataset back to a
@@ -35,12 +35,12 @@ logging.basicConfig(level=logging.INFO)
 logging.getLogger("py4j").setLevel(logging.WARNING)  # Ignore Databricks logger
 
 
-class DataPreparationTask:
-    """Encapsulates the data preparation logic for the SST pipeline."""
+class DataProcessingTask:
+    """Encapsulates the data preprocessing logic for the SST pipeline."""
 
     def __init__(self, args: argparse.Namespace):
         """
-        Initializes the DataPreparationTask.
+        Initializes the DataProcessingTask.
 
         Args:
             args: The parsed command-line arguments.
@@ -195,7 +195,7 @@ class DataPreparationTask:
             raise
 
     def run(self):
-        """Executes the data preparation pipeline."""
+        """Executes the data preprocessing pipeline."""
         df_course, df_cohort = self.read_data_from_delta()
         df_processed = self.preprocess_data(df_course, df_cohort)
         processed_dataset_path = self.write_data_to_delta(df_processed)
@@ -212,7 +212,7 @@ class DataPreparationTask:
 def parse_arguments() -> argparse.Namespace:
     """Parses command line arguments."""
     parser = argparse.ArgumentParser(
-        description="Prepare data for inference in the SST pipeline."
+        description="Data preprocessing for inference in the SST pipeline."
     )
     parser.add_argument(
         "--DB_workspace",
@@ -245,20 +245,19 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--toml_file_path", type=str, required=True, help="Path to configuration file"
     )
+    parser.add_argument(
+        "--custom_schemas_path", required=False, help="Folder path to store custom schemas folders"
+    )
     return parser.parse_args()
-
 
 if __name__ == "__main__":
     args = parse_arguments()
     try:
-        sys.path.append(
-            "/Workspace/Users/pedro.melendez@datakind.org/python-refactor-pipeline/pipelines/tasks/utils/"
-        )
+        sys.path.append(args.custom_schemas_path)
         schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
         logging.info("Running task with custom schema")
     except Exception:
         from student_success_tool.schemas import pdp as schemas
-
         logging.info("Running task with default schema")
-    task = DataPreparationTask(args)
+    task = DataProcessingTask(args)
     task.run()
