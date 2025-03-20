@@ -19,6 +19,7 @@ from student_success_tool.features.pdp import student
                     "gpa_group_year_1": [3.5, 3.5],
                     "number_of_credits_attempted_year_1": [15.0, 12.0],
                     "number_of_credits_earned_year_1": [12.0, 12.0],
+                    "pell_status_first_year": ["Y", "N", pd.NA],
                 }
             ),
             "FALL",
@@ -44,6 +45,7 @@ from student_success_tool.features.pdp import student
                     ],
                     "diff_gpa_term_1_to_year_1": [-0.5, 0.5],
                     "frac_credits_earned_year_1": [0.8, 1.0],
+                    "pell_status_first_year": [True, False, False],
                 }
             ),
         ),
