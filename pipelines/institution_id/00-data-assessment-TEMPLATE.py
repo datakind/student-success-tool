@@ -640,15 +640,8 @@ ax = sb.barplot(
     hue="credential_type_sought_year_1",
     edgecolor="white",
 )
-
-# Set the ylabel
 ax.set(ylabel="Avg. GPA (Year 1)")
-
-# Move the legend to a different location (e.g., upper left)
 ax.legend(loc="lower left", title="Enrollment Intensity")
-
-# Show the plot
-plt.show()
 
 # COMMAND ----------
 
