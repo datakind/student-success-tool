@@ -843,7 +843,7 @@ df_cohort[["race", "pell_status_first_year"]].groupby("race").value_counts(
 # first gen
 (
     sb.histplot(
-        df_copy,
+        df_cohort,
         y="first_gen",
         multiple="stack",
         shrink=0.75,
