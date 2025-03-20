@@ -27,6 +27,7 @@ The 'SST Pipeline Workflow Asset Bundle' is used to deploy the demo inference pi
    export datakind_notification_email=<Datakind email address to receive notifications>
    export end_user_notification_email=<Institution email address to receive notifications>
    export pip_install_branch=<Branch to install the SST libraries from>
+   export custom_schemas_path=<Path to custom schemas>
    ```
 
    Then execute the command:
@@ -43,6 +44,7 @@ The 'SST Pipeline Workflow Asset Bundle' is used to deploy the demo inference pi
    --var="end_user_notification_email=$end_user_notification_email" \
    --var="datakind_notification_email=$datakind_notification_email" \
    --var="pip_install_branch=$pip_install_branch" \
+   --var="custom_schemas_path=$custom_schemas_path" \
    --target dev
    ```
     Note: "dev" is the default target, so the `--target dev` parameter is optional here.
@@ -65,6 +67,7 @@ The 'SST Pipeline Workflow Asset Bundle' is used to deploy the demo inference pi
    --var="end_user_notification_email=$end_user_notification_email" \
    --var="datakind_notification_email=$datakind_notification_email" \
    --var="pip_install_branch=$pip_install_branch" \
+   --var="custom_schemas_path=$custom_schemas_path" \
    --target prod
    ```
 
@@ -83,6 +86,7 @@ The 'SST Pipeline Workflow Asset Bundle' is used to deploy the demo inference pi
    --var="end_user_notification_email=$end_user_notification_email" \
    --var="datakind_notification_email=$datakind_notification_email" \
    --var="pip_install_branch=$pip_install_branch" \
+   --var="custom_schemas_path=$custom_schemas_path" \
    --target dev
    ```
    Note: SST app will use only the prod version of the workflow
