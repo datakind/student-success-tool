@@ -23,6 +23,8 @@ resources:
               - "{{job.parameters.gcp_bucket_name}}"
               - --job_root_dir  
               - "/Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/inference_jobs/{{job.parameters.db_run_id}}"
+              - --custom_schemas_path
+              - "{{job.parameters.custom_schemas_path}}"
           job_cluster_key: pdp-inference-pipeline-cluster
           libraries:
             - pypi:
@@ -48,6 +50,8 @@ resources:
               - "{{tasks.data_ingestion.values.course_dataset_validated_path}}"
               - --toml_file_path
               - "/Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/configuration_files/{{job.parameters.databricks_institution_name}}_{{job.parameters.model_name}}_configuration_file.toml"
+              - --custom_schemas_path
+              - "{{job.parameters.custom_schemas_path}}"
           job_cluster_key: pdp-inference-pipeline-cluster
           libraries:
             - pypi:
@@ -108,6 +112,8 @@ resources:
               - "{{job.parameters.DK_CC_EMAIL}}"
               - --modeling_table_path
               - "{{job.parameters.DB_workspace}}.{{job.parameters.databricks_institution_name}}_gold.modeling_table"
+              - --custom_schemas_path
+              - "{{job.parameters.custom_schemas_path}}"
           job_cluster_key: pdp-inference-pipeline-cluster
           libraries:
             - pypi:
@@ -205,6 +211,8 @@ resources:
           default: ${var.datakind_notification_email}
         - name: fail_on_anomalies
           default: --fail_on_anomalies_false
+        - name: custom_schemas_path
+          default: ${var.custom_schemas_path}
       permissions:
         - group_name: ${var.fellows_group_to_manage_workflow} 
           level: CAN_MANAGE
