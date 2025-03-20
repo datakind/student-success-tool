@@ -557,7 +557,9 @@ df_course_filtered["student_guid"].nunique()
 # COMMAND ----------
 
 # filter cohort data respectively 
-df_cohort_filtered = df_cohort.loc[df_cohort["student_guid"].isin(df_course_filtered["student_guid"]), :]
+df_cohort_filtered = df_cohort.loc[
+    df_cohort["student_guid"].isin(df_course_filtered["student_guid"]), :
+]
 df_cohort_filtered
 
 # COMMAND ----------
