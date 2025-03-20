@@ -557,7 +557,7 @@ df_course_filtered["student_guid"].nunique()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### filter cohort data respectively 
+# MAGIC filter cohort data respectively: 
 
 # COMMAND ----------
 
@@ -839,7 +839,7 @@ _ = ax.set(xlabel="Number of Students")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC #### want to observe any systemic income disparities highlighted across races 
+# MAGIC Observe any systemic income disparities highlighted across races:
 
 # COMMAND ----------
 
