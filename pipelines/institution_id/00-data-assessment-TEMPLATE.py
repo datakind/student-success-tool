@@ -550,7 +550,7 @@ df_course_filtered.shape
 # COMMAND ----------
 
 # how many students remain?
-df_course_valid['student_guid'].nunique()
+df_course_filtered['student_guid'].nunique()
 
 # COMMAND ----------
 
