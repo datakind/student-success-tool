@@ -92,4 +92,5 @@ def diff_gpa_term_1_to_year_1(
     *,
     term_col: str = "gpa_group_term_1",
     year_col: str = "gpa_group_year_1",
-) -> pd.Series: return df[year_col].sub(df[term_col])
+) -> pd.Series:
+    return df[year_col].sub(df[term_col])
