@@ -182,9 +182,7 @@ def send_inference_kickoff_email(
     )
 
 
-import matplotlib.axes
 import matplotlib.colors as mcolors
-import matplotlib.figure
 import matplotlib.pyplot as plt
 
 
