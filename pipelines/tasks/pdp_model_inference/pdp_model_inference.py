@@ -112,9 +112,14 @@ class ModelInferenceTask:
             ]
         except AttributeError:
             model_feature_names = model.metadata.get_input_schema().input_names()
+        
+        # Detele this line after testing with midway university
+        if self.args.databricks_institution_name == "midway_uni":
+            df.rename(columns={'term_is_pre_cohort': 'has_summer_term', 'cumfrac_core_terms_unenrolled': 'cumfrac_fall_spring_terms_unenrolled'}, inplace=True)
 
         df_serving = df[model_feature_names]
         df_predicted = df_serving.copy()
+
         df_predicted["predicted_label"] = model.predict(df_serving)
         df_predicted["predicted_prob"] = model.predict_proba(df_serving)[:, 1]
         return df_predicted
