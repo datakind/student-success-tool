@@ -63,7 +63,7 @@ def add_features(
             for yr in credits_years
         },
         student_is_pell_recipient_first_year=ft.partial(
-            change_pell_to_T_F, 
+            student_is_pell_recipient_first_year,
             pell_col="pell_status_first_year"
         )
     )
@@ -93,4 +93,4 @@ def student_is_pell_recipient_first_year(
     *, 
     pell_col: str = "pell_status_first_year",
 ) -> pd.Series:
-    return df[pell_col].map({'Y': True, 'N': False})  
+    return df[pell_col].map({'Y': True, 'N': False})
