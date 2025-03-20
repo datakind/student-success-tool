@@ -37,10 +37,6 @@ from student_success_tool.schemas.pdp import PDPProjectConfig
 from student_success_tool.modeling.evaluation import plot_shap_beeswarm
 from student_success_tool.utils import emails
 
-import sklearn as sk
-
-print(sk.__version__)
-
 # Disable mlflow autologging (prevents conflicts in Databricks environments)
 mlflow.autolog(disable=True)
 
@@ -49,211 +45,8 @@ logging.basicConfig(level=logging.INFO)
 logging.getLogger("py4j").setLevel(logging.WARNING)  # Suppress py4j logging
 
 # Import that works on develop branch
-# from student_success_tool.modeling.evaluation import plot_shap_beeswarm
-# from student_success_tool.utils import emails
-
-
-# Still using the old locations since we are installing package from branch
-# from student_success_tool.pipeline_utils.plot import plot_shap_beeswarm
-# from student_success_tool.pipeline_utils import emails
-
-"""Utility functions for sending emails in Databricks."""
-
-import smtplib
-
-from email.message import EmailMessage
-
-SMTP_SERVER = "smtp.mandrillapp.com"
-# TODO: switch port?
-SMTP_PORT = 587  # or 465 for SSL
-COMPLETION_SUCCESS_SUBJECT = "Student Success Tool: Inference Results Available."
-COMPLETION_SUCCESS_MESSAGE = """\
-    Hello!
-
-    Your Datakind Student Success Tool inference run has successfully completed and the results are ready for viewing on the Website.
-    """
-
-INFERENCE_KICKOFF_SUBJECT = "Student Success Tool: Inference Run In Progress."
-INFERENCE_KICKOFF_MESSAGE = """\
-    Hello!
-
-    Your Datakind Student Success Tool inference run has been triggered. Once results have been checked and are ready for viewing, you'll receive another email.
-    """
-
-
-def send_email(
-    sender_email: str,
-    receiver_email_list: list[str],
-    cc_email_list: list[str],
-    subject: str,
-    body: str,
-    mandrill_username: str,
-    mandrill_password: str,
-) -> None:
-    """Send email.
-
-    Args:
-      sender_email: Email of sender.
-      receiver_email_list: List of emails to send to.
-      cc_email_list: List of emails to CC.
-      subject: Subject of email.
-      body: Body of email.
-      mandrill_username: Mandrill username for the SMTP server.
-      mandrill_password: Mandrill password for the SMTP server.
-
-    Returns:
-      Nothing.
-    """
-    # Create the email message
-    msg = EmailMessage()
-    msg["Subject"] = subject
-    msg["From"] = sender_email
-    msg["To"] = receiver_email_list
-    msg["Cc"] = cc_email_list
-    msg.set_content(body)
-    try:
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.ehlo()
-        server.starttls()
-        server.login(mandrill_username, mandrill_password)
-        server.send_message(msg)
-        server.quit()
-    except Exception as e:
-        raise e
-
-
-def send_inference_completion_email(
-    sender_email: str,
-    receiver_email_list: list[str],
-    cc_email_list: list[str],
-    username: str,
-    password: str,
-) -> None:
-    """Send email with completion of inference run message.
-
-    Args:
-      sender_email: Email of sender.
-      receiver_email_list: List of emails to send to.
-      cc_email_list: List of emails to CC.
-      username: Mandrill username for the SMTP server.
-      password: Mandrill password for the SMTP server.
-
-    Returns:
-      Nothing.
-    """
-    send_email(
-        sender_email,
-        receiver_email_list,
-        cc_email_list,
-        COMPLETION_SUCCESS_SUBJECT,
-        COMPLETION_SUCCESS_MESSAGE,
-        username,
-        password,
-    )
-
-
-def send_inference_kickoff_email(
-    sender_email: str,
-    receiver_email_list: list[str],
-    cc_email_list: list[str],
-    username: str,
-    password: str,
-) -> None:
-    """Send email with kickoff of inference run message.
-
-    Args:
-      sender_email: Email of sender.
-      receiver_email_list: List of emails to send to.
-      cc_email_list: List of emails to CC.
-      username: Mandrill username for the SMTP server.
-      password: Mandrill password for the SMTP server.
-
-    Returns:
-      Nothing.
-    """
-    send_email(
-        sender_email,
-        receiver_email_list,
-        cc_email_list,
-        INFERENCE_KICKOFF_SUBJECT,
-        INFERENCE_KICKOFF_MESSAGE,
-        username,
-        password,
-    )
-
-
-import matplotlib.colors as mcolors
-import matplotlib.pyplot as plt
-
-
-def plot_shap_beeswarm(shap_values):
-    # Define the color palette
-    start_color = (0.34, 0.79, 0.55)  # Green
-    middle_color = (0.98, 0.82, 0.22)  # Yellow
-    end_color = (0.95, 0.60, 0.19)  # Orange
-    colors = [start_color, middle_color, end_color]
-    cmap = mcolors.LinearSegmentedColormap.from_list("custom_cmap", colors, 256)
-
-    plt.figure(figsize=(5, 6))  # Adjust height as needed.
-
-    # Plot the beeswarm
-    ax = shap.plots.beeswarm(
-        shap_values,
-        show=False,
-        max_display=25,
-        color=cmap,
-        color_bar=False,
-        plot_size=(5, 25),
-    )
-
-    # Get the current y-axis tick labels (feature names)
-    y_ticks_labels = [label.get_text() for label in ax.get_yticklabels()]
-
-    # Modify the feature names
-    modified_labels = [label.replace("_", " ").title() for label in y_ticks_labels]
-
-    # Set the modified labels back to the y-axis
-    ax.set_yticklabels(modified_labels)
-
-    # Add horizontal lines
-    # Get the y-axis tick positions
-    y_ticks = ax.get_yticks()
-    for y in y_ticks:
-        # Add a dashed gray line
-        ax.axhline(y=y, color="gray", linestyle="-", linewidth=0.5)
-
-    # Add colorbar above chart
-    cbar = plt.colorbar(
-        plt.cm.ScalarMappable(
-            cmap=cmap,
-        ),
-        ax=ax,
-        location="top",
-        shrink=0.5,
-        aspect=20,
-        ticks=[],
-        pad=0.02,
-    )
-    cbar.outline.set_visible(False)
-    cbar.set_label("Feature Value", loc="center", labelpad=10)
-    # Add labels to the left and right of the colorbar
-    cbar.ax.text(
-        -0.1,  # Adjust horizontal position for left label
-        0.5,  # Vertical position (middle of colorbar)
-        "Low",  # Left label text
-        va="center",
-        ha="right",
-        transform=cbar.ax.transAxes,
-    )
-    cbar.ax.text(
-        1.1,  # Adjust horizontal position for right label
-        0.5,  # Vertical position (middle of colorbar)
-        "High",  # Right label text
-        va="center",
-        ha="left",
-        transform=cbar.ax.transAxes,
-    )
-    return plt.gcf()
+from student_success_tool.modeling.evaluation import plot_shap_beeswarm
+from student_success_tool.utils import emails
 
 
 class ModelInferenceTask:
@@ -518,7 +311,7 @@ class ModelInferenceTask:
         MANDRILL_USERNAME = w.dbutils.secrets.get(scope="sst", key="MANDRILL_USERNAME")
         MANDRILL_PASSWORD = w.dbutils.secrets.get(scope="sst", key="MANDRILL_PASSWORD")
         SENDER_EMAIL = Address("Datakind Info", "help", "datakind.org")
-        send_inference_kickoff_email(
+        emails.send_inference_kickoff_email(
             SENDER_EMAIL,
             [self.args.notification_email],
             [self.args.DK_CC_EMAIL],
