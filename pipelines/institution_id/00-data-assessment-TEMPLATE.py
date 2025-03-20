@@ -403,8 +403,8 @@ missing_course = df_course.groupby("student_guid").filter(
     lambda x: x["course_prefix"].isna().all()
 )
 
-missing_course.groupby('student_guid')[
-    'enrolled_at_other_institution_s'
+missing_course.groupby("student_guid")[
+    "enrolled_at_other_institution_s"
 ].first().value_counts(dropna=False)
 
 # COMMAND ----------
@@ -667,19 +667,19 @@ df_pct_creds_by_yr = pd.concat(
 
 # COMMAND ----------
 
-df_pct_creds_by_yr['pct_credits_earned'] = df_pct_creds_by_yr[
+df_pct_creds_by_yr["pct_credits_earned"] = df_pct_creds_by_yr[
     "pct_credits_earned"
 ].astype("float")
 
 # median values
 print(
-    df_pct_creds_by_yr.groupby('year_of_enrollment')['pct_credits_earned']
+    df_pct_creds_by_yr.groupby("year_of_enrollment")["pct_credits_earned"]
     .median()
     .value_counts(dropna=False)
 )
 
 # mean values
-df_pct_creds_by_yr.groupby('year_of_enrollment')[
+df_pct_creds_by_yr.groupby("year_of_enrollment")[
     "pct_credits_earned"
 ].mean().value_counts(dropna=False)
 
@@ -806,7 +806,7 @@ _ = ax.set(xlabel="Number of Students")
 # gender by age 
 (
     sb.histplot(
-        df_cohort[(df_cohort['gender'] == "F") | (df_cohort['gender'] == "M")],
+        df_cohort[(df_cohort["gender"] == "F") | (df_cohort["gender"] == "M")],
         y="gender",
         hue="student_age",
         multiple="stack",
@@ -834,7 +834,7 @@ _ = ax.set(xlabel="Number of Students")
 # want to see systemic income disparities highlighted across races 
 df_cohort[["race", "pell_status_first_year"]].groupby("race").value_counts(
     normalize=True, dropna=False
-).sort_index()*100
+).sort_index() * 100
 
 # COMMAND ----------
 
