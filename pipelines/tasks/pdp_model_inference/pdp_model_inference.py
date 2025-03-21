@@ -44,6 +44,7 @@ mlflow.autolog(disable=True)
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("py4j").setLevel(logging.WARNING)  # Suppress py4j logging
 
+
 class ModelInferenceTask:
     """Encapsulates the model inference logic for the SST pipeline."""
 
@@ -128,7 +129,7 @@ class ModelInferenceTask:
             logging.error(
                 "Error writing %s data to Delta Lake: %s", table_name_suffix, e
             )
-            raise  
+            raise
 
     @staticmethod
     def predict_proba(

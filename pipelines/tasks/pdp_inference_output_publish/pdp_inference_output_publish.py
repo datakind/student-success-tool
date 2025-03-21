@@ -8,6 +8,7 @@ from student_success_tool.utils.emails import send_inference_completion_email
 from databricks.sdk import WorkspaceClient
 from email.headerregistry import Address
 
+
 def main():
     """Main function."""
     logging.basicConfig(level=logging.INFO)
