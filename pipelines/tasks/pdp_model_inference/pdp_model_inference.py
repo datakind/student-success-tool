@@ -1,7 +1,7 @@
 """
 This script performs model inference for the Student Success Tool (SST) pipeline.
 
-It loads a pre-trained ML model from MLflow Model Registry,
+It loads a pre-trained ML model from MLflow Model run,
 reads a processed dataset from Delta Lake, performs inference, calculates SHAP values,
 and writes the predictions back to Delta Lake.
 
@@ -34,6 +34,8 @@ from email.headerregistry import Address
 import student_success_tool.dataio as dataio
 from student_success_tool.modeling import inference
 from student_success_tool.schemas.pdp import PDPProjectConfig
+from student_success_tool.modeling.evaluation import plot_shap_beeswarm
+from student_success_tool.utils import emails
 
 # Disable mlflow autologging (prevents conflicts in Databricks environments)
 mlflow.autolog(disable=True)
@@ -41,11 +43,6 @@ mlflow.autolog(disable=True)
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("py4j").setLevel(logging.WARNING)  # Suppress py4j logging
-
-# Import that works on develop branch
-from student_success_tool.modeling.evaluation import plot_shap_beeswarm
-from student_success_tool.utils import emails
-
 
 class ModelInferenceTask:
     """Encapsulates the model inference logic for the SST pipeline."""
@@ -112,14 +109,9 @@ class ModelInferenceTask:
             model_feature_names = model.metadata.get_input_schema().input_names()
 
         df_serving = df[model_feature_names]
-
         df_predicted = df_serving.copy()
-
         df_predicted["predicted_label"] = model.predict(df_serving)
-        try:
-            df_predicted["predicted_prob"] = model.predict_proba(df_serving)[:, 1]
-        except AttributeError:
-            logging.error("Model does not have predict_proba method.  Skipping.")
+        df_predicted["predicted_prob"] = model.predict_proba(df_serving)[:, 1]
         return df_predicted
 
     def write_data_to_delta(self, df: pd.DataFrame, table_name_suffix: str):
@@ -136,7 +128,7 @@ class ModelInferenceTask:
             logging.error(
                 "Error writing %s data to Delta Lake: %s", table_name_suffix, e
             )
-            raise  # Critical, prevent further execution.
+            raise  
 
     @staticmethod
     def predict_proba(
@@ -151,8 +143,7 @@ class ModelInferenceTask:
             feature_names = model.named_steps["column_selector"].get_params()["cols"]
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(data=X, columns=feature_names)
-        # else: # This check seems unnecessary and potentially incorrect.
-        #     assert X.shape[1] == len(feature_names)  # Check *number* of columns.
+
         pred_probs = model.predict_proba(X)
         if pos_label is not None:
             return pred_probs[:, model.classes_.tolist().index(pos_label)]
@@ -246,8 +237,6 @@ class ModelInferenceTask:
                 df_ref,
                 link="identity",
             )
-
-            # shap_values = explainer(df_processed[model_feature_names])
 
             shap_values_explanation = self.parallel_explanations(
                 model=model,
