@@ -19,6 +19,7 @@ from student_success_tool.features.pdp import student
                     "gpa_group_year_1": [3.5, 3.5],
                     "number_of_credits_attempted_year_1": [15.0, 12.0],
                     "number_of_credits_earned_year_1": [12.0, 12.0],
+                    "pell_status_first_year": ["Y", "N"],
                 }
             ),
             "FALL",
@@ -33,6 +34,7 @@ from student_success_tool.features.pdp import student
                     "gpa_group_year_1": [3.5, 3.5],
                     "number_of_credits_attempted_year_1": [15.0, 12.0],
                     "number_of_credits_earned_year_1": [12.0, 12.0],
+                    "pell_status_first_year": ["Y", "N"],
                     "cohort_id": ["2020-21 FALL", "2021-22 SUMMER"],
                     "cohort_start_dt": ["2020-09-01", "2022-06-01"],
                     "student_program_of_study_area_term_1": ["24", "27"],
@@ -42,6 +44,7 @@ from student_success_tool.features.pdp import student
                         False,
                         False,
                     ],
+                    "student_is_pell_recipient_first_year": [True, False],
                     "diff_gpa_term_1_to_year_1": [-0.5, 0.5],
                     "frac_credits_earned_year_1": [0.8, 1.0],
                 }
@@ -91,6 +94,23 @@ def test_student_program_of_study_area(df, col, exp):
 def test_student_program_of_study_changed_term_1_to_year_1(df, term_col, year_col, exp):
     obs = student.student_program_of_study_changed_term_1_to_year_1(
         df, term_col=term_col, year_col=year_col
+    )
+    assert isinstance(obs, pd.Series) and not obs.empty
+    assert obs.equals(exp) or obs.compare(exp).empty
+
+
+@pytest.mark.parametrize(
+    ["df", "exp"],
+    [
+        (
+            pd.DataFrame({"pell_status_first_year": ["Y", "N", pd.NA]}),
+            pd.Series([True, False, pd.NA], dtype="boolean"),
+        )
+    ],
+)
+def student_is_pell_recipient_first_year(df, exp):
+    obs = student.student_is_pell_recipient_first_year(
+        df, pell_col="pell_status_first_year"
     )
     assert isinstance(obs, pd.Series) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
