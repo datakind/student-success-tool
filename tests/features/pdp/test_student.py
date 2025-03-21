@@ -102,17 +102,15 @@ def test_student_program_of_study_changed_term_1_to_year_1(df, term_col, year_co
     ["df", "exp"],
     [
         (
-            pd.DataFrame(
-                {"pell_status_first_year": ["Y", "N", pd.NA]}
-            ),
-            # defaults NA to False - we can check with schools on this! 
-            pd.Series([True, False, False], dtype="boolean"),
+            pd.DataFrame({"pell_status_first_year": ["Y", "N", pd.NA]}),
+            # defaults NA to False - we can check with schools on this!
+            pd.Series([True, False, pd.NA], dtype="boolean"),
         )
     ],
 )
 def student_is_pell_recipient_first_year(df, exp):
     obs = student.student_is_pell_recipient_first_year(
-        df, pell_coll="pell_status_first_year"
+        df, pell_col="pell_status_first_year"
     )
     assert isinstance(obs, pd.Series) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
