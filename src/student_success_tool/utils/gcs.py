@@ -81,9 +81,12 @@ def publish_inference_output_files(
             files_to_move.append(f"{volume_path_top_level}/{f.name}")
 
     for f in files_to_move:
+        new_fname = os.path.basename(f)
+        if new_fname.endswith(".csv"):
+            new_fname = "inference_output.csv"
         save_file(
             bucket,
             f,
-            f"{bucket_directory}/{os.path.basename(f)}",
+            f"{bucket_directory}/{new_fname}",
         )
     return status_string
