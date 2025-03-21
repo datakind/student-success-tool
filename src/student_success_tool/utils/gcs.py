@@ -74,9 +74,8 @@ def publish_inference_output_files(
                 status_string = filename
         elif filename.endswith(".csv"):
             files_to_move.append(f"{volume_path_inference_folder}/{filename}")
-    # The top level volume directory can include other files that are part
-    # of the published set of files. So we still need to iterate over these files. We only take .pngs from this directory
-    # we have to be selective with the extension type because there may be subfolders in this folder.
+    # The top level volume directory can include other files like pngs etc. that are part
+    # of the published set of files. So we still need to iterate over these files.
     for f in dbutils.fs.ls(volume_path_top_level):
         if f.name.endswith(".png"):
             files_to_move.append(f"{volume_path_top_level}/{f.name}")
