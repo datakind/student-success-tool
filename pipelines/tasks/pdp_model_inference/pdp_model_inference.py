@@ -44,10 +44,6 @@ mlflow.autolog(disable=True)
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("py4j").setLevel(logging.WARNING)  # Suppress py4j logging
 
-# Import that works on develop branch
-from student_success_tool.modeling.evaluation import plot_shap_beeswarm
-from student_success_tool.utils import emails
-
 
 class ModelInferenceTask:
     """Encapsulates the model inference logic for the SST pipeline."""
@@ -115,7 +111,6 @@ class ModelInferenceTask:
 
         df_serving = df[model_feature_names]
         df_predicted = df_serving.copy()
-
         df_predicted["predicted_label"] = model.predict(df_serving)
         df_predicted["predicted_prob"] = model.predict_proba(df_serving)[:, 1]
         return df_predicted
