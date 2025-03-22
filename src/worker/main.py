@@ -165,7 +165,7 @@ def execute_pdp_pull(
         headers={
             "accept": "application/json",
             "X-API-KEY": env_vars["BACKEND_API_KEY"],
-        }
+        },
     ).json()["access_token"]
     r = requests.post(
         "https://dev-sst.datakind.org/api/v1/institutions/pdp-id/345000",

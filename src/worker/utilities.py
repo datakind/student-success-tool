@@ -12,6 +12,7 @@ from collections import defaultdict
 import logging
 from typing import List, Dict, Any
 
+
 def get_sftp_bucket_name(env_var: str) -> str:
     return env_var.lower() + "_sftp_ingestion"
 
@@ -39,7 +40,7 @@ class StorageControl(BaseModel):
             if client is None:
                 raise RuntimeError("Failed to create SFTP client.")
             # Open the file in binary read mode.
-            with client.open(sftp_file, 'rb') as f:
+            with client.open(sftp_file, "rb") as f:
                 blob.upload_from_file(f)
 
     def list_sftp_files(
@@ -80,9 +81,13 @@ class StorageControl(BaseModel):
                         recursive_list(entry_path)
                     else:
                         # Cast modification time and file size.
-                        st_mtime = float(attr.st_mtime) if attr.st_mtime is not None else 0.0
+                        st_mtime = (
+                            float(attr.st_mtime) if attr.st_mtime is not None else 0.0
+                        )
                         st_size = int(attr.st_size) if attr.st_size is not None else 0
-                        modified_iso = datetime.datetime.fromtimestamp(st_mtime).isoformat()
+                        modified_iso = datetime.datetime.fromtimestamp(
+                            st_mtime
+                        ).isoformat()
                         size_mb = round(st_size / (1024 * 1024), 2)
                         file_info = {
                             "path": entry_path,
