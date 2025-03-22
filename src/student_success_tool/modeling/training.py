@@ -79,9 +79,14 @@ def run_automl_classification(
         str(job_run_id),
         optimization_metric,
     ]
-    experiment_name_components.extend(f"{key}={val}" for key, val in kwargs.items())
+    # experiment_name_components.extend(f"{key}={val}" for key, val in kwargs.items())
     experiment_name_components.append(time.strftime("%Y-%m-%dT%H:%M:%S"))
     experiment_name = "_".join(experiment_name_components)
+    if len(experiment_name) > 500:
+        LOGGER.warning(
+            "truncating long experiment name '%s' to first 500 chars", experiment_name
+        )
+        experiment_name = experiment_name[:500]
 
     from databricks import automl  # type: ignore  # importing here for mocking in tests
 
