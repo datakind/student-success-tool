@@ -29,13 +29,13 @@ def client_fixture():
     app.dependency_overrides.clear()
 
 
-def test_get_root(client: TestClient):
+def test_get_root(client: TestClient) -> None:
     """Test GET /."""
     response = client.get("/")
     assert response.status_code == 200
 
 
-def test_retrieve_token(client: TestClient):
+def test_retrieve_token(client: TestClient) -> None:
     """Test POST /token."""
     response = client.post(
         "/token",
@@ -45,7 +45,7 @@ def test_retrieve_token(client: TestClient):
     assert response.status_code == 200
 
 
-def test_execute_pdp_pull(client: TestClient):
+def test_execute_pdp_pull(client: TestClient) -> None:
     """Test POST /execute-pdp-pull."""
     MOCK_STORAGE.copy_from_sftp_to_gcs.return_value = None
     MOCK_STORAGE.create_bucket_if_not_exists.return_value = None

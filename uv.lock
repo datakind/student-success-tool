@@ -1,4 +1,5 @@
 version = 1
+revision = 1
 requires-python = ">=3.10, <3.13"
 resolution-markers = [
     "python_full_version < '3.11' and sys_platform != 'win32'",
@@ -3600,6 +3601,7 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "python-multipart" },
     { name = "pyyaml" },
+    { name = "requests" },
     { name = "scikit-learn" },
     { name = "seaborn" },
     { name = "shap" },
@@ -3608,6 +3610,8 @@ dependencies = [
     { name = "strenum" },
     { name = "textwrap3" },
     { name = "tomli", marker = "python_full_version < '3.11'" },
+    { name = "types-paramiko" },
+    { name = "types-requests" },
 ]
 
 [package.dev-dependencies]
@@ -3654,6 +3658,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "python-multipart", specifier = ">=0.0.16" },
     { name = "pyyaml", specifier = "~=6.0" },
+    { name = "requests", specifier = ">=2.0.0" },
     { name = "scikit-learn", specifier = "~=1.4" },
     { name = "seaborn", specifier = "~=0.13" },
     { name = "shap", specifier = "~=0.46.0" },
@@ -3662,6 +3667,8 @@ requires-dist = [
     { name = "strenum", specifier = ">=0.4.15" },
     { name = "textwrap3", specifier = "~=0.9" },
     { name = "tomli", marker = "python_full_version < '3.11'", specifier = "~=2.0" },
+    { name = "types-paramiko" },
+    { name = "types-requests" },
 ]
 
 [package.metadata.requires-dev]
@@ -3822,12 +3829,36 @@ wheels = [
 ]
 
 [[package]]
+name = "types-paramiko"
+version = "3.5.0.20240928"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cryptography" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ae/00/733b05fa97328becc7606301d9ae4c7ec7ec9e92324b8420208e397f3ac7/types-paramiko-3.5.0.20240928.tar.gz", hash = "sha256:79dd9b2ee510b76a3b60d8ac1f3f348c45fcecf01347ca79e14db726bbfc442d", size = 23213 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8e/e5/afb514829e7184e7518a62c014dc364f7a9d47f9112ff26c63835cbf0de5/types_paramiko-3.5.0.20240928-py3-none-any.whl", hash = "sha256:cda0aff4905fe8efe4b5448331a80e943d42a796bd4beb77a3eed3485bc96a85", size = 34016 },
+]
+
+[[package]]
 name = "types-python-dateutil"
 version = "2.9.0.20241206"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a9/60/47d92293d9bc521cd2301e423a358abfac0ad409b3a1606d8fbae1321961/types_python_dateutil-2.9.0.20241206.tar.gz", hash = "sha256:18f493414c26ffba692a72369fea7a154c502646301ebfe3d56a04b3767284cb", size = 13802 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0f/b3/ca41df24db5eb99b00d97f89d7674a90cb6b3134c52fb8121b6d8d30f15c/types_python_dateutil-2.9.0.20241206-py3-none-any.whl", hash = "sha256:e248a4bc70a486d3e3ec84d0dc30eec3a5f979d6e7ee4123ae043eedbb987f53", size = 14384 },
+]
+
+[[package]]
+name = "types-requests"
+version = "2.32.0.20250306"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/09/1a/beaeff79ef9efd186566ba5f0d95b44ae21f6d31e9413bcfbef3489b6ae3/types_requests-2.32.0.20250306.tar.gz", hash = "sha256:0962352694ec5b2f95fda877ee60a159abdf84a0fc6fdace599f20acb41a03d1", size = 23012 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/99/26/645d89f56004aa0ba3b96fec27793e3c7e62b40982ee069e52568922b6db/types_requests-2.32.0.20250306-py3-none-any.whl", hash = "sha256:25f2cbb5c8710b2022f8bbee7b2b66f319ef14aeea2f35d80f18c9dbf3b60a0b", size = 20673 },
 ]
 
 [[package]]
