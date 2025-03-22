@@ -8,16 +8,14 @@ from fastapi.responses import FileResponse
 
 from pydantic import BaseModel
 from google.cloud import storage
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-import jwt
+from fastapi.security import OAuth2PasswordRequestForm
 from .utilities import (
     get_sftp_bucket_name,
-    StorageControl,
-    sftp_split_files
+    StorageControl
 )
 from .config import sftp_vars, env_vars, startup_env_vars
 from .authn import Token, get_current_username, check_creds, create_access_token
-from datetime import timedelta, datetime, timezone
+from datetime import timedelta
 
 
 import os
@@ -157,8 +155,8 @@ def execute_pdp_pull(
     storage_control.create_bucket_if_not_exists(get_sftp_bucket_name(env_vars["ENV"]))
     files = storage_control.list_sftp_files(sftp_vars["SFTP_HOST"],22,sftp_vars["SFTP_USER"],sftp_vars["SFTP_PASSWORD"])
     #sftp_helper(storage_control, files)
-    token = requests.post(f"https://dev-sst.datakind.org/api/v1/token-from-api-key", headers={"accept": "application/json", "X-API-KEY": env_vars['BACKEND_API_KEY']}, data={""}).json()["access_token"]
-    r = requests.post(f"https://dev-sst.datakind.org/api/v1/institutions/pdp-id/345000", headers={"accept": "application/json", "Content-Type": "application/x-www-form-urlencoded", "Authorization": f"Bearer {token}"}).json()
+    token = requests.post("https://dev-sst.datakind.org/api/v1/token-from-api-key", headers={"accept": "application/json", "X-API-KEY": env_vars['BACKEND_API_KEY']}, data={""}).json()["access_token"]
+    r = requests.post("https://dev-sst.datakind.org/api/v1/institutions/pdp-id/345000", headers={"accept": "application/json", "Content-Type": "application/x-www-form-urlencoded", "Authorization": f"Bearer {token}"}).json()
     print("Status Code:", r.status_code, "\nResponse Body:", r.text)
     return {
         "sftp_files": files,

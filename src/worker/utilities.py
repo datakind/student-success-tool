@@ -102,6 +102,8 @@ class StorageControl(BaseModel):
         bucket.storage_class = "STANDARD"
         new_bucket = storage_client.create_bucket(bucket, location="us")
 
+        return new_bucket
+
 def sftp_split_files(storage_control: StorageControl, bucket_name: str, source_blob_name: str, destination_folder: str, institution_column: str = "institution_id"):
     """
     Splits a CSV blob by the values in the given institution column and writes each subset
