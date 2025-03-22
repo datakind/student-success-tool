@@ -1,5 +1,4 @@
-"""Test file for the main.py file and constituent API functions.
-"""
+"""Test file for the main.py file and constituent API functions."""
 
 import pytest
 
@@ -55,9 +54,9 @@ def test_execute_pdp_pull(client: TestClient):
         "name": "University of South Carolina - Beaufort",
         "state": "SC",
         "retention_days": None,
-        "pdp_id": "345000"
-        }
-  
+        "pdp_id": "345000",
+    }
+
     response = client.post("/execute-pdp-pull", json={"placeholder": "val"})
     assert response.status_code == 200
     assert response.json() == {

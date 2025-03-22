@@ -1,5 +1,4 @@
-"""Main file for the SST Worker.
-"""
+"""Main file for the SST Worker."""
 
 import logging
 from typing import Any, Annotated
@@ -9,10 +8,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from google.cloud import storage
 from fastapi.security import OAuth2PasswordRequestForm
-from .utilities import (
-    get_sftp_bucket_name,
-    StorageControl
-)
+from .utilities import get_sftp_bucket_name, StorageControl
 from .config import sftp_vars, env_vars, startup_env_vars
 from .authn import Token, get_current_username, check_creds, create_access_token
 from datetime import timedelta
@@ -103,12 +99,15 @@ def sftp_helper(storage_control: StorageControl, sftp_source_filenames: list):
     """
     num_files = len(sftp_source_filenames)
     logger.info(f"Starting sftp_helper for {num_files} file(s).")
-    
+
     for sftp_source_filename in sftp_source_filenames:
-        sftp_source_filename = sftp_source_filename['path']
-        if sftp_source_filename == './receive/AO1600pdp_AO1600_AR_DEIDENTIFIED_STUDYID_20250228030226.csv':
+        sftp_source_filename = sftp_source_filename["path"]
+        if (
+            sftp_source_filename
+            == "./receive/AO1600pdp_AO1600_AR_DEIDENTIFIED_STUDYID_20250228030226.csv"
+        ):
             logger.debug(f"Processing source file: {sftp_source_filename}")
-            
+
             # Extract the base filename.
             base_filename = os.path.basename(sftp_source_filename)
             dest_filename = f"{base_filename}"
@@ -124,10 +123,14 @@ def sftp_helper(storage_control: StorageControl, sftp_source_filenames: list):
                     get_sftp_bucket_name(env_vars["ENV"]),
                     dest_filename,
                 )
-                logger.info(f"Successfully processed '{sftp_source_filename}' as '{dest_filename}'.")
+                logger.info(
+                    f"Successfully processed '{sftp_source_filename}' as '{dest_filename}'."
+                )
             except Exception as e:
-                logger.error(f"Error processing '{sftp_source_filename}': {e}", exc_info=True)
-    
+                logger.error(
+                    f"Error processing '{sftp_source_filename}': {e}", exc_info=True
+                )
+
 
 def CreateBlobReference(bucket_name: str, blob_name: str):
     """Retrieves a blob reference from a given bucket.
@@ -135,7 +138,7 @@ def CreateBlobReference(bucket_name: str, blob_name: str):
         ValueError: If the bucket does not exist.
     Returns:
         google.cloud.storage.blob.Blob: The blob reference."""
-    
+
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     if not bucket.exists():
@@ -143,8 +146,8 @@ def CreateBlobReference(bucket_name: str, blob_name: str):
     blob = bucket.blob(blob_name)
     # Optional: Check if blob exists and decide whether to overwrite or raise an error.
     return blob
-    
-    
+
+
 @app.post("/execute-pdp-pull", response_model=PdpPullResponse)
 def execute_pdp_pull(
     req: PdpPullRequest,
@@ -153,13 +156,29 @@ def execute_pdp_pull(
 ) -> Any:
     """Performs the PDP pull of the file."""
     storage_control.create_bucket_if_not_exists(get_sftp_bucket_name(env_vars["ENV"]))
-    files = storage_control.list_sftp_files(sftp_vars["SFTP_HOST"],22,sftp_vars["SFTP_USER"],sftp_vars["SFTP_PASSWORD"])
-    #sftp_helper(storage_control, files)
-    token = requests.post("https://dev-sst.datakind.org/api/v1/token-from-api-key", headers={"accept": "application/json", "X-API-KEY": env_vars['BACKEND_API_KEY']}, data={""}).json()["access_token"]
-    r = requests.post("https://dev-sst.datakind.org/api/v1/institutions/pdp-id/345000", headers={"accept": "application/json", "Content-Type": "application/x-www-form-urlencoded", "Authorization": f"Bearer {token}"}).json()
+    files = storage_control.list_sftp_files(
+        sftp_vars["SFTP_HOST"], 22, sftp_vars["SFTP_USER"], sftp_vars["SFTP_PASSWORD"]
+    )
+    # sftp_helper(storage_control, files)
+    token = requests.post(
+        "https://dev-sst.datakind.org/api/v1/token-from-api-key",
+        headers={
+            "accept": "application/json",
+            "X-API-KEY": env_vars["BACKEND_API_KEY"],
+        },
+        data={""},
+    ).json()["access_token"]
+    r = requests.post(
+        "https://dev-sst.datakind.org/api/v1/institutions/pdp-id/345000",
+        headers={
+            "accept": "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": f"Bearer {token}",
+        },
+    ).json()
     print("Status Code:", r.status_code, "\nResponse Body:", r.text)
     return {
         "sftp_files": files,
-        "pdp_inst_generated": [r['pdp_id']],
+        "pdp_inst_generated": [r["pdp_id"]],
         "pdp_inst_not_found": [],
     }
