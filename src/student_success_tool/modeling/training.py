@@ -13,7 +13,7 @@ def run_automl_classification(
     df: pd.DataFrame,
     *,
     target_col: str,
-    optimization_metric: str,
+    primary_metric: str,
     institution_id: str,
     job_run_id: str,
     student_id_col: str,
@@ -28,7 +28,7 @@ def run_automl_classification(
             as well as ``student_id_col`` and any other columns
             specified in the optional ``**kwargs``
         target_col: Column name for the target to be predicted
-        optimization_metric: Metric used to evaluate and rank model performance;
+        primary_metric: Metric used to evaluate and rank model performance;
             currently supported classification metrics include "f1", "log_loss",
             "precision", "accuracy", "roc_auc"
         institution_id: Unique identifier for the dataset's institution,
@@ -77,7 +77,7 @@ def run_automl_classification(
         institution_id,
         target_col,
         str(job_run_id),
-        optimization_metric,
+        primary_metric,
     ]
     # experiment_name_components.extend(f"{key}={val}" for key, val in kwargs.items())
     experiment_name_components.append(time.strftime("%Y-%m-%dT%H:%M:%S"))
@@ -94,7 +94,7 @@ def run_automl_classification(
     summary = automl.classify(
         dataset=df,
         target_col=target_col,
-        primary_metric=optimization_metric,
+        primary_metric=primary_metric,
         experiment_name=experiment_name,
         exclude_cols=exclude_cols,
         **kwargs,
