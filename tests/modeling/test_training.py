@@ -20,7 +20,7 @@ def test_run_automl_classification_uses_correct_args_and_format():
         training.run_automl_classification(
             df=train_df,
             target_col=target_col,
-            optimization_metric=automl_metric,
+            primary_metric=automl_metric,
             institution_id="test_inst",
             job_run_id="test",
             student_id_col=student_id_col,
