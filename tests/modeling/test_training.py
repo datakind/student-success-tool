@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
+import pytest
 
 from student_success_tool.modeling import training
 
@@ -35,3 +36,33 @@ def test_run_automl_classification_uses_correct_args_and_format():
         assert kwargs.get("time_col") == input_kwargs["time_col"]
         assert kwargs.get("timeout_minutes") == input_kwargs["timeout_minutes"]
         assert kwargs.get("pos_label") == True
+
+
+@pytest.mark.parametrize(
+    ["params", "exp_prefix"],
+    [
+        (
+            {
+                "institution_id": "inst_id",
+                "job_run_id": "interactive",
+                "primary_metric": "log_loss",
+                "timeout_minutes": 10,
+            },
+            "inst_id__job_run_id='interactive'__primary_metric='log_loss'__timeout_minutes=10__",
+        ),
+        (
+            {
+                "institution_id": "other_inst_id",
+                "job_run_id": "12345",
+                "primary_metric": "f1",
+                "timeout_minutes": 5,
+                "exclude_frameworks": ["xgboost", "lightgbm"],
+            },
+            "other_inst_id__job_run_id='12345'__primary_metric='f1'__timeout_minutes=5__exclude_frameworks=xgboost,lightgbm__",
+        ),
+    ],
+)
+def test_get_experiment_name(params, exp_prefix):
+    obs = training.get_experiment_name(**params)
+    assert isinstance(obs, str)
+    assert obs.startswith(exp_prefix)

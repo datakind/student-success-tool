@@ -1,5 +1,6 @@
 import logging
 import time
+import typing as t
 
 import pandas as pd
 
@@ -72,21 +73,13 @@ def run_automl_classification(
     if student_id_col is not None and student_id_col not in exclude_cols:
         exclude_cols.append(student_id_col)
 
-    # generate a very descriptive experiment name
-    experiment_name_components = [
-        institution_id,
-        target_col,
-        str(job_run_id),
-        primary_metric,
-    ]
-    # experiment_name_components.extend(f"{key}={val}" for key, val in kwargs.items())
-    experiment_name_components.append(time.strftime("%Y-%m-%dT%H:%M:%S"))
-    experiment_name = "_".join(experiment_name_components)
-    if len(experiment_name) > 500:
-        LOGGER.warning(
-            "truncating long experiment name '%s' to first 500 chars", experiment_name
-        )
-        experiment_name = experiment_name[:500]
+    experiment_name = get_experiment_name(
+        institution_id=institution_id,
+        job_run_id=job_run_id,
+        primary_metric=primary_metric,
+        timeout_minutes=kwargs["timeout_minutes"],  # type: ignore
+        exclude_frameworks=kwargs.get("exclude_frameworks"),  # type: ignore
+    )
 
     from databricks import automl  # type: ignore  # importing here for mocking in tests
 
@@ -100,3 +93,37 @@ def run_automl_classification(
         **kwargs,
     )
     return summary
+
+
+def get_experiment_name(
+    *,
+    institution_id: str,
+    job_run_id: str,
+    primary_metric: str,
+    timeout_minutes: int,
+    exclude_frameworks: t.Optional[list[str]] = None,
+) -> str:
+    """
+    Get a descriptive experiment name based on more important input parameters.
+
+    See Also:
+        - :func:`run_automl_classification()`
+
+    References:
+        - https://docs.databricks.com/en/machine-learning/automl/automl-api-reference.html#classify
+    """
+    name_components = [
+        institution_id,
+        f"{job_run_id=}",
+        f"{primary_metric=}",
+        f"{timeout_minutes=}",
+    ]
+    if exclude_frameworks:
+        name_components.append(f"exclude_frameworks={','.join(exclude_frameworks)}")
+    name_components.append(time.strftime("%Y-%m-%dT%H:%M:%S"))
+
+    name = "__".join(name_components)
+    if len(name) > 500:
+        LOGGER.warning("truncating long experiment name '%s' to first 500 chars", name)
+        name = name[:500]
+    return name
