@@ -6,7 +6,6 @@ from fastapi import FastAPI, Depends, HTTPException, status, Security
 from fastapi.responses import FileResponse
 
 from pydantic import BaseModel
-from google.cloud import storage
 from fastapi.security import OAuth2PasswordRequestForm
 from .utilities import get_sftp_bucket_name, StorageControl, fetch_institution_ids, split_csv_and_generate_signed_urls
 from .config import sftp_vars, env_vars, startup_env_vars
@@ -15,7 +14,6 @@ from datetime import timedelta
 
 
 import os
-import requests
 
 # Set the logging
 logging.basicConfig(format="%(asctime)s [%(levelname)s]: %(message)s")
@@ -131,6 +129,7 @@ def sftp_helper(storage_control: StorageControl, sftp_source_filenames: list) ->
                 logger.error(
                     f"Error processing '{sftp_source_filename}': {e}", exc_info=True
                 )
+    return all_blobs
 
 @app.post("/execute-pdp-pull", response_model=PdpPullResponse)
 async def execute_pdp_pull(

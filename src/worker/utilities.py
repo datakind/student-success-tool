@@ -6,14 +6,11 @@ from pydantic import BaseModel
 import os
 import stat
 from datetime import datetime, timedelta
-import csv
 import io
-from collections import defaultdict
 import logging
 from typing import List, Dict, Any
 import requests
 import pandas as pd
-import io
 import re
 
 def get_sftp_bucket_name(env_var: str) -> str:
@@ -178,7 +175,7 @@ def split_csv_and_generate_signed_urls(
     if not institution_column:
         error_message = "No column found matching the pattern for 'institution' and 'id'."
         logging.error(error_message)
-        return {"error": error_message}
+        return {"error": {"message": "Failed to download or parse CSV"}}
 
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
     all_data = {}
@@ -193,7 +190,7 @@ def split_csv_and_generate_signed_urls(
 
         file_name = f"{source_blob_name.split('.')[0]}_{inst_id}.csv"
         timestamped_folder = f"{inst_id}"
-        new_blob_name = f"{timestamped_folder}/{file_name}"
+        new_blob_name = f"{timestamped_folder}/{current_time}/{file_name}"
         new_blob = storage_client.bucket(bucket_name).blob(new_blob_name)
 
         # Attempt to upload the CSV file
@@ -232,9 +229,8 @@ def fetch_institution_ids(pdp_ids: list, backend_api_key: str) -> Any:
         raise ValueError("Missing BACKEND_API_KEY in environment variables.")
     
     # Dictionary to store successful PDP ID to Institution ID mappings
-    inst_id_dict = {}
-    # List to track PDP IDs that had issues
-    problematic_ids = []
+    inst_id_dict: Dict[str, str] = {}  # Explicit type annotation
+    problematic_ids: list = []  # List to track problematic IDs
 
     # Obtain the access token
     token_response = requests.post(
