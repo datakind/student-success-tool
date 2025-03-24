@@ -25,7 +25,7 @@ resources:
           job_cluster_key: approval-pipeline-cluster
           libraries:
             - pypi:
-                package: git+https://github.com/datakind/student-success-tool.git@e209f19d1e0912739a1de85c704270039e2cb337
+                package: git+https://github.com/datakind/student-success-tool.git@develop
       job_clusters:
         - job_cluster_key: approval-pipeline-cluster
           new_cluster:
