@@ -7,9 +7,20 @@ from fastapi.responses import FileResponse
 
 from pydantic import BaseModel
 from fastapi.security import OAuth2PasswordRequestForm
-from .utilities import get_sftp_bucket_name, StorageControl, fetch_institution_ids, split_csv_and_generate_signed_urls
+from .utilities import (
+    get_sftp_bucket_name,
+    StorageControl,
+    fetch_institution_ids,
+    split_csv_and_generate_signed_urls,
+)
 from .config import sftp_vars, env_vars, startup_env_vars
-from .authn import Token, get_current_username, check_creds, create_access_token, get_api_key
+from .authn import (
+    Token,
+    get_current_username,
+    check_creds,
+    create_access_token,
+    get_api_key,
+)
 from datetime import timedelta
 
 
@@ -84,6 +95,7 @@ async def login_for_access_token(
     )
     return Token(access_token=access_token, token_type="bearer")
 
+
 def sftp_helper(storage_control: StorageControl, sftp_source_filenames: list) -> list:
     """
     For each source file in sftp_source_filenames, copies the file from the SFTP
@@ -131,12 +143,13 @@ def sftp_helper(storage_control: StorageControl, sftp_source_filenames: list) ->
                 )
     return all_blobs
 
+
 @app.post("/execute-pdp-pull", response_model=PdpPullResponse)
 async def execute_pdp_pull(
     req: PdpPullRequest,
     current_username: Annotated[str, Depends(get_current_username)],
     storage_control: Annotated[StorageControl, Depends(StorageControl)],
-    api_key_enduser_tuple: str = Security(get_api_key)
+    api_key_enduser_tuple: str = Security(get_api_key),
 ) -> Any:
     """Performs the PDP pull of the file."""
     storage_control.create_bucket_if_not_exists(get_sftp_bucket_name(env_vars["ENV"]))
@@ -144,10 +157,14 @@ async def execute_pdp_pull(
         sftp_vars["SFTP_HOST"], 22, sftp_vars["SFTP_USER"], sftp_vars["SFTP_PASSWORD"]
     )
     all_blobs = sftp_helper(storage_control, files)
-    signed_urls = split_csv_and_generate_signed_urls(bucket_name=get_sftp_bucket_name(env_vars["ENV"]),
-                                       source_blob_name=all_blobs[0])
+    signed_urls = split_csv_and_generate_signed_urls(
+        bucket_name=get_sftp_bucket_name(env_vars["ENV"]), source_blob_name=all_blobs[0]
+    )
 
-    valid_pdp_ids, invalid_ids = fetch_institution_ids(pdp_ids=list(signed_urls.keys()), backend_api_key=next(key for key in api_key_enduser_tuple if key is not None))
+    valid_pdp_ids, invalid_ids = fetch_institution_ids(
+        pdp_ids=list(signed_urls.keys()),
+        backend_api_key=next(key for key in api_key_enduser_tuple if key is not None),
+    )
 
     return {
         "sftp_files": files,

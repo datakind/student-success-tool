@@ -24,6 +24,7 @@ api_key_enduser_header = APIKeyHeader(
     name="ENDUSER", scheme_name="api-enduser", auto_error=False
 )
 
+
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -31,6 +32,7 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: str | None = None
+
 
 def get_api_key(
     api_key_header: str = Security(api_key_header),
@@ -53,6 +55,7 @@ def get_api_key(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid or missing API Key",
     )
+
 
 def check_creds(username: str, password: str) -> bool:
     if username == env_vars["USERNAME"] and password == env_vars["PASSWORD"]:

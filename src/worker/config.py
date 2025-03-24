@@ -1,10 +1,9 @@
-"""Helper dict to retrieve OS env variables. This list includes all environment variables needed.
-"""
+"""Helper dict to retrieve OS env variables. This list includes all environment variables needed."""
 
 import os
 from dotenv import load_dotenv
 
-os.environ['ENV_FILE_PATH'] = "/Users/oluwadolaposalako/fastapi_fellows_build/src/.env"
+os.environ["ENV_FILE_PATH"] = "/Users/oluwadolaposalako/fastapi_fellows_build/src/.env"
 # defaults to unit test values.
 env_vars = {
     "ENV": "",
@@ -14,7 +13,7 @@ env_vars = {
     "USERNAME": "tester-user",
     "PASSWORD": "tester-pw",
     "BACKEND_API_KEY": "",
-    "BUCKET_ENV": ""
+    "BUCKET_ENV": "",
 }
 
 gcs_vars = {

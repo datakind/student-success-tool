@@ -13,6 +13,7 @@ import requests
 import pandas as pd
 import re
 
+
 def get_sftp_bucket_name(env_var: str) -> str:
     return env_var.lower() + "_sftp_ingestion"
 
@@ -85,9 +86,7 @@ class StorageControl(BaseModel):
                             float(attr.st_mtime) if attr.st_mtime is not None else 0.0
                         )
                         st_size = int(attr.st_size) if attr.st_size is not None else 0
-                        modified_iso = datetime.fromtimestamp(
-                            st_mtime
-                        ).isoformat()
+                        modified_iso = datetime.fromtimestamp(st_mtime).isoformat()
                         size_mb = round(st_size / (1024 * 1024), 2)
                         file_info = {
                             "path": entry_path,
@@ -128,9 +127,7 @@ class StorageControl(BaseModel):
 
 
 def split_csv_and_generate_signed_urls(
-    bucket_name: str,
-    source_blob_name: str,
-    url_expiration_minutes: int = 1440
+    bucket_name: str, source_blob_name: str, url_expiration_minutes: int = 1440
 ) -> Dict[str, Dict[str, str]]:
     """
     Fetches a CSV from Google Cloud Storage, splits it by a specified column, uploads the results,
@@ -162,7 +159,7 @@ def split_csv_and_generate_signed_urls(
         logging.error(f"Failed to process blob {source_blob_name}: {e}")
         return {}
 
-    pattern = re.compile(r'(?=.*institution)(?=.*id)', re.IGNORECASE)
+    pattern = re.compile(r"(?=.*institution)(?=.*id)", re.IGNORECASE)
     institution_column = None
 
     # Identify the correct column based on the pattern
@@ -171,9 +168,11 @@ def split_csv_and_generate_signed_urls(
             institution_column = column
             logging.info(f"Matching column found: {column}")
             break
-    
+
     if not institution_column:
-        error_message = "No column found matching the pattern for 'institution' and 'id'."
+        error_message = (
+            "No column found matching the pattern for 'institution' and 'id'."
+        )
         logging.error(error_message)
         return {"error": {"message": "Failed to download or parse CSV"}}
 
@@ -195,23 +194,30 @@ def split_csv_and_generate_signed_urls(
 
         # Attempt to upload the CSV file
         try:
-            logging.info(f"Uploading split CSV for institution ID {inst_id} to {new_blob_name}")
-            new_blob.upload_from_string(output.getvalue(), content_type='text/csv')
+            logging.info(
+                f"Uploading split CSV for institution ID {inst_id} to {new_blob_name}"
+            )
+            new_blob.upload_from_string(output.getvalue(), content_type="text/csv")
         except Exception as e:
             logging.error(f"Failed to upload CSV for institution ID {inst_id}: {e}")
             continue
-        
+
         # Attempt to generate a signed URL for the new blob
         try:
             expiration_time = datetime.now() + timedelta(minutes=url_expiration_minutes)
             signed_url = new_blob.generate_signed_url(expiration=expiration_time)
-            all_data[inst_id] = {'signed_url': signed_url, 'file_name': file_name}
-            logging.info(f"Signed URL generated successfully for institution ID {inst_id}")
+            all_data[inst_id] = {"signed_url": signed_url, "file_name": file_name}
+            logging.info(
+                f"Signed URL generated successfully for institution ID {inst_id}"
+            )
         except Exception as e:
-            logging.error(f"Failed to generate signed URL for institution ID {inst_id}: {e}")
+            logging.error(
+                f"Failed to generate signed URL for institution ID {inst_id}: {e}"
+            )
             continue
 
     return all_data
+
 
 def fetch_institution_ids(pdp_ids: list, backend_api_key: str) -> Any:
     """
@@ -227,7 +233,7 @@ def fetch_institution_ids(pdp_ids: list, backend_api_key: str) -> Any:
     """
     if not backend_api_key:
         raise ValueError("Missing BACKEND_API_KEY in environment variables.")
-    
+
     # Dictionary to store successful PDP ID to Institution ID mappings
     inst_id_dict: Dict[str, str] = {}  # Explicit type annotation
     problematic_ids: list = []  # List to track problematic IDs
@@ -240,9 +246,12 @@ def fetch_institution_ids(pdp_ids: list, backend_api_key: str) -> Any:
     if token_response.status_code != 200:
         logging.error(f"Failed to get token: {token_response.text}")
         problematic_ids.append(f"Failed to get token: {token_response.text}")
-        return inst_id_dict, problematic_ids  # Return empty dict and list if no token is obtained
+        return (
+            inst_id_dict,
+            problematic_ids,
+        )  # Return empty dict and list if no token is obtained
 
-    access_token = token_response.json().get('access_token')
+    access_token = token_response.json().get("access_token")
     if not access_token:
         logging.error("Access token not found in the response.")
         problematic_ids.append("Access token not found in the response.")
@@ -261,17 +270,20 @@ def fetch_institution_ids(pdp_ids: list, backend_api_key: str) -> Any:
 
         if inst_response.status_code == 200:
             inst_data = inst_response.json()
-            inst_id = inst_data.get('inst_id')
+            inst_id = inst_data.get("inst_id")
             if inst_id:
                 inst_id_dict[pdp_id] = inst_id
             else:
                 logging.error(f"No institution ID found for PDP ID: {pdp_id}")
                 problematic_ids.append(pdp_id)
         else:
-            logging.error(f"Failed to fetch institution ID for PDP ID {pdp_id}: {inst_response.text}")
+            logging.error(
+                f"Failed to fetch institution ID for PDP ID {pdp_id}: {inst_response.text}"
+            )
             problematic_ids.append(pdp_id)
 
     return inst_id_dict, problematic_ids
+
 
 def fetch_upload_url(file_name: str, institution_id: int, access_token: str) -> str:
     """
@@ -289,10 +301,7 @@ def fetch_upload_url(file_name: str, institution_id: int, access_token: str) -> 
     url = f"https://dev-sst.datakind.org/api/v1/institutions/{institution_id}/upload-url/{file_name}"
 
     # Set the headers including the Authorization header
-    headers = {
-        'accept': 'application/json',
-        'Authorization': f'Bearer {access_token}'
-    }
+    headers = {"accept": "application/json", "Authorization": f"Bearer {access_token}"}
 
     # Make the GET request to the API
     response = requests.get(url, headers=headers)
@@ -302,6 +311,7 @@ def fetch_upload_url(file_name: str, institution_id: int, access_token: str) -> 
         return response.text  # or response.json() if the response is JSON
     else:
         return f"Error fetching URL: {response.status_code} {response.text}"
+
 
 def post_file_to_signed_url(file_path: str, signed_url: str) -> str:
     """
@@ -315,9 +325,9 @@ def post_file_to_signed_url(file_path: str, signed_url: str) -> str:
     str: The response from the server after attempting to upload.
     """
     # Open the file in binary mode
-    with open(file_path, 'rb') as file:
+    with open(file_path, "rb") as file:
         # Prepare the files dictionary for uploading
-        files = {'file': (file_path, file)}
+        files = {"file": (file_path, file)}
 
         # POST the file to the signed URL
         response = requests.post(signed_url, files=files)
