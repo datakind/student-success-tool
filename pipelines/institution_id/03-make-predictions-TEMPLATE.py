@@ -23,9 +23,8 @@
 
 # WARNING: AutoML/mlflow expect particular packages within certain version constraints
 # overriding existing installs can result in errors and inability to load trained models
-# %pip install "student-success-tool==0.1.0" --no-deps
+# %pip install "student-success-tool==0.1.1" --no-deps
 # %pip install "git+https://github.com/datakind/student-success-tool.git@develop" --no-deps
-# %pip install pandera
 
 # COMMAND ----------
 
