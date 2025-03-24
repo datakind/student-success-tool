@@ -25,7 +25,7 @@
 # install dependencies, most/all of which should come through our 1st-party SST package
 # NOTE: it's okay to use 'develop' or a feature branch while developing this nb
 # but when it's finished, it's best to pin to a specific version of the package
-# %pip install "student-success-tool == 0.1.0"
+# %pip install "student-success-tool == 0.1.1"
 # %pip install "git+https://github.com/datakind/student-success-tool.git@develop"
 
 # COMMAND ----------
