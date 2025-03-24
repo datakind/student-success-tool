@@ -273,6 +273,7 @@ def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
                 "sections_num_students_completed",
                 "term_start_dt",
                 "cohort_start_dt",
+                "pell_status_first_year",
                 # "outcome" variables / likely sources of data leakage
                 "retention",
                 "persistence",
