@@ -10,13 +10,21 @@ from pydantic import BaseModel
 from datetime import timedelta, datetime, timezone
 from .config import env_vars
 from typing import Annotated
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Security
 from jwt.exceptions import InvalidTokenError
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="token",
 )
 
+api_key_header = APIKeyHeader(name="X-API-KEY", scheme_name="api-key", auto_error=False)
+api_key_inst_header = APIKeyHeader(
+    name="INST", scheme_name="api-inst", auto_error=False
+)
+# The following is for use by the frontend enduser only.
+api_key_enduser_header = APIKeyHeader(
+    name="ENDUSER", scheme_name="api-enduser", auto_error=False
+)
 
 class Token(BaseModel):
     access_token: str
@@ -26,6 +34,27 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: str | None = None
 
+def get_api_key(
+    api_key_header: str = Security(api_key_header),
+    api_key_inst_header: str = Security(api_key_inst_header),
+    api_key_enduser_header: str = Security(api_key_enduser_header),
+) -> str:
+    """Retrieve the api key and enduser header key if present.
+
+    Args:
+        api_key_header: The API key passed in the HTTP header.
+
+    Returns:
+        A tuple with the api key and enduser header if present. Authentication happens elsewhere.
+    Raises:
+        HTTPException: If the API key is invalid or missing.
+    """
+    if api_key_header:
+        return (api_key_header, api_key_inst_header, api_key_enduser_header)
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or missing API Key",
+    )
 
 def check_creds(username: str, password: str):
     if username == env_vars["USERNAME"] and password == env_vars["PASSWORD"]:
