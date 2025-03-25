@@ -314,9 +314,6 @@ class ModelInferenceTask:
             MANDRILL_USERNAME,
             MANDRILL_PASSWORD,
         )
-        # send_inference_kickoff_email(
-        #     SENDER_EMAIL, [notification_email], [], MANDRILL_USERNAME, MANDRILL_PASSWORD
-        # )
 
         df_predicted = self.predict(model, df_processed)
         self.write_data_to_delta(df_predicted, "predicted_dataset")
@@ -340,8 +337,9 @@ class ModelInferenceTask:
                 os.makedirs(result_path, exist_ok=True)
                 print("result_path:", result_path)
 
+                # TODO What is the proper name for the table with the results?
                 # Write the DataFrame to Unity Catalog table
-                self.write_data_to_delta(shap_results, "shap_results_dataset")
+                self.write_data_to_delta(shap_results, "inference_output")
 
                 # Write the DataFrame to CSV in the specified volume
                 spark_df = self.spark_session.createDataFrame(shap_results)
@@ -357,9 +355,6 @@ class ModelInferenceTask:
                 raise Exception(
                     "Empty Shap results, cannot create the SHAP chart and table"
                 )
-
-        # --- Write Inference Dataset --- (This was missing, but good to have)
-        self.write_data_to_delta(df_processed[model_feature_names], "inference_dataset")
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -413,7 +408,7 @@ def parse_arguments() -> argparse.Namespace:
         "--modeling_table_path",
         type=str,
         required=True,
-        help="Path to training dataset table",
+        help="Path to training dataset table used to calculate shap values",
     )
     parser.add_argument(
         "--custom_schemas_path",
