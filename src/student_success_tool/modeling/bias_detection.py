@@ -90,7 +90,7 @@ def z_test_fnpr_difference(
         (fnpr1 * (1 - fnpr1)) / denominator1 + (fnpr2 * (1 - fnpr2)) / denominator2
     )
     z_stat = (fnpr1 - fnpr2) / std_error
-    return 2 * (1 - st.norm.cdf(abs(z_stat)))  # Two-tailed p-value
+    return float(2 * (1 - st.norm.cdf(abs(z_stat))))  # Two-tailed p-value
 
 def log_bias_flag(
     group: str,
