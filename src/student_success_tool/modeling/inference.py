@@ -1,3 +1,4 @@
+import re
 import typing as t
 
 import numpy as np
@@ -65,10 +66,7 @@ def select_top_features_for_display(
             zip(top_features, top_feature_values, top_shap_values), start=1
         ):
             feature_name = (
-                # HACK: lowercase feature column name in features table lookup
-                # TODO: we should *ensure* feature column names are lowercased
-                # before using them in a model; current behavior should be considered a bug
-                features_table.get(feature.lower(), {}).get("name", feature)
+                _get_mapped_feature_name(feature, features_table)
                 if features_table is not None
                 else feature
             )
@@ -85,6 +83,23 @@ def select_top_features_for_display(
 
         top_features_info.append(student_output)
     return pd.DataFrame(top_features_info)
+
+
+def _get_mapped_feature_name(
+    feature_col: str, features_table: dict[str, dict[str, str]]
+) -> str:
+    feature_col = feature_col.lower()  # just in case
+    if feature_col in features_table:
+        feature_name = features_table[feature_col]["name"]
+    else:
+        for fkey, fval in features_table.items():
+            if "(" in fkey and ")" in fkey:
+                if match := re.match(fkey, feature_col):
+                    feature_name = fval["name"].format(*match.groups())
+                    break
+        else:
+            feature_name = feature_col
+    return feature_name
 
 
 def calculate_shap_values_spark_udf(

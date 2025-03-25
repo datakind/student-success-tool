@@ -26,9 +26,8 @@
 # WARNING: AutoML/mlflow expect particular packages within certain version constraints
 # overriding existing installs can result in errors and inability to load trained models
 # install (minimal!) extra dependencies not provided by databricks runtime
-# %pip install "student-success-tool==0.1.0" --no-deps
+# %pip install "student-success-tool==0.1.1" --no-deps
 # %pip install git+https://github.com/datakind/student-success-tool.git@develop --no-deps
-# %pip install pandera
 
 # COMMAND ----------
 
@@ -42,13 +41,11 @@ import os
 import mlflow
 import numpy as np
 import pandas as pd
-import sklearn.inspection
 import sklearn.metrics
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
-from py4j.protocol import Py4JJavaError
 
-from student_success_tool import dataio, modeling, schemas
+from student_success_tool import dataio, modeling, schemas, utils
 
 # COMMAND ----------
 
@@ -68,36 +65,21 @@ except Exception:
 
 # COMMAND ----------
 
-# TODO(Burton?): figure out if/how this should be used
-run_parameters = dict(dbutils.notebook.entry_point.getCurrentBindings())
+run_type = utils.databricks.get_db_widget_param("run_type", default="train")
+dataset_name = utils.databricks.get_db_widget_param("dataset_name", default="labeled")
+# should this be "job_id" and "run_id", separately
+job_run_id = utils.databricks.get_db_widget_param("job_run_id", default="interactive")
 
-# check if we're running this notebook as a "job" in a "workflow"
-# if not, assume this is a training workflow using labeled data
-try:
-    run_type = dbutils.widgets.get("run_type")
-    dataset_name = dbutils.widgets.get("dataset_name")
-except Py4JJavaError:
-    run_type = "train"
-    dataset_name = "labeled"
-
-logging.info("'%s' run of notebook using '%s' dataset", run_type, dataset_name)
-# just in case!
-if run_type != "train":
-    logging.warning(
-        "this notebook is meant for model training; "
-        "should you be running it in '%s' mode?",
-        run_type,
-    )
+logging.info(
+    "'%s' run (id=%s) of notebook using dataset_name=%s",
+    run_type,
+    job_run_id,
+    dataset_name,
+)
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC ## import school-specific code
-
-# COMMAND ----------
-
-# MAGIC %load_ext autoreload
-# MAGIC %autoreload 2
+assert run_type == "train"
 
 # COMMAND ----------
 
@@ -105,9 +87,7 @@ if run_type != "train":
 # it'll start out with just basic info: institution_id, institution_name
 # but as each step of the pipeline gets built, more parameters will be moved
 # from hard-coded notebook variables to shareable, persistent config fields
-cfg = dataio.read_config(
-    "./config-TEMPLATE.toml", schema=schemas.pdp.PDPProjectConfigV2
-)
+cfg = dataio.read_config("./config-TEMPLATE.toml", schema=schemas.pdp.PDPProjectConfig)
 cfg
 
 # COMMAND ----------
@@ -117,14 +97,16 @@ cfg
 
 # COMMAND ----------
 
-df = schemas.pdp.PDPLabeledDataSchema(
-    dataio.read.from_delta_table(
-        cfg.datasets[dataset_name].preprocessed.table_path,
-        spark_session=spark,
-    )
+df = dataio.read.from_delta_table(
+    cfg.datasets[dataset_name].preprocessed.table_path,
+    spark_session=spark,
 )
-print(f"rows x cols = {df.shape}")
 df.head()
+
+# COMMAND ----------
+
+# delta tables not great about maintaining dtypes; this may be needed
+# df = df.convert_dtypes()
 
 # COMMAND ----------
 
@@ -154,17 +136,8 @@ mlflow.autolog(disable=True)
 
 # TODO: load feature selection params from the project config
 # okay to hard-code it first then add it to the config later
-try:
-    selection_params = cfg.modeling.feature_selection.model_dump()
-    logging.info("selection params = %s", selection_params)
-except AttributeError:
-    selection_params = {
-        "non_feature_cols": cfg.non_feature_cols,
-        "force_include_cols": [],
-        "incomplete_threshold": 0.5,
-        "low_variance_threshold": 0.0,
-        "collinear_threshold": 10.0,
-    }
+selection_params = cfg.modeling.feature_selection.model_dump()
+logging.info("selection params = %s", selection_params)
 
 # COMMAND ----------
 
@@ -193,25 +166,20 @@ mlflow.autolog(disable=False)
 # COMMAND ----------
 
 training_params = {
-    "job_run_id": run_parameters.get("job_run_id", "interactive"),
+    "job_run_id": job_run_id,
     "institution_id": cfg.institution_id,
     "student_id_col": cfg.student_id_col,
     "target_col": cfg.target_col,
     "split_col": cfg.split_col,
     "sample_weight_col": cfg.sample_weight_col,
     "pos_label": cfg.pos_label,
+    "optimization_metric": cfg.modeling.training.primary_metric,
+    "timeout_minutes": cfg.modeling.training.timeout_minutes,
+    "exclude_frameworks": cfg.modeling.training.exclude_frameworks,
+    "exclude_cols": sorted(
+        set((cfg.modeling.training.exclude_cols or []) + (cfg.student_group_cols or []))
+    ),
 }
-# TODO: load feature selection params from the project config
-# okay to hard-code it first then add it to the config later
-try:
-    training_params |= cfg.modeling.training.model_dump()
-except AttributeError:
-    training_params |= {
-        "optimization_metric": "log_loss",
-        "timeout_minutes": 15,
-        "exclude_frameworks": [],
-        "exclude_cols": cfg.student_group_cols or [],
-    }
 logging.info("training params = %s", training_params)
 
 # COMMAND ----------
@@ -248,17 +216,7 @@ split_col = training_params.get("split_col", "_automl_split_col_0000")
 # only possible to do bias evaluation if you specify a split col for train/test/validate
 # AutoML doesn't preserve student ids the training set, which we need for [reasons]
 if evaluate_model_bias := (training_params.get("split_col") is not None):
-    non_feature_cols = sorted(
-        set(
-            [
-                training_params["student_id_col"],
-                training_params["target_col"],
-                split_col,
-            ]
-            + training_params["exclude_cols"]
-        )
-    )
-    df_features = df.drop(columns=non_feature_cols)
+    df_features = df.drop(columns=cfg.non_feature_cols)
 else:
     df_features = modeling.evaluation.extract_training_data_from_model(experiment_id)
 
@@ -366,17 +324,21 @@ for flag in flag_names.keys():
 
 # COMMAND ----------
 
-# TODO(Burton?): clean this up and incorporate it into modeling.evaluation
-result = sklearn.inspection.permutation_importance(
+# MAGIC %md
+# MAGIC # evaluate model
+
+# COMMAND ----------
+
+ax = modeling.evaluation.plot_features_permutation_importance(
     model,
-    df_features.drop(columns=cfg.target_col),
-    df_features[cfg.target_col],
+    df_features,
+    df[cfg.target_col],
     scoring=sklearn.metrics.make_scorer(
         sklearn.metrics.log_loss, greater_is_better=False
     ),
-    n_repeats=5,
+    sample_weight=df[cfg.sample_weight_col],
+    random_state=cfg.random_state,
 )
-
 fig = ax.get_figure()
 fig.tight_layout()
 # save plot via mlflow into experiment artifacts folder
