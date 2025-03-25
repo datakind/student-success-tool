@@ -20,6 +20,7 @@ FLAG_NAMES = {
     "🔴 HIGH BIAS": "high_bias",
 }
 
+
 def calculate_fnpr_and_ci(
     targets: pd.Series,
     preds: pd.Series,
@@ -33,13 +34,13 @@ def calculate_fnpr_and_ci(
         preds: Predictions from model output
         min_fnpr_samples: Minimum number of true positives or false negatives for FNPR calculation. When TP or FN are low, FNPR can be very unstable and flag subgroups based on small differences in TP or FN.
     """
-    cm = confusion_matrix(targets, preds, labels=[False, True])    
+    cm = confusion_matrix(targets, preds, labels=[False, True])
     tn, fp, fn, tp = (
         cm.ravel()
         if cm.shape == (2, 2)
         else np.bincount(np.array(targets) * 2 + np.array(preds), minlength=4)
     )
-        
+
     denominator = fn + tp
 
     if (tp < min_fnpr_samples) or (fn < min_fnpr_samples):
@@ -48,6 +49,7 @@ def calculate_fnpr_and_ci(
     fnpr = fn / denominator
     margin = Z * np.sqrt((fnpr * (1 - fnpr)) / denominator)
     return fnpr, max(0, fnpr - margin), min(1, fnpr + margin)
+
 
 def check_ci_overlap(
     ci1: tuple[float, float],
@@ -64,19 +66,20 @@ def check_ci_overlap(
     """
     return not (ci1[1] < ci2[0] or ci2[1] < ci1[0])
 
+
 def z_test_fnpr_difference(
     fnpr1: float,
     fnpr2: float,
     denominator1: int,
     denominator2: int,
-    ) -> float:
+) -> float:
     """
     Performs a z-test for the FNPR difference between two groups. If there are
     less than 30 samples of false negatives and true negatives, then we do not
     have enough data to perform a z-test. Thirty samples is the standard check
     for z-tests.
 
-    Args: 
+    Args:
         fnpr1: FNPR value for subgroup 1
         fnpr2: FNPR value for subgroup 2
         denominator1: Number of false negatives + true negatives for subgroup 1
@@ -91,6 +94,7 @@ def z_test_fnpr_difference(
     )
     z_stat = (fnpr1 - fnpr2) / std_error
     return float(2 * (1 - st.norm.cdf(abs(z_stat))))  # Two-tailed p-value
+
 
 def log_bias_flag(
     group: str,
@@ -126,6 +130,7 @@ def log_bias_flag(
         "flag": flag,
     }
     return flag_entry
+
 
 def flag_bias(
     fnpr_data: list,

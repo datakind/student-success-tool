@@ -336,7 +336,7 @@ for run_id in top_run_ids:
                                     labels, pred_probs, labels=[False, True]
                                 ),
                                 2,
-                             ),
+                            ),
                         }
 
                         for metric, value in subgroup_metrics.items():
@@ -352,7 +352,7 @@ for run_id in top_run_ids:
                         group_metrics.append(subgroup_metrics)
 
                     df_group_metrics = pd.DataFrame(group_metrics)
-                    metrics_tmp_path = (f"/tmp/{split_name}_{group}_metrics.csv")
+                    metrics_tmp_path = f"/tmp/{split_name}_{group}_metrics.csv"
                     df_group_metrics.to_csv(metrics_tmp_path, index=False)
                     mlflow.log_artifact(
                         local_path=metrics_tmp_path, artifact_path="subgroup_metrics"
