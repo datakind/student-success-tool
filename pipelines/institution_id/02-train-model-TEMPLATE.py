@@ -228,8 +228,10 @@ optimization_metric = training_params["optimization_metric"]
 # Fetch top X runs
 runs = mlflow.search_runs(
     experiment_ids=[experiment_id],
-    order_by=[f"metrics.{optimization_metric} DESC"],  # Sort by metric, adjust order if lower is better
-    max_results=top_x
+    order_by=[
+        f"metrics.{optimization_metric} DESC"
+    ],  # Sort by metric
+    max_results=top_x,
 )
 
 # Extract run IDs
@@ -311,8 +313,8 @@ for run_id in top_run_ids:
                             "Number of Samples": len(subgroup_data),
                             "Actual Target Prevalence": round(labels.mean(), 2),
                             "Predicted Target Prevalence": round(preds.mean(), 2),
-                            "FNPR": round(fnpr, 2) 
-                            if not pd.isna(fnpr) 
+                            "FNPR": round(fnpr, 2)
+                            if not pd.isna(fnpr)
                             else "Insufficient # of FN or TP",
                             "Accuracy": round(
                                 sklearn.metrics.accuracy_score(labels, preds), 2
@@ -332,7 +334,7 @@ for run_id in top_run_ids:
                                     preds,
                                     pos_label=cfg["pos_label"],
                                     zero_division=np.nan,
-                                ), 
+                                ),
                                 2,
                             ),
                             "Log Loss": round(

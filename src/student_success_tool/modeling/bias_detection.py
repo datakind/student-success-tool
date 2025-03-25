@@ -154,7 +154,7 @@ def flag_bias(
     ]
 
     for i, current in enumerate(fnpr_data):
-        for other in fnpr_data[i+1:]:
+        for other in fnpr_data[i + 1 :]:
             if current["fnpr"] > 0 and other["fnpr"] > 0:
                 fnpr_diff = np.abs(current["fnpr"] - other["fnpr"])
                 p_value = z_test_fnpr_difference(
