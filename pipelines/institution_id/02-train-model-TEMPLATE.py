@@ -222,7 +222,8 @@ else:
 
 # COMMAND ----------
 
-top_x = 5  # Change this to the number of top runs you want to evaluate
+# NOTE: Change this to the number of top runs you want to evaluate
+top_x = 3
 optimization_metric = training_params["optimization_metric"]
 
 # Fetch top X runs
@@ -230,11 +231,10 @@ runs = mlflow.search_runs(
     experiment_ids=[experiment_id],
     order_by=[
         f"metrics.{optimization_metric} DESC"
-    ],  # Sort by metric
+    ],
     max_results=top_x,
 )
 
-# Extract run IDs
 top_run_ids = runs["run_id"].tolist()
 
 # COMMAND ----------
