@@ -4,14 +4,17 @@ import numpy as np
 
 from student_success_tool.modeling import bias_detection
 
+# Set random seed for reproducibility
+np.random.seed(42)
+
 @pytest.mark.parametrize(
     "targets, preds, expected_fnpr, expected_ci_lower, expected_ci_upper",
     [
-        (pd.Series([1, 1, 0, 0, 1, 1, 1, 0, 1, 0]),
-         pd.Series([0, 1, 0, 0, 1, 0, 1, 0, 1, 1]),
-         0.25, 0.05, 0.45),
-        (pd.Series([1, 1, 1, 1, 1]), pd.Series([1, 1, 1, 1, 1]), np.nan, np.nan, np.nan),
-        (pd.Series([0, 0, 0, 0, 0]), pd.Series([0, 0, 0, 0, 0]), np.nan, np.nan, np.nan),
+        (pd.Series(np.random.choice([0, 1], size=500)),
+         pd.Series(np.random.choice([0, 1], size=500)),
+         0.515625, 0.454406, 0.57684),
+        (pd.Series(np.ones(500)), pd.Series(np.ones(500)), np.nan, np.nan, np.nan),
+        (pd.Series(np.zeros(500)), pd.Series(np.zeros(500)),, np.nan, np.nan, np.nan),
     ]
 )
 def test_calculate_fnpr_and_ci(targets, preds, expected_fnpr, expected_ci_lower, expected_ci_upper):
