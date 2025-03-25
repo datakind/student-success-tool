@@ -6,6 +6,7 @@ bundle:
     
 include:
   - resources/github_sourced_pdp_inference_pipeline.yml
+  - resources/github_sourced_approval_pipeline.yml
 
 variables:
   DB_workspace:
