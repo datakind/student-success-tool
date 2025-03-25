@@ -72,7 +72,7 @@ def z_test_fnpr_difference(
         denominator2: Number of false negatives + true negatives for subgroup 2
     """
     if denominator1 <= 30 or denominator2 <= 30:  # Ensures valid sample sizes for z-test
-        return None  
+        return np.nan  
     std_error = np.sqrt((fnpr1 * (1 - fnpr1)) / denominator1 + (fnpr2 * (1 - fnpr2)) / denominator2)
     z_stat = (fnpr1 - fnpr2) / std_error
     return 2 * (1 - st.norm.cdf(abs(z_stat)))  # Two-tailed p-value
@@ -85,7 +85,7 @@ def log_bias_flag(
     bias_type: str,
     dataset: str,
     flag: str,
-    p_value: float = None,
+    p_value: float = np.nan,
     ) -> dict:
     """
     Aggregate bias flag information for a given subgroup pair into a dict.
@@ -104,7 +104,7 @@ def log_bias_flag(
         "group": group,
         "subgroups": f"{subgroup1} vs {subgroup2}",
         "difference": fnpr_diff * 100,
-        "type": bias_type if p_value is None else f"{bias_type}, p-value: {'< 0.001' if p_value < 0.001 else f'{p_value:.3f}'}",
+        "type": bias_type if np.isnan(p_value) else f"{bias_type}, p-value: {'< 0.001' if p_value < 0.001 else f'{p_value:.3f}'}",
         "dataset": dataset,
         "flag": flag
     }

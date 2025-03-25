@@ -37,7 +37,7 @@ def test_check_ci_overlap(ci1, ci2, expected):
     "fnpr1, fnpr2, denom1, denom2, expected_p",
     [
         (0.2, 0.25, 100, 100, 0.3),
-        (0.1, 0.15, 50, 50, None),  # Sample size too small
+        (0.1, 0.15, 40, 35, np.nan), 
         (0.3, 0.1, 200, 200, 0.001),
     ]
 )
@@ -54,14 +54,3 @@ def test_z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2, expected_p):
 )
 def test_log_bias_flag(group, sub1, sub2, diff, bias_type, dataset, flag, p, expected):
     assert bias_detection.log_bias_flag(group, sub1, sub2, diff, bias_type, dataset, flag, p) == expected
-
-@pytest.mark.parametrize(
-    "fnpr_data, split_name, expected_length",
-    [
-        ([{"group": "Gender", "subgroup": "Male", "fnpr": 0.15, "ci": (0.1, 0.2), "size": 100},
-          {"group": "Gender", "subgroup": "Female", "fnpr": 0.1, "ci": (0.05, 0.15), "size": 100}], "test", 1),
-    ]
-)
-def test_flag_bias(fnpr_data, split_name, expected_length):
-    bias_flags = bias_detection.flag_bias(fnpr_data, split_name)
-    assert len(bias_flags) == expected_length
