@@ -377,13 +377,8 @@ result = sklearn.inspection.permutation_importance(
     n_repeats=5,
 )
 
-sorted_importances_idx = result.importances_mean.argsort()
-importances = pd.DataFrame(
-    result.importances[sorted_importances_idx].T,
-    columns=df_features.columns[sorted_importances_idx],
-)
-ax = importances.plot.box(vert=False, whis=10, figsize=(10, 10))
-ax.set_title("Permutation Importances (test set)")
-ax.axvline(x=0, color="k", linestyle="--")
-ax.set_xlabel("Decrease in accuracy score")
-ax.figure.tight_layout()
+fig = ax.get_figure()
+fig.tight_layout()
+# save plot via mlflow into experiment artifacts folder
+with mlflow.start_run(run_id=run_id) as run:
+    mlflow.log_figure(fig, "test_features_permutation_importance.png")
