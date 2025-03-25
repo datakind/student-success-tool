@@ -121,7 +121,7 @@ def log_bias_flag(
         "difference": fnpr_diff * 100,
         "type": bias_type
         if np.isnan(p_value)
-        else f"{bias_type}, p-value: {"< 0.001" if p_value < 0.001 else f"{p_value:.3f}"}",
+        else f"{bias_type}, p-value: {'< 0.001' if p_value < 0.001 else f'{p_value:.3f}'}",
         "dataset": dataset,
         "flag": flag,
     }
