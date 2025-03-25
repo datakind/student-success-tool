@@ -14,10 +14,10 @@ LOW_FLAG_THRESHOLD = 0.05
 
 # Define flag types
 FLAG_NAMES = {
-    '🟢 NO BIAS': "no_bias",
-    '🟡 LOW BIAS': "low_bias",
-    '🟠 MODERATE BIAS': "moderate_bias",
-    '🔴 HIGH BIAS': "high_bias",
+    "🟢 NO BIAS": "no_bias",
+    "🟡 LOW BIAS": "low_bias",
+    "🟠 MODERATE BIAS": "moderate_bias",
+    "🔴 HIGH BIAS": "high_bias",
 }
 
 def calculate_fnpr_and_ci(
@@ -121,7 +121,7 @@ def log_bias_flag(
         "difference": fnpr_diff * 100,
         "type": bias_type
         if np.isnan(p_value)
-        else f"{bias_type}, p-value: {'< 0.001' if p_value < 0.001 else f'{p_value:.3f}'}",
+        else f"{bias_type}, p-value: {"< 0.001" if p_value < 0.001 else f"{p_value:.3f}"}",
         "dataset": dataset,
         "flag": flag,
     }
@@ -155,19 +155,19 @@ def flag_bias(
 
     for i, current in enumerate(fnpr_data):
         for other in fnpr_data[i+1:]:
-            if current['fnpr'] > 0 and other['fnpr'] > 0:
-                fnpr_diff = np.abs(current['fnpr'] - other['fnpr'])
+            if current["fnpr"] > 0 and other["fnpr"] > 0:
+                fnpr_diff = np.abs(current["fnpr"] - other["fnpr"])
                 p_value = z_test_fnpr_difference(
-                    current['fnpr'], other['fnpr'], current['size'], other['size']
+                    current["fnpr"], other["fnpr"], current["size"], other["size"]
                 )
-                ci_overlap = check_ci_overlap(current['ci'], other['ci'])
+                ci_overlap = check_ci_overlap(current["ci"], other["ci"])
 
                 if (fnpr_diff < low_bias_thresh) or (p_value > 0.1):
                     bias_flags.append(
                         log_bias_flag(
-                            current['group'],
-                            current['subgroup'],
-                            other['subgroup'],
+                            current["group"],
+                            current["subgroup"],
+                            other["subgroup"],
                             fnpr_diff,
                             "No significant difference",
                             split_name,
@@ -185,9 +185,9 @@ def flag_bias(
                             )
                             bias_flags.append(
                                 log_bias_flag(
-                                    current['group'],
-                                    current['subgroup'],
-                                    other['subgroup'],
+                                    current["group"],
+                                    current["subgroup"],
+                                    other["subgroup"],
                                     fnpr_diff,
                                     reason,
                                     split_name,

@@ -265,9 +265,9 @@ for run_id in top_run_ids:
 
             hist_fig, cal_fig, sla_fig = modeling.evaluation.create_evaluation_plots(
                 split_data,
-                cfg['pred_prob_col'],
-                cfg['target_col'],
-                cfg['pos_label'],
+                cfg["pred_prob_col"],
+                cfg["target_col"],
+                cfg["pos_label"],
                 split_name,
             )
             mlflow.log_figure(
@@ -284,24 +284,24 @@ for run_id in top_run_ids:
             )
 
             if evaluate_model_bias:
-                for group in cfg['student_group_cols']:
+                for group in cfg["student_group_cols"]:
                     group_metrics = []
                     fnpr_data = []
                     for subgroup, subgroup_data in split_data.groupby(group):
-                        labels = subgroup_data[cfg['target_col']]
-                        preds = subgroup_data[cfg['pred_col']]
-                        pred_probs = subgroup_data[cfg['pred_prob_col']]
+                        labels = subgroup_data[cfg["target_col"]]
+                        preds = subgroup_data[cfg["pred_col"]]
+                        pred_probs = subgroup_data[cfg["pred_prob_col"]]
                         fnpr, fnpr_lower, fnpr_upper = (
                             modeling.bias_detection.calculate_fnpr_and_ci(labels, preds)
                         )
 
                         fnpr_data.append(
                             {
-                                'group': group,
-                                'subgroup': subgroup,
-                                'fnpr': fnpr,
-                                'ci': (fnpr_lower, fnpr_upper),
-                                'size': len(subgroup_data),
+                                "group": group,
+                                "subgroup": subgroup,
+                                "fnpr": fnpr,
+                                "ci": (fnpr_lower, fnpr_upper),
+                                "size": len(subgroup_data),
                             }
                         )
 
@@ -321,7 +321,7 @@ for run_id in top_run_ids:
                                 sklearn.metrics.precision_score(
                                     labels,
                                     preds,
-                                    pos_label=cfg['pos_label'],
+                                    pos_label=cfg["pos_label"],
                                     zero_division=np.nan,
                                 ),
                                 2,
@@ -330,7 +330,7 @@ for run_id in top_run_ids:
                                 sklearn.metrics.recall_score(
                                     labels,
                                     preds,
-                                    pos_label=cfg['pos_label'],
+                                    pos_label=cfg["pos_label"],
                                     zero_division=np.nan,
                                 ), 
                                 2,
@@ -371,9 +371,9 @@ for run_id in top_run_ids:
                     )
 
                     for flag in bias_flags:
-                        if flag['flag'] != "🟢 NO BIAS":
+                        if flag["flag"] != "🟢 NO BIAS":
                             print(
-                                f"Run {run_id}: {flag['group']} on {flag['dataset']} - {flag['subgroups']}, FNPR Difference: {flag['difference']:.2f}% ({flag['type']}) [{flag['flag']}]"
+                                f"Run {run_id}: {flag["group"]} on {flag["dataset"]} - {flag["subgroups"]}, FNPR Difference: {flag["difference"]:.2f}% ({flag["type"]}) [{flag["flag"]}]"
                             )
 
                     df_bias_flags = pd.DataFrame(bias_flags)
@@ -383,7 +383,7 @@ for run_id in top_run_ids:
 
 for flag in modeling.bias_detection.FLAG_NAMES.keys():
     flag_name = modeling.bias_detection.FLAG_NAMES[flag]
-    df_flag = df_all_flags[df_all_flags['flag'] == flag].sort_values(
+    df_flag = df_all_flags[df_all_flags["flag"] == flag].sort_values(
         by='difference', ascending=False
     )
     bias_tmp_path = f"/tmp/{flag_name}_flags.csv"
@@ -397,6 +397,8 @@ for flag in modeling.bias_detection.FLAG_NAMES.keys():
 
 # COMMAND ----------
 
+# Evaluation permutation importance for top model
+model = mlflow.sklearn.load_model(f"runs:/{top_run_ids[0]}/model")
 ax = modeling.evaluation.plot_features_permutation_importance(
     model,
     df_features,
