@@ -4,7 +4,6 @@ import numpy as np
 
 from student_success_tool.modeling import bias_detection
 
-# Set random seed for reproducibility
 np.random.seed(42)
 
 @pytest.mark.parametrize(
