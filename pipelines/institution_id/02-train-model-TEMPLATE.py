@@ -260,7 +260,7 @@ for run_id in top_run_ids:
             )
             mlflow.log_artifact(
                 local_path=f"/tmp/{split_name}_preds_{run_id}.csv",
-                artifact_path=preds_dir
+                artifact_path=preds_dir,
             )
 
             hist_fig, cal_fig, sla_fig = modeling.evaluation.create_evaluation_plots(
@@ -268,19 +268,19 @@ for run_id in top_run_ids:
                 cfg['pred_prob_col'],
                 cfg['target_col'],
                 cfg['pos_label'],
-                split_name
+                split_name,
             )
             mlflow.log_figure(
                 hist_fig,
-                os.path.join(preds_dir, f"{split_name}_hist_{run_id}.png")
+                os.path.join(preds_dir, f"{split_name}_hist_{run_id}.png"),
             )
             mlflow.log_figure(
                 cal_fig, 
-                os.path.join(calibration_dir, f"{split_name}_calibration_{run_id}.png")
+                os.path.join(calibration_dir, f"{split_name}_calibration_{run_id}.png"),
             )
             mlflow.log_figure(
                 sla_fig,
-                os.path.join(sensitivity_dir, f"{split_name}_sla_{run_id}.png")
+                os.path.join(sensitivity_dir, f"{split_name}_sla_{run_id}.png"),
             )
 
             if evaluate_model_bias:
@@ -301,7 +301,7 @@ for run_id in top_run_ids:
                                 'subgroup': subgroup,
                                 'fnpr': fnpr,
                                 'ci': (fnpr_lower, fnpr_upper),
-                                'size': len(subgroup_data)
+                                'size': len(subgroup_data),
                             }
                         )
 
@@ -322,18 +322,18 @@ for run_id in top_run_ids:
                                     labels,
                                     preds,
                                     pos_label=cfg['pos_label'],
-                                    zero_division=np.nan
+                                    zero_division=np.nan,
                                 ),
-                                2
+                                2,
                             ),
                             "Recall": round(
                                 sklearn.metrics.recall_score(
                                     labels,
                                     preds,
                                     pos_label=cfg['pos_label'],
-                                    zero_division=np.nan
+                                    zero_division=np.nan,
                                 ), 
-                                2
+                                2,
                             ),
                             "Log Loss": round(
                                 sklearn.metrics.log_loss(
@@ -341,14 +341,14 @@ for run_id in top_run_ids:
                                     pred_probs,
                                     labels=[False, True]
                                 ),
-                                2
+                                2,
                              ),
                         }
 
                         for metric, value in subgroup_metrics.items():
                             if metric not in {
-                                "Subgroup", 
-                                "Number of Samples",  
+                                "Subgroup",
+                                "Number of Samples",
                             } and not pd.isna(fnpr):
                                 mlflow.log_metric(
                                     f"{split_name}_{group}_metrics/{metric}_subgroup{subgroup}_run{run_id}",
