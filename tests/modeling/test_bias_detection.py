@@ -6,16 +6,22 @@ from student_success_tool.modeling import bias_detection
 
 np.random.seed(42)
 
+
 @pytest.mark.parametrize(
     "targets, preds, expected_fnpr, expected_ci_lower, expected_ci_upper",
     [
-        (pd.Series(np.random.choice([0, 1], size=500)),
-         pd.Series(np.random.choice([0, 1], size=500)),
-         0.515625, 0.454406, 0.57684),
+        (
+            pd.Series(np.random.choice([0, 1], size=500)),
+            pd.Series(np.random.choice([0, 1], size=500)),
+            0.515625,
+            0.454406,
+            0.57684,
+        ), 
         (pd.Series(np.ones(500)), pd.Series(np.ones(500)), np.nan, np.nan, np.nan),
         (pd.Series(np.zeros(500)), pd.Series(np.zeros(500)), np.nan, np.nan, np.nan),
-    ]
+    ],
 )
+
 def test_calculate_fnpr_and_ci(targets, preds, expected_fnpr, expected_ci_lower, expected_ci_upper):
     fnpr, ci_lower, ci_upper = bias_detection.calculate_fnpr_and_ci(targets, preds)
     assert np.isclose(fnpr, expected_fnpr, equal_nan=True)
@@ -28,7 +34,7 @@ def test_calculate_fnpr_and_ci(targets, preds, expected_fnpr, expected_ci_lower,
         ((0.1, 0.3), (0.2, 0.4), True),
         ((0.1, 0.2), (0.3, 0.4), False),
         ((0.05, 0.15), (0.1, 0.2), True),
-    ]
+    ],
 )
 def test_check_ci_overlap(ci1, ci2, expected):
     assert bias_detection.check_ci_overlap(ci1, ci2) == expected
@@ -37,9 +43,9 @@ def test_check_ci_overlap(ci1, ci2, expected):
     "fnpr1, fnpr2, denom1, denom2, expected_p",
     [
         (0.2, 0.25, 100, 100, 0.3963327),
-        (0.1, 0.15, 20, 35, np.nan), 
+        (0.1, 0.15, 20, 35, np.nan),
         (0.3, 0.1, 200, 200, 2.4e-07),
-    ]
+    ],
 )
 def test_z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2, expected_p):
     p_value = bias_detection.z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2)
@@ -48,9 +54,30 @@ def test_z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2, expected_p):
 @pytest.mark.parametrize(
     "group, sub1, sub2, diff, bias_type, dataset, flag, p, expected",
     [
-        ("Gender", "Male", "Female", 0.12, "Non-overlapping CIs", "train", "🔴 HIGH BIAS", 0.005,
-         {"group": "Gender", "subgroups": "Male vs Female", "difference": 12, "type": "Non-overlapping CIs, p-value: 0.005", "dataset": "train", "flag": "🔴 HIGH BIAS"}),
+        (
+            "Gender",
+            "Male",
+            "Female",
+            0.12,
+            "Non-overlapping CIs",
+            "train",
+            "🔴 HIGH BIAS",
+            0.005,
+            {
+                "group": "Gender",
+                "subgroups": "Male vs Female",
+                "difference": 12,
+                "type": "Non-overlapping CIs, p-value: 0.005",
+                "dataset": "train",
+                "flag": "🔴 HIGH BIAS",
+            },
+        ),
     ]
 )
 def test_log_bias_flag(group, sub1, sub2, diff, bias_type, dataset, flag, p, expected):
-    assert bias_detection.log_bias_flag(group, sub1, sub2, diff, bias_type, dataset, flag, p) == expected
+    assert (
+        bias_detection.log_bias_flag(
+            group, sub1, sub2, diff, bias_type, dataset, flag, p
+        )
+        == expected
+    )

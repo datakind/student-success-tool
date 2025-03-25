@@ -12,6 +12,14 @@ HIGH_FLAG_THRESHOLD = 0.15
 MODERATE_FLAG_THRESHOLD = 0.1
 LOW_FLAG_THRESHOLD = 0.05
 
+# Define flag types
+FLAG_NAMES = {
+    '🟢 NO BIAS': 'no_bias',
+    '🟡 LOW BIAS': 'low_bias',
+    '🟠 MODERATE BIAS': 'moderate_bias',
+    '🔴 HIGH BIAS': 'high_bias'
+}
+
 def calculate_fnpr_and_ci(
     targets: pd.Series, 
     preds: pd.Series, 

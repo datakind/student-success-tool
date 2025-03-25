@@ -241,27 +241,47 @@ for run_id in top_run_ids:
     with mlflow.start_run(run_id=run_id) as run:
         print(f"Processing run {run_id} - rows x cols = {df_pred.shape}")
 
-        model = mlflow.sklearn.load_model(f"runs:/{run_id}/model")  
-        df_all_flags = pd.DataFrame() 
+        model = mlflow.sklearn.load_model(f"runs:/{run_id}/model")
+        df_all_flags = pd.DataFrame()
         df_pred = df.assign(
             **{
                 cfg.pred_col: model.predict(df_features),
                 cfg.pred_prob_col: model.predict_proba(df_features)[:, 1],
             }
         )
-        model_comp_fig = modeling.evaluation.compare_trained_models_plot(experiment_id, optimization_metric)
+        model_comp_fig = modeling.evaluation.compare_trained_models_plot(
+            experiment_id, optimization_metric
+        )
         mlflow.log_figure(model_comp_fig, f"model_comparison_{run_id}.png")
 
         for split_name, split_data in df_pred.groupby(split_col):
-            split_data.to_csv(f"/tmp/{split_name}_preds_{run_id}.csv", header=True, index=False)
-            mlflow.log_artifact(local_path=f"/tmp/{split_name}_preds_{run_id}.csv", artifact_path=preds_dir)
+            split_data.to_csv(
+                f"/tmp/{split_name}_preds_{run_id}.csv", header=True, index=False
+            )
+            mlflow.log_artifact(
+                local_path=f"/tmp/{split_name}_preds_{run_id}.csv",
+                artifact_path=preds_dir
+            )
 
             hist_fig, cal_fig, sla_fig = modeling.evaluation.create_evaluation_plots(
-                split_data, cfg['pred_prob_col'], cfg['target_col'], cfg['pos_label'], split_name
+                split_data,
+                cfg['pred_prob_col'],
+                cfg['target_col'],
+                cfg['pos_label'],
+                split_name
             )
-            mlflow.log_figure(hist_fig, os.path.join(preds_dir, f"{split_name}_hist_{run_id}.png"))
-            mlflow.log_figure(cal_fig, os.path.join(calibration_dir, f"{split_name}_calibration_{run_id}.png"))
-            mlflow.log_figure(sla_fig, os.path.join(sensitivity_dir, f"{split_name}_sla_{run_id}.png"))
+            mlflow.log_figure(
+                hist_fig,
+                os.path.join(preds_dir, f"{split_name}_hist_{run_id}.png")
+            )
+            mlflow.log_figure(
+                cal_fig, 
+                os.path.join(calibration_dir, f"{split_name}_calibration_{run_id}.png")
+            )
+            mlflow.log_figure(
+                sla_fig,
+                os.path.join(sensitivity_dir, f"{split_name}_sla_{run_id}.png")
+            )
 
             if evaluate_model_bias:
                 for group in cfg['student_group_cols']:
@@ -271,15 +291,19 @@ for run_id in top_run_ids:
                         labels = subgroup_data[cfg['target_col']]
                         preds = subgroup_data[cfg['pred_col']]
                         pred_probs = subgroup_data[cfg['pred_prob_col']]
-                        fnpr, fnpr_lower, fnpr_upper = modeling.bias_detection.calculate_fnpr_and_ci(labels, preds)
+                        fnpr, fnpr_lower, fnpr_upper = (
+                            modeling.bias_detection.calculate_fnpr_and_ci(labels, preds)
+                        )
 
-                        fnpr_data.append({
-                            'group': group,
-                            'subgroup': subgroup,
-                            'fnpr': fnpr,
-                            'ci': (fnpr_lower, fnpr_upper),
-                            'size': len(subgroup_data)
-                        })
+                        fnpr_data.append(
+                            {
+                                'group': group,
+                                'subgroup': subgroup,
+                                'fnpr': fnpr,
+                                'ci': (fnpr_lower, fnpr_upper),
+                                'size': len(subgroup_data)
+                            }
+                        )
 
                         subgroup_metrics = {
                             "Run ID": run_id,
@@ -287,37 +311,81 @@ for run_id in top_run_ids:
                             "Number of Samples": len(subgroup_data),
                             "Actual Target Prevalence": round(labels.mean(), 2),
                             "Predicted Target Prevalence": round(preds.mean(), 2),
-                            "FNPR": round(fnpr, 2) if not pd.isna(fnpr) else "Insufficient # of FN or TP",
-                            "Accuracy": round(sklearn.metrics.accuracy_score(labels, preds), 2),
-                            "Precision": round(sklearn.metrics.precision_score(labels, preds, pos_label=cfg['pos_label'], zero_division=np.nan), 2),
-                            "Recall": round(sklearn.metrics.recall_score(labels, preds, pos_label=cfg['pos_label'], zero_division=np.nan), 2),
-                            "Log Loss": round(sklearn.metrics.log_loss(labels, pred_probs, labels=[False, True]), 2),
+                            "FNPR": round(fnpr, 2) 
+                            if not pd.isna(fnpr) 
+                            else "Insufficient # of FN or TP",
+                            "Accuracy": round(
+                                sklearn.metrics.accuracy_score(labels, preds), 2
+                            ),
+                            "Precision": round(
+                                sklearn.metrics.precision_score(
+                                    labels,
+                                    preds,
+                                    pos_label=cfg['pos_label'],
+                                    zero_division=np.nan
+                                ),
+                                2
+                            ),
+                            "Recall": round(
+                                sklearn.metrics.recall_score(
+                                    labels,
+                                    preds,
+                                    pos_label=cfg['pos_label'],
+                                    zero_division=np.nan
+                                ), 
+                                2
+                            ),
+                            "Log Loss": round(
+                                sklearn.metrics.log_loss(
+                                    labels,
+                                    pred_probs,
+                                    labels=[False, True]
+                                ),
+                                2
+                             ),
                         }
 
                         for metric, value in subgroup_metrics.items():
-                            if metric not in {"Subgroup", "Number of Samples"} and not pd.isna(fnpr):
-                                mlflow.log_metric(f"{split_name}_{group}_metrics/{metric}_subgroup{subgroup}_run{run_id}", value)
+                            if metric not in {
+                                "Subgroup", 
+                                "Number of Samples",  
+                            } and not pd.isna(fnpr):
+                                mlflow.log_metric(
+                                    f"{split_name}_{group}_metrics/{metric}_subgroup{subgroup}_run{run_id}",
+                                    value,
+                                )
 
                         group_metrics.append(subgroup_metrics)
 
                     df_group_metrics = pd.DataFrame(group_metrics)
-                    metrics_tmp_path = f"/tmp/{split_name}_{group}_metrics_run{run_id}.csv"
+                    metrics_tmp_path = (
+                        f"/tmp/{split_name}_{group}_metrics_run{run_id}.csv"
+                    )
                     df_group_metrics.to_csv(metrics_tmp_path, index=False)
-                    mlflow.log_artifact(local_path=metrics_tmp_path, artifact_path="subgroup_metrics")
+                    mlflow.log_artifact(
+                        local_path=metrics_tmp_path, artifact_path="subgroup_metrics"
+                    )
 
-                    bias_flags = modeling.bias_detection.flag_bias(fnpr_data, split_name)
+                    bias_flags = modeling.bias_detection.flag_bias(
+                        fnpr_data, split_name
+                    )
 
                     for flag in bias_flags:
                         if flag['flag'] != "🟢 NO BIAS":
-                            print(f"Run {run_id}: {flag['group']} on {flag['dataset']} - {flag['subgroups']}, FNPR Difference: {flag['difference']:.2f}% ({flag['type']}) [{flag['flag']}]")
+                            print(
+                                f"Run {run_id}: {flag['group']} on {flag['dataset']} - {flag['subgroups']}, FNPR Difference: {flag['difference']:.2f}% ({flag['type']}) [{flag['flag']}]"
+                            )
 
                     df_bias_flags = pd.DataFrame(bias_flags)
-                    df_all_flags = pd.concat([df_all_flags, df_bias_flags], ignore_index=True)
+                    df_all_flags = pd.concat(
+                        [df_all_flags, df_bias_flags], ignore_index=True
+                    )
 
-flag_names = {'🟢 NO BIAS': 'no_bias', '🟡 LOW BIAS': 'low_bias', '🟠 MODERATE BIAS': 'moderate_bias', '🔴 HIGH BIAS': 'high_bias'}
-for flag in flag_names.keys():
-    flag_name = flag_names[flag]
-    df_flag = df_all_flags[df_all_flags['flag'] == flag].sort_values(by='difference', ascending=False)
+for flag in modeling.bias_detection.FLAG_NAMES.keys():
+    flag_name = modeling.bias_detection.FLAG_NAMES[flag]
+    df_flag = df_all_flags[df_all_flags['flag'] == flag].sort_values(
+        by='difference', ascending=False
+    )
     bias_tmp_path = f"/tmp/{flag_name}_flags.csv"
     df_flag.to_csv(bias_tmp_path, index=False)
     mlflow.log_artifact(local_path=bias_tmp_path, artifact_path="bias_flags")
