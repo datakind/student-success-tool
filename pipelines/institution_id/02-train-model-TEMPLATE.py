@@ -365,7 +365,8 @@ for run_id in top_run_ids:
                     for flag in bias_flags:
                         if flag["flag"] != "🟢 NO BIAS":
                             print(
-                                f'Run {run_id}: {flag["group"]} on {flag["dataset"]} - {flag["subgroups"]}, FNPR Difference: {flag["difference"]:.2f}% ({flag["type"]}) [{flag["flag"]}]' # noqa: Q000
+                                f"""Run {run_id}: {flag["group"]} on {flag["dataset"]} - {flag["subgroups"]}, 
+                                FNPR Difference: {flag["difference"]:.2f}% ({flag["type"]}) [{flag["flag"]}]"""
                             )
 
                     df_bias_flags = pd.DataFrame(bias_flags)

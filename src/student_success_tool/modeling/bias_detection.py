@@ -87,8 +87,8 @@ def z_test_fnpr_difference(
     """
     if (
         denominator1 <= 30 or denominator2 <= 30
-    ): # Ensures valid sample sizes for z-test
-        return np.nan  
+    ):  # Ensures valid sample sizes for z-test
+        return np.nan
     std_error = np.sqrt(
         (fnpr1 * (1 - fnpr1)) / denominator1 + (fnpr2 * (1 - fnpr2)) / denominator2
     )

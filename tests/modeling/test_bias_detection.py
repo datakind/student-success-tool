@@ -21,7 +21,6 @@ np.random.seed(42)
         (pd.Series(np.zeros(500)), pd.Series(np.zeros(500)), np.nan, np.nan, np.nan),
     ],
 )
-
 def test_calculate_fnpr_and_ci(
     targets, preds, expected_fnpr, expected_ci_lower, expected_ci_upper
 ):
