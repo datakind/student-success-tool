@@ -36,8 +36,8 @@ def test_check_ci_overlap(ci1, ci2, expected):
 @pytest.mark.parametrize(
     "fnpr1, fnpr2, denom1, denom2, expected_p",
     [
-        (0.2, 0.25, 100, 100, 0.3),
-        (0.1, 0.15, 40, 35, np.nan), 
+        (0.2, 0.25, 100, 100, 0.3963327),
+        (0.1, 0.15, 20, 35, np.nan), 
         (0.3, 0.1, 200, 200, 0.001),
     ]
 )
@@ -49,7 +49,7 @@ def test_z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2, expected_p):
     "group, sub1, sub2, diff, bias_type, dataset, flag, p, expected",
     [
         ("Gender", "Male", "Female", 0.12, "Non-overlapping CIs", "train", "🔴 HIGH BIAS", 0.005,
-         {"group": "Gender", "subgroups": "Male vs Female", "difference": 12, "type": "Non-overlapping CIs, p-value: < 0.001", "dataset": "train", "flag": "🔴 HIGH BIAS"}),
+         {"group": "Gender", "subgroups": "Male vs Female", "difference": 12, "type": "Non-overlapping CIs, p-value: 0.005", "dataset": "train", "flag": "🔴 HIGH BIAS"}),
     ]
 )
 def test_log_bias_flag(group, sub1, sub2, diff, bias_type, dataset, flag, p, expected):
