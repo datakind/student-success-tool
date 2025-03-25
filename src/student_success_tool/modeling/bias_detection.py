@@ -21,8 +21,8 @@ FLAG_NAMES = {
 }
 
 def calculate_fnpr_and_ci(
-    targets: pd.Series, 
-    preds: pd.Series, 
+    targets: pd.Series,
+    preds: pd.Series,
     min_fnpr_samples: int = MIN_FNPR_SAMPLES,
 ) -> tuple[float, float, float]:
     """
@@ -36,7 +36,7 @@ def calculate_fnpr_and_ci(
     cm = confusion_matrix(targets, preds, labels=[False, True])    
     tn, fp, fn, tp = (
         cm.ravel()
-        if cm.shape == (2,2)
+        if cm.shape == (2, 2)
         else np.bincount(np.array(targets) * 2 + np.array(preds), minlength=4)
     )
         
@@ -57,7 +57,7 @@ def check_ci_overlap(
     Checks whether confidence intervals (CIs) overlap. If they do, the FNPR differences
     are within the margin of error at the 95% confidence level. If the CIs do not
     overlap, this suggests strong statistical evidence that the FNPRs are different.
-    
+
     Args:
         ci1: Confidence interval (min, max) for subgroup 1
         ci2: Confidence interval (min, max) for subgroup 2
@@ -71,11 +71,11 @@ def z_test_fnpr_difference(
     denominator2: int,
     ) -> float:
     """
-    Performs a z-test for the FNPR difference between two groups. If there are 
-    less than 30 samples of false negatives and true negatives, then we do not 
+    Performs a z-test for the FNPR difference between two groups. If there are
+    less than 30 samples of false negatives and true negatives, then we do not
     have enough data to perform a z-test. Thirty samples is the standard check
     for z-tests.
-    
+
     Args: 
         fnpr1: FNPR value for subgroup 1
         fnpr2: FNPR value for subgroup 2
@@ -136,7 +136,7 @@ def flag_bias(
 ) -> list[dict]:
     """
     Flags bias based on FNPR differences and confidence interval overlap.
-    
+
     Args:
         fnpr_data: List of dictionaries containing FNPR and CI information for each subgroup.
         split_name: Name of the dataset (e.g. train/test/validate).
@@ -179,7 +179,7 @@ def flag_bias(
                     for threshold, flag, p_thresh in thresholds:
                         if fnpr_diff >= threshold:
                             reason = (
-                                "Overlapping CIs" 
+                                "Overlapping CIs"
                                 if ci_overlap and p_value and p_value < p_thresh
                                 else "Non-overlapping CIs"
                             )

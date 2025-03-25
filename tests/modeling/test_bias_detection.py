@@ -16,18 +16,14 @@ np.random.seed(42)
             0.515625,
             0.454406,
             0.57684,
-        ), 
+        ),
         (pd.Series(np.ones(500)), pd.Series(np.ones(500)), np.nan, np.nan, np.nan),
         (pd.Series(np.zeros(500)), pd.Series(np.zeros(500)), np.nan, np.nan, np.nan),
     ],
 )
 
-def test_calculate_fnpr_and_ci(
-    targets,
-    preds,
-    expected_fnpr,
-    expected_ci_lower,
-    expected_ci_upper):
+def test_calculate_fnpr_and_ci(targets, preds, expected_fnpr, expected_ci_lower, expected_ci_upper
+):
     fnpr, ci_lower, ci_upper = bias_detection.calculate_fnpr_and_ci(targets, preds)
     assert np.isclose(fnpr, expected_fnpr, equal_nan=True)
     assert np.isclose(ci_lower, expected_ci_lower, equal_nan=True)

@@ -277,7 +277,7 @@ for run_id in top_run_ids:
                 os.path.join(preds_dir, f"{split_name}_hist_{run_id}.png"),
             )
             mlflow.log_figure(
-                cal_fig, 
+                cal_fig,
                 os.path.join(calibration_dir, f"{split_name}_calibration_{run_id}.png"),
             )
             mlflow.log_figure(
@@ -386,7 +386,7 @@ for run_id in top_run_ids:
 for flag in modeling.bias_detection.FLAG_NAMES.keys():
     flag_name = modeling.bias_detection.FLAG_NAMES[flag]
     df_flag = df_all_flags[df_all_flags["flag"] == flag].sort_values(
-        by='difference', ascending=False
+        by="difference", ascending=False
     )
     bias_tmp_path = f"/tmp/{flag_name}_flags.csv"
     df_flag.to_csv(bias_tmp_path, index=False)
