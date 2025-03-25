@@ -43,7 +43,7 @@ def test_check_ci_overlap(ci1, ci2, expected):
 )
 def test_z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2, expected_p):
     p_value = bias_detection.z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2)
-    assert (p_value is None and expected_p is None) or np.isclose(p_value, expected_p, atol=0.05)
+    assert np.isclose(p_value, expected_p, equal_nan=True)
 
 @pytest.mark.parametrize(
     "group, sub1, sub2, diff, bias_type, dataset, flag, p, expected",
