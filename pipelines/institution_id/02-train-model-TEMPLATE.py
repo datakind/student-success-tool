@@ -229,9 +229,7 @@ optimization_metric = training_params["optimization_metric"]
 # Fetch top X runs
 runs = mlflow.search_runs(
     experiment_ids=[experiment_id],
-    order_by=[
-        f"metrics.{optimization_metric} DESC"
-    ],
+    order_by=[f"metrics.{optimization_metric} DESC"],
     max_results=top_x,
 )
 
@@ -241,7 +239,6 @@ top_run_ids = runs["run_id"].tolist()
 
 for run_id in top_run_ids:
     with mlflow.start_run(run_id=run_id) as run:
-
         model = mlflow.sklearn.load_model(f"runs:/{run_id}/model")
         df_all_flags = pd.DataFrame()
         df_pred = df.assign(
@@ -257,9 +254,7 @@ for run_id in top_run_ids:
         mlflow.log_figure(model_comp_fig, "model_comparison.png")
 
         for split_name, split_data in df_pred.groupby(split_col):
-            split_data.to_csv(
-                f"/tmp/{split_name}_preds.csv", header=True, index=False
-            )
+            split_data.to_csv(f"/tmp/{split_name}_preds.csv", header=True, index=False)
             mlflow.log_artifact(
                 local_path=f"/tmp/{split_name}_preds.csv",
                 artifact_path=preds_dir,
@@ -338,9 +333,7 @@ for run_id in top_run_ids:
                             ),
                             "Log Loss": round(
                                 sklearn.metrics.log_loss(
-                                    labels,
-                                    pred_probs,
-                                    labels=[False, True]
+                                    labels, pred_probs, labels=[False, True]
                                 ),
                                 2,
                              ),
@@ -359,9 +352,7 @@ for run_id in top_run_ids:
                         group_metrics.append(subgroup_metrics)
 
                     df_group_metrics = pd.DataFrame(group_metrics)
-                    metrics_tmp_path = (
-                        f"/tmp/{split_name}_{group}_metrics.csv"
-                    )
+                    metrics_tmp_path = (f"/tmp/{split_name}_{group}_metrics.csv")
                     df_group_metrics.to_csv(metrics_tmp_path, index=False)
                     mlflow.log_artifact(
                         local_path=metrics_tmp_path, artifact_path="subgroup_metrics"
@@ -374,7 +365,7 @@ for run_id in top_run_ids:
                     for flag in bias_flags:
                         if flag["flag"] != "🟢 NO BIAS":
                             print(
-                                f'Run {run_id}: {flag["group"]} on {flag["dataset"]} - {flag["subgroups"]}, FNPR Difference: {flag["difference"]:.2f}% ({flag["type"]}) [{flag["flag"]}]'
+                                f'Run {run_id}: {flag["group"]} on {flag["dataset"]} - {flag["subgroups"]}, FNPR Difference: {flag["difference"]:.2f}% ({flag["type"]}) [{flag["flag"]}]' # noqa: Q000
                             )
 
                     df_bias_flags = pd.DataFrame(bias_flags)
@@ -390,7 +381,6 @@ for run_id in top_run_ids:
             bias_tmp_path = f"/tmp/{flag_name}_flags.csv"
             df_flag.to_csv(bias_tmp_path, index=False)
             mlflow.log_artifact(local_path=bias_tmp_path, artifact_path="bias_flags")
-    
     mlflow.end_run()
 
 # COMMAND ----------
