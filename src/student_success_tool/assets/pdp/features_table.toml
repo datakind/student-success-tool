@@ -150,6 +150,9 @@ frac_courses_course_grade_d = { name = "fraction of D grades earned this term" }
 frac_courses_course_grade_f = { name = "fraction of F grades earned this term" }
 frac_courses_grade_is_failing_or_withdrawal = { name = "fraction of courses failed or withdrawn this term" }
 frac_courses_grade_above_section_avg = { name = "fraction of courses this term with grades above the sections' avg. grades" }
+frac_courses_in_program_of_study_area_term_1 = { name = "fraction of courses taken this term in student's first-term program of study area" }
+frac_courses_in_program_of_study_area_year_1 = { name = "fraction of courses taken this term in student's first-year program of study area" }
+frac_courses_in_term_program_of_study_area = { name = "fraction of courses taken this term in student's current program of study area" }
 frac_sections_students_passed = { name = "fraction of section's students that passed the course" }
 frac_sections_students_completed = { name = "fraction of section's students that completed the course" }
 student_pass_rate_above_sections_avg = { name = "student's pass rate this term is above sections' avg. pass rate" }

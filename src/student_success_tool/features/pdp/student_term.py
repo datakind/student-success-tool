@@ -143,10 +143,18 @@ def add_features(
     LOGGER.info("adding student-term features ...")
     nc_prefix = constants.NUM_COURSE_FEATURE_COL_PREFIX
     fc_prefix = constants.FRAC_COURSE_FEATURE_COL_PREFIX
+    _num_course_cols = (
+        [col for col in df.columns if col.startswith(f"{nc_prefix}_")]
+        +
+        # also include num-course cols to be added below
+        [
+            "num_courses_in_program_of_study_area_term_1",
+            "num_courses_in_program_of_study_area_year_1",
+            "num_courses_in_term_program_of_study_area",
+        ]
+    )
     num_frac_courses_cols = [
-        (col, col.replace(f"{nc_prefix}_", f"{fc_prefix}_"))
-        for col in df.columns
-        if col.startswith(f"{constants.NUM_COURSE_FEATURE_COL_PREFIX}_")
+        (col, col.replace(f"{nc_prefix}_", f"{fc_prefix}_")) for col in _num_course_cols
     ]
     feature_name_funcs = (
         {
