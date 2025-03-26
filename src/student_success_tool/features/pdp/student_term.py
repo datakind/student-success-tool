@@ -236,8 +236,12 @@ def student_has_prior_degree(
         f"first_year_to_certificate_at_{inst}_inst",
         f"first_year_to_associates_at_{inst}_inst",
         f"first_year_to_associates_or_certificate_at_{inst}_inst",
-        f"first_year_to_bachelors_at_{inst}_inst",
     ]
+    # yes, they really are inconsistent here
+    if inst == "cohort":
+        degree_year_cols.append("first_year_to_bachelors_at_cohort_inst")
+    else:
+        degree_year_cols.append("first_year_to_bachelor_at_other_inst")
     return df.loc[:, degree_year_cols].lt(df[enrollment_year_col], axis=0).any(axis=1)
 
 
