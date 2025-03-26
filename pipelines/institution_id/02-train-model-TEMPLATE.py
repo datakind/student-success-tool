@@ -242,9 +242,9 @@ search_metric = (
 # Sort and select top run IDs based on min/max with loss vs. score
 ascending_order = optimization_metric == "log_loss"
 top_run_ids = (
-            runs.sort_values(by=search_metric, ascending=ascending_order)
-            .iloc[:top_x]["run_id"]
-            .tolist()
+    runs.sort_values(by=search_metric, ascending=ascending_order)
+    .iloc[:top_x]["run_id"]
+    .tolist()
 )
 
 # COMMAND ----------
