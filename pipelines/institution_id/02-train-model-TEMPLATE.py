@@ -222,18 +222,26 @@ else:
 
 # COMMAND ----------
 
-# NOTE: Change this to the number of top runs you want to evaluate
+# Set the number of top runs to evaluate
 top_x = 3
 optimization_metric = training_params["optimization_metric"]
 
-# Fetch top X runs
+# Fetch all runs
 runs = mlflow.search_runs(
     experiment_ids=[experiment_id],
-    order_by=[f"metrics.{optimization_metric} DESC"],
-    max_results=top_x,
+    order_by=["metrics.m DESC"],
 )
 
-top_run_ids = runs["run_id"].tolist()
+# Retrieve validation metric for sorting
+search_metric = (
+    f"metrics.val_{optimization_metric}"
+    if optimization_metric in ["log_loss", "roc_auc"]
+    else f"metrics.val_{optimization_metric}_score"
+)
+
+# Sort and select top run IDs based on min/max with loss vs. score
+ascending_order = optimization_metric == "log_loss"
+top_run_ids = runs.sort_values(by=search_metric, ascending=ascending_order).iloc[:top_x]["run_id"].tolist()
 
 # COMMAND ----------
 
@@ -382,7 +390,8 @@ for run_id in top_run_ids:
             bias_tmp_path = f"/tmp/{flag_name}_flags.csv"
             df_flag.to_csv(bias_tmp_path, index=False)
             mlflow.log_artifact(local_path=bias_tmp_path, artifact_path="bias_flags")
-    mlflow.end_run()
+    
+mlflow.end_run()
 
 # COMMAND ----------
 
