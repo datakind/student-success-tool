@@ -241,7 +241,11 @@ search_metric = (
 
 # Sort and select top run IDs based on min/max with loss vs. score
 ascending_order = optimization_metric == "log_loss"
-top_run_ids = runs.sort_values(by=search_metric, ascending=ascending_order).iloc[:top_x]["run_id"].tolist()
+top_run_ids = (
+            runs.sort_values(by=search_metric, ascending=ascending_order)
+            .iloc[:top_x]["run_id"]
+            .tolist()
+)
 
 # COMMAND ----------
 
@@ -390,7 +394,6 @@ for run_id in top_run_ids:
             bias_tmp_path = f"/tmp/{flag_name}_flags.csv"
             df_flag.to_csv(bias_tmp_path, index=False)
             mlflow.log_artifact(local_path=bias_tmp_path, artifact_path="bias_flags")
-    
 mlflow.end_run()
 
 # COMMAND ----------
