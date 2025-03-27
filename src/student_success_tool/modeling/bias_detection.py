@@ -6,6 +6,7 @@ from sklearn.metrics import confusion_matrix
 # FNPR sample threshold
 MIN_FNPR_SAMPLES = 50
 Z = st.norm.ppf(1 - (1 - 0.95) / 2)
+FNPR_LAPLACE_CONSTANT = 10
 
 # Flag FNPR difference thresholds
 HIGH_FLAG_THRESHOLD = 0.15
@@ -20,19 +21,44 @@ FLAG_NAMES = {
     "🔴 HIGH BIAS": "high_bias",
 }
 
+def apply_laplace_smoothing(
+    TP: int, 
+    FN: int, 
+    smoothing_constant: int,
+) -> float:
+    """ 
+    Determines Laplace smoothing factor alpha.
+    Args:
+        TP: Labels from model output
+        FN: Predictions from model output
+        smoothing_constant: Constant for adaptive Laplace smoothing. The greater the threshold here, the 
+        more aggressive the smoothing.
+    """
+    if (TP + FN) < 200:
+        return smoothing_constant / np.sqrt(TP + FN + 1)  
+    return 0
 
 def calculate_fnpr_and_ci(
     targets: pd.Series,
     preds: pd.Series,
     min_fnpr_samples: int = MIN_FNPR_SAMPLES,
-) -> tuple[float, float, float]:
+    smoothing_constant: int = FNPR_LAPLACE_CONSTANT,
+) -> tuple[float, float, float, bool]:
     """
-    Calculates the False Negative Prediction Rate (FNPR) and its confidence interval.
+    Calculates the False Negative Prediction Rate (FNPR) and its confidence interval, applying Laplace smoothing.
 
     Args:
         targets: Labels from model output
         preds: Predictions from model output
-        min_fnpr_samples: Minimum number of true positives or false negatives for FNPR calculation. When TP or FN are low, FNPR can be very unstable and flag subgroups based on small differences in TP or FN.
+        min_fnpr_samples: Minimum number of true positives or false negatives for FNPR calculation.
+        smoothing_constant: Constant for adaptive Laplace smoothing. The greater the threshold here, the 
+        more aggressive the smoothing.
+    
+    Returns:
+        fnpr: False Negative Parity Rate
+        ci_min: Lower bound of the confidence interval
+        ci_max: Upper bound of the confidence interval
+        valid_samples_flag: True if the minimum number of samples for FNPR calculation was met.
     """
     cm = confusion_matrix(targets, preds, labels=[False, True])
     tn, fp, fn, tp = (
@@ -41,15 +67,18 @@ def calculate_fnpr_and_ci(
         else np.bincount(np.array(targets) * 2 + np.array(preds), minlength=4)
     )
 
-    denominator = fn + tp
+    valid_samples_flag = (tp >= min_fnpr_samples) and (fn >= min_fnpr_samples)
+    alpha = apply_laplace_smoothing(tp, fn, smoothing_constant)
 
-    if (tp < min_fnpr_samples) or (fn < min_fnpr_samples):
-        return np.nan, np.nan, np.nan
+    # Calculate FNPR
+    total = tp + fn
+    fnpr = fn / (total + alpha)
 
-    fnpr = fn / denominator
-    margin = Z * np.sqrt((fnpr * (1 - fnpr)) / denominator)
-    return fnpr, max(0, fnpr - margin), min(1, fnpr + margin)
+    # Confidence Interval Calculation
+    margin = Z * np.sqrt((fnpr * (1 - fnpr)) / (total + 2 * alpha))
+    ci_min, ci_max = max(0, fnpr - margin), min(1, fnpr + margin)
 
+    return fnpr, ci_min, ci_max, valid_samples_flag
 
 def check_ci_overlap(
     ci1: tuple[float, float],
@@ -160,7 +189,7 @@ def flag_bias(
 
     for i, current in enumerate(fnpr_data):
         for other in fnpr_data[i + 1 :]:
-            if current["fnpr"] > 0 and other["fnpr"] > 0:
+            if (current["fnpr"] > 0 and other["fnpr"] > 0) and (current["fnpr_sample_threshold_met"] and other["fnpr_sample_threshold_met"]):
                 fnpr_diff = np.abs(current["fnpr"] - other["fnpr"])
                 p_value = z_test_fnpr_difference(
                     current["fnpr"], other["fnpr"], current["size"], other["size"]

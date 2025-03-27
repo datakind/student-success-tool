@@ -300,7 +300,7 @@ for run_id in top_run_ids:
                         labels = subgroup_data[cfg.target_col]
                         preds = subgroup_data[cfg.pred_col]
                         pred_probs = subgroup_data[cfg.pred_prob_col]
-                        fnpr, fnpr_lower, fnpr_upper = (
+                        fnpr, fnpr_lower, fnpr_upper, valid_samples_flag = (
                             modeling.bias_detection.calculate_fnpr_and_ci(labels, preds)
                         )
 
@@ -311,6 +311,7 @@ for run_id in top_run_ids:
                                 "fnpr": fnpr,
                                 "ci": (fnpr_lower, fnpr_upper),
                                 "size": len(subgroup_data),
+                                "fnpr_sample_threshold_met": valid_samples_flag,
                             }
                         )
 
@@ -319,9 +320,10 @@ for run_id in top_run_ids:
                             "Number of Samples": len(subgroup_data),
                             "Actual Target Prevalence": round(labels.mean(), 2),
                             "Predicted Target Prevalence": round(preds.mean(), 2),
-                            "FNPR": round(fnpr, 2)
-                            if not pd.isna(fnpr)
-                            else "Insufficient # of FN or TP",
+                            "FNPR": round(fnpr, 2),
+                            # if we have less than 50 samples for TP or FN, then
+                            # our threshold is NOT met and FNPR is likely not reliable.
+                            "Valid FNPR Calculation": valid_samples_flag,
                             "Accuracy": round(
                                 sklearn.metrics.accuracy_score(labels, preds), 2
                             ),
@@ -355,7 +357,7 @@ for run_id in top_run_ids:
                             if metric not in {
                                 "Subgroup",
                                 "Number of Samples",
-                            } and not isinstance(value, str):
+                            }:
                                 mlflow.log_metric(
                                     f"{split_name}_{group}_metrics/{metric}_subgroup{subgroup}",
                                     value,
