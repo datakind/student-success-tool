@@ -47,9 +47,9 @@ Please read the [CONTRIBUTING](CONTRIBUTING.md) to learn how to contribute to th
 
 ### databricks notebook
 
-1. Connect notebook to a cluster running Databricks Runtime [14.3 LTS](https://docs.databricks.com/en/release-notes/runtime/14.3lts.html) or [15.4 LTS](https://docs.databricks.com/en/release-notes/runtime/15.4lts.html).
+1. Connect notebook to a cluster running Databricks Runtime [15.4 LTS](https://docs.databricks.com/en/release-notes/runtime/15.4lts.html) or [16.x](https://docs.databricks.com/aws/en/release-notes/runtime/16.2).
 1. Run the `%pip` magic command, pointing it at one of three places:
     - a local workspace directory: `%pip install ../../../student-success-tool/`
     - a GitHub repo (for a specific branch): `%pip install git+https://github.com/datakind/student-success-tool.git@develop`
-    - public PyPI: `%pip install student-success-tool`  (NOTE: THIS DOESN'T WORK YET)
-1. Restart Python, per usual: `dbutils.library.restartPython()`
+    - public PyPI: `%pip install student-success-tool == x.y.z`
+1. Restart Python: `dbutils.library.restartPython()` or `%restart_python`
