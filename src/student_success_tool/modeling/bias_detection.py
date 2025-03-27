@@ -22,21 +22,24 @@ FLAG_NAMES = {
 }
 
 def apply_laplace_smoothing(
-    TP: int, 
-    FN: int, 
+    TP: int,
+    FN: int,
     smoothing_constant: int,
 ) -> float:
-    """ 
+    """
     Determines Laplace smoothing factor alpha.
     Args:
         TP: Labels from model output
         FN: Predictions from model output
-        smoothing_constant: Constant for adaptive Laplace smoothing. The greater the threshold here, the 
-        more aggressive the smoothing.
+        smoothing_constant: Constant for adaptive Laplace smoothing. The greater
+        the threshold here, the more aggressive the smoothing.
+    Returns: 
+        alpha: Laplace smoothing factor alpha.
     """
     if (TP + FN) < 200:
-        return smoothing_constant / np.sqrt(TP + FN + 1)  
+        return smoothing_constant / np.sqrt(TP + FN + 1)
     return 0
+
 
 def calculate_fnpr_and_ci(
     targets: pd.Series,
@@ -51,8 +54,8 @@ def calculate_fnpr_and_ci(
         targets: Labels from model output
         preds: Predictions from model output
         min_fnpr_samples: Minimum number of true positives or false negatives for FNPR calculation.
-        smoothing_constant: Constant for adaptive Laplace smoothing. The greater the threshold here, the 
-        more aggressive the smoothing.
+        smoothing_constant: Constant for adaptive Laplace smoothing. The greater
+        the threshold here, the more aggressive the smoothing.
     
     Returns:
         fnpr: False Negative Parity Rate
@@ -79,6 +82,7 @@ def calculate_fnpr_and_ci(
     ci_min, ci_max = max(0, fnpr - margin), min(1, fnpr + margin)
 
     return fnpr, ci_min, ci_max, valid_samples_flag
+
 
 def check_ci_overlap(
     ci1: tuple[float, float],
