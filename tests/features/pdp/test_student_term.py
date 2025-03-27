@@ -221,6 +221,46 @@ def test_year_of_enrollment_at_cohort_inst(df, ccol, tcol, exp):
 
 
 @pytest.mark.parametrize(
+    ["df", "inst", "exp"],
+    [
+        (
+            pd.DataFrame(
+                {
+                    "year_of_enrollment_at_cohort_inst": [1, 2, 3, 4],
+                    "first_year_to_certificate_at_cohort_inst": [
+                        pd.NA,
+                        pd.NA,
+                        pd.NA,
+                        pd.NA,
+                    ],
+                    "first_year_to_associates_at_cohort_inst": [
+                        pd.NA,
+                        pd.NA,
+                        pd.NA,
+                        pd.NA,
+                    ],
+                    "first_year_to_associates_or_certificate_at_cohort_inst": [
+                        pd.NA,
+                        1,
+                        2,
+                        4,
+                    ],
+                    "first_year_to_bachelors_at_cohort_inst": [pd.NA, 3, pd.NA, 6],
+                },
+                dtype="Int8",
+            ),
+            "cohort",
+            pd.Series([False, True, True, False], dtype="boolean"),
+        ),
+    ],
+)
+def test_student_has_prior_degree(df, inst, exp):
+    obs = student_term.student_has_prior_degree(df, inst=inst)
+    assert isinstance(obs, pd.Series) and not obs.empty
+    assert pd.testing.assert_series_equal(obs, exp) is None
+
+
+@pytest.mark.parametrize(
     ["df", "ccol", "tcol", "exp"],
     [
         (

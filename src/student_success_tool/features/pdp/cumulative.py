@@ -71,7 +71,7 @@ def add_features(
         # however, by definition, these transforms shouldn't alter the original indexing, so:
         pd.concat([df, df_cumnum_ur, df_expanding_agg], axis="columns")
         # add a last couple features, which don't fit nicely into above logic
-        .pipe(add_cumfrac_terms_unenrolled_features, student_id_cols=student_id_cols)
+        .pipe(add_cumfrac_terms_enrolled_features, student_id_cols=student_id_cols)
         .pipe(
             add_term_diff_features,
             cols=[
@@ -182,27 +182,34 @@ def _concat_elements(*args: Iterable) -> list:
     return list(itertools.chain(*args))
 
 
-def add_cumfrac_terms_unenrolled_features(
+def add_cumfrac_terms_enrolled_features(
     df: pd.DataFrame, *, student_id_cols: list[str]
 ) -> pd.DataFrame:
-    LOGGER.info("computing cumfrac terms unenrolled features ...")
+    LOGGER.info("computing cumfrac terms enrolled features ...")
     df_grped = df.groupby(by=student_id_cols, as_index=False, sort=False)
     df_min_term_ranks = df_grped.agg(
         min_student_term_rank=("term_rank", "min"),
         min_student_term_rank_core=("term_rank_core", "min"),
+        min_student_term_rank_noncore=("term_rank_noncore", "min"),
     )
     return pd.merge(df, df_min_term_ranks, on=student_id_cols, how="inner").assign(
-        cumfrac_terms_unenrolled=ft.partial(
-            _compute_cumfrac_terms_unenrolled,
+        cumfrac_terms_enrolled=ft.partial(
+            _compute_cumfrac_terms_enrolled,
             term_rank_col="term_rank",
             min_student_term_rank_col="min_student_term_rank",
             cumnum_terms_enrolled_col="cumnum_terms_enrolled",
         ),
-        cumfrac_core_terms_unenrolled=ft.partial(
-            _compute_cumfrac_terms_unenrolled,
+        cumfrac_core_terms_enrolled=ft.partial(
+            _compute_cumfrac_terms_enrolled,
             term_rank_col="term_rank_core",
             min_student_term_rank_col="min_student_term_rank_core",
             cumnum_terms_enrolled_col="cumnum_core_terms_enrolled",
+        ),
+        cumfrac_noncore_terms_enrolled=ft.partial(
+            _compute_cumfrac_terms_enrolled,
+            term_rank_col="term_rank_noncore",
+            min_student_term_rank_col="min_student_term_rank_noncore",
+            cumnum_terms_enrolled_col="cumnum_noncore_terms_enrolled",
         ),
     )
 
@@ -254,7 +261,7 @@ def add_term_diff_features(
     )
 
 
-def _compute_cumfrac_terms_unenrolled(
+def _compute_cumfrac_terms_enrolled(
     df: pd.DataFrame,
     *,
     term_rank_col: str = "term_rank",
@@ -263,7 +270,7 @@ def _compute_cumfrac_terms_unenrolled(
 ) -> pd.Series:
     cumnum_terms_total = (df[term_rank_col] - df[min_student_term_rank_col]) + 1
     cumfrac_terms_enrolled = df[cumnum_terms_enrolled_col] / cumnum_terms_total
-    return (1.0 - cumfrac_terms_enrolled).astype("Float32")
+    return cumfrac_terms_enrolled.astype("Float32")
 
 
 #######################

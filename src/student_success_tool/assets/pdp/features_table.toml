@@ -68,7 +68,7 @@ math_placement = { name = "student's math placement upon enrollment" }
 english_placement = { name = "student's english placement upon enrollment" }
 reading_placement = { name = "student's reading placement upon enrollment" }
 dual_and_summer_enrollment = { name = "student's past dual and/or summer enrollment status" }
-pell_status_first_year = { name = "student's first-year Pell status" }
+student_is_pell_recipient_first_year = { name = "student is a Pell grant recipient in year 1" }
 credential_type_sought_year_1 = { name = "student's first-year credential type sought" }
 program_of_study_term_1 = { name = "student's first-term program of study" }
 program_of_study_year_1 = { name = "student's first-year program of study" }
@@ -94,6 +94,8 @@ frac_credits_earned_year_2 = { name = "fraction of credits earned in year 2" }
 frac_credits_earned_year_3 = { name = "fraction of credits earned in year 3" }
 frac_credits_earned_year_4 = { name = "fraction of credits earned in year 4" }
 year_of_enrollment_at_cohort_inst = { name = "year of enrollment at cohort institution" }
+student_has_prior_degree_at_cohort_inst = { name = "student has received a prior degree from cohort institution" }
+student_has_prior_degree_at_other_inst = { name = "student has received a prior degree from another institution" }
 term_is_pre_cohort = { name = "term occurred before student's cohort (enrollment) term" }
 term_is_while_student_enrolled_at_other_inst = { name = "term occurred while student is enrolled at another institution" }
 frac_credits_earned = { name = "fraction of credits earned this term" }
@@ -150,6 +152,9 @@ frac_courses_course_grade_d = { name = "fraction of D grades earned this term" }
 frac_courses_course_grade_f = { name = "fraction of F grades earned this term" }
 frac_courses_grade_is_failing_or_withdrawal = { name = "fraction of courses failed or withdrawn this term" }
 frac_courses_grade_above_section_avg = { name = "fraction of courses this term with grades above the sections' avg. grades" }
+frac_courses_in_program_of_study_area_term_1 = { name = "fraction of courses taken this term in student's first-term program of study area" }
+frac_courses_in_program_of_study_area_year_1 = { name = "fraction of courses taken this term in student's first-year program of study area" }
+frac_courses_in_term_program_of_study_area = { name = "fraction of courses taken this term in student's current program of study area" }
 frac_sections_students_passed = { name = "fraction of section's students that passed the course" }
 frac_sections_students_completed = { name = "fraction of section's students that completed the course" }
 student_pass_rate_above_sections_avg = { name = "student's pass rate this term is above sections' avg. pass rate" }
@@ -234,8 +239,9 @@ num_courses_grade_is_failing_or_withdrawal_cumfrac = { name = "fraction of cours
 num_courses_grade_above_section_avg_cumfrac = { name = "fraction of courses so far with grades above the sections' avg. grades" }
 num_courses_in_program_of_study_area_term_1_cumfrac = { name = "number of courses taken so far in student's first-term program of study area" }
 num_courses_in_program_of_study_area_year_1_cumfrac = { name = "number of courses taken so far in student's first-year program of study area" }
-cumfrac_terms_unenrolled = { name = "fraction of skipped terms so far" }
-cumfrac_core_terms_unenrolled = { name = "fraction of skipped 'core' terms so far" }
+cumfrac_terms_enrolled = { name = "fraction of all terms enrolled so far" }
+cumfrac_core_terms_enrolled = { name = "fraction of 'core' terms enrolled so far" }
+cumfrac_noncore_terms_enrolled = { name = "fraction of 'non-core' terms enrolled so far" }
 num_courses_diff_prev_term = { name = "change in number of courses taken this term compared to previous term" }
 num_credits_earned_diff_prev_term = { name = "change in number of credits earned this term compared to previous term" }
 course_grade_numeric_mean_diff_prev_term = { name = "change in avg. numeric grade this term compared to previous term" }
