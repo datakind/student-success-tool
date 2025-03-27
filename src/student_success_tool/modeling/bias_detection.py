@@ -33,6 +33,8 @@ def calculate_fnpr_and_ci(
         targets: Labels from model output
         preds: Predictions from model output
         min_fnpr_samples: Minimum number of true positives or false negatives for FNPR calculation. When TP or FN are low, FNPR can be very unstable and flag subgroups based on small differences in TP or FN.
+    Returns:
+        Tuple of FNPR, lower CI bound, and upper CI bound.
     """
     cm = confusion_matrix(targets, preds, labels=[False, True])
     tn, fp, fn, tp = (
@@ -63,6 +65,8 @@ def check_ci_overlap(
     Args:
         ci1: Confidence interval (min, max) for subgroup 1
         ci2: Confidence interval (min, max) for subgroup 2
+    Returns:
+        Boolean indicating whether the CIs overlap.
     """
     return not (ci1[1] < ci2[0] or ci2[1] < ci1[0])
 
@@ -84,6 +88,8 @@ def z_test_fnpr_difference(
         fnpr2: FNPR value for subgroup 2
         denominator1: Number of false negatives + true negatives for subgroup 1
         denominator2: Number of false negatives + true negatives for subgroup 2
+    Returns:
+        Two-tailed p-value for the z-test for the FNPR difference between the two subgroups.
     """
     if (
         denominator1 <= 30 or denominator2 <= 30
@@ -118,6 +124,8 @@ def log_bias_flag(
         dataset: Name of the dataset (e.g. train/test/validate)
         flag: Flag value (e.g. "🔴 HIGH BIAS", "🟠 MODERATE BIAS", "🟡 LOW BIAS", "🟢 NO BIAS")
         p_value: p-value for the z-test for the FNPR difference of the subgroup pair
+    Returns:
+        Dictionary containing bias flag information.
     """
     flag_entry = {
         "group": group,
