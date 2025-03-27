@@ -18,11 +18,16 @@ The 'SST Pipeline Workflow Asset Bundle' is used to deploy the demo inference pi
    Set local env variables:
    ```
    export profile_name=<Profile name created on Step 2>
-   export group_to_manage_workflow=<Databrics managing group>
-   export service_account_user=<Service account user>
-   export pipeline_sa_email=<Ingestion pipline service account email>
-   export datakind_notification_email=<Datakind email to receive notifications>
-   export end_user_notification_email=<End user email to receive notifications>
+   export DB_workspace=<Databricks Workspace name>
+   export service_account_executer=<Service account to trigger the pipeline>
+   export service_principal_run_as=<Service principal for the workflow to run as>
+   export fellows_group_to_manage_workflow=<Temp group to manage the workflow>
+   export datakind_group_to_manage_workflow=<Datakind group to manahe the workflow>
+   export pipeline_sa_email=<Service accoount to ingest the data>
+   export datakind_notification_email=<Datakind email address to receive notifications>
+   export end_user_notification_email=<Institution email address to receive notifications>
+   export pip_install_branch=<Branch to install the SST libraries from>
+   export custom_schemas_path=<Path to custom schemas>
    ```
 
    Then execute the command:
@@ -30,11 +35,16 @@ The 'SST Pipeline Workflow Asset Bundle' is used to deploy the demo inference pi
    ```
    $ databricks bundle deploy \
    --profile=$profile_name \
-   --var="service_account_user=$service_account_user" \
-   --var="group_to_manage_workflow=$group_to_manage_workflow" \
+   --var="DB_workspace=$DB_workspace" \
+   --var="service_account_executer=$service_account_executer" \
+   --var="service_principal_run_as=$service_principal_run_as" \
+   --var="fellows_group_to_manage_workflow=$fellows_group_to_manage_workflow" \
+   --var="datakind_group_to_manage_workflow=$datakind_group_to_manage_workflow" \
    --var="pipeline_sa_email=$pipeline_sa_email" \
    --var="end_user_notification_email=$end_user_notification_email" \
    --var="datakind_notification_email=$datakind_notification_email" \
+   --var="pip_install_branch=$pip_install_branch" \
+   --var="custom_schemas_path=$custom_schemas_path" \
    --target dev
    ```
     Note: "dev" is the default target, so the `--target dev` parameter is optional here.
@@ -48,11 +58,16 @@ The 'SST Pipeline Workflow Asset Bundle' is used to deploy the demo inference pi
    ```
    $ databricks bundle deploy \
    --profile=$profile_name \
-   --var="service_account_user=$service_account_user" \
-   --var="group_to_manage_workflow=$group_to_manage_workflow" \
+   --var="DB_workspace=$DB_workspace" \
+   --var="service_account_executer=$service_account_executer" \
+   --var="service_principal_run_as=$service_principal_run_as" \
+   --var="fellows_group_to_manage_workflow=$fellows_group_to_manage_workflow" \
+   --var="datakind_group_to_manage_workflow=$datakind_group_to_manage_workflow" \
    --var="pipeline_sa_email=$pipeline_sa_email" \
    --var="end_user_notification_email=$end_user_notification_email" \
    --var="datakind_notification_email=$datakind_notification_email" \
+   --var="pip_install_branch=$pip_install_branch" \
+   --var="custom_schemas_path=$custom_schemas_path" \
    --target prod
    ```
 
@@ -62,11 +77,16 @@ The 'SST Pipeline Workflow Asset Bundle' is used to deploy the demo inference pi
    ```
    $ databricks bundle run \
    --profile=$profile_name \
-   --var="service_account_user=$service_account_user" \
-   --var="group_to_manage_workflow=$group_to_manage_workflow" \
+   --var="DB_workspace=$DB_workspace" \
+   --var="service_account_executer=$service_account_executer" \
+   --var="service_principal_run_as=$service_principal_run_as" \
+   --var="fellows_group_to_manage_workflow=$fellows_group_to_manage_workflow" \
+   --var="datakind_group_to_manage_workflow=$datakind_group_to_manage_workflow" \
    --var="pipeline_sa_email=$pipeline_sa_email" \
    --var="end_user_notification_email=$end_user_notification_email" \
    --var="datakind_notification_email=$datakind_notification_email" \
+   --var="pip_install_branch=$pip_install_branch" \
+   --var="custom_schemas_path=$custom_schemas_path" \
    --target dev
    ```
    Note: SST app will use only the prod version of the workflow
