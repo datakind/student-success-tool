@@ -256,9 +256,12 @@ def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
                 # "cohort_term",  # keeping this to see if useful
                 "cohort_id",
                 "term_rank",
+                "min_student_term_rank",
                 "term_rank_core",
+                "min_student_term_rank_core",
                 "term_is_core",
                 "term_rank_noncore",
+                "min_student_term_rank_noncore",
                 "term_is_noncore",
                 # columns used to derive other features, but not features themselves
                 # "grade",  # TODO: should this be course_grade?
