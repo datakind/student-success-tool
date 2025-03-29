@@ -9,7 +9,7 @@ from collections.abc import Collection
 import mlflow
 import mlflow.artifacts
 import mlflow.tracking
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 LOGGER = logging.getLogger(__name__)
 
