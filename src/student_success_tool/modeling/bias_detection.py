@@ -25,29 +25,38 @@ def calculate_fnpr_and_ci(
     targets: pd.Series,
     preds: pd.Series,
     min_fnpr_samples: int = MIN_FNPR_SAMPLES,
-) -> tuple[float, float, float]:
+) -> tuple[float, float, float, bool]:
     """
-    Calculates the False Negative Prediction Rate (FNPR) and its confidence interval.
+    Calculates the False Negative Prediction Rate (FNPR) and its confidence interval, applying Laplace smoothing.
 
     Args:
         targets: Labels from model output
         preds: Predictions from model output
-        min_fnpr_samples: Minimum number of true positives or false negatives for FNPR calculation. When TP or FN are low, FNPR can be very unstable and flag subgroups based on small differences in TP or FN.
-
+        min_fnpr_samples: Minimum number of true positives or false negatives for FNPR calculation.
+        smoothing_constant: Constant for adaptive Laplace smoothing. The greater
+        the threshold here, the more aggressive the smoothing.
+    
     Returns:
-        Tuple of FNPR, lower CI bound, and upper CI bound.
+        fnpr: False Negative Parity Rate
+        ci_min: Lower bound of the confidence interval
+        ci_max: Upper bound of the confidence interval
+        valid_samples_flag: True if the minimum number of samples for FNPR calculation was met.
     """
     cm = confusion_matrix(targets, preds, labels=[False, True])
     tn, fp, fn, tp = cm.ravel()
 
+    # Assign whether FNPR calculation is reliable (low TP and/or low FN can create instability)
+    valid_samples_flag = (tp >= min_fnpr_samples) and (fn >= min_fnpr_samples)
+
+    # Calculate FNPR
     denominator = fn + tp
-
-    if (tp < min_fnpr_samples) or (fn < min_fnpr_samples):
-        return np.nan, np.nan, np.nan
-
     fnpr = fn / denominator
+
+    # Confidence Interval Calculation
     margin = Z * np.sqrt((fnpr * (1 - fnpr)) / denominator)
-    return fnpr, max(0, fnpr - margin), min(1, fnpr + margin)
+    ci_min, ci_max = max(0, fnpr - margin), min(1, fnpr + margin)
+
+    return fnpr, ci_min, ci_max, valid_samples_flag
 
 
 def check_ci_overlap(
@@ -131,9 +140,11 @@ def generate_bias_flag(
         "group": group,
         "subgroups": f"{subgroup1} vs {subgroup2}",
         "percentage_difference": fnpr_diff * 100,
-        "type": bias_type
-        if np.isnan(p_value)
-        else f"{bias_type}, p-value: {'< 0.001' if p_value < 0.001 else f'{p_value:.3f}'}",
+        "type": (
+            bias_type
+            if np.isnan(p_value)
+            else f"{bias_type}, p-value: {'< 0.001' if p_value < 0.001 else f'{p_value:.3f}'}"
+        ),
         "split_name": split_name,
         "flag": flag,
     }
