@@ -33,8 +33,6 @@ def calculate_fnpr_and_ci(
         targets: Labels from model output
         preds: Predictions from model output
         min_fnpr_samples: Minimum number of true positives or false negatives for FNPR calculation.
-        smoothing_constant: Constant for adaptive Laplace smoothing. The greater
-        the threshold here, the more aggressive the smoothing.
     
     Returns:
         fnpr: False Negative Parity Rate
@@ -50,7 +48,7 @@ def calculate_fnpr_and_ci(
 
     # Calculate FNPR
     denominator = fn + tp
-    fnpr = fn / denominator if denominator > 0 else 0 
+    fnpr = fn / denominator if denominator > 0 else 0
 
     # Confidence Interval Calculation
     margin = Z * np.sqrt((fnpr * (1 - fnpr)) / denominator) if denominator > 0 else 0

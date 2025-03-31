@@ -37,9 +37,16 @@ np.random.seed(42)
     ],
 )
 def test_calculate_fnpr_and_ci(
-    targets, preds, expected_fnpr, expected_ci_lower, expected_ci_upper, valid_samples_flag,
+    targets,
+    preds,
+    expected_fnpr,
+    expected_ci_lower,
+    expected_ci_upper,
+    valid_samples_flag,
 ):
-    fnpr, ci_lower, ci_upper, valid_samples_flag = bias_detection.calculate_fnpr_and_ci(targets, preds)
+    fnpr, ci_lower, ci_upper, valid_samples_flag = bias_detection.calculate_fnpr_and_ci(
+        targets, preds
+    )
     assert np.isclose(fnpr, expected_fnpr, equal_nan=True)
     assert np.isclose(ci_lower, expected_ci_lower, equal_nan=True)
     assert np.isclose(ci_upper, expected_ci_upper, equal_nan=True)
@@ -93,7 +100,9 @@ def test_z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2, expected_p):
         ),
     ],
 )
-def test_generate_bias_flag(group, sub1, sub2, percentage_difference, bias_type, split_name, flag, p, expected):
+def test_generate_bias_flag(
+    group, sub1, sub2, percentage_difference, bias_type, split_name, flag, p, expected
+):
     assert (
         bias_detection.generate_bias_flag(
             group, sub1, sub2, percentage_difference, bias_type, split_name, flag, p

@@ -395,7 +395,7 @@ for run_id in top_run_ids:
             df_flag = (
                 df_all_flags[df_all_flags["flag"] == flag].sort_values(
                     by="percentage_difference", ascending=False
-                ) 
+                )
                 if df_all_flags.shape[0] > 0
                 else None
             )
