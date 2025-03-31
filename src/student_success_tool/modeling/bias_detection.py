@@ -187,7 +187,7 @@ def flag_bias(
                 )
                 ci_overlap = check_ci_overlap(current["ci"], other["ci"])
 
-                if (fnpr_diff < low_bias_thresh) or (p_value > 0.1):
+                if (current["fnpr"] > 0 and other["fnpr"] > 0) and (current["fnpr_sample_threshold_met"] and other["fnpr_sample_threshold_met"]):
                     bias_flags.append(
                         generate_bias_flag(
                             current["group"],

@@ -386,16 +386,17 @@ for run_id in top_run_ids:
                     df_bias_flags = pd.DataFrame(bias_flags)
                     df_all_flags = pd.concat(
                         [df_all_flags, df_bias_flags], ignore_index=True
-                    )
+                    ) if not df_bias_flags.empty else df_all_flags
 
         for flag in modeling.bias_detection.FLAG_NAMES.keys():
             flag_name = modeling.bias_detection.FLAG_NAMES[flag]
             df_flag = df_all_flags[df_all_flags["flag"] == flag].sort_values(
-                by="difference", ascending=False
-            )
-            bias_tmp_path = f"/tmp/{flag_name}_flags.csv"
-            df_flag.to_csv(bias_tmp_path, index=False)
-            mlflow.log_artifact(local_path=bias_tmp_path, artifact_path="bias_flags")
+                by="percentage_difference", ascending=False
+            ) if df_all_flags.shape[0] > 0 else None
+            if df_flag is not None:
+                bias_tmp_path = f"/tmp/{flag_name}_flags.csv"
+                df_flag.to_csv(bias_tmp_path, index=False)
+                mlflow.log_artifact(local_path=bias_tmp_path, artifact_path="bias_flags")
 mlflow.end_run()
 
 # COMMAND ----------
