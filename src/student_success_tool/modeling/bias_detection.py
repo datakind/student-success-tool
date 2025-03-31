@@ -3,10 +3,8 @@ import numpy as np
 import scipy.stats as st
 from sklearn.metrics import confusion_matrix
 
-# FNPR sample threshold
-MIN_FNPR_SAMPLES = 50
+# Z-score for 95% confidence interval
 Z = st.norm.ppf(1 - (1 - 0.95) / 2)
-FNPR_LAPLACE_CONSTANT = 10
 
 # Flag FNPR difference thresholds
 HIGH_FLAG_THRESHOLD = 0.15
@@ -21,31 +19,11 @@ FLAG_NAMES = {
     "🔴 HIGH BIAS": "high_bias",
 }
 
-def apply_laplace_smoothing(
-    TP: int,
-    FN: int,
-    smoothing_constant: int,
-) -> float:
-    """
-    Determines Laplace smoothing factor alpha.
-    Args:
-        TP: Labels from model output
-        FN: Predictions from model output
-        smoothing_constant: Constant for adaptive Laplace smoothing. The greater
-        the threshold here, the more aggressive the smoothing.
-    Returns: 
-        alpha: Laplace smoothing factor alpha.
-    """
-    if (TP + FN) < 200:
-        return smoothing_constant / np.sqrt(TP + FN + 1)
-    return 0
-
 
 def calculate_fnpr_and_ci(
     targets: pd.Series,
     preds: pd.Series,
-    min_fnpr_samples: int = MIN_FNPR_SAMPLES,
-    smoothing_constant: int = FNPR_LAPLACE_CONSTANT,
+    apply_scaling: bool = True,
 ) -> tuple[float, float, float, bool]:
     """
     Calculates the False Negative Prediction Rate (FNPR) and its confidence interval, applying Laplace smoothing.
@@ -54,34 +32,34 @@ def calculate_fnpr_and_ci(
         targets: Labels from model output
         preds: Predictions from model output
         min_fnpr_samples: Minimum number of true positives or false negatives for FNPR calculation.
-        smoothing_constant: Constant for adaptive Laplace smoothing. The greater
-        the threshold here, the more aggressive the smoothing.
-    
+        apply_scaling: Boolean of whether log scaling should be applied. We default to True since we want to
+        sufficiently dampen FNPR variance in low sample sizes situations.
+
     Returns:
         fnpr: False Negative Parity Rate
         ci_min: Lower bound of the confidence interval
         ci_max: Upper bound of the confidence interval
-        valid_samples_flag: True if the minimum number of samples for FNPR calculation was met.
+        num_positives: We output the number of positives for reporting. When the number of positives are low (< MIN_FNPR_SAMPLES),
+        then our FNPR computation is likely not as reliable. 
     """
     cm = confusion_matrix(targets, preds, labels=[False, True])
-    tn, fp, fn, tp = (
-        cm.ravel()
-        if cm.shape == (2, 2)
-        else np.bincount(np.array(targets) * 2 + np.array(preds), minlength=4)
+    tn, fp, fn, tp = cm.ravel()
+
+    # Calculate FNPR & apply Log Scaling to smoothen FNPR at low sample sizes
+    scaled_num_positives = (
+        fn + tp + np.log(fn + tp + 1) 
+        if apply_scaling 
+        else fn + tp
     )
-
-    valid_samples_flag = (tp >= min_fnpr_samples) and (fn >= min_fnpr_samples)
-    alpha = apply_laplace_smoothing(tp, fn, smoothing_constant)
-
-    # Calculate FNPR
-    total = tp + fn
-    fnpr = fn / (total + alpha)
+    fnpr = fn / scaled_num_positives if scaled_num_positives > 0 else 0
 
     # Confidence Interval Calculation
-    margin = Z * np.sqrt((fnpr * (1 - fnpr)) / (total + 2 * alpha))
+    margin = (
+        Z * np.sqrt((fnpr * (1 - fnpr)) / scaled_num_positives) if scaled_num_positives > 0 else 0
+    )
     ci_min, ci_max = max(0, fnpr - margin), min(1, fnpr + margin)
 
-    return fnpr, ci_min, ci_max, valid_samples_flag
+    return fnpr, ci_min, ci_max, fn + tp
 
 
 def check_ci_overlap(
@@ -96,6 +74,9 @@ def check_ci_overlap(
     Args:
         ci1: Confidence interval (min, max) for subgroup 1
         ci2: Confidence interval (min, max) for subgroup 2
+
+    Returns:
+        Boolean indicating whether the CIs overlap.
     """
     return not (ci1[1] < ci2[0] or ci2[1] < ci1[0])
 
@@ -117,25 +98,28 @@ def z_test_fnpr_difference(
         fnpr2: FNPR value for subgroup 2
         denominator1: Number of false negatives + true negatives for subgroup 1
         denominator2: Number of false negatives + true negatives for subgroup 2
+
+    Returns:
+        Two-tailed p-value for the z-test for the FNPR difference between the two subgroups.
     """
     if (
         denominator1 <= 30 or denominator2 <= 30
     ):  # Ensures valid sample sizes for z-test
         return np.nan
     std_error = np.sqrt(
-        (fnpr1 * (1 - fnpr1)) / denominator1 + (fnpr2 * (1 - fnpr2)) / denominator2
+        ((fnpr1 * (1 - fnpr1)) / denominator1) + ((fnpr2 * (1 - fnpr2)) / denominator2)
     )
     z_stat = (fnpr1 - fnpr2) / std_error
     return float(2 * (1 - st.norm.cdf(abs(z_stat))))  # Two-tailed p-value
 
 
-def log_bias_flag(
+def generate_bias_flag(
     group: str,
     subgroup1: str,
     subgroup2: str,
     fnpr_diff: float,
     bias_type: str,
-    dataset: str,
+    split_name: str,
     flag: str,
     p_value: float = np.nan,
 ) -> dict:
@@ -148,18 +132,23 @@ def log_bias_flag(
         subgroup2: Name of the subgroup 2 (e.g. "Female", "Male", "Asian", "African American", "Caucasian")
         fnpr_diff: Absolute value of difference in FNPR
         bias_type: Type of bias (e.g. "Non-overlapping CIs", "Overlapping: : p-value: ...")
-        dataset: Name of the dataset (e.g. train/test/validate)
+        split_name: Name of the split (e.g. train/test/validate)
         flag: Flag value (e.g. "🔴 HIGH BIAS", "🟠 MODERATE BIAS", "🟡 LOW BIAS", "🟢 NO BIAS")
         p_value: p-value for the z-test for the FNPR difference of the subgroup pair
+
+    Returns:
+        Dictionary containing bias flag information.
     """
     flag_entry = {
         "group": group,
         "subgroups": f"{subgroup1} vs {subgroup2}",
-        "difference": fnpr_diff * 100,
-        "type": bias_type
-        if np.isnan(p_value)
-        else f"{bias_type}, p-value: {'< 0.001' if p_value < 0.001 else f'{p_value:.3f}'}",
-        "dataset": dataset,
+        "percentage_difference": fnpr_diff * 100,
+        "type": (
+            bias_type
+            if np.isnan(p_value)
+            else f"{bias_type}, p-value: {'< 0.001' if p_value < 0.001 else f'{p_value:.3f}'}"
+        ),
+        "split_name": split_name,
         "flag": flag,
     }
     return flag_entry
@@ -171,16 +160,20 @@ def flag_bias(
     high_bias_thresh: float = HIGH_FLAG_THRESHOLD,
     moderate_bias_thresh: float = MODERATE_FLAG_THRESHOLD,
     low_bias_thresh: float = LOW_FLAG_THRESHOLD,
+    min_samples: int = 50,
 ) -> list[dict]:
     """
     Flags bias based on FNPR differences and confidence interval overlap.
 
     Args:
         fnpr_data: List of dictionaries containing FNPR and CI information for each subgroup.
-        split_name: Name of the dataset (e.g. train/test/validate).
+        split_name: Name of the split (e.g. train/test/validate).
         high_bias_thresh: Threshold for flagging high bias.
         moderate_bias_thresh: Threshold for flagging moderate bias.
         low_bias_thresh: Threshold for flagging low bias.
+        min_samples: Minimum number of positive samples (FN + TP) such that FNPR difference
+        will be flagged.
+
     Returns:
         List of dictionaries with bias flag information.
     """
@@ -193,7 +186,10 @@ def flag_bias(
 
     for i, current in enumerate(fnpr_data):
         for other in fnpr_data[i + 1 :]:
-            if (current["fnpr"] > 0 and other["fnpr"] > 0) and (current["fnpr_sample_threshold_met"] and other["fnpr_sample_threshold_met"]):
+            if (current["fnpr"] > 0 and other["fnpr"] > 0) and (
+                (current["number_of_positive_samples"] > min_samples) and
+                (other["number_of_positive_samples"] > min_samples)
+            ):
                 fnpr_diff = np.abs(current["fnpr"] - other["fnpr"])
                 p_value = z_test_fnpr_difference(
                     current["fnpr"], other["fnpr"], current["size"], other["size"]
@@ -202,7 +198,7 @@ def flag_bias(
 
                 if (fnpr_diff < low_bias_thresh) or (p_value > 0.1):
                     bias_flags.append(
-                        log_bias_flag(
+                        generate_bias_flag(
                             current["group"],
                             current["subgroup"],
                             other["subgroup"],
@@ -222,7 +218,7 @@ def flag_bias(
                                 else "Non-overlapping CIs"
                             )
                             bias_flags.append(
-                                log_bias_flag(
+                                generate_bias_flag(
                                     current["group"],
                                     current["subgroup"],
                                     other["subgroup"],
