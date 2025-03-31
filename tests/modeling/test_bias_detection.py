@@ -8,7 +8,7 @@ np.random.seed(42)
 
 
 @pytest.mark.parametrize(
-    "targets, preds, expected_fnpr, expected_ci_lower, expected_ci_upper",
+    "targets, preds, expected_fnpr, expected_ci_lower, expected_ci_upper, valid_samples_flag",
     [
         (
             pd.Series(np.random.choice([False, True], size=500)),  # Use bool values
