@@ -48,10 +48,18 @@ def calculate_fnpr_and_ci(
 
     # Calculate FNPR
     num_positives = fn + tp
-    fnpr = fn / num_positives if num_positives > 0 else 0
+    fnpr = (
+        fn / num_positives
+        if num_positives > 0
+        else 0
+    )
 
     # Confidence Interval Calculation
-    margin = Z * np.sqrt((fnpr * (1 - fnpr)) / num_positives) if num_positives > 0 else 0
+    margin = (
+        Z * np.sqrt((fnpr * (1 - fnpr)) / num_positives)
+        if num_positives > 0
+        else 0
+    )
     ci_min, ci_max = max(0, fnpr - margin), min(1, fnpr + margin)
 
     return fnpr, ci_min, ci_max, valid_samples_flag
@@ -102,7 +110,8 @@ def z_test_fnpr_difference(
     ):  # Ensures valid sample sizes for z-test
         return np.nan
     std_error = np.sqrt(
-        ((fnpr1 * (1 - fnpr1)) / num_positives1) + ((fnpr2 * (1 - fnpr2)) / num_positives2)
+        ((fnpr1 * (1 - fnpr1)) / num_positives1)
+        + ((fnpr2 * (1 - fnpr2)) / num_positives2)
     )
     z_stat = (fnpr1 - fnpr2) / std_error
     return float(2 * (1 - st.norm.cdf(abs(z_stat))))  # Two-tailed p-value
