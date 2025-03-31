@@ -57,7 +57,7 @@ def test_z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2, expected_p):
 
 
 @pytest.mark.parametrize(
-    "group, sub1, sub2, diff, bias_type, dataset, flag, p, expected",
+    "group, sub1, sub2, percentage_difference, bias_type, split_name, flag, p, expected",
     [
         (
             "Gender",
