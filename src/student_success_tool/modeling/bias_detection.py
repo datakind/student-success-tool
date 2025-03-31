@@ -48,17 +48,11 @@ def calculate_fnpr_and_ci(
 
     # Calculate FNPR
     num_positives = fn + tp
-    fnpr = (
-        fn / num_positives
-        if num_positives > 0
-        else 0
-    )
+    fnpr = fn / num_positives if num_positives > 0 else 0
 
     # Confidence Interval Calculation
     margin = (
-        Z * np.sqrt((fnpr * (1 - fnpr)) / num_positives)
-        if num_positives > 0
-        else 0
+        Z * np.sqrt((fnpr * (1 - fnpr)) / num_positives) if num_positives > 0 else 0
     )
     ci_min, ci_max = max(0, fnpr - margin), min(1, fnpr + margin)
 
