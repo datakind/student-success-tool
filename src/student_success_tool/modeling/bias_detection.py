@@ -47,11 +47,11 @@ def calculate_fnpr_and_ci(
     valid_samples_flag = (tp >= min_fnpr_samples) and (fn >= min_fnpr_samples)
 
     # Calculate FNPR
-    denominator = fn + tp
-    fnpr = fn / denominator if denominator > 0 else 0
+    num_positives = fn + tp
+    fnpr = fn / num_positives if num_positives > 0 else 0
 
     # Confidence Interval Calculation
-    margin = Z * np.sqrt((fnpr * (1 - fnpr)) / denominator) if denominator > 0 else 0
+    margin = Z * np.sqrt((fnpr * (1 - fnpr)) / num_positives) if num_positives > 0 else 0
     ci_min, ci_max = max(0, fnpr - margin), min(1, fnpr + margin)
 
     return fnpr, ci_min, ci_max, valid_samples_flag
@@ -79,8 +79,8 @@ def check_ci_overlap(
 def z_test_fnpr_difference(
     fnpr1: float,
     fnpr2: float,
-    denominator1: int,
-    denominator2: int,
+    num_positives1: int,
+    num_positives2: int,
 ) -> float:
     """
     Performs a z-test for the FNPR difference between two groups. If there are
@@ -91,18 +91,18 @@ def z_test_fnpr_difference(
     Args:
         fnpr1: FNPR value for subgroup 1
         fnpr2: FNPR value for subgroup 2
-        denominator1: Number of false negatives + true negatives for subgroup 1
-        denominator2: Number of false negatives + true negatives for subgroup 2
+        num_positives1: Number of false negatives + true negatives for subgroup 1
+        num_positives2: Number of false negatives + true negatives for subgroup 2
 
     Returns:
         Two-tailed p-value for the z-test for the FNPR difference between the two subgroups.
     """
     if (
-        denominator1 <= 30 or denominator2 <= 30
+        num_positives1 <= 30 or num_positives2 <= 30
     ):  # Ensures valid sample sizes for z-test
         return np.nan
     std_error = np.sqrt(
-        ((fnpr1 * (1 - fnpr1)) / denominator1) + ((fnpr2 * (1 - fnpr2)) / denominator2)
+        ((fnpr1 * (1 - fnpr1)) / num_positives1) + ((fnpr2 * (1 - fnpr2)) / num_positives2)
     )
     z_stat = (fnpr1 - fnpr2) / std_error
     return float(2 * (1 - st.norm.cdf(abs(z_stat))))  # Two-tailed p-value
