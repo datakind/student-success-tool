@@ -50,10 +50,10 @@ def calculate_fnpr_and_ci(
 
     # Calculate FNPR
     denominator = fn + tp
-    fnpr = fn / denominator
+    fnpr = fn / denominator if denominator > 0 else 0 
 
     # Confidence Interval Calculation
-    margin = Z * np.sqrt((fnpr * (1 - fnpr)) / denominator)
+    margin = Z * np.sqrt((fnpr * (1 - fnpr)) / denominator) if denominator > 0 else 0
     ci_min, ci_max = max(0, fnpr - margin), min(1, fnpr + margin)
 
     return fnpr, ci_min, ci_max, valid_samples_flag

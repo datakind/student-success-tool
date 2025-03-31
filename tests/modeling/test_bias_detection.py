@@ -11,14 +11,14 @@ np.random.seed(42)
     "targets, preds, expected_fnpr, expected_ci_lower, expected_ci_upper",
     [
         (
-            pd.Series(np.random.choice([0, 1], size=500)),
-            pd.Series(np.random.choice([0, 1], size=500)),
+            pd.Series(np.random.choice([False, True], size=500)),  # Use bool values
+            pd.Series(np.random.choice([False, True], size=500)),
             0.515625,
             0.454406,
             0.57684,
         ),
-        (pd.Series(np.ones(500)), pd.Series(np.ones(500)), np.nan, np.nan, np.nan),
-        (pd.Series(np.zeros(500)), pd.Series(np.zeros(500)), np.nan, np.nan, np.nan),
+        (pd.Series([True] * 500, dtype=bool), pd.Series([True] * 500, dtype=bool), np.nan, np.nan, np.nan),
+        (pd.Series([False] * 500, dtype=bool), pd.Series([False] * 500, dtype=bool), np.nan, np.nan, np.nan),
     ],
 )
 def test_calculate_fnpr_and_ci(
