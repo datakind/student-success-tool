@@ -23,9 +23,9 @@ np.random.seed(42)
     ],
 )
 def test_calculate_fnpr_and_ci(
-    targets, preds, expected_fnpr, expected_ci_lower, expected_ci_upper
+    targets, preds, expected_fnpr, expected_ci_lower, expected_ci_upper, valid_samples_flag,
 ):
-    fnpr, ci_lower, ci_upper = bias_detection.calculate_fnpr_and_ci(targets, preds)
+    fnpr, ci_lower, ci_upper, valid_samples_flag = bias_detection.calculate_fnpr_and_ci(targets, preds)
     assert np.isclose(fnpr, expected_fnpr, equal_nan=True)
     assert np.isclose(ci_lower, expected_ci_lower, equal_nan=True)
     assert np.isclose(ci_upper, expected_ci_upper, equal_nan=True)
