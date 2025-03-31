@@ -300,7 +300,7 @@ for run_id in top_run_ids:
                         labels = subgroup_data[cfg.target_col]
                         preds = subgroup_data[cfg.pred_col]
                         pred_probs = subgroup_data[cfg.pred_prob_col]
-                        fnpr, fnpr_lower, fnpr_upper, valid_samples_flag = (
+                        fnpr, fnpr_lower, fnpr_upper, num_positives = (
                             modeling.bias_detection.calculate_fnpr_and_ci(labels, preds)
                         )
 
@@ -311,7 +311,7 @@ for run_id in top_run_ids:
                                 "fnpr": fnpr,
                                 "ci": (fnpr_lower, fnpr_upper),
                                 "size": len(subgroup_data),
-                                "fnpr_sample_threshold_met": valid_samples_flag,
+                                "number_of_positive_samples": num_positives,
                             }
                         )
 
@@ -321,9 +321,7 @@ for run_id in top_run_ids:
                             "Actual Target Prevalence": round(labels.mean(), 2),
                             "Predicted Target Prevalence": round(preds.mean(), 2),
                             "FNPR": round(fnpr, 2),
-                            # if we have less than 50 samples for TP or FN, then
-                            # our threshold is NOT met and FNPR is likely not reliable.
-                            "Valid FNPR Calculation": valid_samples_flag,
+                            "Number of Positive Samples": num_positives,
                             "Accuracy": round(
                                 sklearn.metrics.accuracy_score(labels, preds), 2
                             ),
@@ -379,23 +377,24 @@ for run_id in top_run_ids:
                     for flag in bias_flags:
                         if flag["flag"] != "🟢 NO BIAS":
                             print(
-                                f"""Run {run_id}: {flag["group"]} on {flag["dataset"]} - {flag["subgroups"]}, 
-                                FNPR Difference: {flag["difference"]:.2f}% ({flag["type"]}) [{flag["flag"]}]"""
+                                f"""Run {run_id}: {flag["group"]} on {flag["split_name"]} - {flag["subgroups"]}, 
+                                FNPR Difference: {flag["percentage_difference"]:.2f}% ({flag["type"]}) [{flag["flag"]}]"""
                             )
 
                     df_bias_flags = pd.DataFrame(bias_flags)
                     df_all_flags = pd.concat(
                         [df_all_flags, df_bias_flags], ignore_index=True
-                    )
+                    ) if not df_bias_flags.empty else df_all_flags
 
         for flag in modeling.bias_detection.FLAG_NAMES.keys():
             flag_name = modeling.bias_detection.FLAG_NAMES[flag]
             df_flag = df_all_flags[df_all_flags["flag"] == flag].sort_values(
-                by="difference", ascending=False
-            )
-            bias_tmp_path = f"/tmp/{flag_name}_flags.csv"
-            df_flag.to_csv(bias_tmp_path, index=False)
-            mlflow.log_artifact(local_path=bias_tmp_path, artifact_path="bias_flags")
+                by="percentage_difference", ascending=False
+            ) if df_all_flags.shape[0] > 0 else None
+            if df_flag is not None:
+                bias_tmp_path = f"/tmp/{flag_name}_flags.csv"
+                df_flag.to_csv(bias_tmp_path, index=False)
+                mlflow.log_artifact(local_path=bias_tmp_path, artifact_path="bias_flags")
 mlflow.end_run()
 
 # COMMAND ----------
