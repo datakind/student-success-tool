@@ -33,7 +33,7 @@ def calculate_fnpr_and_ci(
         targets: Labels from model output
         preds: Predictions from model output
         min_fnpr_samples: Minimum number of true positives or false negatives for FNPR calculation.
-    
+
     Returns:
         fnpr: False Negative Parity Rate
         ci_min: Lower bound of the confidence interval
