@@ -84,8 +84,8 @@ def check_ci_overlap(
 def z_test_fnpr_difference(
     fnpr1: float,
     fnpr2: float,
-    denominator1: int,
-    denominator2: int,
+    num_positives1: int,
+    num_positives2: int,
 ) -> float:
     """
     Performs a z-test for the FNPR difference between two groups. If there are
@@ -96,18 +96,19 @@ def z_test_fnpr_difference(
     Args:
         fnpr1: FNPR value for subgroup 1
         fnpr2: FNPR value for subgroup 2
-        denominator1: Number of false negatives + true negatives for subgroup 1
-        denominator2: Number of false negatives + true negatives for subgroup 2
-
+        num_positives1: Number of false negatives + true negatives for subgroup 1
+        num_positives2: Number of false negatives + true negatives for subgroup 2
+        
     Returns:
         Two-tailed p-value for the z-test for the FNPR difference between the two subgroups.
     """
     if (
-        denominator1 <= 30 or denominator2 <= 30
+        num_positives1 <= 30 or num_positives2 <= 30
     ):  # Ensures valid sample sizes for z-test
         return np.nan
     std_error = np.sqrt(
-        ((fnpr1 * (1 - fnpr1)) / denominator1) + ((fnpr2 * (1 - fnpr2)) / denominator2)
+        ((fnpr1 * (1 - fnpr1)) / num_positives1)
+        + ((fnpr2 * (1 - fnpr2)) / num_positives2)
     )
     z_stat = (fnpr1 - fnpr2) / std_error
     return float(2 * (1 - st.norm.cdf(abs(z_stat))))  # Two-tailed p-value
@@ -196,7 +197,10 @@ def flag_bias(
                 )
                 ci_overlap = check_ci_overlap(current["ci"], other["ci"])
 
-                if (fnpr_diff < low_bias_thresh) or (p_value > 0.1):
+                if (current["fnpr"] > 0 and other["fnpr"] > 0) and (
+                    current["fnpr_sample_threshold_met"]
+                    and other["fnpr_sample_threshold_met"]
+                ):
                     bias_flags.append(
                         generate_bias_flag(
                             current["group"],

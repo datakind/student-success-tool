@@ -8,23 +8,45 @@ np.random.seed(42)
 
 
 @pytest.mark.parametrize(
-    "targets, preds, expected_fnpr, expected_ci_lower, expected_ci_upper",
+    "targets, preds, expected_fnpr, expected_ci_lower, expected_ci_upper, valid_samples_flag",
     [
         (
-            pd.Series(np.random.choice([0, 1], size=500)),
-            pd.Series(np.random.choice([0, 1], size=500)),
+            pd.Series(np.random.choice([False, True], size=500)),  # Use bool values
+            pd.Series(np.random.choice([False, True], size=500)),
             0.515625,
             0.454406,
             0.57684,
+            True,
         ),
-        (pd.Series(np.ones(500)), pd.Series(np.ones(500)), np.nan, np.nan, np.nan),
-        (pd.Series(np.zeros(500)), pd.Series(np.zeros(500)), np.nan, np.nan, np.nan),
+        (
+            pd.Series([True] * 500, dtype=bool),
+            pd.Series([True] * 500, dtype=bool),
+            0,
+            0,
+            0,
+            False,
+        ),
+        (
+            pd.Series([False] * 500, dtype=bool),
+            pd.Series([False] * 500, dtype=bool),
+            0,
+            0,
+            0,
+            False,
+        ),
     ],
 )
 def test_calculate_fnpr_and_ci(
-    targets, preds, expected_fnpr, expected_ci_lower, expected_ci_upper
+    targets,
+    preds,
+    expected_fnpr,
+    expected_ci_lower,
+    expected_ci_upper,
+    valid_samples_flag,
 ):
-    fnpr, ci_lower, ci_upper = bias_detection.calculate_fnpr_and_ci(targets, preds)
+    fnpr, ci_lower, ci_upper, valid_samples_flag = bias_detection.calculate_fnpr_and_ci(
+        targets, preds
+    )
     assert np.isclose(fnpr, expected_fnpr, equal_nan=True)
     assert np.isclose(ci_lower, expected_ci_lower, equal_nan=True)
     assert np.isclose(ci_upper, expected_ci_upper, equal_nan=True)
@@ -56,7 +78,7 @@ def test_z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2, expected_p):
 
 
 @pytest.mark.parametrize(
-    "group, sub1, sub2, diff, bias_type, dataset, flag, p, expected",
+    "group, sub1, sub2, percentage_difference, bias_type, split_name, flag, p, expected",
     [
         (
             "Gender",
@@ -70,18 +92,20 @@ def test_z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2, expected_p):
             {
                 "group": "Gender",
                 "subgroups": "Male vs Female",
-                "difference": 12,
+                "percentage_difference": 12,
                 "type": "Non-overlapping CIs, p-value: 0.005",
-                "dataset": "train",
+                "split_name": "train",
                 "flag": "🔴 HIGH BIAS",
             },
         ),
     ],
 )
-def test_log_bias_flag(group, sub1, sub2, diff, bias_type, dataset, flag, p, expected):
+def test_generate_bias_flag(
+    group, sub1, sub2, percentage_difference, bias_type, split_name, flag, p, expected
+):
     assert (
-        bias_detection.log_bias_flag(
-            group, sub1, sub2, diff, bias_type, dataset, flag, p
+        bias_detection.generate_bias_flag(
+            group, sub1, sub2, percentage_difference, bias_type, split_name, flag, p
         )
         == expected
     )
