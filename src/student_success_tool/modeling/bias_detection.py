@@ -33,15 +33,12 @@ def calculate_fnpr_and_ci(
         targets: Labels from model output
         preds: Predictions from model output
         min_fnpr_samples: Minimum number of true positives or false negatives for FNPR calculation. When TP or FN are low, FNPR can be very unstable and flag subgroups based on small differences in TP or FN.
+
     Returns:
         Tuple of FNPR, lower CI bound, and upper CI bound.
     """
     cm = confusion_matrix(targets, preds, labels=[False, True])
-    tn, fp, fn, tp = (
-        cm.ravel()
-        if cm.shape == (2, 2)
-        else np.bincount(np.array(targets) * 2 + np.array(preds), minlength=4)
-    )
+    tn, fp, fn, tp = cm.ravel()
 
     denominator = fn + tp
 
@@ -65,6 +62,7 @@ def check_ci_overlap(
     Args:
         ci1: Confidence interval (min, max) for subgroup 1
         ci2: Confidence interval (min, max) for subgroup 2
+
     Returns:
         Boolean indicating whether the CIs overlap.
     """
@@ -88,6 +86,7 @@ def z_test_fnpr_difference(
         fnpr2: FNPR value for subgroup 2
         denominator1: Number of false negatives + true negatives for subgroup 1
         denominator2: Number of false negatives + true negatives for subgroup 2
+
     Returns:
         Two-tailed p-value for the z-test for the FNPR difference between the two subgroups.
     """
@@ -96,19 +95,19 @@ def z_test_fnpr_difference(
     ):  # Ensures valid sample sizes for z-test
         return np.nan
     std_error = np.sqrt(
-        (fnpr1 * (1 - fnpr1)) / denominator1 + (fnpr2 * (1 - fnpr2)) / denominator2
+        ((fnpr1 * (1 - fnpr1)) / denominator1) + ((fnpr2 * (1 - fnpr2)) / denominator2)
     )
     z_stat = (fnpr1 - fnpr2) / std_error
     return float(2 * (1 - st.norm.cdf(abs(z_stat))))  # Two-tailed p-value
 
 
-def log_bias_flag(
+def generate_bias_flag(
     group: str,
     subgroup1: str,
     subgroup2: str,
     fnpr_diff: float,
     bias_type: str,
-    dataset: str,
+    split_name: str,
     flag: str,
     p_value: float = np.nan,
 ) -> dict:
@@ -121,20 +120,21 @@ def log_bias_flag(
         subgroup2: Name of the subgroup 2 (e.g. "Female", "Male", "Asian", "African American", "Caucasian")
         fnpr_diff: Absolute value of difference in FNPR
         bias_type: Type of bias (e.g. "Non-overlapping CIs", "Overlapping: : p-value: ...")
-        dataset: Name of the dataset (e.g. train/test/validate)
+        split_name: Name of the split (e.g. train/test/validate)
         flag: Flag value (e.g. "🔴 HIGH BIAS", "🟠 MODERATE BIAS", "🟡 LOW BIAS", "🟢 NO BIAS")
         p_value: p-value for the z-test for the FNPR difference of the subgroup pair
+
     Returns:
         Dictionary containing bias flag information.
     """
     flag_entry = {
         "group": group,
         "subgroups": f"{subgroup1} vs {subgroup2}",
-        "difference": fnpr_diff * 100,
+        "percentage_difference": fnpr_diff * 100,
         "type": bias_type
         if np.isnan(p_value)
         else f"{bias_type}, p-value: {'< 0.001' if p_value < 0.001 else f'{p_value:.3f}'}",
-        "dataset": dataset,
+        "split_name": split_name,
         "flag": flag,
     }
     return flag_entry
@@ -152,10 +152,11 @@ def flag_bias(
 
     Args:
         fnpr_data: List of dictionaries containing FNPR and CI information for each subgroup.
-        split_name: Name of the dataset (e.g. train/test/validate).
+        split_name: Name of the split (e.g. train/test/validate).
         high_bias_thresh: Threshold for flagging high bias.
         moderate_bias_thresh: Threshold for flagging moderate bias.
         low_bias_thresh: Threshold for flagging low bias.
+
     Returns:
         List of dictionaries with bias flag information.
     """
@@ -177,7 +178,7 @@ def flag_bias(
 
                 if (fnpr_diff < low_bias_thresh) or (p_value > 0.1):
                     bias_flags.append(
-                        log_bias_flag(
+                        generate_bias_flag(
                             current["group"],
                             current["subgroup"],
                             other["subgroup"],
@@ -197,7 +198,7 @@ def flag_bias(
                                 else "Non-overlapping CIs"
                             )
                             bias_flags.append(
-                                log_bias_flag(
+                                generate_bias_flag(
                                     current["group"],
                                     current["subgroup"],
                                     other["subgroup"],
