@@ -16,9 +16,10 @@ np.random.seed(42)
             0.515625,
             0.454406,
             0.57684,
+            True
         ),
-        (pd.Series([True] * 500, dtype=bool), pd.Series([True] * 500, dtype=bool), np.nan, np.nan, np.nan),
-        (pd.Series([False] * 500, dtype=bool), pd.Series([False] * 500, dtype=bool), np.nan, np.nan, np.nan),
+        (pd.Series([True] * 500, dtype=bool), pd.Series([True] * 500, dtype=bool), 0, 0, 0, False),
+        (pd.Series([False] * 500, dtype=bool), pd.Series([False] * 500, dtype=bool), 0, 0, 0, False),
     ],
 )
 def test_calculate_fnpr_and_ci(
