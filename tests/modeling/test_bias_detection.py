@@ -101,11 +101,26 @@ def test_z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2, expected_p):
     ],
 )
 def test_generate_bias_flag(
-    group, sub1, sub2, fnpr_percentage_difference, bias_type, split_name, flag, p, expected
+    group,
+    sub1,
+    sub2,
+    fnpr_percentage_difference,
+    bias_type,
+    split_name,
+    flag,
+    p,
+    expected,
 ):
     assert (
         bias_detection.generate_bias_flag(
-            group, sub1, sub2, fnpr_percentage_difference, bias_type, split_name, flag, p
+            group,
+            sub1,
+            sub2,
+            fnpr_percentage_difference,
+            bias_type,
+            split_name,
+            flag,
+            p,
         )
         == expected
     )

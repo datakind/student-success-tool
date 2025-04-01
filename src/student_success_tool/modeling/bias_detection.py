@@ -230,8 +230,8 @@ def flag_bias(
                     for threshold, flag, p_thresh in thresholds:
                         if fnpr_diff >= threshold and p_value <= p_thresh:
                             reason = (
-                                "Overlapping CIs" 
-                                if ci_overlap 
+                                "Overlapping CIs"
+                                if ci_overlap
                                 else "Non-overlapping CIs"
                             )
                             bias_flags.append(
