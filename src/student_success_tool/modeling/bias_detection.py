@@ -39,23 +39,20 @@ def calculate_fnpr_and_ci(
         fnpr: False Negative Parity Rate
         ci_min: Lower bound of the confidence interval
         ci_max: Upper bound of the confidence interval
-        num_positives: We output the number of positives for reporting. When the number of positives are low (< MIN_FNPR_SAMPLES),
-        then our FNPR computation is likely not as reliable. 
+        num_positives: We output the number of positives for reporting. Since when the number of positives are low (< MIN_FNPR_SAMPLES), then our FNPR computation may be not as reliable.
     """
     cm = confusion_matrix(targets, preds, labels=[False, True])
     tn, fp, fn, tp = cm.ravel()
 
     # Calculate FNPR & apply Log Scaling to smoothen FNPR at low sample sizes
-    scaled_num_positives = (
-        fn + tp + np.log(fn + tp + 1) 
-        if apply_scaling 
-        else fn + tp
-    )
+    scaled_num_positives = fn + tp + np.log(fn + tp + 1) if apply_scaling else fn + tp
     fnpr = fn / scaled_num_positives if scaled_num_positives > 0 else 0
 
     # Confidence Interval Calculation
     margin = (
-        Z * np.sqrt((fnpr * (1 - fnpr)) / scaled_num_positives) if scaled_num_positives > 0 else 0
+        Z * np.sqrt((fnpr * (1 - fnpr)) / scaled_num_positives) 
+        if scaled_num_positives > 0 
+        else 0
     )
     ci_min, ci_max = max(0, fnpr - margin), min(1, fnpr + margin)
 
@@ -173,7 +170,8 @@ def flag_bias(
         moderate_bias_thresh: Threshold for flagging moderate bias.
         low_bias_thresh: Threshold for flagging low bias.
         min_samples: Minimum number of positive samples (FN + TP) such that FNPR difference
-        will be flagged.
+        will be flagged. This value can range anywhere from 30 (z-test minimum) to 100 samples or more.
+        We default to 50 samples here, as that's what we've observed to work well in testing so far.
 
     Returns:
         List of dictionaries with bias flag information.
@@ -188,8 +186,8 @@ def flag_bias(
     for i, current in enumerate(fnpr_data):
         for other in fnpr_data[i + 1 :]:
             if (current["fnpr"] > 0 and other["fnpr"] > 0) and (
-                (current["number_of_positive_samples"] > min_samples) and
-                (other["number_of_positive_samples"] > min_samples)
+                (current["number_of_positive_samples"] >= min_samples)
+                and (other["number_of_positive_samples"] >= min_samples)
             ):
                 fnpr_diff = np.abs(current["fnpr"] - other["fnpr"])
                 p_value = z_test_fnpr_difference(
