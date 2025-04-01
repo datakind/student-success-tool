@@ -50,8 +50,8 @@ def calculate_fnpr_and_ci(
 
     # Confidence Interval Calculation
     margin = (
-        Z * np.sqrt((fnpr * (1 - fnpr)) / scaled_num_positives) 
-        if scaled_num_positives > 0 
+        Z * np.sqrt((fnpr * (1 - fnpr)) / scaled_num_positives)
+        if scaled_num_positives > 0
         else 0
     )
     ci_min, ci_max = max(0, fnpr - margin), min(1, fnpr + margin)
