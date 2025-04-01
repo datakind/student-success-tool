@@ -159,7 +159,7 @@ def flag_bias(
     high_bias_thresh: float = HIGH_FLAG_THRESHOLD,
     moderate_bias_thresh: float = MODERATE_FLAG_THRESHOLD,
     low_bias_thresh: float = LOW_FLAG_THRESHOLD,
-    min_samples: int = 50,
+    min_sample_ratio: float = 0.15,
 ) -> list[dict]:
     """
     Flags bias based on FNPR differences and confidence interval overlap.
@@ -170,13 +170,15 @@ def flag_bias(
         high_bias_thresh: Threshold for flagging high bias.
         moderate_bias_thresh: Threshold for flagging moderate bias.
         low_bias_thresh: Threshold for flagging low bias.
-        min_samples: Minimum number of positive samples (FN + TP) such that FNPR difference
-        will be flagged. This value can range anywhere from 30 (z-test minimum) to 100 samples or more.
-        We default to 50 samples here, as that's what we've observed to work well in testing so far.
+        min_sample_ratio: Percentage of total positive samples required for valid FNPR comparison.
+        We default to 15% since we want to ensure we are checking subgroups with sufficient data.
 
     Returns:
         List of dictionaries with bias flag information.
     """
+    total_group_positives = sum(subgroup["number_of_positive_samples"] for subgroup in fnpr_data)
+    min_samples = min(50, int(min_sample_ratio * total_group_positives))
+
     bias_flags = []
     thresholds = [
         (high_bias_thresh, "🔴 HIGH BIAS", 0.01),
@@ -196,7 +198,7 @@ def flag_bias(
                 if np.isnan(p_value) or (
                     (current["number_of_positive_samples"] < min_samples)
                     or (other["number_of_positive_samples"] < min_samples)
-                ): 
+                ):
                     bias_flags.append(
                         generate_bias_flag(
                             current["group"],
