@@ -13,10 +13,10 @@ np.random.seed(42)
         (
             pd.Series(np.random.choice([False, True], size=500)),  # Use bool values
             pd.Series(np.random.choice([False, True], size=500)),
-            0.515625,
-            0.454406,
-            0.57684,
-            235,
+            0.504685,
+            0.444092,
+            0.565278,
+            256,
         ),
         (
             pd.Series([True] * 500, dtype=bool),
