@@ -176,7 +176,9 @@ def flag_bias(
     Returns:
         List of dictionaries with bias flag information.
     """
-    total_group_positives = sum(subgroup["number_of_positive_samples"] for subgroup in fnpr_data)
+    total_group_positives = sum(
+        subgroup["number_of_positive_samples"] for subgroup in fnpr_data
+    )
     min_samples = min(50, int(min_sample_ratio * total_group_positives))
 
     bias_flags = []
@@ -188,7 +190,7 @@ def flag_bias(
 
     for i, current in enumerate(fnpr_data):
         for other in fnpr_data[i + 1 :]:
-            if current['fnpr'] > 0 and other['fnpr'] > 0:
+            if current["fnpr"] > 0 and other["fnpr"] > 0:
                 fnpr_diff = np.abs(current["fnpr"] - other["fnpr"])
                 p_value = z_test_fnpr_difference(
                     current["fnpr"], other["fnpr"], current["size"], other["size"]
@@ -228,7 +230,9 @@ def flag_bias(
                     for threshold, flag, p_thresh in thresholds:
                         if fnpr_diff >= threshold and p_value <= p_thresh:
                             reason = (
-                                "Overlapping CIs" if ci_overlap else "Non-overlapping CIs"
+                                "Overlapping CIs" 
+                                if ci_overlap 
+                                else "Non-overlapping CIs"
                             )
                             bias_flags.append(
                                 generate_bias_flag(
