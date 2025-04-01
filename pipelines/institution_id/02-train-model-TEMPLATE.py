@@ -392,7 +392,9 @@ for run_id in top_run_ids:
             flag_name = modeling.bias_detection.FLAG_NAMES[flag]
             df_flag = (
                 df_all_flags[df_all_flags["flag"] == flag].sort_values(
-                    by="fnpr_percentage_difference", key=lambda x: x.astype(float), ascending=False
+                    by="fnpr_percentage_difference",
+                    key=lambda x: x.astype(float),
+                    ascending=False,
                 )
                 if df_all_flags.shape[0] > 0
                 else None
