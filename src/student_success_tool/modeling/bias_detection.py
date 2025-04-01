@@ -194,7 +194,7 @@ def flag_bias(
                     current["fnpr"], other["fnpr"], current["size"], other["size"]
                 )
                 ci_overlap = check_ci_overlap(current["ci"], other["ci"])
-                
+
                 if np.isnan(p_value) or (
                     (current["number_of_positive_samples"] < min_samples)
                     or (other["number_of_positive_samples"] < min_samples)

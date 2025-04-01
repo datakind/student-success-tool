@@ -78,7 +78,7 @@ def test_z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2, expected_p):
 
 
 @pytest.mark.parametrize(
-    "group, sub1, sub2, percentage_difference, bias_type, split_name, flag, p, expected",
+    "group, sub1, sub2, fnpr_percentage_difference, bias_type, split_name, flag, p, expected",
     [
         (
             "Gender",
@@ -92,7 +92,7 @@ def test_z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2, expected_p):
             {
                 "group": "Gender",
                 "subgroups": "Male vs Female",
-                "percentage_difference": 12,
+                "fnpr_percentage_difference": 12,
                 "type": "Non-overlapping CIs, p-value: 0.005",
                 "split_name": "train",
                 "flag": "🔴 HIGH BIAS",
@@ -101,11 +101,11 @@ def test_z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2, expected_p):
     ],
 )
 def test_generate_bias_flag(
-    group, sub1, sub2, percentage_difference, bias_type, split_name, flag, p, expected
+    group, sub1, sub2, fnpr_percentage_difference, bias_type, split_name, flag, p, expected
 ):
     assert (
         bias_detection.generate_bias_flag(
-            group, sub1, sub2, percentage_difference, bias_type, split_name, flag, p
+            group, sub1, sub2, fnpr_percentage_difference, bias_type, split_name, flag, p
         )
         == expected
     )
