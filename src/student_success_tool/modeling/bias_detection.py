@@ -185,7 +185,7 @@ def flag_bias(
 
     for i, current in enumerate(fnpr_data):
         for other in fnpr_data[i + 1 :]:
-            if (current["fnpr"] > 0 and other["fnpr"] > 0) and (
+            if (current['fnpr'] > 0 and other['fnpr'] > 0) and (
                 (current["number_of_positive_samples"] >= min_samples)
                 and (other["number_of_positive_samples"] >= min_samples)
             ):
@@ -194,11 +194,8 @@ def flag_bias(
                     current["fnpr"], other["fnpr"], current["size"], other["size"]
                 )
                 ci_overlap = check_ci_overlap(current["ci"], other["ci"])
-
-                if (current["fnpr"] > 0 and other["fnpr"] > 0) and (
-                    current["fnpr_sample_threshold_met"]
-                    and other["fnpr_sample_threshold_met"]
-                ):
+                
+                if fnpr_diff < low_bias_thresh or p_value > 0.1:
                     bias_flags.append(
                         generate_bias_flag(
                             current["group"],
