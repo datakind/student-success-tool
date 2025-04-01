@@ -92,7 +92,7 @@ def test_z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2, expected_p):
             {
                 "group": "Gender",
                 "subgroups": "Male vs Female",
-                "fnpr_percentage_difference": 12,
+                "fnpr_percentage_difference": '12.00',
                 "type": "Non-overlapping CIs, p-value: 0.005",
                 "split_name": "train",
                 "flag": "🔴 HIGH BIAS",
