@@ -98,7 +98,7 @@ def z_test_fnpr_difference(
         fnpr2: FNPR value for subgroup 2
         num_positives1: Number of false negatives + true negatives for subgroup 1
         num_positives2: Number of false negatives + true negatives for subgroup 2
-        
+
     Returns:
         Two-tailed p-value for the z-test for the FNPR difference between the two subgroups.
     """
