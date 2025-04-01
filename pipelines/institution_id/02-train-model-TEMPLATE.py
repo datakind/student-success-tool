@@ -375,10 +375,10 @@ for run_id in top_run_ids:
                     )
 
                     for flag in bias_flags:
-                        if flag["flag"] != "🟢 NO BIAS":
+                        if flag["flag"] not in ["🟢 NO BIAS", "⚪ INSUFFICIENT DATA"]:
                             print(
                                 f"""Run {run_id}: {flag["group"]} on {flag["split_name"]} - {flag["subgroups"]}, 
-                                FNPR Difference: {flag["percentage_difference"]:.2f}% ({flag["type"]}) [{flag["flag"]}]"""
+                                FNPR Difference: {flag["fnpr_percentage_difference"]}% ({flag["type"]}) [{flag["flag"]}]"""
                             )
 
                     df_bias_flags = pd.DataFrame(bias_flags)
@@ -392,7 +392,7 @@ for run_id in top_run_ids:
             flag_name = modeling.bias_detection.FLAG_NAMES[flag]
             df_flag = (
                 df_all_flags[df_all_flags["flag"] == flag].sort_values(
-                    by="percentage_difference", ascending=False
+                    by="fnpr_percentage_difference", ascending=False
                 )
                 if df_all_flags.shape[0] > 0
                 else None

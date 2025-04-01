@@ -13,6 +13,7 @@ LOW_FLAG_THRESHOLD = 0.05
 
 # Define flag types
 FLAG_NAMES = {
+    "⚪ INSUFFICIENT DATA": "insufficient_data",
     "🟢 NO BIAS": "no_bias",
     "🟡 LOW BIAS": "low_bias",
     "🟠 MODERATE BIAS": "moderate_bias",
@@ -128,7 +129,7 @@ def generate_bias_flag(
         group: Name of the group (e.g. "Gender", "Race", "Age")
         subgroup1: Name of the subgroup 1 (e.g. "Female", "Male", "Asian", "African American", "Caucasian")
         subgroup2: Name of the subgroup 2 (e.g. "Female", "Male", "Asian", "African American", "Caucasian")
-        fnpr_diff: Absolute value of difference in FNPR
+        fnpr_percentage_difference: Absolute value of percentage difference in FNPR
         bias_type: Type of bias (e.g. "Non-overlapping CIs", "Overlapping: : p-value: ...")
         split_name: Name of the split (e.g. train/test/validate)
         flag: Flag value (e.g. "🔴 HIGH BIAS", "🟠 MODERATE BIAS", "🟡 LOW BIAS", "🟢 NO BIAS")
@@ -140,7 +141,7 @@ def generate_bias_flag(
     flag_entry = {
         "group": group,
         "subgroups": f"{subgroup1} vs {subgroup2}",
-        "percentage_difference": fnpr_diff * 100,
+        "fnpr_percentage_difference": f"{fnpr_diff * 100:.2f}",
         "type": (
             bias_type
             if np.isnan(p_value)
@@ -185,17 +186,30 @@ def flag_bias(
 
     for i, current in enumerate(fnpr_data):
         for other in fnpr_data[i + 1 :]:
-            if (current['fnpr'] > 0 and other['fnpr'] > 0) and (
-                (current["number_of_positive_samples"] >= min_samples)
-                and (other["number_of_positive_samples"] >= min_samples)
-            ):
+            if current['fnpr'] > 0 and other['fnpr'] > 0:
                 fnpr_diff = np.abs(current["fnpr"] - other["fnpr"])
                 p_value = z_test_fnpr_difference(
                     current["fnpr"], other["fnpr"], current["size"], other["size"]
                 )
                 ci_overlap = check_ci_overlap(current["ci"], other["ci"])
                 
-                if fnpr_diff < low_bias_thresh or p_value > 0.1:
+                if np.isnan(p_value) or (
+                    (current["number_of_positive_samples"] < min_samples)
+                    or (other["number_of_positive_samples"] < min_samples)
+                ): 
+                    bias_flags.append(
+                        generate_bias_flag(
+                            current["group"],
+                            current["subgroup"],
+                            other["subgroup"],
+                            fnpr_diff,
+                            "Insufficient samples for statistical test",
+                            split_name,
+                            "⚪ INSUFFICIENT DATA",
+                            p_value,
+                        )
+                    )
+                elif fnpr_diff < low_bias_thresh or p_value > 0.1:
                     bias_flags.append(
                         generate_bias_flag(
                             current["group"],
@@ -210,11 +224,9 @@ def flag_bias(
                     )
                 else:
                     for threshold, flag, p_thresh in thresholds:
-                        if fnpr_diff >= threshold:
+                        if fnpr_diff >= threshold and p_value <= p_thresh:
                             reason = (
-                                "Overlapping CIs"
-                                if ci_overlap and p_value and p_value < p_thresh
-                                else "Non-overlapping CIs"
+                                "Overlapping CIs" if ci_overlap else "Non-overlapping CIs"
                             )
                             bias_flags.append(
                                 generate_bias_flag(
