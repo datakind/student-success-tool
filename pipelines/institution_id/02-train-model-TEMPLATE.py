@@ -318,10 +318,12 @@ for run_id in top_run_ids:
                         subgroup_metrics = {
                             "Subgroup": subgroup,
                             "Number of Samples": len(subgroup_data),
+                            "Number of Positive Samples": num_positives,
                             "Actual Target Prevalence": round(labels.mean(), 2),
                             "Predicted Target Prevalence": round(preds.mean(), 2),
                             "FNPR": round(fnpr, 2),
-                            "Number of Positive Samples": num_positives,
+                            "FNPR CI Lower": round(fnpr_lower, 2),
+                            "FNPR CI Upper": round(fnpr_upper, 2),
                             "Accuracy": round(
                                 sklearn.metrics.accuracy_score(labels, preds), 2
                             ),
