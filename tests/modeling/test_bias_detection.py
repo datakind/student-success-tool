@@ -16,7 +16,7 @@ np.random.seed(42)
             0.515625,
             0.454406,
             0.57684,
-            True,
+            235,
         ),
         (
             pd.Series([True] * 500, dtype=bool),
@@ -24,7 +24,7 @@ np.random.seed(42)
             0,
             0,
             0,
-            False,
+            500,
         ),
         (
             pd.Series([False] * 500, dtype=bool),
@@ -32,7 +32,7 @@ np.random.seed(42)
             0,
             0,
             0,
-            False,
+            0,
         ),
     ],
 )
