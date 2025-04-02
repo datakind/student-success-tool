@@ -1,10 +1,64 @@
+import logging
 import re
 import typing as t
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+import sklearn.base
 from shap import KernelExplainer
+
+LOGGER = logging.getLogger(__name__)
+
+
+def predict_probs(
+    features: pd.DataFrame | np.ndarray,
+    model: sklearn.base.BaseEstimator,
+    *,
+    feature_names: t.Optional[list[str]] = None,
+    pos_label: t.Optional[bool | str] = None,
+    dtypes: t.Optional[dict[str, object]] = None,
+) -> np.ndarray:
+    """
+    Predict target probabilities for examples in ``features`` using ``model`` .
+
+    Args:
+        features
+        model
+        feature_names: Names of features corresponding to each column in ``features`` ,
+            in cases where it must be passed as a numpy array. If not specified,
+            feature names are inferred from the model's "column_selector"
+            (a standard in models trained using Databricks AutoML).
+        pos_label: Value in ``model`` classes that constitutes a "positive" prediction,
+            often ``True`` in the case of binary classification.
+        dtypes: Mapping of column name to dtype in ``featuress`` that needs to be overridden
+            before passing it into ``model`` .
+
+    Returns:
+        Predicted probabilities, as a 1-dimensional array (when ``pos_label is True`` )
+            or an N-dimensional array, where N corresponds to the number of pred classes.
+    """
+    if not sklearn.base.is_classifier(model):
+        LOGGER.warning("predict_proba() expects a classifier, but received %s", model)
+
+    if feature_names is None:
+        feature_names = model.named_steps["column_selector"].get_params()["cols"]
+    assert isinstance(feature_names, list)  # type guard
+
+    assert features.shape[1] == len(feature_names)
+    if not isinstance(features, pd.DataFrame):
+        features = pd.DataFrame(data=features, columns=feature_names)
+
+    if dtypes:
+        features = features.astype(dtypes)
+
+    pred_probs = model.predict_proba(features)
+    assert isinstance(pred_probs, np.ndarray)  # type guard
+
+    if pos_label is not None:
+        return pred_probs[:, model.classes_.tolist().index(pos_label)]
+    else:
+        return pred_probs
 
 
 def select_top_features_for_display(
