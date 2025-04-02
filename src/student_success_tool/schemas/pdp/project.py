@@ -187,8 +187,7 @@ class DatasetConfig(pyd.BaseModel):
     raw_cohort: DatasetIOConfig
     preprocessed: t.Optional[DatasetIOConfig] = None
     predictions: t.Optional[DatasetIOConfig] = None
-    # TODO: do we want advisor-facing output data separate from "raw" predictions?
-    # finalized: t.Optional[DatasetIOConfig] = None
+    finalized: t.Optional[DatasetIOConfig] = None
 
 
 class ModelConfig(pyd.BaseModel):
