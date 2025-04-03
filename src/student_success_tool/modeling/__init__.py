@@ -5,5 +5,5 @@ from . import (
     inference,
     registration,
     training,
-    utils
+    utils,
 )
