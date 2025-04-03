@@ -40,19 +40,22 @@ def calculate_fnpr_and_ci(
         fnpr: False Negative Parity Rate
         ci_min: Lower bound of the confidence interval
         ci_max: Upper bound of the confidence interval
-        num_positives: We output the number of positives for reporting. Since when the number of positives are low (< MIN_FNPR_SAMPLES), then our FNPR computation may be not as reliable.
+        num_positives: Number of positive samples, for reporting. When the number of positives is low, the FNPR computation may not be reliable.
     """
     cm = confusion_matrix(targets, preds, labels=[False, True])
     tn, fp, fn, tp = cm.ravel()
 
     # Calculate FNPR & apply Log Scaling to smoothen FNPR at low sample sizes
-    scaled_num_positives = fn + tp + np.log(fn + tp + 1) if apply_scaling else fn + tp
-    fnpr = fn / scaled_num_positives if scaled_num_positives > 0 else 0
+    num_positives = fn + tp
+    if apply_scaling:
+            num_positives += np.log1p(num_positives)
+
+    fnpr = fn / num_positives if num_positives > 0 else 0
 
     # Confidence Interval Calculation
     margin = (
-        Z * np.sqrt((fnpr * (1 - fnpr)) / scaled_num_positives)
-        if scaled_num_positives > 0
+        Z * np.sqrt((fnpr * (1 - fnpr)) / num_positives)
+        if num_positives > 0
         else 0
     )
     ci_min, ci_max = max(0, fnpr - margin), min(1, fnpr + margin)
@@ -171,7 +174,9 @@ def flag_bias(
         moderate_bias_thresh: Threshold for flagging moderate bias.
         low_bias_thresh: Threshold for flagging low bias.
         min_sample_ratio: Percentage of total positive samples required for valid FNPR comparison.
-        We default to 15% since we want to ensure we are checking subgroups with sufficient data.
+        This gives us flexibility with smaller datasets. We default to 15% since we want to ensure
+        we are checking subgroups with sufficient data. When calculating min_samples, we have an upper
+        limit of 50 samples so that larger datasets aren't unnecessarily restricted.
 
     Returns:
         List of dictionaries with bias flag information.

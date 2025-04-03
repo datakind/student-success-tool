@@ -259,7 +259,7 @@ for run_id in top_run_ids:
                 cfg.pred_prob_col: model.predict_proba(df_features)[:, 1],
             }
         )
-        print(f"Processing run {run_id} - rows x cols = {df_pred.shape}")
+        logging.info(f"Processing run {run_id} - rows x cols = {df_pred.shape}")
         model_comp_fig = modeling.evaluation.compare_trained_models_plot(
             experiment_id, optimization_metric
         )
@@ -378,7 +378,7 @@ for run_id in top_run_ids:
 
                     for flag in bias_flags:
                         if flag["flag"] not in ["🟢 NO BIAS", "⚪ INSUFFICIENT DATA"]:
-                            print(
+                            logging.info(
                                 f"""Run {run_id}: {flag["group"]} on {flag["split_name"]} - {flag["subgroups"]}, 
                                 FNPR Difference: {flag["fnpr_percentage_difference"]}% ({flag["type"]}) [{flag["flag"]}]"""
                             )
