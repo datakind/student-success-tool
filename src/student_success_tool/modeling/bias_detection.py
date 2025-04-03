@@ -48,15 +48,13 @@ def calculate_fnpr_and_ci(
     # Calculate FNPR & apply Log Scaling to smoothen FNPR at low sample sizes
     num_positives = fn + tp
     if apply_scaling:
-            num_positives += np.log1p(num_positives)
+        num_positives += np.log1p(num_positives)
 
     fnpr = fn / num_positives if num_positives > 0 else 0
 
     # Confidence Interval Calculation
     margin = (
-        Z * np.sqrt((fnpr * (1 - fnpr)) / num_positives)
-        if num_positives > 0
-        else 0
+        Z * np.sqrt((fnpr * (1 - fnpr)) / num_positives) if num_positives > 0 else 0
     )
     ci_min, ci_max = max(0, fnpr - margin), min(1, fnpr + margin)
 
