@@ -205,7 +205,7 @@ dbutils.jobs.taskValues.set(key="run_id", value=run_id)
 # COMMAND ----------
 
 # HACK: Evaluate an experiment you've already trained
-# experiment_id = cfg.models['retention'].experiment_id
+# experiment_id = cfg.models['graduation'].experiment_id
 
 calibration_dir = "calibration"
 preds_dir = "preds"
