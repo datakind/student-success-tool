@@ -1,18 +1,14 @@
 version = 1
+revision = 1
 requires-python = ">=3.10, <3.13"
 resolution-markers = [
-    "python_full_version < '3.11' and platform_system != 'Windows' and sys_platform != 'win32'",
-    "python_full_version < '3.11' and platform_system == 'Windows' and sys_platform != 'win32'",
-    "python_full_version == '3.11.*' and platform_system != 'Windows' and sys_platform != 'win32'",
-    "python_full_version == '3.11.*' and platform_system == 'Windows' and sys_platform != 'win32'",
-    "python_full_version >= '3.12' and platform_system != 'Windows' and sys_platform != 'win32'",
-    "python_full_version >= '3.12' and platform_system == 'Windows' and sys_platform != 'win32'",
-    "python_full_version < '3.11' and platform_system != 'Windows' and sys_platform == 'win32'",
-    "python_full_version < '3.11' and platform_system == 'Windows' and sys_platform == 'win32'",
-    "python_full_version == '3.11.*' and platform_system != 'Windows' and sys_platform == 'win32'",
-    "python_full_version == '3.11.*' and platform_system == 'Windows' and sys_platform == 'win32'",
-    "python_full_version >= '3.12' and platform_system != 'Windows' and sys_platform == 'win32'",
-    "python_full_version >= '3.12' and platform_system == 'Windows' and sys_platform == 'win32'",
+    "python_full_version < '3.11' and sys_platform != 'win32'",
+    "python_version < '0'",
+    "python_full_version == '3.11.*' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and sys_platform != 'win32'",
+    "python_full_version < '3.11' and sys_platform == 'win32'",
+    "python_full_version == '3.11.*' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and sys_platform == 'win32'",
 ]
 
 [[package]]
@@ -303,7 +299,7 @@ name = "click"
 version = "8.1.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/96/d3/f04c7bfcf5c1862a2a5b845c6b2b360488cf47af55dfa79c98f6a6bf98b5/click-8.1.7.tar.gz", hash = "sha256:ca9853ad459e787e2192211578cc907e7594e294c7ccc834310722b41b9ca6de", size = 336121 }
 wheels = [
@@ -849,7 +845,7 @@ name = "gunicorn"
 version = "23.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "packaging", marker = "platform_system != 'Windows'" },
+    { name = "packaging", marker = "sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/34/72/9614c465dc206155d93eff0ca20d42e1e35afc533971379482de953521a4/gunicorn-23.0.0.tar.gz", hash = "sha256:f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec", size = 375031 }
 wheels = [
@@ -928,7 +924,7 @@ name = "ipykernel"
 version = "6.29.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "appnope", marker = "platform_system == 'Darwin'" },
+    { name = "appnope", marker = "sys_platform == 'darwin'" },
     { name = "comm" },
     { name = "debugpy" },
     { name = "ipython" },
@@ -1486,7 +1482,7 @@ dependencies = [
     { name = "docker" },
     { name = "flask" },
     { name = "graphene" },
-    { name = "gunicorn", marker = "platform_system != 'Windows'" },
+    { name = "gunicorn", marker = "sys_platform != 'win32'" },
     { name = "jinja2" },
     { name = "markdown" },
     { name = "matplotlib" },
@@ -1497,7 +1493,7 @@ dependencies = [
     { name = "scikit-learn" },
     { name = "scipy" },
     { name = "sqlalchemy" },
-    { name = "waitress", marker = "platform_system == 'Windows'" },
+    { name = "waitress", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b9/4e/cff7f16684073cba17cd8c4b838d974b3f1a1fc02d38a7f2081b85e0c7e5/mlflow-2.18.0.tar.gz", hash = "sha256:90f0d04b02e35c0f2fccc88e892e37b84871cb4f766acd3ef904c1c30be63ee3", size = 26750827 }
 wheels = [
@@ -2787,7 +2783,7 @@ requires-dist = [
     { name = "missingno", specifier = "~=0.5" },
     { name = "mlflow", specifier = "~=2.13" },
     { name = "numpy", specifier = "~=1.26" },
-    { name = "pandas", specifier = "~=2.1" },
+    { name = "pandas", specifier = "~=2.0" },
     { name = "pandera", specifier = "~=0.23.0" },
     { name = "pyarrow", specifier = "~=16.0" },
     { name = "pydantic", specifier = "~=2.10" },
@@ -2805,7 +2801,7 @@ dev = [
     { name = "jupyterlab", specifier = "~=4.2" },
     { name = "mypy", specifier = "~=1.11" },
     { name = "pytest", specifier = "~=8.3" },
-    { name = "ruff", specifier = "~=0.9.0" },
+    { name = "ruff", specifier = "~=0.9" },
 ]
 
 [[package]]
@@ -2895,7 +2891,7 @@ name = "tqdm"
 version = "4.67.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a8/4b/29b4ef32e036bb34e4ab51796dd745cdba7ed47ad142a9f4a1eb8e0c744d/tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2", size = 169737 }
 wheels = [
