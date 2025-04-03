@@ -204,6 +204,9 @@ dbutils.jobs.taskValues.set(key="run_id", value=run_id)
 
 # COMMAND ----------
 
+# HACK: Evaluate an experiment you've already trained
+# experiment_id = cfg.models['graduation'].experiment_id
+
 calibration_dir = "calibration"
 preds_dir = "preds"
 sensitivity_dir = "sensitivity"
@@ -259,7 +262,7 @@ for run_id in top_run_ids:
                 cfg.pred_prob_col: model.predict_proba(df_features)[:, 1],
             }
         )
-        print(f"Processing run {run_id} - rows x cols = {df_pred.shape}")
+        logging.info(f"Processing run {run_id} - rows x cols = {df_pred.shape}")
         model_comp_fig = modeling.evaluation.compare_trained_models_plot(
             experiment_id, optimization_metric
         )
@@ -300,7 +303,7 @@ for run_id in top_run_ids:
                         labels = subgroup_data[cfg.target_col]
                         preds = subgroup_data[cfg.pred_col]
                         pred_probs = subgroup_data[cfg.pred_prob_col]
-                        fnpr, fnpr_lower, fnpr_upper, valid_samples_flag = (
+                        fnpr, fnpr_lower, fnpr_upper, num_positives = (
                             modeling.bias_detection.calculate_fnpr_and_ci(labels, preds)
                         )
 
@@ -311,19 +314,19 @@ for run_id in top_run_ids:
                                 "fnpr": fnpr,
                                 "ci": (fnpr_lower, fnpr_upper),
                                 "size": len(subgroup_data),
-                                "fnpr_sample_threshold_met": valid_samples_flag,
+                                "number_of_positive_samples": num_positives,
                             }
                         )
 
                         subgroup_metrics = {
                             "Subgroup": subgroup,
                             "Number of Samples": len(subgroup_data),
+                            "Number of Positive Samples": num_positives,
                             "Actual Target Prevalence": round(labels.mean(), 2),
                             "Predicted Target Prevalence": round(preds.mean(), 2),
                             "FNPR": round(fnpr, 2),
-                            # if we have less than 50 samples for TP or FN, then
-                            # our threshold is NOT met and FNPR is likely not reliable.
-                            "Valid FNPR Calculation": valid_samples_flag,
+                            "FNPR CI Lower": round(fnpr_lower, 2),
+                            "FNPR CI Upper": round(fnpr_upper, 2),
                             "Accuracy": round(
                                 sklearn.metrics.accuracy_score(labels, preds), 2
                             ),
@@ -377,10 +380,10 @@ for run_id in top_run_ids:
                     )
 
                     for flag in bias_flags:
-                        if flag["flag"] != "🟢 NO BIAS":
-                            print(
+                        if flag["flag"] not in ["🟢 NO BIAS", "⚪ INSUFFICIENT DATA"]:
+                            logging.info(
                                 f"""Run {run_id}: {flag["group"]} on {flag["split_name"]} - {flag["subgroups"]}, 
-                                FNPR Difference: {flag["percentage_difference"]:.2f}% ({flag["type"]}) [{flag["flag"]}]"""
+                                FNPR Difference: {flag["fnpr_percentage_difference"]}% ({flag["type"]}) [{flag["flag"]}]"""
                             )
 
                     df_bias_flags = pd.DataFrame(bias_flags)
@@ -394,7 +397,9 @@ for run_id in top_run_ids:
             flag_name = modeling.bias_detection.FLAG_NAMES[flag]
             df_flag = (
                 df_all_flags[df_all_flags["flag"] == flag].sort_values(
-                    by="percentage_difference", ascending=False
+                    by="fnpr_percentage_difference",
+                    key=lambda x: x.astype(float),
+                    ascending=False,
                 )
                 if df_all_flags.shape[0] > 0
                 else None

@@ -13,10 +13,10 @@ np.random.seed(42)
         (
             pd.Series(np.random.choice([False, True], size=500)),  # Use bool values
             pd.Series(np.random.choice([False, True], size=500)),
-            0.515625,
-            0.454406,
-            0.57684,
-            True,
+            0.504685,
+            0.444092,
+            0.565278,
+            256,
         ),
         (
             pd.Series([True] * 500, dtype=bool),
@@ -24,7 +24,7 @@ np.random.seed(42)
             0,
             0,
             0,
-            False,
+            500,
         ),
         (
             pd.Series([False] * 500, dtype=bool),
@@ -32,7 +32,7 @@ np.random.seed(42)
             0,
             0,
             0,
-            False,
+            0,
         ),
     ],
 )
@@ -78,7 +78,7 @@ def test_z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2, expected_p):
 
 
 @pytest.mark.parametrize(
-    "group, sub1, sub2, percentage_difference, bias_type, split_name, flag, p, expected",
+    "group, sub1, sub2, fnpr_percentage_difference, bias_type, split_name, flag, p, expected",
     [
         (
             "Gender",
@@ -92,7 +92,7 @@ def test_z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2, expected_p):
             {
                 "group": "Gender",
                 "subgroups": "Male vs Female",
-                "percentage_difference": 12,
+                "fnpr_percentage_difference": "12.00",
                 "type": "Non-overlapping CIs, p-value: 0.005",
                 "split_name": "train",
                 "flag": "🔴 HIGH BIAS",
@@ -101,11 +101,26 @@ def test_z_test_fnpr_difference(fnpr1, fnpr2, denom1, denom2, expected_p):
     ],
 )
 def test_generate_bias_flag(
-    group, sub1, sub2, percentage_difference, bias_type, split_name, flag, p, expected
+    group,
+    sub1,
+    sub2,
+    fnpr_percentage_difference,
+    bias_type,
+    split_name,
+    flag,
+    p,
+    expected,
 ):
     assert (
         bias_detection.generate_bias_flag(
-            group, sub1, sub2, percentage_difference, bias_type, split_name, flag, p
+            group,
+            sub1,
+            sub2,
+            fnpr_percentage_difference,
+            bias_type,
+            split_name,
+            flag,
+            p,
         )
         == expected
     )
