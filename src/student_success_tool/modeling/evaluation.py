@@ -4,7 +4,6 @@ import typing as t
 import uuid
 from collections.abc import Sequence
 
-import matplotlib.axes
 import matplotlib.colors as mcolors
 import matplotlib.figure
 import matplotlib.pyplot as plt
@@ -471,11 +470,20 @@ def plot_features_permutation_importance(
     model: sklearn.base.BaseEstimator,
     features: pd.DataFrame,
     target: pd.Series,
+    *,
     scoring: t.Optional[str | t.Callable] = None,
     sample_weight: t.Optional[np.ndarray] = None,
     random_state: t.Optional[int] = None,
-) -> matplotlib.axes.Axes:
+) -> matplotlib.figure.Figure:
     """
+    Args:
+        model
+        features
+        target
+        scoring
+        sample_weight
+        random_state
+
     See Also:
         - https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html
         - https://scikit-learn.org/stable/modules/model_evaluation.html#callable-scorers
@@ -495,13 +503,14 @@ def plot_features_permutation_importance(
         result.importances[sorted_importances_idx].T,
         columns=features.columns[sorted_importances_idx],
     )
-    ax = importances.plot.box(vert=False, whis=10, figsize=(10, 10))
+
+    fig, ax = plt.subplots(figsize=(10, 10))
+    importances.plot.box(vert=False, whis=10, ax=ax)
     ax.set_title("Permutation Feature Importances")
     ax.axvline(x=0, color="k", linestyle="--")
     ax.set_xlabel("Decrease in score")
-    # ugh mypy is so stupid
-    assert isinstance(ax, matplotlib.axes.Axes)  # type guard
-    return ax
+    fig.tight_layout()  # HACK
+    return fig
 
 
 def plot_shap_beeswarm(shap_values):
