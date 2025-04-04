@@ -374,7 +374,7 @@ def generate_bias_flag(
     group: str,
     subgroup1: str,
     subgroup2: str,
-    fnpr_diff: float,
+    fnpr_percentage_difference: float,
     bias_type: str,
     split_name: str,
     flag: str,
@@ -399,7 +399,7 @@ def generate_bias_flag(
     flag_entry = {
         "group": group,
         "subgroups": f"{subgroup1} vs {subgroup2}",
-        "fnpr_percentage_difference": f"{round(fnpr, 2)}",
+        "fnpr_percentage_difference": f"{round(fnpr_percentage_difference, 2)}",
         "type": (
             bias_type
             if np.isnan(p_value)
