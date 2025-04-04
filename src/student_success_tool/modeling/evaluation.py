@@ -643,6 +643,7 @@ def plot_shap_beeswarm(shap_values):
     )
     return plt.gcf()
 
+
 def fnpr_group_plot(fnpr_data: list) -> matplotlib.figure.Figure:
     """
     Plots False Negative Prediction Rate (FNPR) for a group by subgroup on
@@ -655,7 +656,7 @@ def fnpr_group_plot(fnpr_data: list) -> matplotlib.figure.Figure:
     subgroups = [subgroup_data["subgroup"] for subgroup_data in fnpr_data]
     fnpr = [subgroup_data["fnpr"] for subgroup_data in fnpr_data]
     min_ci_errors = [
-        subgroup_data["fnpr"] - subgroup_data['ci'][0] for subgroup_data in fnpr_data
+        subgroup_data["fnpr"] - subgroup_data["ci"][0] for subgroup_data in fnpr_data
     ]
     max_ci_errors = [
         subgroup_data["ci"][1] - subgroup_data["fnpr"] for subgroup_data in fnpr_data
@@ -694,6 +695,7 @@ def fnpr_group_plot(fnpr_data: list) -> matplotlib.figure.Figure:
 
     plt.tight_layout()
     return fig
+
 
 def _check_array_of_arrays(input_array: pd.Series) -> bool:
     """
