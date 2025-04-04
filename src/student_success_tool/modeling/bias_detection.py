@@ -424,9 +424,9 @@ def log_bias_flags_to_mlflow(all_model_flags: list):
         for flag in FLAG_NAMES.keys():
             flag_name = FLAG_NAMES[flag]
             df_flag = (
-                df_all_flags[df_all_flags["flag"] == flag]
+                df_model_flags[df_model_flags["flag"] == flag]
                 .sort_values(by="fnpr_percentage_difference", ascending=False)
-                if df_all_flags.shape[0] > 0
+                if df_model_flags.shape[0] > 0
                 else None
             )
             if df_flag is not None:
