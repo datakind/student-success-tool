@@ -253,7 +253,7 @@ top_run_ids = (
 for run_id in top_run_ids:
     with mlflow.start_run(run_id=run_id) as run:
         model = mlflow.sklearn.load_model(f"runs:/{run_id}/model")
-        df_all_flags = pd.DataFrame()
+        df_group_flags = pd.DataFrame()
         df_pred = df.assign(
             **{
                 cfg.pred_col: model.predict(df_features),
@@ -309,6 +309,7 @@ for run_id in top_run_ids:
                             {
                                 "group": group,
                                 "subgroup": subgroup,
+                                "split_name": split_name,
                                 "fnpr": fnpr,
                                 "ci": (fnpr_lower, fnpr_upper),
                                 "size": len(subgroup_data),
@@ -373,38 +374,50 @@ for run_id in top_run_ids:
                         local_path=metrics_tmp_path, artifact_path="subgroup_metrics"
                     )
 
-                    bias_flags = modeling.bias_detection.flag_bias(
-                        fnpr_data, split_name
-                    )
+                    all_subgroup_flags = modeling.bias_detection.flag_bias(fnpr_data)
 
-                    for flag in bias_flags:
-                        if flag["flag"] not in ["🟢 NO BIAS", "⚪ INSUFFICIENT DATA"]:
-                            logging.info(
-                                f"""Run {run_id}: {flag["group"]} on {flag["split_name"]} - {flag["subgroups"]},
-                                FNPR Difference: {flag["fnpr_percentage_difference"]}% ({flag["type"]}) [{flag["flag"]}]"""
-                            )
+                    bias_subgroup_flags = [
+                        flag
+                        for flag in all_subgroup_flags
+                        if flag["flag"] not in ["🟢 NO BIAS", "⚪ INSUFFICIENT DATA"]
+                    ]
+                    for bias_flag in bias_subgroup_flags:
+                        logging.info(
+                            f"""Run {run_id}: {bias_flag["group"]} on {bias_flag["split_name"]} - {bias_flag["subgroups"]}, 
+                            FNPR Difference: {bias_flag["fnpr_percentage_difference"]}% ({bias_flag["type"]}) [{bias_flag["flag"]}]"""
+                        )
 
-                    df_bias_flags = pd.DataFrame(bias_flags)
-                    df_all_flags = (
-                        pd.concat([df_all_flags, df_bias_flags], ignore_index=True)
-                        if not df_bias_flags.empty
-                        else df_all_flags
+                    if bias_subgroup_flags:
+                        fnpr_fig = modeling.evaluation.fnpr_group_plot(fnpr_data)
+                        mlflow.log_figure(
+                            fnpr_fig,
+                            os.path.join(
+                                fnpr_plots_dir, f"{split_name}_{group}_fnpr.png")
+                        )
+
+                    df_subgroup_flags = pd.DataFrame(all_subgroup_flags)
+                    df_group_flags = (
+                        pd.concat(
+                            [df_group_flags, df_subgroup_flags], ignore_index=True
+                        )
+                        if not df_subgroup_flags.empty
+                        else df_group_flags
                     )
 
         for flag in modeling.bias_detection.FLAG_NAMES.keys():
             flag_name = modeling.bias_detection.FLAG_NAMES[flag]
-            df_flag = (
-                df_all_flags[df_all_flags["flag"] == flag].sort_values(
+            df_group_flags_sorted = (
+                df_group_flags[df_group_flags["flag"] == flag].sort_values(
                     by="fnpr_percentage_difference",
                     key=lambda x: x.astype(float),
                     ascending=False,
                 )
-                if df_all_flags.shape[0] > 0
+                if df_group_flags.shape[0] > 0
                 else None
             )
-            if df_flag is not None:
+            if df_group_flags_sorted is not None:
                 bias_tmp_path = f"/tmp/{flag_name}_flags.csv"
-                df_flag.to_csv(bias_tmp_path, index=False)
+                df_group_flags_sorted.to_csv(bias_tmp_path, index=False)
                 mlflow.log_artifact(
                     local_path=bias_tmp_path, artifact_path="bias_flags"
                 )

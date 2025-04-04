@@ -156,7 +156,6 @@ def generate_bias_flag(
 
 def flag_bias(
     fnpr_data: list,
-    split_name: str,
     high_bias_thresh: float = HIGH_FLAG_THRESHOLD,
     moderate_bias_thresh: float = MODERATE_FLAG_THRESHOLD,
     low_bias_thresh: float = LOW_FLAG_THRESHOLD,
@@ -167,7 +166,6 @@ def flag_bias(
 
     Args:
         fnpr_data: List of dictionaries containing FNPR and CI information for each subgroup.
-        split_name: Name of the split (e.g. train/test/validate).
         high_bias_thresh: Threshold for flagging high bias.
         moderate_bias_thresh: Threshold for flagging moderate bias.
         low_bias_thresh: Threshold for flagging low bias.
@@ -211,7 +209,7 @@ def flag_bias(
                             other["subgroup"],
                             fnpr_diff,
                             "Insufficient samples for statistical test",
-                            split_name,
+                            current["split_name"],
                             "⚪ INSUFFICIENT DATA",
                             p_value,
                         )
@@ -224,7 +222,7 @@ def flag_bias(
                             other["subgroup"],
                             fnpr_diff,
                             "No significant difference",
-                            split_name,
+                            current["split_name"],
                             "🟢 NO BIAS",
                             p_value,
                         )
@@ -244,7 +242,7 @@ def flag_bias(
                                     other["subgroup"],
                                     fnpr_diff,
                                     reason,
-                                    split_name,
+                                    current["split_name"],
                                     flag,
                                     p_value,
                                 )
