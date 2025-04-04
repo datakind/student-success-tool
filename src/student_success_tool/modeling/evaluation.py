@@ -643,9 +643,7 @@ def plot_shap_beeswarm(shap_values):
     )
     return plt.gcf()
 
-def fnpr_group_plot(
-    fnpr_data: list
-) -> matplotlib.figure.Figure:
+def fnpr_group_plot(fnpr_data: list) -> matplotlib.figure.Figure:
     """
     Plots False Negative Prediction Rate (FNPR) for a group by subgroup on
     a split (train/test/val) of data with confidence intervals.
@@ -654,13 +652,13 @@ def fnpr_group_plot(
     - fnpr_data: List with dictionaries for each subgroup. Each dictionary
     comprises of group, fnpr, ci (confidence interval), and split_name keys.
     """
-    subgroups = [subgroup_data['subgroup'] for subgroup_data in fnpr_data]
-    fnpr = [subgroup_data['fnpr'] for subgroup_data in fnpr_data]
+    subgroups = [subgroup_data["subgroup"] for subgroup_data in fnpr_data]
+    fnpr = [subgroup_data["fnpr"] for subgroup_data in fnpr_data]
     min_ci_errors = [
-        subgroup_data['fnpr'] - subgroup_data['ci'][0] for subgroup_data in fnpr_data
+        subgroup_data["fnpr"] - subgroup_data['ci'][0] for subgroup_data in fnpr_data
     ]
     max_ci_errors = [
-        subgroup_data['ci'][1] - subgroup_data['fnpr'] for subgroup_data in fnpr_data
+        subgroup_data["ci"][1] - subgroup_data["fnpr"] for subgroup_data in fnpr_data
     ]
 
     y_positions = list(range(len(subgroups)))
@@ -689,7 +687,7 @@ def fnpr_group_plot(
     ax.set_ylabel("Subgroup")
     ax.set_xlabel("False Negative Parity Rate")
     ax.set_title(
-        f"FNPR @ 0.5 for {fnpr_data[0]['group']} on {fnpr_data[0]['split_name']}"
+        f"FNPR @ 0.5 for {fnpr_data[0]["group"]} on {fnpr_data[0]["split_name"]}"
     )
     ax.tick_params(axis="both", labelsize=12)
     ax.grid(True, linestyle="--", alpha=0.6)

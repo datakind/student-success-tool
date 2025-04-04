@@ -392,7 +392,8 @@ for run_id in top_run_ids:
                         mlflow.log_figure(
                             fnpr_fig,
                             os.path.join(
-                                fnpr_plots_dir, f"{split_name}_{group}_fnpr.png")
+                                fnpr_plots_dir, f"{split_name}_{group}_fnpr.png"
+                            ),
                         )
 
                     df_subgroup_flags = pd.DataFrame(all_subgroup_flags)
