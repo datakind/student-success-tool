@@ -116,7 +116,7 @@ def compute_subgroup_bias_metrics(
     group_metrics = []
     fnpr_data = []
 
-    for subgroup, subgroup_data in split_data.groupby(group):
+    for subgroup, subgroup_data in split_data.groupby(group_col):
         labels = subgroup_data[target_col]
         preds = subgroup_data[pred_col]
         pred_probs = subgroup_data[pred_prob_col]

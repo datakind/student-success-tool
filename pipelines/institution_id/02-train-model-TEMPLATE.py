@@ -225,36 +225,30 @@ else:
 
 # COMMAND ----------
 
-evaluation_params = {
-    "student_group_cols": cfg.student_group_cols,
-    "target_col": training_params.get("target_col"),
-    "optimization_metric": training_params.get("optimization_metric"),
-    "pos_label": training_params.get("pos_label"),
-    "pred_col": cfg.pred_col,
-    "pred_prob_col": cfg.pred_prob_col,
-    "experiment_id": experiment_id,
-    "top_run_ids": cfg.modeling.evaluation.topn_runs_included,
-}
-logging.info("evaluation params = %s", evaluation_params)
+# Get top runs from experiment for evaluation
+top_run_ids = modeling.evaluation.get_top_run_ids(
+    experiment_id=experiment_id,
+    optimization_metric=cfg.modeling.training.primary_metric,
+    topn_runs_included=cfg.modeling.evaluation.topn_runs_included,
+)
+logging.info("top run ids = %s", top_run_ids)
 
 # COMMAND ----------
-
-# Get top runs from experiment for evaluation
-top_run_ids = modeling.evaluation.get_top_run_ids(**evaluation_params)
 
 # Iterate through runs and evaluate performance & bias
 for run_id in top_run_ids:
     with mlflow.start_run(run_id=run_id) as run:
         model = mlflow.sklearn.load_model(f"runs:/{run_id}/model")
+        df_group_flags = pd.DataFrame()
         df_pred = df.assign(
             **{
-                evaluation_params.get("pred_col"): model.predict(df_features),
-                evaluation_params.get("pred_prob_col"): model.predict_proba(df_features)[:, 1],
+                cfg.pred_col: model.predict(df_features),
+                cfg.pred_prob_col: model.predict_proba(df_features)[:, 1],
             }
         )
         logging.info(f"Processing run {run_id} - rows x cols = {df_pred.shape}")
-        model_comp_fig = modeling.evaluation.compare_trained_models_plot(
-            evaluation_params.get("experiment_id"), evaluation_params.get("optimization_metric")
+        model_comp_fig = modeling.evaluation.plot_trained_models_comparison(
+            experiment_id, cfg.modeling.training.primary_metric
         )
         mlflow.log_figure(model_comp_fig, "model_comparison.png")
 
@@ -269,8 +263,10 @@ for run_id in top_run_ids:
 
             hist_fig, cal_fig, sla_fig = modeling.evaluation.create_evaluation_plots(
                 split_data,
+                cfg.pred_prob_col,
+                cfg.target_col,
+                cfg.pos_label,
                 split_name,
-                **evaluation_params,
             )
             mlflow.log_figure(
                 hist_fig,
@@ -288,14 +284,17 @@ for run_id in top_run_ids:
             if evaluate_model_bias:
                 split_flags = modeling.bias_detection.evaluate_bias(
                     run_id,
-                    df_model_flags,
                     split_data,
                     split_name,
-                    **evaluation_params
+                    cfg.student_group_cols,
+                    cfg.target_col,
+                    cfg.pred_col, 
+                    cfg.pred_prob_col,
+                    cfg.pos_label,            
                 )
                 all_model_flags.extend(split_flags)
         
-        log_bias_flags_to_mlflow(all_model_flags)
+        modeling.bias_detection.log_bias_flags_to_mlflow(all_model_flags)
 
 mlflow.end_run()
 
