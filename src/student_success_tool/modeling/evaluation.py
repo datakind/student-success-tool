@@ -64,6 +64,42 @@ def extract_training_data_from_model(
     return df_loaded
 
 
+def compute_classification_eval_metrics(
+    targets: pd.Series,
+    preds: pd.Series,
+    pred_probs: pd.Series,
+    *,
+    pos_label: PosLabelType,
+    sample_weights: t.Optional[pd.Series] = None,
+) -> dict[str, object]:
+    """
+    Args
+    """
+    precision, recall, f1, support = sklearn.metrics.precision_recall_fscore_support(
+        targets,
+        preds,
+        beta=1,
+        average="binary",
+        pos_label=pos_label,  # type: ignore
+        sample_weight=sample_weights,
+        zero_division=np.nan,  # type: ignore
+    )
+    result = {
+        "num_samples": len(targets),
+        "num_positives": support,
+        "accuracy": sklearn.metrics.accuracy_score(
+            targets, preds, sample_weight=sample_weights
+        ),
+        "precision": precision,
+        "recall": recall,
+        "f1_score": f1,
+        "log_loss": sklearn.metrics.log_loss(
+            targets, pred_probs, sample_weight=sample_weights, labels=[False, True]
+        ),
+    }
+    return result
+
+
 def get_sensitivity_of_top_q_pctl_thresh(
     y_true: pd.Series | Sequence,
     risk_score: pd.Series | Sequence,
