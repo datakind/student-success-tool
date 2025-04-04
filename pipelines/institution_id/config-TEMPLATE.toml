@@ -12,11 +12,12 @@ pos_label = true
 random_state = 12345
 
 [datasets.ingested_YYYYMMDD]
-raw_course = { file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/FILE_NAME_COURSE.csv" }
-raw_cohort = { file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/FILE_NAME_COHORT.csv" }
-preprocessed = { table_path = "CATALOG.INST_NAME_silver.DATASET_NAME_preprocessed" }
-# TODO: once PR #122 is merged
-# finalized = { table_path = "CATALOG.INST_NAME_gold.INST_ID_advisor_output_ETC_YYYYMMDD" }
+raw_course = { file_path = "/Volumes/CATALOG/INST_ID_bronze/INST_ID_bronze_file_volume/FILE_NAME_COURSE.csv" }
+raw_cohort = { file_path = "/Volumes/CATALOG/INST_ID_bronze/INST_ID_bronze_file_volume/FILE_NAME_COHORT.csv" }
+preprocessed = { table_path = "CATALOG.INST_ID_silver.DATASET_NAME_preprocessed" }
+# optionally, if you want to save predictions on their own
+# predictions = { table_path = "CATALOG.INST_ID_gold.DATASET_NAME_predictions" }
+finalized = { table_path = "CATALOG.INST_ID_gold.INST_ID_advisor_output_ETC_YYYYMMDD" }
 
 [models.TARGET_CHECKPOINT]
 experiment_id = "EXPERIMENT_ID"
@@ -51,6 +52,9 @@ primary_metric = "log_loss"
 timeout_minutes = 10
 # exclude_frameworks = ["xgboost", "lightgbm"]
 # exclude_cols = []
+
+[modeling.evaluation]
+topn_runs_included = 3
 
 [inference]
 num_top_features = 5

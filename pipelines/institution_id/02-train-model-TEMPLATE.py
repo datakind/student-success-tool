@@ -225,8 +225,6 @@ else:
 
 # COMMAND ----------
 
-# Set the number of top runs to evaluate
-top_x = 3
 optimization_metric = training_params["optimization_metric"]
 
 # Fetch all runs
@@ -246,7 +244,7 @@ search_metric = (
 ascending_order = optimization_metric == "log_loss"
 top_run_ids = (
     runs.sort_values(by=search_metric, ascending=ascending_order)
-    .iloc[:top_x]["run_id"]
+    .iloc[: cfg.modeling.evaluation.topn_runs_included]["run_id"]
     .tolist()
 )
 
@@ -382,7 +380,7 @@ for run_id in top_run_ids:
                     for flag in bias_flags:
                         if flag["flag"] not in ["🟢 NO BIAS", "⚪ INSUFFICIENT DATA"]:
                             logging.info(
-                                f"""Run {run_id}: {flag["group"]} on {flag["split_name"]} - {flag["subgroups"]}, 
+                                f"""Run {run_id}: {flag["group"]} on {flag["split_name"]} - {flag["subgroups"]},
                                 FNPR Difference: {flag["fnpr_percentage_difference"]}% ({flag["type"]}) [{flag["flag"]}]"""
                             )
 

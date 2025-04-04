@@ -4,7 +4,6 @@ import typing as t
 import uuid
 from collections.abc import Sequence
 
-import matplotlib.axes
 import matplotlib.colors as mcolors
 import matplotlib.figure
 import matplotlib.pyplot as plt
@@ -65,113 +64,55 @@ def extract_training_data_from_model(
     return df_loaded
 
 
-def create_risk_score_histogram(
-    risk_score: str | Sequence, title_suffix: str
-) -> matplotlib.figure.Figure:
-    """
-    Create histogram of risk scores
-
-    Args:
-        risk_score: risk scores
-        title_suffix: suffix for plot title
-    """
-    fig, ax = plt.subplots()
-    sns.histplot(x=risk_score, ax=ax, color=PALETTE[1])
-    ax.set(xlabel="Risk Score", title=f"Distribution of risk scores - {title_suffix}")
-    return fig
-
-
-def check_array_of_arrays(input_array: pd.Series) -> bool:
-    """
-    Check if an input array contains sub-arrays. Used for plotting different
-    groups of predictions
-
-    Args:
-        input_array
-
-    Returns:
-        True if the input_array contains sub-arrays
-    """
-    try:
-        assert isinstance(input_array, pd.Series)
-        assert isinstance(input_array[0], list)
-        return True
-    except Exception:
-        return False
-
-
-def create_calibration_curve(
-    y_true: pd.Series,
-    risk_score: pd.Series,
-    keys: str | list[str],
-    title_suffix: str,
+def compute_classification_eval_metrics(
+    targets: pd.Series,
+    preds: pd.Series,
+    pred_probs: pd.Series,
+    *,
     pos_label: PosLabelType,
-    lowess_frac: t.Optional[float] = None,
-) -> matplotlib.figure.Figure:
+    sample_weights: t.Optional[pd.Series] = None,
+) -> dict[str, object]:
     """
-    Create calibration plot
+    Compute a variety of useful metrics for evaluating the performance of a classifier.
 
     Args:
-        y_true (array-like of shape (n_samples,) or (n_groups,)): overall or group-level true outcome class
-        risk_score (array-like of shape (n_samples,) or (n_groups,)): overall or group level predicted risk scores
-        keys: overall or subgroup level labels for labeling lines
-        title_suffix: suffix for plot title
-        pos_label: label identifying the positive class. Defaults to True.
-
-    Returns:
-        line plot of prediction bins X fraction of positive class
+        targets: True target values that classifier model was trained to predict.
+        preds: Binary predictions output by classifier model.
+        pred_probs: Prediction probabilities output by classifier model,
+            for the positive class only.
+        pos_label: Value of the positive class (aka "label").
+        sample_weights: Sample weights for the examples corresponding to targets/preds,
+            if classifier model was trained on weighted samples.
     """
-    if not check_array_of_arrays(y_true):
-        y_true = [y_true]
-        risk_score = [risk_score]
-        keys = [keys]  # type: ignore
-
-    fig, ax = plt.subplots()
-
-    for j in range(len(y_true)):
-        prob_true, prob_pred = calibration_curve(
-            y_true[j],
-            risk_score[j],
-            n_bins=10,
-            strategy="uniform",
-            pos_label=pos_label,  # type: ignore
-        )
-        if lowess_frac:
-            # When we create calibration curves with less data points (i.e. for subgroups),
-            # it can look choppy and be difficult to interpret. We use locally weighted
-            # scatterplot smoothing (LOWESS) to fit a smooth curve to the data points. LOWESS
-            # is a non-parametric smoother that tries to find a curve of best fit without
-            # assuming the data fits a particular shape.
-            # Resource: https://www.statisticshowto.com/lowess-smoothing/
-            prob_true = lowess(
-                endog=prob_true,
-                exog=prob_pred,
-                frac=lowess_frac,
-                it=0,
-                is_sorted=False,
-                return_sorted=False,
-            )
-        sns.lineplot(
-            x=prob_pred, y=prob_true, color=PALETTE[j + 1], ax=ax, label=keys[j]
-        )
-    sns.lineplot(
-        x=[0, 1],
-        y=[0, 1],
-        linestyle="dashed",
-        color=PALETTE[0],
-        ax=ax,
-        label="Perfectly calibrated",
+    assert isinstance(pos_label, (int, float, bool, str))  # type guard
+    precision, recall, f1_score, _ = sklearn.metrics.precision_recall_fscore_support(
+        targets,
+        preds,
+        beta=1,
+        average="binary",
+        pos_label=pos_label,  # type: ignore
+        sample_weight=sample_weights,
+        zero_division=np.nan,  # type: ignore
     )
-
-    ax.set(
-        xlabel="Mean predicted value",
-        ylabel="Fraction of positives",
-        title=f"Calibration Curve - {title_suffix}",
-    )
-    ax.set_xlim(left=-0.05, right=1.05)
-    ax.set_ylim(bottom=-0.05, top=1.05)
-    ax.legend(loc="lower right")
-    return fig
+    result = {
+        "num_samples": len(targets),
+        "num_positives": targets.eq(pos_label).sum(),
+        "true_positive_prevalence": targets.eq(pos_label).mean(),
+        "pred_positive_prevalence": preds.eq(pos_label).mean(),
+        "accuracy": sklearn.metrics.accuracy_score(
+            targets, preds, sample_weight=sample_weights
+        ),
+        "precision": precision,
+        "recall": recall,
+        "f1_score": f1_score,
+        "log_loss": sklearn.metrics.log_loss(
+            targets, pred_probs, sample_weight=sample_weights
+        ),
+        "roc_auc": sklearn.metrics.roc_auc_score(
+            targets, pred_probs, sample_weight=sample_weights
+        ),
+    }
+    return result
 
 
 def get_sensitivity_of_top_q_pctl_thresh(
@@ -210,70 +151,6 @@ def get_sensitivity_of_top_q_pctl_thresh(
     return result
 
 
-def plot_sla_curve(
-    y_true: pd.Series,
-    risk_score: pd.Series,
-    keys: str | list[str],
-    title_suffix: str,
-    pos_label: PosLabelType,
-    alert_rates: list[float] = [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06],
-    label_alert_rate: float = 0.01,
-) -> matplotlib.figure.Figure:
-    """
-    Create Sensitivity at Low Alert Rates plot
-
-    Args:
-        y_true (array-like of shape (n_samples,) or (n_groups,)): overall or group-level true outcome class
-        risk_score (array-like of shape (n_samples,) or (n_groups,)): overall or group level predicted risk scores
-        keys: overall or subgroup level labels for labeling lines
-        title_suffix: suffix for plot title
-        pos_label: label identifying the positive class in y_true
-        alert_rates: alert rates to plot. Defaults to [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06].
-        label_alert_rate: alert rate of interest to report sensitivity at. Defaults to 0.01.
-
-    Returns:
-        line plot of sensitivity at small alert rates
-    """
-    if not check_array_of_arrays(y_true):
-        y_true = [y_true]
-        risk_score = [risk_score]
-        keys = [keys]  # type: ignore
-
-    fig, ax = plt.subplots()
-
-    for j in range(len(risk_score)):
-        ss = []
-        for i in alert_rates:  # calculate sensitivity at different alert rates
-            s = get_sensitivity_of_top_q_pctl_thresh(
-                y_true[j], risk_score[j], 1 - i, pos_label
-            )
-            ss.append(s)
-        s_lab = round(
-            get_sensitivity_of_top_q_pctl_thresh(
-                y_true[j], risk_score[j], 1 - label_alert_rate, pos_label
-            ),
-            2,
-        )
-        ax.plot(
-            alert_rates,
-            ss,
-            color=PALETTE[j + 1],
-            label="{} (Sensitivity at {}% alert rate={})".format(
-                keys[j], label_alert_rate * 100, s_lab
-            ),
-        )
-
-    ax.set(
-        xlabel="Alert rate",
-        ylabel="sensitivity (true positive rate)",
-        title=f"Sensitivity vs. Low Alert Rate - {title_suffix}",
-    )
-    ax.set_ylim(bottom=-0.02, top=1.02)
-    ax.legend(loc="lower right")
-
-    return fig
-
-
 def compare_trained_models(
     automl_experiment_id: str, automl_metric: str
 ) -> tuple[pd.DataFrame, str]:
@@ -310,7 +187,135 @@ def compare_trained_models(
     return df_sorted, metric_score_column
 
 
-def compare_trained_models_plot(
+def compute_feature_permutation_importance(
+    model: sklearn.base.BaseEstimator,
+    features: pd.DataFrame,
+    target: pd.Series,
+    *,
+    n_repeats: int = 5,
+    scoring: t.Optional[str | t.Callable] = None,
+    sample_weight: t.Optional[np.ndarray] = None,
+    random_state: t.Optional[int] = None,
+) -> sklearn.utils.Bunch:
+    """
+    Compute model features' permutation importance.
+
+    Args:
+        model
+        features
+        target
+        n_repeats
+        scoring
+        sample_weight
+        random_state
+
+    References:
+        - https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html
+        - https://scikit-learn.org/stable/modules/model_evaluation.html#callable-scorers
+
+    See Also:
+        - :func:`plot_feature_permutation_importances()`
+    """
+    result = sklearn.inspection.permutation_importance(
+        model,
+        features,
+        target,
+        scoring=scoring,
+        n_repeats=n_repeats,
+        sample_weight=sample_weight,
+        random_state=random_state,
+    )
+    assert isinstance(result, sklearn.utils.Bunch)  # type guard
+    return result
+
+
+############
+## PLOTS! ##
+############
+
+
+def create_evaluation_plots(
+    data: pd.DataFrame,
+    risk_score_col: str,
+    y_true_col: str,
+    pos_label: PosLabelType,
+    split_type: str,
+) -> tuple[matplotlib.figure.Figure, ...]:
+    """
+    Create plots to evaluate a model overall - risk score histogram,
+    calibration curve, and sensitivity at low alert rates
+
+    Args:
+        data: containing predicted and actual outcome data
+        risk_score_col: column name containing data of predicted risk scores
+        y_true_col: column name containing data of actual outcome classes
+        pos_label: label identifying the positive class in y_true
+        split_type: type of data being plotted for labeling plots - train, test, or validation
+
+    Returns:
+        risk score histogram, calibration curve, and sensitivity at low alert rates figures
+    """
+    title_suffix = f"{split_type} data - Overall"
+    hist_fig = plot_support_score_histogram(data[risk_score_col], title_suffix)
+    cal_fig = plot_calibration_curve(
+        data[y_true_col], data[risk_score_col], "Overall", title_suffix, pos_label
+    )
+    sla_fig = plot_sla_curve(
+        data[y_true_col], data[risk_score_col], "Overall", title_suffix, pos_label
+    )
+    return hist_fig, cal_fig, sla_fig
+
+
+def create_evaluation_plots_by_subgroup(
+    data: pd.DataFrame,
+    risk_score_col: str,
+    y_true_col: str,
+    pos_label: PosLabelType,
+    group_col: str,
+    split_type: str,
+) -> tuple[matplotlib.figure.Figure, ...]:
+    """
+    Create plots to evaluate a model by group - calibration curve
+    and sensitivity at low alert rates
+
+    Args:
+        data: containing predicted and actual outcome data, as well as group label
+        risk_score_col: column name containing data of predicted risk scores
+        y_true_col: column name containing data of actual outcome classes
+        pos_label: label identifying the positive class in y_true
+        group_col: column name containing data of subgroup labels
+        split_type: type of data being plotted for labeling plots - train, test, or validation
+
+    Returns:
+        calibration curve sensitivity at low alert rates figures by group
+    """
+    title_suffix = f"{split_type} data - {group_col}"
+
+    grouped_data = data.groupby(group_col).agg(list)
+
+    ys = grouped_data[y_true_col]
+    scores = grouped_data[risk_score_col]
+
+    subgroups = grouped_data.index
+    n_counts = [len(subgroup_scores) for subgroup_scores in scores]
+    names = [
+        subgroup_name + f" (N={n})" for subgroup_name, n in zip(subgroups, n_counts)
+    ]
+
+    if len(subgroups) > 4:
+        lowess_frac = 0.7
+    else:
+        lowess_frac = 0.6
+
+    sla_subgroup_plot = plot_sla_curve(ys, scores, names, title_suffix, pos_label)
+    cal_subgroup_plot = plot_calibration_curve(
+        ys, scores, names, title_suffix, pos_label, lowess_frac=lowess_frac
+    )
+
+    return cal_subgroup_plot, sla_subgroup_plot
+
+
+def plot_trained_models_comparison(
     automl_experiment_id: str, automl_metric: str
 ) -> matplotlib.figure.Figure:
     """
@@ -386,122 +391,187 @@ def compare_trained_models_plot(
     return fig
 
 
-def create_evaluation_plots(
-    data: pd.DataFrame,
-    risk_score_col: str,
-    y_true_col: str,
+def plot_calibration_curve(
+    y_true: pd.Series,
+    risk_score: pd.Series,
+    keys: str | list[str],
+    title_suffix: str,
     pos_label: PosLabelType,
-    split_type: str,
-) -> tuple[matplotlib.figure.Figure, ...]:
+    lowess_frac: t.Optional[float] = None,
+) -> matplotlib.figure.Figure:
     """
-    Create plots to evaluate a model overall - risk score histogram,
-    calibration curve, and sensitivity at low alert rates
+    Plot calibration curve.
 
     Args:
-        data: containing predicted and actual outcome data
-        risk_score_col: column name containing data of predicted risk scores
-        y_true_col: column name containing data of actual outcome classes
-        pos_label: label identifying the positive class in y_true
-        split_type: type of data being plotted for labeling plots - train, test, or validation
+        y_true (array-like of shape (n_samples,) or (n_groups,)): overall or group-level true outcome class
+        risk_score (array-like of shape (n_samples,) or (n_groups,)): overall or group level predicted risk scores
+        keys: overall or subgroup level labels for labeling lines
+        title_suffix: suffix for plot title
+        pos_label: label identifying the positive class. Defaults to True.
 
     Returns:
-        risk score histogram, calibration curve, and sensitivity at low alert rates figures
+        line plot of prediction bins X fraction of positive class
     """
-    title_suffix = f"{split_type} data - Overall"
-    hist_fig = create_risk_score_histogram(data[risk_score_col], title_suffix)
-    cal_fig = create_calibration_curve(
-        data[y_true_col], data[risk_score_col], "Overall", title_suffix, pos_label
+    if not _check_array_of_arrays(y_true):
+        y_true = [y_true]
+        risk_score = [risk_score]
+        keys = [keys]  # type: ignore
+
+    fig, ax = plt.subplots()
+
+    for j in range(len(y_true)):
+        prob_true, prob_pred = calibration_curve(
+            y_true[j],
+            risk_score[j],
+            n_bins=10,
+            strategy="uniform",
+            pos_label=pos_label,  # type: ignore
+        )
+        if lowess_frac:
+            # When we create calibration curves with less data points (i.e. for subgroups),
+            # it can look choppy and be difficult to interpret. We use locally weighted
+            # scatterplot smoothing (LOWESS) to fit a smooth curve to the data points. LOWESS
+            # is a non-parametric smoother that tries to find a curve of best fit without
+            # assuming the data fits a particular shape.
+            # Resource: https://www.statisticshowto.com/lowess-smoothing/
+            prob_true = lowess(
+                endog=prob_true,
+                exog=prob_pred,
+                frac=lowess_frac,
+                it=0,
+                is_sorted=False,
+                return_sorted=False,
+            )
+        sns.lineplot(
+            x=prob_pred, y=prob_true, color=PALETTE[j + 1], ax=ax, label=keys[j]
+        )
+    sns.lineplot(
+        x=[0, 1],
+        y=[0, 1],
+        linestyle="dashed",
+        color=PALETTE[0],
+        ax=ax,
+        label="Perfectly calibrated",
     )
-    sla_fig = plot_sla_curve(
-        data[y_true_col], data[risk_score_col], "Overall", title_suffix, pos_label
+
+    ax.set(
+        xlabel="Mean predicted value",
+        ylabel="Fraction of positives",
+        title=f"Calibration Curve - {title_suffix}",
     )
-    return hist_fig, cal_fig, sla_fig
+    ax.set_xlim(left=-0.05, right=1.05)
+    ax.set_ylim(bottom=-0.05, top=1.05)
+    ax.legend(loc="lower right")
+    return fig
 
 
-def create_evaluation_plots_by_subgroup(
-    data: pd.DataFrame,
-    risk_score_col: str,
-    y_true_col: str,
+def plot_sla_curve(
+    y_true: pd.Series,
+    risk_score: pd.Series,
+    keys: str | list[str],
+    title_suffix: str,
     pos_label: PosLabelType,
-    group_col: str,
-    split_type: str,
-) -> tuple[matplotlib.figure.Figure, ...]:
+    alert_rates: list[float] = [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06],
+    label_alert_rate: float = 0.01,
+) -> matplotlib.figure.Figure:
     """
-    Create plots to evaluate a model by group - calibration curve
-    and sensitivity at low alert rates
+    Create Sensitivity at Low Alert Rates plot
 
     Args:
-        data: containing predicted and actual outcome data, as well as group label
-        risk_score_col: column name containing data of predicted risk scores
-        y_true_col: column name containing data of actual outcome classes
+        y_true (array-like of shape (n_samples,) or (n_groups,)): overall or group-level true outcome class
+        risk_score (array-like of shape (n_samples,) or (n_groups,)): overall or group level predicted risk scores
+        keys: overall or subgroup level labels for labeling lines
+        title_suffix: suffix for plot title
         pos_label: label identifying the positive class in y_true
-        group_col: column name containing data of subgroup labels
-        split_type: type of data being plotted for labeling plots - train, test, or validation
+        alert_rates: alert rates to plot. Defaults to [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06].
+        label_alert_rate: alert rate of interest to report sensitivity at. Defaults to 0.01.
 
     Returns:
-        calibration curve sensitivity at low alert rates figures by group
+        line plot of sensitivity at small alert rates
     """
-    title_suffix = f"{split_type} data - {group_col}"
+    if not _check_array_of_arrays(y_true):
+        y_true = [y_true]
+        risk_score = [risk_score]
+        keys = [keys]  # type: ignore
 
-    grouped_data = data.groupby(group_col).agg(list)
+    fig, ax = plt.subplots()
 
-    ys = grouped_data[y_true_col]
-    scores = grouped_data[risk_score_col]
+    for j in range(len(risk_score)):
+        ss = []
+        for i in alert_rates:  # calculate sensitivity at different alert rates
+            s = get_sensitivity_of_top_q_pctl_thresh(
+                y_true[j], risk_score[j], 1 - i, pos_label
+            )
+            ss.append(s)
+        s_lab = round(
+            get_sensitivity_of_top_q_pctl_thresh(
+                y_true[j], risk_score[j], 1 - label_alert_rate, pos_label
+            ),
+            2,
+        )
+        ax.plot(
+            alert_rates,
+            ss,
+            color=PALETTE[j + 1],
+            label="{} (Sensitivity at {}% alert rate={})".format(
+                keys[j], label_alert_rate * 100, s_lab
+            ),
+        )
 
-    subgroups = grouped_data.index
-    n_counts = [len(subgroup_scores) for subgroup_scores in scores]
-    names = [
-        subgroup_name + f" (N={n})" for subgroup_name, n in zip(subgroups, n_counts)
-    ]
-
-    if len(subgroups) > 4:
-        lowess_frac = 0.7
-    else:
-        lowess_frac = 0.6
-
-    sla_subgroup_plot = plot_sla_curve(ys, scores, names, title_suffix, pos_label)
-    cal_subgroup_plot = create_calibration_curve(
-        ys, scores, names, title_suffix, pos_label, lowess_frac=lowess_frac
+    ax.set(
+        xlabel="Alert rate",
+        ylabel="sensitivity (true positive rate)",
+        title=f"Sensitivity vs. Low Alert Rate - {title_suffix}",
     )
+    ax.set_ylim(bottom=-0.02, top=1.02)
+    ax.legend(loc="lower right")
 
-    return cal_subgroup_plot, sla_subgroup_plot
+    return fig
+
+
+def plot_support_score_histogram(
+    support_scores: str | Sequence, title_suffix: str
+) -> matplotlib.figure.Figure:
+    """
+    Plot histogram of support scores.
+
+    Args:
+        support_scores: support scores
+        title_suffix: suffix for plot title
+    """
+    fig, ax = plt.subplots()
+    sns.histplot(x=support_scores, ax=ax, color=PALETTE[1])
+    ax.set(
+        xlabel="Support Score", title=f"Distribution of support scores - {title_suffix}"
+    )
+    return fig
 
 
 def plot_features_permutation_importance(
-    model: sklearn.base.BaseEstimator,
-    features: pd.DataFrame,
-    target: pd.Series,
-    scoring: t.Optional[str | t.Callable] = None,
-    sample_weight: t.Optional[np.ndarray] = None,
-    random_state: t.Optional[int] = None,
-) -> matplotlib.axes.Axes:
+    result: sklearn.utils.Bunch, feature_cols: pd.Index
+) -> matplotlib.figure.Figure:
     """
+    Plot features' permutation importances (computed previously).
+
+    Args:
+        result
+        feature_cols
+
     See Also:
-        - https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html
-        - https://scikit-learn.org/stable/modules/model_evaluation.html#callable-scorers
+        - :func:`compute_feature_permutation_importance()`
     """
-    result = sklearn.inspection.permutation_importance(
-        model,
-        features,
-        target,
-        scoring=scoring,
-        n_repeats=5,
-        sample_weight=sample_weight,
-        random_state=random_state,
-    )
-    assert isinstance(result, sklearn.utils.Bunch)  # type guard
     sorted_importances_idx = result.importances_mean.argsort()
-    importances = pd.DataFrame(
-        result.importances[sorted_importances_idx].T,
-        columns=features.columns[sorted_importances_idx],
+    df_importances = pd.DataFrame(
+        data=result.importances[sorted_importances_idx].T,
+        columns=feature_cols[sorted_importances_idx],
     )
-    ax = importances.plot.box(vert=False, whis=10, figsize=(10, 10))
+
+    fig, ax = plt.subplots(layout="constrained", figsize=(10, 10))
+    df_importances.plot.box(vert=False, whis=10, ax=ax)
     ax.set_title("Permutation Feature Importances")
     ax.axvline(x=0, color="k", linestyle="--")
-    ax.set_xlabel("Decrease in score")
-    # ugh mypy is so stupid
-    assert isinstance(ax, matplotlib.axes.Axes)  # type guard
-    return ax
+    ax.set_xlabel("decrease in model score")
+    return fig
 
 
 def plot_shap_beeswarm(shap_values):
@@ -572,3 +642,16 @@ def plot_shap_beeswarm(shap_values):
         transform=cbar.ax.transAxes,
     )
     return plt.gcf()
+
+
+def _check_array_of_arrays(input_array: pd.Series) -> bool:
+    """
+    Check if an input array contains sub-arrays, and return True if so; False otherwise.
+    Used for plotting different groups of predictions.
+    """
+    try:
+        assert isinstance(input_array, pd.Series)
+        assert isinstance(input_array[0], list)
+        return True
+    except Exception:
+        return False
