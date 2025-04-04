@@ -26,7 +26,6 @@ PALETTE = sns.color_palette("Paired")
 
 PosLabelType = t.Optional[int | float | bool | str]
 
-
 def extract_training_data_from_model(
     automl_experiment_id: str, data_runname: str = "Training Data Storage and Analysis"
 ) -> pd.DataFrame:
@@ -63,6 +62,44 @@ def extract_training_data_from_model(
 
     return df_loaded
 
+def get_top_run_ids(
+    experiment_id: str,
+    optimization_metric: str,
+    topn_runs_included: int,
+) -> list:
+    """
+    Retrieve top run IDs from an MLflow experiment using evaluation parameters.
+
+    Args:
+        experiment_id (str): MLflow experiment ID.
+        optimization_metric (str): Metric used to optimize the model.
+        topn_runs_included (int): Number of top runs to return.
+
+    Returns:
+        List[str]: List of top run IDs based on the optimization metric.
+    """
+    # Fetch all runs
+    runs = mlflow.search_runs(
+        experiment_ids=[experiment_id],
+        order_by=["metrics.m DESC"],
+    )
+
+    # Retrieve validation metric for sorting
+    search_metric = (
+        f"metrics.val_{optimization_metric}"
+        if optimization_metric in ["log_loss", "roc_auc"]
+        else f"metrics.val_{optimization_metric}_score"
+    )
+
+    # Sort and select top run IDs based on min/max with loss vs. score
+    ascending_order = optimization_metric == "log_loss"
+    top_run_ids = (
+        runs.sort_values(by=search_metric, ascending=ascending_order)
+        .iloc[:topn_runs_included]["run_id"]
+        .tolist()
+    )
+
+    return top_run_ids
 
 def compute_classification_eval_metrics(
     targets: pd.Series,

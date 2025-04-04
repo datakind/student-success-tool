@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
 import scipy.stats as st
-from sklearn.metrics import confusion_matrix
+import sklearn.metrics
+from evaluation import fnpr_group_plot
 
 # Z-score for 95% confidence interval
 Z = st.norm.ppf(1 - (1 - 0.95) / 2)
@@ -21,13 +22,261 @@ FLAG_NAMES = {
 }
 
 
+def evaluate_bias(
+    run_id: str, 
+    split_data: pd.DataFrame,
+    split_name: str,
+    student_group_cols: list,
+    target_col: str, 
+    pred_col: str, 
+    pred_prob_col: str, 
+    pos_label: str
+) -> list:
+    """
+    Evaluates the bias in a model's predictions across different student groups for a specific split
+    denoted by "split_name". For each student group, the function computes  FNPR (False Negative Positive Rate)
+    and flags any detected biases. The function also logs the metrics & plots to MLflow.
+
+    Args:
+        run_id (str): The ID of the MLflow run
+        split_data (pd.DataFrame): Data for the current split to evaluate
+        split_name (str): Name of the data split (e.g., "train", "test", or "val")
+        student_group_cols (list): A list of columns representing student groups for bias analysis
+        target_col (str): Column name for the target (actual) values
+        pred_col (str): Column name for the model's predicted values
+        pred_prob_col (str): Column name for the model's predicted probabilities
+        pos_label (str or int): Label representing the positive class
+
+    Returns:
+        split_flags: List of flags for the data split
+    """
+    
+    split_flags = []
+    
+    for group_col in student_group_cols:
+        group_metrics, fnpr_data = compute_subgroup_bias_metrics(
+            split_data,
+            split_name,
+            group_col,
+            target_col, 
+            pred_col, 
+            pred_prob_col, 
+            pos_label,
+        )
+        log_group_metrics_to_mlflow(group_metrics, split_name, group_col)
+        
+        # Detect bias flags
+        bias_flags = flag_bias(fnpr_data)
+        
+        # Filter flags for groups where bias is detected
+        group_flags = [flag for flag in bias_flags if flag["flag"] not in ["🟢 NO BIAS", "⚪ INSUFFICIENT DATA"]]
+        
+        if group_flags:
+            fnpr_fig = fnpr_group_plot(fnpr_data)
+            mlflow.log_figure(fnpr_fig, f"fnpr_plots/{split_name}_{group}_fnpr.png")
+            
+            for flag in group_flags:
+                logging.info(
+                    f"Run {run_id}: Bias detected in {flag['group']} - {flag['subgroups']} for split {split_name}. "
+                    f"FNPR Difference: {flag['fnpr_percentage_difference']*100}% ({flag['type']}) [{flag['flag']}]"
+                )
+        
+        split_flags.extend(group_flags)
+    
+    return split_flags
+
+
+def compute_subgroup_bias_metrics(
+    split_data: pd.DataFrame,
+    split_name: str,
+    group_col: str,
+    target_col: str, 
+    pred_col: str, 
+    pred_prob_col: str, 
+    pos_label: str, 
+) -> tuple(dict, dict):
+    """
+    Computes subgroup metrics (including FNPR) based on evaluation parameters and logs them to MLflow.
+
+    Args:
+        split_data (pd.DataFrame): Subset of data corresponding to split_name
+        split_name (str): Name of the split (e.g. train, test, val)
+        target_col (str): Column name for the target variable.
+        pred_col (str): Column name for the predictions.
+        pred_prob_col (str): Column name for predicted probabilities.
+        pos_label (str): Positive class label.
+        student_group_cols (list): List of columns for subgroups.
+    """
+    group_metrics = []
+    fnpr_data = []
+
+    for subgroup, subgroup_data in split_data.groupby(group):
+        labels = subgroup_data[target_col]
+        preds = subgroup_data[pred_col]
+        pred_probs = subgroup_data[pred_prob_col]
+        
+        fnpr, fnpr_lower, fnpr_upper, num_positives = (
+            calculate_fnpr_and_ci(labels, preds)
+        )
+
+        fnpr_data.append(
+            {
+                "group": group,
+                "subgroup": subgroup,
+                "fnpr": fnpr,
+                "split_name": split_name,
+                "ci": (fnpr_lower, fnpr_upper),
+                "size": len(subgroup_data),
+                "number_of_positive_samples": num_positives,
+            }
+        )
+
+        subgroup_metrics = {
+            "Subgroup": subgroup,
+            "Number of Samples": len(subgroup_data),
+            "Number of Positive Samples": num_positives,
+            "Actual Target Prevalence": round(labels.mean(), 2),
+            "Predicted Target Prevalence": round(preds.mean(), 2),
+            "FNPR": round(fnpr, 2),
+            "FNPR CI Lower": round(fnpr_lower, 2),
+            "FNPR CI Upper": round(fnpr_upper, 2),
+            "Accuracy": round(sklearn.metrics.accuracy_score(labels, preds), 2),
+            "Precision": round(
+                sklearn.metrics.precision_score(
+                    labels,
+                    preds,
+                    pos_label=pos_label,
+                    zero_division=np.nan,
+                ),
+                2,
+            ),
+            "Recall": round(
+                sklearn.metrics.recall_score(
+                    labels,
+                    preds,
+                    pos_label=pos_label,
+                    zero_division=np.nan,
+                ),
+                2,
+            ),
+            "Log Loss": round(
+                sklearn.metrics.log_loss(
+                    labels, pred_probs, labels=[False, True]
+                ),
+                2,
+            ),
+        }
+        log_subgroup_metrics_to_mlflow(group_metrics, split_name, group_col)
+        group_metrics.append(subgroup_metrics)
+
+    return group_metrics, fnpr_data
+
+
+def flag_bias(
+    fnpr_data: list,
+    high_bias_thresh: float = HIGH_FLAG_THRESHOLD,
+    moderate_bias_thresh: float = MODERATE_FLAG_THRESHOLD,
+    low_bias_thresh: float = LOW_FLAG_THRESHOLD,
+    min_sample_ratio: float = 0.15,
+) -> list[dict]:
+    """
+    Flags bias based on FNPR differences and confidence interval overlap.
+
+    Args:
+        fnpr_data: List of dictionaries containing FNPR and CI information for each subgroup.
+        high_bias_thresh: Threshold for flagging high bias.
+        moderate_bias_thresh: Threshold for flagging moderate bias.
+        low_bias_thresh: Threshold for flagging low bias.
+        min_sample_ratio: Percentage of total positive samples required for valid FNPR comparison.
+        This gives us flexibility with smaller datasets. We default to 15% since we want to ensure
+        we are checking subgroups with sufficient data. When calculating min_samples, we have an upper
+        limit of 50 samples so that larger datasets aren't unnecessarily restricted.
+
+    Returns:
+        List of dictionaries with bias flag information.
+    """
+    total_group_positives = sum(
+        subgroup["number_of_positive_samples"] for subgroup in fnpr_data
+    )
+    min_samples = min(50, int(min_sample_ratio * total_group_positives))
+
+    bias_flags = []
+    thresholds = [
+        (high_bias_thresh, "🔴 HIGH BIAS", 0.01),
+        (moderate_bias_thresh, "🟠 MODERATE BIAS", 0.01),
+        (low_bias_thresh, "🟡 LOW BIAS", 0.1),
+    ]
+
+    for i, current in enumerate(fnpr_data):
+        for other in fnpr_data[i + 1 :]:
+            if current["fnpr"] > 0 and other["fnpr"] > 0:
+                fnpr_diff = np.abs(current["fnpr"] - other["fnpr"])
+                p_value = z_test_fnpr_difference(
+                    current["fnpr"], other["fnpr"], current["size"], other["size"]
+                )
+                ci_overlap = check_ci_overlap(current["ci"], other["ci"])
+
+                if np.isnan(p_value) or (
+                    (current["number_of_positive_samples"] < min_samples)
+                    or (other["number_of_positive_samples"] < min_samples)
+                ):
+                    bias_flags.append(
+                        generate_bias_flag(
+                            current["group"],
+                            current["subgroup"],
+                            other["subgroup"],
+                            fnpr_diff,
+                            "Insufficient samples for statistical test",
+                            current["split_name"],
+                            "⚪ INSUFFICIENT DATA",
+                            p_value,
+                        )
+                    )
+                elif fnpr_diff < low_bias_thresh or p_value > 0.1:
+                    bias_flags.append(
+                        generate_bias_flag(
+                            current["group"],
+                            current["subgroup"],
+                            other["subgroup"],
+                            fnpr_diff,
+                            "No significant difference",
+                            current["split_name"],
+                            "🟢 NO BIAS",
+                            p_value,
+                        )
+                    )
+                else:
+                    for threshold, flag, p_thresh in thresholds:
+                        if fnpr_diff >= threshold and p_value <= p_thresh:
+                            reason = (
+                                "Overlapping CIs"
+                                if ci_overlap
+                                else "Non-overlapping CIs"
+                            )
+                            bias_flags.append(
+                                generate_bias_flag(
+                                    current["group"],
+                                    current["subgroup"],
+                                    other["subgroup"],
+                                    fnpr_diff,
+                                    reason,
+                                    current["split_name"],
+                                    flag,
+                                    p_value,
+                                )
+                            )
+                            break  # Exit after the first matched threshold
+
+    return bias_flags
+
+
 def calculate_fnpr_and_ci(
     targets: pd.Series,
     preds: pd.Series,
     apply_scaling: bool = True,
 ) -> tuple[float, float, float, bool]:
     """
-    Calculates the False Negative Prediction Rate (FNPR) and its confidence interval, applying Laplace smoothing.
+    Calculates the False Negative Prediction Rate (FNPR) and its confidence interval, applying Log scaling.
 
     Args:
         targets: Labels from model output
@@ -42,7 +291,7 @@ def calculate_fnpr_and_ci(
         ci_max: Upper bound of the confidence interval
         num_positives: Number of positive samples, for reporting. When the number of positives is low, the FNPR computation may not be reliable.
     """
-    cm = confusion_matrix(targets, preds, labels=[False, True])
+    cm = sklearn.metrics.confusion_matrix(targets, preds, labels=[False, True])
     tn, fp, fn, tp = cm.ravel()
 
     # Calculate FNPR & apply Log Scaling to smoothen FNPR at low sample sizes
@@ -142,7 +391,7 @@ def generate_bias_flag(
     flag_entry = {
         "group": group,
         "subgroups": f"{subgroup1} vs {subgroup2}",
-        "fnpr_percentage_difference": f"{fnpr_diff * 100:.2f}",
+        "fnpr_percentage_difference": f"{round(fnpr, 2)}",
         "type": (
             bias_type
             if np.isnan(p_value)
@@ -154,99 +403,64 @@ def generate_bias_flag(
     return flag_entry
 
 
-def flag_bias(
-    fnpr_data: list,
-    high_bias_thresh: float = HIGH_FLAG_THRESHOLD,
-    moderate_bias_thresh: float = MODERATE_FLAG_THRESHOLD,
-    low_bias_thresh: float = LOW_FLAG_THRESHOLD,
-    min_sample_ratio: float = 0.15,
-) -> list[dict]:
+def log_bias_flags_to_mlflow(all_model_flags: list):
     """
-    Flags bias based on FNPR differences and confidence interval overlap.
+    Save and log bias flags to MLflow. If no flags exist for the model, then we do not log anything.
+    
+    Args:
+        all_model_flags (list): Bias flags for across all splits
+        (e.g. "train", "test", "val") of the model
+    """
+    if all_model_flags:
+        df_model_flags = pd.DataFrame(all_model_flags)
+        for flag in modeling.bias_detection.FLAG_NAMES.keys():
+            flag_name = modeling.bias_detection.FLAG_NAMES[flag]
+            df_flag = (
+                df_all_flags[df_all_flags["flag"] == flag]
+                .sort_values(by="fnpr_percentage_difference", key=lambda x: x.astype(float), ascending=False)
+                if df_all_flags.shape[0] > 0
+                else None
+            )
+            if df_flag is not None:
+                bias_tmp_path = f"/tmp/{flag_name}_flags.csv"
+                df_flag.to_csv(bias_tmp_path, index=False)
+                mlflow.log_artifact(local_path=bias_tmp_path, artifact_path="bias_flags")
+
+
+def log_group_metrics_to_mlflow(
+    metrics: dict,
+    split_name: str,
+    group_col: str,
+):
+    """
+    Saves and logs group-level bias metrics as a CSV artifact in MLflow.
 
     Args:
-        fnpr_data: List of dictionaries containing FNPR and CI information for each subgroup.
-        high_bias_thresh: Threshold for flagging high bias.
-        moderate_bias_thresh: Threshold for flagging moderate bias.
-        low_bias_thresh: Threshold for flagging low bias.
-        min_sample_ratio: Percentage of total positive samples required for valid FNPR comparison.
-        This gives us flexibility with smaller datasets. We default to 15% since we want to ensure
-        we are checking subgroups with sufficient data. When calculating min_samples, we have an upper
-        limit of 50 samples so that larger datasets aren't unnecessarily restricted.
-
-    Returns:
-        List of dictionaries with bias flag information.
+        metrics (dict): Dictionary containing computed group-level bias metrics.
+        split_name (str): Name of the data split (e.g., "train", "test", "validation").
+        group_col (str): Column name representing the group for bias evaluation.
     """
-    total_group_positives = sum(
-        subgroup["number_of_positive_samples"] for subgroup in fnpr_data
-    )
-    min_samples = min(50, int(min_sample_ratio * total_group_positives))
+    df_group_metrics = pd.DataFrame(metrics)
+    metrics_tmp_path = f"/tmp/{split_name}_{group_col}_metrics.csv"
+    df_group_metrics.to_csv(metrics_tmp_path, index=False)
+    mlflow.log_artifact(local_path=metrics_tmp_path, artifact_path="group_metrics")
 
-    bias_flags = []
-    thresholds = [
-        (high_bias_thresh, "🔴 HIGH BIAS", 0.01),
-        (moderate_bias_thresh, "🟠 MODERATE BIAS", 0.01),
-        (low_bias_thresh, "🟡 LOW BIAS", 0.1),
-    ]
 
-    for i, current in enumerate(fnpr_data):
-        for other in fnpr_data[i + 1 :]:
-            if current["fnpr"] > 0 and other["fnpr"] > 0:
-                fnpr_diff = np.abs(current["fnpr"] - other["fnpr"])
-                p_value = z_test_fnpr_difference(
-                    current["fnpr"], other["fnpr"], current["size"], other["size"]
-                )
-                ci_overlap = check_ci_overlap(current["ci"], other["ci"])
+def log_subgroup_metrics_to_mlflow(
+    metrics: dict,
+    split_name: str,
+    group_col: str,
+):
+    """
+    Logs individual subgroup-level metrics to MLflow.
 
-                if np.isnan(p_value) or (
-                    (current["number_of_positive_samples"] < min_samples)
-                    or (other["number_of_positive_samples"] < min_samples)
-                ):
-                    bias_flags.append(
-                        generate_bias_flag(
-                            current["group"],
-                            current["subgroup"],
-                            other["subgroup"],
-                            fnpr_diff,
-                            "Insufficient samples for statistical test",
-                            current["split_name"],
-                            "⚪ INSUFFICIENT DATA",
-                            p_value,
-                        )
-                    )
-                elif fnpr_diff < low_bias_thresh or p_value > 0.1:
-                    bias_flags.append(
-                        generate_bias_flag(
-                            current["group"],
-                            current["subgroup"],
-                            other["subgroup"],
-                            fnpr_diff,
-                            "No significant difference",
-                            current["split_name"],
-                            "🟢 NO BIAS",
-                            p_value,
-                        )
-                    )
-                else:
-                    for threshold, flag, p_thresh in thresholds:
-                        if fnpr_diff >= threshold and p_value <= p_thresh:
-                            reason = (
-                                "Overlapping CIs"
-                                if ci_overlap
-                                else "Non-overlapping CIs"
-                            )
-                            bias_flags.append(
-                                generate_bias_flag(
-                                    current["group"],
-                                    current["subgroup"],
-                                    other["subgroup"],
-                                    fnpr_diff,
-                                    reason,
-                                    current["split_name"],
-                                    flag,
-                                    p_value,
-                                )
-                            )
-                            break  # Exit after the first matched threshold
-
-    return bias_flags
+    Args:
+        metrics (dict): Dictionary of subgroup bias metrics.
+        split_name (str): Name of the data split (e.g., "train", "test", "validation").
+        group_col (str): Column name representing the group for bias evaluation.
+    """
+    for metric, value in metrics.items():
+        if metric not in {"Subgroup", "Number of Samples"}:
+            mlflow.log_metric(
+                f"{split_name}_{group_col}_metrics/{metric}_subgroup", value
+            )
