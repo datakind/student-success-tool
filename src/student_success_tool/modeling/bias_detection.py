@@ -86,7 +86,7 @@ def evaluate_bias(
             for flag in group_flags:
                 logging.info(
                     f"Run {run_id}: Bias detected in {flag['group']} - {flag['subgroups']} for split {split_name}. "
-                    f"FNPR Difference: {flag['fnpr_percentage_difference']*100}% ({flag['type']}) [{flag['flag']}]"
+                    f"FNPR Difference: {flag['fnpr_percentage_difference'] * 100:.0f}% ({flag['type']}) [{flag['flag']}]"
                 )
         
         split_flags.extend(group_flags)
