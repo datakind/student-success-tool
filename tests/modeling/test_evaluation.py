@@ -18,12 +18,12 @@ def patch_mlflow(monkeypatch):
 
 def test_check_array_of_arrays_true():
     input_array = pd.Series([[1, 0, 1], [0, 1, 0]])
-    assert evaluation.check_array_of_arrays(input_array)
+    assert evaluation._check_array_of_arrays(input_array)
 
 
 def test_check_array_of_arrays_false():
     input_array = pd.Series([1, 0, 1])
-    assert not evaluation.check_array_of_arrays(input_array)
+    assert not evaluation._check_array_of_arrays(input_array)
 
 
 @pytest.mark.parametrize(
@@ -89,9 +89,9 @@ def test_compare_trained_models(
     result, _ = evaluation.compare_trained_models("dummy_id", metric)
     print(result["tags.model_type"].tolist())
     assert isinstance(result, pd.DataFrame), "The result should be a pandas DataFrame."
-    assert (
-        result["tags.model_type"].tolist() == expected_order
-    ), "Models are not sorted in ascending order based on the metric."
-    assert all(
-        column in result.columns for column in expected_columns
-    ), "DataFrame should contain specific columns."
+    assert result["tags.model_type"].tolist() == expected_order, (
+        "Models are not sorted in ascending order based on the metric."
+    )
+    assert all(column in result.columns for column in expected_columns), (
+        "DataFrame should contain specific columns."
+    )
