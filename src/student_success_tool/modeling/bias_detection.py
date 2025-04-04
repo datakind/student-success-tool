@@ -172,7 +172,7 @@ def compute_subgroup_bias_metrics(
                 2,
             ),
         }
-        log_subgroup_metrics_to_mlflow(group_metrics, split_name, group_col)
+        log_subgroup_metrics_to_mlflow(subgroup_metrics, split_name, group_col)
         group_metrics.append(subgroup_metrics)
 
     return group_metrics, fnpr_data
