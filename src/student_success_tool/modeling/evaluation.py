@@ -310,6 +310,47 @@ def compare_trained_models(
 
 
 def compare_trained_models_plot(
+def compute_feature_permutation_importance(
+    model: sklearn.base.BaseEstimator,
+    features: pd.DataFrame,
+    target: pd.Series,
+    *,
+    n_repeats: int = 5,
+    scoring: t.Optional[str | t.Callable] = None,
+    sample_weight: t.Optional[np.ndarray] = None,
+    random_state: t.Optional[int] = None,
+) -> sklearn.utils.Bunch:
+    """
+    Compute model features' permutation importance.
+
+    Args:
+        model
+        features
+        target
+        n_repeats
+        scoring
+        sample_weight
+        random_state
+
+    References:
+        - https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html
+        - https://scikit-learn.org/stable/modules/model_evaluation.html#callable-scorers
+
+    See Also:
+        - :func:`plot_feature_permutation_importances()`
+    """
+    result = sklearn.inspection.permutation_importance(
+        model,
+        features,
+        target,
+        scoring=scoring,
+        n_repeats=n_repeats,
+        sample_weight=sample_weight,
+        random_state=random_state,
+    )
+    assert isinstance(result, sklearn.utils.Bunch)  # type guard
+    return result
+
     automl_experiment_id: str, automl_metric: str
 ) -> matplotlib.figure.Figure:
     """
@@ -467,49 +508,29 @@ def create_evaluation_plots_by_subgroup(
 
 
 def plot_features_permutation_importance(
-    model: sklearn.base.BaseEstimator,
-    features: pd.DataFrame,
-    target: pd.Series,
-    *,
-    scoring: t.Optional[str | t.Callable] = None,
-    sample_weight: t.Optional[np.ndarray] = None,
-    random_state: t.Optional[int] = None,
+    result: sklearn.utils.Bunch, feature_cols: pd.Index
 ) -> matplotlib.figure.Figure:
     """
+    Plot features' permutation importances (computed previously).
+
     Args:
-        model
-        features
-        target
-        scoring
-        sample_weight
-        random_state
+        result
+        feature_cols
 
     See Also:
-        - https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html
-        - https://scikit-learn.org/stable/modules/model_evaluation.html#callable-scorers
+        - :func:`compute_feature_permutation_importance()`
     """
-    result = sklearn.inspection.permutation_importance(
-        model,
-        features,
-        target,
-        scoring=scoring,
-        n_repeats=5,
-        sample_weight=sample_weight,
-        random_state=random_state,
-    )
-    assert isinstance(result, sklearn.utils.Bunch)  # type guard
     sorted_importances_idx = result.importances_mean.argsort()
-    importances = pd.DataFrame(
-        result.importances[sorted_importances_idx].T,
-        columns=features.columns[sorted_importances_idx],
+    df_importances = pd.DataFrame(
+        data=result.importances[sorted_importances_idx].T,
+        columns=feature_cols[sorted_importances_idx],
     )
 
-    fig, ax = plt.subplots(figsize=(10, 10))
-    importances.plot.box(vert=False, whis=10, ax=ax)
+    fig, ax = plt.subplots(layout="constrained", figsize=(10, 10))
+    df_importances.plot.box(vert=False, whis=10, ax=ax)
     ax.set_title("Permutation Feature Importances")
     ax.axvline(x=0, color="k", linestyle="--")
-    ax.set_xlabel("Decrease in score")
-    fig.tight_layout()  # HACK
+    ax.set_xlabel("decrease in model score")
     return fig
 
 
