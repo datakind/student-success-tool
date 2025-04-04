@@ -399,7 +399,7 @@ def generate_bias_flag(
     flag_entry = {
         "group": group,
         "subgroups": f"{subgroup1} vs {subgroup2}",
-        "fnpr_percentage_difference": f"{round(fnpr_percentage_difference, 2)}",
+        "fnpr_percentage_difference": round(fnpr_percentage_difference, 2),
         "type": (
             bias_type
             if np.isnan(p_value)
@@ -425,7 +425,7 @@ def log_bias_flags_to_mlflow(all_model_flags: list):
             flag_name = modeling.bias_detection.FLAG_NAMES[flag]
             df_flag = (
                 df_all_flags[df_all_flags["flag"] == flag]
-                .sort_values(by="fnpr_percentage_difference", key=lambda x: x.astype(float), ascending=False)
+                .sort_values(by="fnpr_percentage_difference", ascending=False)
                 if df_all_flags.shape[0] > 0
                 else None
             )
