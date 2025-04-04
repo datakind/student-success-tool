@@ -421,8 +421,8 @@ def log_bias_flags_to_mlflow(all_model_flags: list):
     """
     if all_model_flags:
         df_model_flags = pd.DataFrame(all_model_flags)
-        for flag in modeling.bias_detection.FLAG_NAMES.keys():
-            flag_name = modeling.bias_detection.FLAG_NAMES[flag]
+        for flag in FLAG_NAMES.keys():
+            flag_name = FLAG_NAMES[flag]
             df_flag = (
                 df_all_flags[df_all_flags["flag"] == flag]
                 .sort_values(by="fnpr_percentage_difference", ascending=False)
