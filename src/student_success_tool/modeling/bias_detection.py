@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
+import matplotlib.figure
+import matplotlib.pyplot as plt
+import seaborn as sns
 import scipy.stats as st
 import sklearn.metrics
-from evaluation import fnpr_group_plot
 
 # Z-score for 95% confidence interval
 Z = st.norm.ppf(1 - (1 - 0.95) / 2)
@@ -21,6 +23,10 @@ FLAG_NAMES = {
     "🔴 HIGH BIAS": "high_bias",
 }
 
+# TODO: eventually we should use the custom_style.mplstyle colors, but currently
+# the color palette does not have distinct enough colors for calibration by group
+# where there are a lot of subgroups
+PALETTE = sns.color_palette("Paired")
 
 def evaluate_bias(
     run_id: str, 
@@ -464,3 +470,55 @@ def log_subgroup_metrics_to_mlflow(
             mlflow.log_metric(
                 f"{split_name}_{group_col}_metrics/{metric}_subgroup", value
             )
+
+def fnpr_group_plot(fnpr_data: list) -> matplotlib.figure.Figure:
+    """
+    Plots False Negative Prediction Rate (FNPR) for a group by subgroup on
+    a split (train/test/val) of data with confidence intervals.
+
+    Parameters:
+    - fnpr_data: List with dictionaries for each subgroup. Each dictionary
+    comprises of group, fnpr, ci (confidence interval), and split_name keys.
+    """
+    subgroups = [subgroup_data["subgroup"] for subgroup_data in fnpr_data]
+    fnpr = [subgroup_data["fnpr"] for subgroup_data in fnpr_data]
+    min_ci_errors = [
+        subgroup_data["fnpr"] - subgroup_data["ci"][0] for subgroup_data in fnpr_data
+    ]
+    max_ci_errors = [
+        subgroup_data["ci"][1] - subgroup_data["fnpr"] for subgroup_data in fnpr_data
+    ]
+
+    y_positions = list(range(len(subgroups)))
+    fig, ax = plt.subplots()
+
+    for i, (x, y, err_min, err_max) in enumerate(
+        zip(fnpr, y_positions, min_ci_errors, max_ci_errors)
+    ):
+        color = PALETTE[i % len(PALETTE)]
+        ax.errorbar(
+            x=x,
+            y=y,
+            xerr=[[err_min], [err_max]],
+            fmt="o",
+            capsize=5,
+            capthick=2,
+            markersize=8,
+            linewidth=2,
+            color=color,
+            label="FNPR" if i == 0 else "",
+        )
+
+    ax.set_yticks(y_positions)
+    ax.set_yticklabels(subgroups)
+    ax.set_ylim(-1, len(subgroups))
+    ax.set_ylabel("Subgroup")
+    ax.set_xlabel("False Negative Parity Rate")
+    ax.set_title(
+        f"""FNPR @ 0.5 for {fnpr_data[0]["group"]} on {fnpr_data[0]["split_name"]}"""
+    )
+    ax.tick_params(axis="both", labelsize=12)
+    ax.grid(True, linestyle="--", alpha=0.6)
+
+    plt.tight_layout()
+    return fig
