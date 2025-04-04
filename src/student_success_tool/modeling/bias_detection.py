@@ -116,7 +116,7 @@ def compute_subgroup_bias_metrics(
     group_metrics = []
     fnpr_data = []
 
-    for subgroup, subgroup_data in split_data.groupby(group_col):
+    for subgroup_name, subgroup_data in split_data.groupby(group_col):
         labels = subgroup_data[target_col]
         preds = subgroup_data[pred_col]
         pred_probs = subgroup_data[pred_prob_col]
@@ -127,8 +127,8 @@ def compute_subgroup_bias_metrics(
 
         fnpr_data.append(
             {
-                "group": group,
-                "subgroup": subgroup,
+                "group": group_col,
+                "subgroup": subgroup_name,
                 "fnpr": fnpr,
                 "split_name": split_name,
                 "ci": (fnpr_lower, fnpr_upper),
@@ -138,7 +138,7 @@ def compute_subgroup_bias_metrics(
         )
 
         subgroup_metrics = {
-            "Subgroup": subgroup,
+            "Subgroup": subgroup_name,
             "Number of Samples": len(subgroup_data),
             "Number of Positive Samples": num_positives,
             "Actual Target Prevalence": round(labels.mean(), 2),
