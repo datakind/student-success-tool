@@ -80,6 +80,7 @@ def compute_classification_eval_metrics(
         pos_label
         sample_weights
     """
+    assert isinstance(pos_label, (int, float, bool, str))  # type guard
     precision, recall, f1_score, _ = sklearn.metrics.precision_recall_fscore_support(
         targets,
         preds,
@@ -92,6 +93,8 @@ def compute_classification_eval_metrics(
     result = {
         "num_samples": len(targets),
         "num_positives": targets.eq(pos_label).sum(),
+        "true_positive_prevalence": targets.eq(pos_label).mean(),
+        "pred_positive_prevalence": preds.eq(pos_label).mean(),
         "accuracy": sklearn.metrics.accuracy_score(
             targets, preds, sample_weight=sample_weights
         ),
