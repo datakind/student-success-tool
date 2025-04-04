@@ -39,9 +39,9 @@ def evaluate_bias(
     pos_label: str
 ) -> list:
     """
-    Evaluates the bias in a model's predictions across different student groups for a specific split
-    denoted by "split_name". For each student group, the function computes  FNPR (False Negative Positive Rate)
-    and flags any detected biases. The function also logs the metrics & plots to MLflow.
+    Evaluates the bias in a model's predictions across different student groups for a split
+    denoted by "split_name". For each student group, FNPR (False Negative Positive Rate) is
+    computed and any detected biases are flagged. Then, the metrics & plots are logged to MLflow.
 
     Args:
         run_id (str): The ID of the MLflow run
@@ -100,13 +100,13 @@ def compute_subgroup_bias_metrics(
     pred_col: str, 
     pred_prob_col: str, 
     pos_label: str, 
-) -> tuple(dict, dict):
+) -> tuple[dict, dict]:
     """
     Computes subgroup metrics (including FNPR) based on evaluation parameters and logs them to MLflow.
 
     Args:
-        split_data (pd.DataFrame): Subset of data corresponding to split_name
-        split_name (str): Name of the split (e.g. train, test, val)
+        split_data (pd.DataFrame): Data for the current split to evaluate
+        split_name (str): Name of the data split (e.g., "train", "test", or "val")
         target_col (str): Column name for the target variable.
         pred_col (str): Column name for the predictions.
         pred_prob_col (str): Column name for predicted probabilities.
@@ -285,7 +285,7 @@ def calculate_fnpr_and_ci(
     Calculates the False Negative Prediction Rate (FNPR) and its confidence interval, applying Log scaling.
 
     Args:
-        targets: Labels from model output
+        targets: "Actual" labels from model output
         preds: Predictions from model output
         min_fnpr_samples: Minimum number of true positives or false negatives for FNPR calculation.
         apply_scaling: Boolean of whether log scaling should be applied. We default to True since we want to
