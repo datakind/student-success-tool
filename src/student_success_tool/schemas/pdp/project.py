@@ -149,9 +149,17 @@ class TrainingConfig(pyd.BaseModel):
     )
 
 
+class EvaluationConfig(pyd.BaseModel):
+    topn_runs_included: int = pyd.Field(
+        default=3,
+        description="Number of top-scoring mlflow runs to include for detailed evaluation",
+    )
+
+
 class ModelingConfig(pyd.BaseModel):
     feature_selection: t.Optional[FeatureSelectionConfig] = None
     training: TrainingConfig
+    evaluation: t.Optional[EvaluationConfig] = None
 
 
 class InferenceConfig(pyd.BaseModel):

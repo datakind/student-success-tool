@@ -52,6 +52,9 @@ timeout_minutes = 10
 # exclude_frameworks = ["xgboost", "lightgbm"]
 # exclude_cols = []
 
+[modeling.evaluation]
+topn_runs_included = 3
+
 [inference]
 num_top_features = 5
 min_prob_pos_label = 0.5
