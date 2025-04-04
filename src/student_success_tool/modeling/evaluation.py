@@ -73,9 +73,14 @@ def compute_classification_eval_metrics(
     sample_weights: t.Optional[pd.Series] = None,
 ) -> dict[str, object]:
     """
-    Args
+    Args:
+        targets
+        preds
+        pred_probs
+        pos_label
+        sample_weights
     """
-    precision, recall, f1, support = sklearn.metrics.precision_recall_fscore_support(
+    precision, recall, f1_score, _ = sklearn.metrics.precision_recall_fscore_support(
         targets,
         preds,
         beta=1,
@@ -86,15 +91,18 @@ def compute_classification_eval_metrics(
     )
     result = {
         "num_samples": len(targets),
-        "num_positives": support,
+        "num_positives": targets.eq(pos_label).sum(),
         "accuracy": sklearn.metrics.accuracy_score(
             targets, preds, sample_weight=sample_weights
         ),
         "precision": precision,
         "recall": recall,
-        "f1_score": f1,
+        "f1_score": f1_score,
         "log_loss": sklearn.metrics.log_loss(
-            targets, pred_probs, sample_weight=sample_weights, labels=[False, True]
+            targets, pred_probs, sample_weight=sample_weights
+        ),
+        "roc_auc": sklearn.metrics.roc_auc_score(
+            targets, pred_probs, sample_weight=sample_weights
         ),
     }
     return result
