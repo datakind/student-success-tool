@@ -74,10 +74,10 @@ def evaluate_bias(
         log_group_metrics_to_mlflow(group_metrics, split_name, group_col)
         
         # Detect bias flags
-        bias_flags = flag_bias(fnpr_data)
+        all_flags = flag_bias(fnpr_data)
         
         # Filter flags for groups where bias is detected
-        group_flags = [flag for flag in bias_flags if flag["flag"] not in ["🟢 NO BIAS", "⚪ INSUFFICIENT DATA"]]
+        group_flags = [flag for flag in all_flags if flag["flag"] not in ["🟢 NO BIAS", "⚪ INSUFFICIENT DATA"]]
         
         if group_flags:
             fnpr_fig = fnpr_group_plot(fnpr_data)
@@ -89,7 +89,7 @@ def evaluate_bias(
                     f"""FNPR Difference: {flag['fnpr_percentage_difference'] * 100:.2f}% ({flag['type']}) [{flag['flag']}]"""
                 )
         
-        split_flags.extend(group_flags)
+        split_flags.extend(all_flags)
     
     return split_flags
 
