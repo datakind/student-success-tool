@@ -73,12 +73,16 @@ def compute_classification_eval_metrics(
     sample_weights: t.Optional[pd.Series] = None,
 ) -> dict[str, object]:
     """
+    Compute a variety of useful metrics for evaluating the performance of a classifier.
+
     Args:
-        targets
-        preds
-        pred_probs
-        pos_label
-        sample_weights
+        targets: True target values that classifier model was trained to predict.
+        preds: Binary predictions output by classifier model.
+        pred_probs: Prediction probabilities output by classifier model,
+            for the positive class only.
+        pos_label: Value of the positive class (aka "label").
+        sample_weights: Sample weights for the examples corresponding to targets/preds,
+            if classifier model was trained on weighted samples.
     """
     assert isinstance(pos_label, (int, float, bool, str))  # type guard
     precision, recall, f1_score, _ = sklearn.metrics.precision_recall_fscore_support(
