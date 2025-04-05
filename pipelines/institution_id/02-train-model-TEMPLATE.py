@@ -227,9 +227,9 @@ else:
 
 # Get top runs from experiment for evaluation
 top_run_ids = modeling.evaluation.get_top_run_ids(
-    experiment_id=experiment_id,
-    optimization_metric=cfg.modeling.training.primary_metric,
-    topn_runs_included=cfg.modeling.evaluation.topn_runs_included,
+    experiment_id,
+    cfg.modeling.training.primary_metric,
+    cfg.modeling.evaluation.topn_runs_included,
 )
 logging.info("top run ids = %s", top_run_ids)
 

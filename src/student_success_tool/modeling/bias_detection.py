@@ -82,6 +82,7 @@ def evaluate_bias(
         if group_flags:
             fnpr_fig = fnpr_group_plot(fnpr_data)
             mlflow.log_figure(fnpr_fig, f"fnpr_plots/{split_name}_{group_col}_fnpr.png")
+            plt.close()
             
             for flag in group_flags:
                 logging.info(
