@@ -174,7 +174,7 @@ def get_top_run_ids(
         List[str]: List of top run IDs based on the optimization metric.
     """
     # Fetch all runs
-    runs = mlflow.search_runs(
+    runs: pd.DataFrame = mlflow.search_runs(
         experiment_ids=[experiment_id],
         order_by=["metrics.m DESC"],
     )
