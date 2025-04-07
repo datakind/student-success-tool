@@ -100,12 +100,10 @@ def load_model_and_predict(
         }
     )
 
-    model_comp_fig = plot_trained_models_comparison(
-        experiment_id, optimization_metric
-    )
+    model_comp_fig = plot_trained_models_comparison(experiment_id, optimization_metric)
     mlflow.log_figure(model_comp_fig, "model_comparison.png")
     plt.close()
-    
+
     logging.info("Run %s: logging model comparison plot", run_id)
 
     return model, df_pred
@@ -121,7 +119,7 @@ def evaluate_performance(
 ) -> None:
     """
     Evaluates and logs model performance for each data split. Generates
-    histogram, calibration, and sensitivity plots. 
+    histogram, calibration, and sensitivity plots.
 
     Args:
         run_id (str): The specific MLflow run ID to load the model from.
@@ -151,9 +149,7 @@ def evaluate_performance(
             split_name,
         )
 
-        mlflow.log_figure(
-            hist_fig, os.path.join(preds_dir, f"{split_name}_hist.png")
-        )
+        mlflow.log_figure(hist_fig, os.path.join(preds_dir, f"{split_name}_hist.png"))
         mlflow.log_figure(
             cal_fig, os.path.join(calibration_dir, f"{split_name}_calibration.png")
         )
@@ -165,6 +161,7 @@ def evaluate_performance(
         plt.close("all")
 
         logging.info("Run %s: logging evaluation plots for %s", run_id, split_name)
+
 
 def get_top_run_ids(
     experiment_id: str,

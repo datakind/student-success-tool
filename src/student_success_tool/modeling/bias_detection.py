@@ -64,9 +64,9 @@ def evaluate_bias(
                 split_data,
                 split_name,
                 group_col,
-                target_col, 
-                pred_col, 
-                pred_prob_col, 
+                target_col,
+                pred_col,
+                pred_prob_col,
                 pos_label,
             )
             log_group_metrics_to_mlflow(group_metrics, split_name, group_col)
@@ -75,11 +75,17 @@ def evaluate_bias(
             all_flags = flag_bias(fnpr_data)
 
             # Filter flags for groups where bias is detected
-            group_flags = [flag for flag in all_flags if flag["flag"] not in ["🟢 NO BIAS", "⚪ INSUFFICIENT DATA"]]
+            group_flags = [
+                flag
+                for flag in all_flags
+                if flag["flag"] not in ["🟢 NO BIAS", "⚪ INSUFFICIENT DATA"]
+            ]
 
             if group_flags:
                 fnpr_fig = plot_fnpr_group(fnpr_data)
-                mlflow.log_figure(fnpr_fig, f"fnpr_plots/{split_name}_{group_col}_fnpr.png")
+                mlflow.log_figure(
+                    fnpr_fig, f"fnpr_plots/{split_name}_{group_col}_fnpr.png"
+                )
                 plt.close()
 
                 for flag in group_flags:
@@ -95,7 +101,7 @@ def evaluate_bias(
                     )
 
             model_flags.extend(all_flags)
-    
+
     log_bias_flags_to_mlflow(model_flags)
 
 
@@ -127,7 +133,7 @@ def compute_subgroup_bias_metrics(
         labels = subgroup_data[target_col]
         preds = subgroup_data[pred_col]
         pred_probs = subgroup_data[pred_prob_col]
-        
+
         fnpr, fnpr_lower, fnpr_upper, num_positives = calculate_fnpr_and_ci(
             labels, preds
         )
