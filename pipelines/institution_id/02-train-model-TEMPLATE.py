@@ -36,11 +36,7 @@
 # COMMAND ----------
 
 import logging
-import os
-
 import mlflow
-import numpy as np
-import pandas as pd
 import sklearn.metrics
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
