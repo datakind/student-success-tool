@@ -67,7 +67,9 @@ def load_model_and_predict(
     run_id: str,
     optimization_metric: str,
     df: pd.DataFrame,
-    df_features: pd.DataFrame
+    df_features: pd.DataFrame,
+    pred_col: str, 
+    pred_prob_col: str, 
 ) -> pd.DataFrame:
     """
     Loads a trained MLflow model, generates predictions, logs a model comparison figure,
@@ -79,16 +81,18 @@ def load_model_and_predict(
         optimization_metric (str): The metric used to compare and rank trained models.
         df (pd.DataFrame): The original DataFrame containing all relevant columns.
         df_features (pd.DataFrame): DataFrame but with only columns from model training features.
+        pred_col (str): Column name for the predictions.
+        pred_prob_col (str): Column name for predicted probabilities.
 
     Returns:
-        df_pred (pd.DataFrame): A copy of the original DataFrame `df`, with two new columns: cfg.pred_col: predicted
-        class labels and cfg.pred_prob_col: predicted probabilities for the positive class.
+        df_pred (pd.DataFrame): A copy of the original DataFrame `df`, with two new columns: pred_col: predicted
+        class labels and pred_prob_col: predicted probabilities for the positive class.
     """
     model = mlflow.sklearn.load_model(f"runs:/{run_id}/model")
     df_pred = df.assign(
         **{
-            cfg.pred_col: model.predict(df_features),
-            cfg.pred_prob_col: model.predict_proba(df_features)[:, 1],
+            pred_col: model.predict(df_features),
+            pred_prob_col: model.predict_proba(df_features)[:, 1],
         }
     )
 
@@ -102,14 +106,23 @@ def load_model_and_predict(
 
     return df_pred
 
-def evaluate_performance(df_pred, split_col):
+def evaluate_performance(
+    df_pred: pd.DataFrame,
+    split_col: str,
+    target_col: str,
+    pred_prob_col: str,
+    pos_label: str,
+):
     """
     Evaluates and logs model performance for each data split. Generates
     histogram, calibration, and sensitivity plots. 
 
     Args:
         df_pred (pd.DataFrame): DataFrame containing prediction results with a column for splits.
-        split_col (str): Column indicating split column ("train", "test", or "val")
+        split_col (str): Column indicating split column ("train", "test", or "val").
+        target_col (str): Column name for the target variable.
+        pred_prob_col (str): Column name for predicted probabilities.
+        pos_label (str): Positive class label.
     """
     for split_name, split_data in df_pred.groupby(split_col):
         split_data.to_csv(f"/tmp/{split_name}_preds.csv", header=True, index=False)
@@ -120,9 +133,9 @@ def evaluate_performance(df_pred, split_col):
 
         hist_fig, cal_fig, sla_fig = modeling.evaluation.create_evaluation_plots(
             split_data,
-            cfg.pred_prob_col,
-            cfg.target_col,
-            cfg.pos_label,
+            pred_prob_col,
+            target_col,
+            pos_label,
             split_name,
         )
 
