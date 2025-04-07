@@ -136,6 +136,7 @@ def evaluate_performance(
             local_path=f"/tmp/{split_name}_preds.csv",
             artifact_path=preds_dir,
         )
+        plt.close()
 
         hist_fig, cal_fig, sla_fig = create_evaluation_plots(
             split_data,

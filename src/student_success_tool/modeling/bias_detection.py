@@ -415,7 +415,7 @@ def generate_bias_flag(
     return flag_entry
 
 
-def log_bias_flags_to_mlflow(all_model_flags: list):
+def log_bias_flags_to_mlflow(all_model_flags: list) -> None:
     """
     Save and log bias flags to MLflow. If no flags exist for the model, then we do not log anything.
     
@@ -443,7 +443,7 @@ def log_group_metrics_to_mlflow(
     metrics: dict,
     split_name: str,
     group_col: str,
-):
+) -> None:
     """
     Saves and logs group-level bias metrics as a CSV artifact in MLflow.
 
@@ -462,7 +462,7 @@ def log_subgroup_metrics_to_mlflow(
     metrics: dict,
     split_name: str,
     group_col: str,
-):
+) -> None:
     """
     Logs individual subgroup-level metrics to MLflow.
 
