@@ -39,7 +39,7 @@ def evaluate_bias(
     pred_col: str, 
     pred_prob_col: str, 
     pos_label: str
-):
+) -> None:
     """
     Evaluates the bias in a model's predictions across different student groups for a split
     denoted by "split_name" across df_pred. For each student group, FNPR (False Negative Positive Rate) is
@@ -106,7 +106,7 @@ def compute_subgroup_bias_metrics(
     pred_col: str, 
     pred_prob_col: str, 
     pos_label: str, 
-) -> tuple[dict, dict]:
+) -> tuple[list, list]:
     """
     Computes subgroup metrics (including FNPR) based on evaluation parameters and logs them to MLflow.
 

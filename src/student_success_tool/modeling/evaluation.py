@@ -1,6 +1,7 @@
 import os
 import shutil
 import typing as t
+import logging
 import uuid
 from collections.abc import Sequence
 
@@ -113,7 +114,7 @@ def evaluate_performance(
     target_col: str,
     pred_prob_col: str,
     pos_label: str,
-):
+) -> None:
     """
     Evaluates and logs model performance for each data split. Generates
     histogram, calibration, and sensitivity plots. 
@@ -125,6 +126,10 @@ def evaluate_performance(
         pred_prob_col (str): Column name for predicted probabilities.
         pos_label (str): Positive class label.
     """
+    calibration_dir = "calibration"
+    preds_dir = "preds"
+    sensitivity_dir = "sensitivity"
+
     for split_name, split_data in df_pred.groupby(split_col):
         split_data.to_csv(f"/tmp/{split_name}_preds.csv", header=True, index=False)
         mlflow.log_artifact(
@@ -132,7 +137,7 @@ def evaluate_performance(
             artifact_path=preds_dir,
         )
 
-        hist_fig, cal_fig, sla_fig = modeling.evaluation.create_evaluation_plots(
+        hist_fig, cal_fig, sla_fig = create_evaluation_plots(
             split_data,
             pred_prob_col,
             target_col,
