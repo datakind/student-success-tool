@@ -41,7 +41,9 @@ def mock_helpers(monkeypatch):
         bias_detection, "plot_fnpr_group", lambda fnpr_data: plt.figure()
     )
     monkeypatch.setattr(
-        bias_detection, "calculate_fnpr_and_ci", lambda y_true, y_pred: (0.5, 0.4, 0.6, sum(y_true))
+        bias_detection,
+        "calculate_fnpr_and_ci",
+        lambda y_true, y_pred: (0.5, 0.4, 0.6, sum(y_true)),
     )
 
 
@@ -70,10 +72,7 @@ def test_compute_subgroup_bias_metrics(mock_helpers):
     assert all("FNPR" in m for m in metrics)
     assert all("subgroup" in f for f in fnpr_data)
     assert all(f["split_name"] == "test" for f in fnpr_data)
-    assert all(
-        f["fnpr"] > 0 and f["ci"][0] < f["fnpr"] < f["ci"][1]
-        for f in fnpr_data
-    )
+    assert all(f["fnpr"] > 0 and f["ci"][0] < f["fnpr"] < f["ci"][1] for f in fnpr_data)
 
 
 @pytest.mark.parametrize(
