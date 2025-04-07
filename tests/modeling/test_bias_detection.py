@@ -56,7 +56,10 @@ def test_compute_subgroup_bias_metrics(mock_helpers):
     assert all("FNPR" in m for m in metrics)
     assert all("subgroup" in f for f in fnpr_data)
     assert all(f["split_name"] == "test" for f in fnpr_data)
-
+    assert all(
+        f["fnpr"] > 0 and f["ci"][0] < f["fnpr"] < f["ci"][1]
+        for f in fnpr_data
+    )
 @pytest.mark.parametrize(
     "targets, preds, expected_fnpr, expected_ci_lower, expected_ci_upper, valid_samples_flag",
     [
