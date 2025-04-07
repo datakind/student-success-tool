@@ -234,7 +234,7 @@ logging.info("top run ids = %s", top_run_ids)
 # Iterate through runs and evaluate performance & bias
 for run_id in top_run_ids:
     with mlflow.start_run(run_id=run_id) as run:
-        df_pred = modeling.evaluation.load_model_and_predict(
+        model, df_pred = modeling.evaluation.load_model_and_predict(
             experiment_id,
             run_id,
             cfg.modeling.training.primary_metric,

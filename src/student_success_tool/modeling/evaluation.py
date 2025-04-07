@@ -97,7 +97,7 @@ def load_model_and_predict(
         }
     )
 
-    model_comp_fig = compare_trained_models_plot(
+    model_comp_fig = plot_trained_models_comparison(
         experiment_id, optimization_metric
     )
     mlflow.log_figure(model_comp_fig, "model_comparison.png")
