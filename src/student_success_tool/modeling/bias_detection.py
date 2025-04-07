@@ -491,9 +491,9 @@ def plot_fnpr_group(fnpr_data: list) -> matplotlib.figure.Figure:
     Plots False Negative Prediction Rate (FNPR) for a group by subgroup on
     a split (train/test/val) of data with confidence intervals.
 
-    Parameters:
-    - fnpr_data: List with dictionaries for each subgroup. Each dictionary
-    comprises of group, fnpr, ci (confidence interval), and split_name keys.
+    Args:
+        fnpr_data: List with dictionaries for each subgroup. Each dictionary
+        comprises of group, fnpr, ci (confidence interval), and split_name keys.
     """
     subgroups = [subgroup_data["subgroup"] for subgroup_data in fnpr_data]
     fnpr = [subgroup_data["fnpr"] for subgroup_data in fnpr_data]
