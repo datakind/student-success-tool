@@ -95,3 +95,33 @@ def test_compare_trained_models(
     assert all(column in result.columns for column in expected_columns), (
         "DataFrame should contain specific columns."
     )
+
+
+@pytest.mark.parametrize(
+    ["optimization_metric", "ascending", "expected"],
+    [
+        ("recall", False, ["run_2", "run_1"]),
+        ("log_loss", True, ["run_2", "run_1"]),
+        ("f1", False, ["run_1", "run_2"]),
+    ],
+)
+def test_get_top_run_ids(optimization_metric, ascending, expected, patch_mlflow, monkeypatch):
+    # Create mock DataFrame
+    if optimization_metric == "log_loss":
+        mock_data = pd.DataFrame({
+            "run_id": ["run_1", "run_2"],
+            "metrics.val_log_loss": [0.5, 0.3],
+        })
+    else:
+        mock_data = pd.DataFrame({
+            "run_id": ["run_1", "run_2"],
+            f"metrics.val_{optimization_metric}_score": [0.8, 0.9] if not ascending else [0.5, 0.3],
+        })
+
+    def _search_runs_patch(experiment_ids, order_by):
+        return mock_data
+
+    monkeypatch.setattr(mlflow, "search_runs", _search_runs_patch)
+
+    result = evaluation.get_top_run_ids("dummy_id", optimization_metric, 2)
+    assert result == expected
