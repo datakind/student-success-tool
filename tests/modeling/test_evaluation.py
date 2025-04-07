@@ -100,7 +100,7 @@ def test_compare_trained_models(
 @pytest.mark.parametrize(
     ["optimization_metric", "ascending", "expected"],
     [
-        ("recall", False, ["run_2", "run_1"]),
+        ("recall", False, ["run_1", "run_2"]),
         ("log_loss", True, ["run_2", "run_1"]),
         ("f1", False, ["run_1", "run_2"]),
     ],
@@ -115,7 +115,7 @@ def test_get_top_run_ids(optimization_metric, ascending, expected, patch_mlflow,
     else:
         mock_data = pd.DataFrame({
             "run_id": ["run_1", "run_2"],
-            f"metrics.val_{optimization_metric}_score": [0.8, 0.9] if not ascending else [0.5, 0.3],
+            f"metrics.val_{optimization_metric}_score": [0.9, 0.8] if not ascending else [0.5, 0.3],
         })
 
     def _search_runs_patch(experiment_ids, order_by):
