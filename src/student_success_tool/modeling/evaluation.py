@@ -69,8 +69,8 @@ def load_model_and_predict(
     optimization_metric: str,
     df: pd.DataFrame,
     df_features: pd.DataFrame,
-    pred_col: str, 
-    pred_prob_col: str, 
+    pred_col: str,
+    pred_prob_col: str,
 ) -> tuple[sklearn.base.BaseEstimator, pd.DataFrame]:
     """
     Loads a trained MLflow model, generates predictions, logs a model comparison figure,
@@ -109,6 +109,7 @@ def load_model_and_predict(
     return model, df_pred
 
 def evaluate_performance(
+    run_id: str,
     df_pred: pd.DataFrame,
     split_col: str,
     target_col: str,
@@ -120,6 +121,7 @@ def evaluate_performance(
     histogram, calibration, and sensitivity plots. 
 
     Args:
+        run_id (str): The specific MLflow run ID to load the model from.
         df_pred (pd.DataFrame): DataFrame containing prediction results with a column for splits.
         split_col (str): Column indicating split column ("train", "test", or "val").
         target_col (str): Column name for the target variable.

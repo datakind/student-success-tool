@@ -35,10 +35,10 @@ def evaluate_bias(
     df_pred: pd.DataFrame,
     split_col: str,
     student_group_cols: list,
-    target_col: str, 
-    pred_col: str, 
-    pred_prob_col: str, 
-    pos_label: str
+    target_col: str,
+    pred_col: str,
+    pred_prob_col: str,
+    pos_label: str,
 ) -> None:
     """
     Evaluates the bias in a model's predictions across different student groups for a split
@@ -102,10 +102,10 @@ def compute_subgroup_bias_metrics(
     split_data: pd.DataFrame,
     split_name: str,
     group_col: str,
-    target_col: str, 
-    pred_col: str, 
-    pred_prob_col: str, 
-    pos_label: str, 
+    target_col: str,
+    pred_col: str,
+    pred_prob_col: str,
+    pos_label: str,
 ) -> tuple[list, list]:
     """
     Computes subgroup metrics (including FNPR) based on evaluation parameters and logs them to MLflow.

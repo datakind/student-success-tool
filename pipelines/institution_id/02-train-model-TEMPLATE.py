@@ -241,13 +241,14 @@ for run_id in top_run_ids:
         )
 
         modeling.evaluation.evaluate_performance(
+            run_id,
             df_pred,
             split_col,
             cfg.target_col,
             cfg.pred_prob_col,
             cfg.pos_label,
         )
-        
+
         if evaluate_model_bias:
             modeling.bias_detection.evaluate_bias(
                 run_id,
@@ -257,9 +258,9 @@ for run_id in top_run_ids:
                 cfg.target_col,
                 cfg.pred_col,
                 cfg.pred_prob_col,
-                cfg.pos_label,        
+                cfg.pos_label,
             )
-    logging.info("Finished processing run id: %s", run_id)
+    logging.info("Run %s: finished processing", run_id)
 mlflow.end_run()
 
 # COMMAND ----------
