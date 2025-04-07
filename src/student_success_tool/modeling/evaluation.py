@@ -62,6 +62,79 @@ def extract_training_data_from_model(
 
     return df_loaded
 
+def load_model_and_predict(
+    experiment_id: str,
+    run_id: str,
+    optimization_metric: str,
+    df: pd.DataFrame,
+    df_features: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Loads a trained MLflow model, generates predictions, logs a model comparison figure,
+    and returns a DataFrame containing predictions.
+
+    Args:
+        experiment_id (str): The MLflow experiment ID containing the trained models.
+        run_id (str): The specific MLflow run ID to load the model from.
+        optimization_metric (str): The metric used to compare and rank trained models.
+        df (pd.DataFrame): The original DataFrame containing all relevant columns.
+        df_features (pd.DataFrame): DataFrame but with only columns from model training features.
+
+    Returns:
+        df_pred (pd.DataFrame): A copy of the original DataFrame `df`, with two new columns: cfg.pred_col: predicted
+        class labels and cfg.pred_prob_col: predicted probabilities for the positive class.
+    """
+    model = mlflow.sklearn.load_model(f"runs:/{run_id}/model")
+    df_pred = df.assign(
+        **{
+            cfg.pred_col: model.predict(df_features),
+            cfg.pred_prob_col: model.predict_proba(df_features)[:, 1],
+        }
+    )
+
+    model_comp_fig = modeling.evaluation.compare_trained_models_plot(
+        experiment_id, optimization_metric
+    )
+    mlflow.log_figure(model_comp_fig, "model_comparison.png")
+    plt.close()
+    
+    logging.info("Saving model comparison plot under 'runs:/{run_id}/model_comparison.png")
+
+    return df_pred
+
+def evaluate_performance(df_pred, split_col):
+    """
+    Evaluates and logs model performance for each data split. Generates
+    histogram, calibration, and sensitivity plots. 
+
+    Args:
+        df_pred (pd.DataFrame): DataFrame containing prediction results with a column for splits.
+        split_col (str): Column indicating split column ("train", "test", or "val")
+    """
+    for split_name, split_data in df_pred.groupby(split_col):
+        split_data.to_csv(f"/tmp/{split_name}_preds.csv", header=True, index=False)
+        mlflow.log_artifact(
+            local_path=f"/tmp/{split_name}_preds.csv",
+            artifact_path=preds_dir,
+        )
+
+        hist_fig, cal_fig, sla_fig = modeling.evaluation.create_evaluation_plots(
+            split_data,
+            cfg.pred_prob_col,
+            cfg.target_col,
+            cfg.pos_label,
+            split_name,
+        )
+
+        mlflow.log_figure(hist_fig, os.path.join(preds_dir, f"{split_name}_hist.png"))
+        mlflow.log_figure(cal_fig, os.path.join(calibration_dir, f"{split_name}_calibration.png"))
+        mlflow.log_figure(sla_fig, os.path.join(sensitivity_dir, f"{split_name}_sla.png"))
+
+        # Closes all matplotlib figures in console to free memory
+        plt.close('all')
+
+        logging.info(f"logged evaluation plots for {split_name}")
+
 def get_top_run_ids(
     experiment_id: str,
     optimization_metric: str,

@@ -31,24 +31,24 @@ FLAG_NAMES = {
 PALETTE = sns.color_palette("Paired")
 
 def evaluate_bias(
-    run_id: str, 
-    split_data: pd.DataFrame,
-    split_name: str,
+    run_id: str,
+    df_pred: pd.DataFrame,
+    split_col: str,
     student_group_cols: list,
     target_col: str, 
     pred_col: str, 
     pred_prob_col: str, 
     pos_label: str
-) -> list:
+):
     """
     Evaluates the bias in a model's predictions across different student groups for a split
-    denoted by "split_name". For each student group, FNPR (False Negative Positive Rate) is
+    denoted by "split_name" across df_pred. For each student group, FNPR (False Negative Positive Rate) is
     computed and any detected biases are flagged. Then, the metrics & plots are logged to MLflow.
 
     Args:
         run_id (str): The ID of the MLflow run
-        split_data (pd.DataFrame): Data for the current split to evaluate
-        split_name (str): Name of the data split (e.g., "train", "test", or "val")
+        df_pred (pd.DataFrame): Pandas DataFrame with predictions from the model
+        split_col (str): Column indicating split column ("train", "test", or "val")
         student_group_cols (list): A list of columns representing student groups for bias analysis
         target_col (str): Column name for the target (actual) values
         pred_col (str): Column name for the model's predicted values
@@ -56,43 +56,49 @@ def evaluate_bias(
         pos_label (str or int): Label representing the positive class
 
     Returns:
-        split_flags: List of flags for the data split
+        model_flags: List of dicts for the model across each data split
     """
-    
-    split_flags = []
-    
-    for group_col in student_group_cols:
-        group_metrics, fnpr_data = compute_subgroup_bias_metrics(
-            split_data,
-            split_name,
-            group_col,
-            target_col, 
-            pred_col, 
-            pred_prob_col, 
-            pos_label,
-        )
-        log_group_metrics_to_mlflow(group_metrics, split_name, group_col)
-        
-        # Detect bias flags
-        all_flags = flag_bias(fnpr_data)
-        
-        # Filter flags for groups where bias is detected
-        group_flags = [flag for flag in all_flags if flag["flag"] not in ["🟢 NO BIAS", "⚪ INSUFFICIENT DATA"]]
-        
-        if group_flags:
-            fnpr_fig = fnpr_group_plot(fnpr_data)
-            mlflow.log_figure(fnpr_fig, f"fnpr_plots/{split_name}_{group_col}_fnpr.png")
-            plt.close()
+    model_flags = []
+
+    for split_name, split_data in df_pred.groupby(split_col):
+        for group_col in student_group_cols:
+            group_metrics, fnpr_data = compute_subgroup_bias_metrics(
+                split_data,
+                split_name,
+                group_col,
+                target_col, 
+                pred_col, 
+                pred_prob_col, 
+                pos_label,
+            )
+            log_group_metrics_to_mlflow(group_metrics, split_name, group_col)
             
-            for flag in group_flags:
-                logging.info(
-                    f"""Run {run_id}: {flag['group']} on {flag['split_name']} - {flag['subgroups']}, """ \
-                    f"""FNPR Difference: {flag['fnpr_percentage_difference'] * 100:.2f}% ({flag['type']}) [{flag['flag']}]"""
-                )
-        
-        split_flags.extend(all_flags)
+            # Detect bias flags
+            all_flags = flag_bias(fnpr_data)
+            
+            # Filter flags for groups where bias is detected
+            group_flags = [flag for flag in all_flags if flag["flag"] not in ["🟢 NO BIAS", "⚪ INSUFFICIENT DATA"]]
+            
+            if group_flags:
+                fnpr_fig = plot_fnpr_group(fnpr_data)
+                mlflow.log_figure(fnpr_fig, f"fnpr_plots/{split_name}_{group_col}_fnpr.png")
+                plt.close()
+                
+                for flag in group_flags:
+                    logging.info(
+                        "Run %s: %s on %s - %s, FNPR Difference: %.2f%% (%s) [%s]",
+                        run_id,
+                        flag["group"],
+                        flag["split_name"],
+                        flag["subgroups"],
+                        flag["fnpr_percentage_difference"] * 100,
+                        flag["type"],
+                        flag["flag"]
+                    )
+            
+            model_flags.extend(all_flags)
     
-    return split_flags
+    log_bias_flags_to_mlflow(model_flags)
 
 
 def compute_subgroup_bias_metrics(
@@ -474,7 +480,7 @@ def log_subgroup_metrics_to_mlflow(
                 f"{split_name}_{group_col}_metrics/{metric}_subgroup", value
             )
 
-def fnpr_group_plot(fnpr_data: list) -> matplotlib.figure.Figure:
+def plot_fnpr_group(fnpr_data: list) -> matplotlib.figure.Figure:
     """
     Plots False Negative Prediction Rate (FNPR) for a group by subgroup on
     a split (train/test/val) of data with confidence intervals.

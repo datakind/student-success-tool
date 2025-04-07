@@ -238,64 +238,28 @@ logging.info("top run ids = %s", top_run_ids)
 # Iterate through runs and evaluate performance & bias
 for run_id in top_run_ids:
     with mlflow.start_run(run_id=run_id) as run:
-        model = mlflow.sklearn.load_model(f"runs:/{run_id}/model")
-        df_group_flags = pd.DataFrame()
-        df_pred = df.assign(
-            **{
-                cfg.pred_col: model.predict(df_features),
-                cfg.pred_prob_col: model.predict_proba(df_features)[:, 1],
-            }
+        df_pred = modeling.evaluation.load_model_and_predict(
+            experiment_id,
+            run_id,
+            cfg.modeling.training.primary_metric,
+            df,
+            df_features,
         )
-        logging.info(f"Processing run {run_id} - rows x cols = {df_pred.shape}")
-        model_comp_fig = modeling.evaluation.plot_trained_models_comparison(
-            experiment_id, cfg.modeling.training.primary_metric
-        )
-        mlflow.log_figure(model_comp_fig, "model_comparison.png")
 
-        all_model_flags = [] 
-
-        for split_name, split_data in df_pred.groupby(split_col):
-            split_data.to_csv(f"/tmp/{split_name}_preds.csv", header=True, index=False)
-            mlflow.log_artifact(
-                local_path=f"/tmp/{split_name}_preds.csv",
-                artifact_path=preds_dir,
-            )
-
-            hist_fig, cal_fig, sla_fig = modeling.evaluation.create_evaluation_plots(
-                split_data,
-                cfg.pred_prob_col,
-                cfg.target_col,
-                cfg.pos_label,
-                split_name,
-            )
-            mlflow.log_figure(
-                hist_fig,
-                os.path.join(preds_dir, f"{split_name}_hist.png"),
-            )
-            mlflow.log_figure(
-                cal_fig,
-                os.path.join(calibration_dir, f"{split_name}_calibration.png"),
-            )
-            mlflow.log_figure(
-                sla_fig,
-                os.path.join(sensitivity_dir, f"{split_name}_sla.png"),
-            )
-            
-            if evaluate_model_bias:
-                split_flags = modeling.bias_detection.evaluate_bias(
-                    run_id,
-                    split_data,
-                    split_name,
-                    cfg.student_group_cols,
-                    cfg.target_col,
-                    cfg.pred_col, 
-                    cfg.pred_prob_col,
-                    cfg.pos_label,            
-                )
-                all_model_flags.extend(split_flags)
+        modeling.evaluation.evaluate_performance(df_pred, split_col)
         
-        modeling.bias_detection.log_bias_flags_to_mlflow(all_model_flags)
-
+        if evaluate_model_bias:
+            modeling.bias_detection.evaluate_bias(
+                run_id,
+                df_pred,
+                split_col,
+                cfg.student_group_cols,
+                cfg.target_col,
+                cfg.pred_col, 
+                cfg.pred_prob_col,
+                cfg.pos_label,            
+            )
+    logging.info("Finished processing run id: %s", run_id)
 mlflow.end_run()
 
 # COMMAND ----------
