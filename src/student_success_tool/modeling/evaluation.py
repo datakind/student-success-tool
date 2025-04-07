@@ -70,7 +70,7 @@ def load_model_and_predict(
     df_features: pd.DataFrame,
     pred_col: str, 
     pred_prob_col: str, 
-) -> pd.DataFrame:
+) -> tuple[sklearn.base.BaseEstimator, pd.DataFrame]:
     """
     Loads a trained MLflow model, generates predictions, logs a model comparison figure,
     and returns a DataFrame containing predictions.
@@ -85,8 +85,9 @@ def load_model_and_predict(
         pred_prob_col (str): Column name for predicted probabilities.
 
     Returns:
+        model (sklearn.base.BaseEstimator): The loaded model from experiment_id/run_id.
         df_pred (pd.DataFrame): A copy of the original DataFrame `df`, with two new columns: pred_col: predicted
-        class labels and pred_prob_col: predicted probabilities for the positive class.
+        class labels and pred_probs_col: predicted probabilities for the positive class.
     """
     model = mlflow.sklearn.load_model(f"runs:/{run_id}/model")
     df_pred = df.assign(
@@ -96,7 +97,7 @@ def load_model_and_predict(
         }
     )
 
-    model_comp_fig = modeling.evaluation.compare_trained_models_plot(
+    model_comp_fig = compare_trained_models_plot(
         experiment_id, optimization_metric
     )
     mlflow.log_figure(model_comp_fig, "model_comparison.png")
@@ -104,7 +105,7 @@ def load_model_and_predict(
     
     logging.info("Saving model comparison plot under 'runs:/{run_id}/model_comparison.png")
 
-    return df_pred
+    return model, df_pred
 
 def evaluate_performance(
     df_pred: pd.DataFrame,

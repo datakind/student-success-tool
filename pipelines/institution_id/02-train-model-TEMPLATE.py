@@ -240,9 +240,17 @@ for run_id in top_run_ids:
             cfg.modeling.training.primary_metric,
             df,
             df_features,
+            cfg.pred_col,
+            cfg.pred_prob_col,
         )
 
-        modeling.evaluation.evaluate_performance(df_pred, split_col)
+        modeling.evaluation.evaluate_performance(
+            df_pred,
+            split_col,
+            cfg.target_col,
+            cfg.pred_col,
+            cfg.pos_label,
+        )
         
         if evaluate_model_bias:
             modeling.bias_detection.evaluate_bias(
@@ -251,9 +259,9 @@ for run_id in top_run_ids:
                 split_col,
                 cfg.student_group_cols,
                 cfg.target_col,
-                cfg.pred_col, 
+                cfg.pred_col,
                 cfg.pred_prob_col,
-                cfg.pos_label,            
+                cfg.pos_label,        
             )
     logging.info("Finished processing run id: %s", run_id)
 mlflow.end_run()
