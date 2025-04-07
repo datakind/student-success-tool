@@ -54,9 +54,6 @@ def evaluate_bias(
         pred_col (str): Column name for the model's predicted values
         pred_prob_col (str): Column name for the model's predicted probabilities
         pos_label (str or int): Label representing the positive class
-
-    Returns:
-        model_flags: List of dicts for the model across each data split
     """
     model_flags = []
 
