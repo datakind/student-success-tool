@@ -8,38 +8,52 @@ from student_success_tool.modeling import bias_detection
 
 np.random.seed(42)
 
+
 @pytest.fixture
 def patch_mlflow(monkeypatch):
     """Patch the mlflow.search_runs function."""
 
     def mock_search_runs():
         # This mock function does nothing and will be overridden by each test case
-        pass 
+        pass
 
     monkeypatch.setattr(mlflow.tracking.MlflowClient, "search_runs", mock_search_runs)
+
 
 @pytest.fixture
 def mock_mlflow(monkeypatch):
     monkeypatch.setattr(mlflow, "log_figure", lambda *args, **kwargs: None)
-    monkeypatch.setattr(bias_detection, "log_group_metrics_to_mlflow", lambda *args, **kwargs: None)
-    monkeypatch.setattr(bias_detection, "log_subgroup_metrics_to_mlflow", lambda *args, **kwargs: None)
-    monkeypatch.setattr(bias_detection, "log_bias_flags_to_mlflow", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        bias_detection, "log_group_metrics_to_mlflow", lambda *args, **kwargs: None
+    )
+    monkeypatch.setattr(
+        bias_detection, "log_subgroup_metrics_to_mlflow", lambda *args, **kwargs: None
+    )
+    monkeypatch.setattr(
+        bias_detection, "log_bias_flags_to_mlflow", lambda *args, **kwargs: None
+    )
 
 
 @pytest.fixture
 def mock_helpers(monkeypatch):
     monkeypatch.setattr(bias_detection, "flag_bias", lambda fnpr_data: fnpr_data)
-    monkeypatch.setattr(bias_detection, "plot_fnpr_group", lambda fnpr_data: plt.figure())
-    monkeypatch.setattr(bias_detection, "calculate_fnpr_and_ci", lambda y_true, y_pred: (0.5, 0.4, 0.6, sum(y_true)))
+    monkeypatch.setattr(
+        bias_detection, "plot_fnpr_group", lambda fnpr_data: plt.figure()
+    )
+    monkeypatch.setattr(
+        bias_detection, "calculate_fnpr_and_ci", lambda y_true, y_pred: (0.5, 0.4, 0.6, sum(y_true))
+    )
 
 
 def test_compute_subgroup_bias_metrics(mock_helpers):
-    df = pd.DataFrame({
-        "group_col": ["A", "A", "B", "B"],
-        "target": [1, 0, 1, 0],
-        "pred": [1, 0, 0, 1],
-        "prob": [0.9, 0.2, 0.3, 0.8]
-    })
+    df = pd.DataFrame(
+        {
+            "group_col": ["A", "A", "B", "B"],
+            "target": [1, 0, 1, 0],
+            "pred": [1, 0, 0, 1],
+            "prob": [0.9, 0.2, 0.3, 0.8],
+        }
+    )
 
     metrics, fnpr_data = bias_detection.compute_subgroup_bias_metrics(
         split_data=df,
@@ -60,6 +74,8 @@ def test_compute_subgroup_bias_metrics(mock_helpers):
         f["fnpr"] > 0 and f["ci"][0] < f["fnpr"] < f["ci"][1]
         for f in fnpr_data
     )
+
+
 @pytest.mark.parametrize(
     "targets, preds, expected_fnpr, expected_ci_lower, expected_ci_upper, valid_samples_flag",
     [
