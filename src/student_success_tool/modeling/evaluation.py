@@ -161,7 +161,7 @@ def get_top_run_ids(
     experiment_id: str,
     optimization_metric: str,
     topn_runs_included: int,
-) -> list:
+) -> t.List[str]:
     """
     Retrieve top run IDs from an MLflow experiment using evaluation parameters.
 
@@ -188,7 +188,7 @@ def get_top_run_ids(
 
     # Sort and select top run IDs based on min/max with loss vs. score
     ascending_order = optimization_metric == "log_loss"
-    top_run_ids = (
+    top_run_ids: t.List[str] = (
         runs.sort_values(by=search_metric, ascending=ascending_order)
         .iloc[:topn_runs_included]["run_id"]
         .tolist()
