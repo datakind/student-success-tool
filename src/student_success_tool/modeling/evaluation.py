@@ -27,6 +27,7 @@ PALETTE = sns.color_palette("Paired")
 
 PosLabelType = t.Optional[int | float | bool | str]
 
+
 def extract_training_data_from_model(
     automl_experiment_id: str, data_runname: str = "Training Data Storage and Analysis"
 ) -> pd.DataFrame:
@@ -62,6 +63,7 @@ def extract_training_data_from_model(
     shutil.rmtree(input_temp_dir)
 
     return df_loaded
+
 
 def load_model_and_predict(
     experiment_id: str,
@@ -108,6 +110,7 @@ def load_model_and_predict(
 
     return model, df_pred
 
+
 def evaluate_performance(
     run_id: str,
     df_pred: pd.DataFrame,
@@ -148,12 +151,18 @@ def evaluate_performance(
             split_name,
         )
 
-        mlflow.log_figure(hist_fig, os.path.join(preds_dir, f"{split_name}_hist.png"))
-        mlflow.log_figure(cal_fig, os.path.join(calibration_dir, f"{split_name}_calibration.png"))
-        mlflow.log_figure(sla_fig, os.path.join(sensitivity_dir, f"{split_name}_sla.png"))
+        mlflow.log_figure(
+            hist_fig, os.path.join(preds_dir, f"{split_name}_hist.png")
+        )
+        mlflow.log_figure(
+            cal_fig, os.path.join(calibration_dir, f"{split_name}_calibration.png")
+        )
+        mlflow.log_figure(
+            sla_fig, os.path.join(sensitivity_dir, f"{split_name}_sla.png")
+        )
 
         # Closes all matplotlib figures in console to free memory
-        plt.close('all')
+        plt.close("all")
 
         logging.info("Run %s: logging evaluation plots for %s", run_id, split_name)
 
@@ -195,6 +204,7 @@ def get_top_run_ids(
     )
 
     return top_run_ids
+
 
 def compute_classification_eval_metrics(
     targets: pd.Series,

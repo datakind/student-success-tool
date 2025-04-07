@@ -30,6 +30,7 @@ FLAG_NAMES = {
 # where there are a lot of subgroups
 PALETTE = sns.color_palette("Paired")
 
+
 def evaluate_bias(
     run_id: str,
     df_pred: pd.DataFrame,
@@ -69,18 +70,18 @@ def evaluate_bias(
                 pos_label,
             )
             log_group_metrics_to_mlflow(group_metrics, split_name, group_col)
-            
+
             # Detect bias flags
             all_flags = flag_bias(fnpr_data)
-            
+
             # Filter flags for groups where bias is detected
             group_flags = [flag for flag in all_flags if flag["flag"] not in ["🟢 NO BIAS", "⚪ INSUFFICIENT DATA"]]
-            
+
             if group_flags:
                 fnpr_fig = plot_fnpr_group(fnpr_data)
                 mlflow.log_figure(fnpr_fig, f"fnpr_plots/{split_name}_{group_col}_fnpr.png")
                 plt.close()
-                
+
                 for flag in group_flags:
                     logging.info(
                         "Run %s: %s on %s - %s, FNPR Difference: %.2f%% (%s) [%s]",
@@ -90,9 +91,9 @@ def evaluate_bias(
                         flag["subgroups"],
                         flag["fnpr_percentage_difference"] * 100,
                         flag["type"],
-                        flag["flag"]
+                        flag["flag"],
                     )
-            
+
             model_flags.extend(all_flags)
     
     log_bias_flags_to_mlflow(model_flags)
@@ -127,8 +128,8 @@ def compute_subgroup_bias_metrics(
         preds = subgroup_data[pred_col]
         pred_probs = subgroup_data[pred_prob_col]
         
-        fnpr, fnpr_lower, fnpr_upper, num_positives = (
-            calculate_fnpr_and_ci(labels, preds)
+        fnpr, fnpr_lower, fnpr_upper, num_positives = calculate_fnpr_and_ci(
+            labels, preds
         )
 
         fnpr_data.append(
@@ -172,9 +173,7 @@ def compute_subgroup_bias_metrics(
                 2,
             ),
             "Log Loss": round(
-                sklearn.metrics.log_loss(
-                    labels, pred_probs, labels=[False, True]
-                ),
+                sklearn.metrics.log_loss(labels, pred_probs, labels=[False, True]),
                 2,
             ),
         }
@@ -418,7 +417,7 @@ def generate_bias_flag(
 def log_bias_flags_to_mlflow(all_model_flags: list) -> None:
     """
     Save and log bias flags to MLflow. If no flags exist for the model, then we do not log anything.
-    
+
     Args:
         all_model_flags (list): Bias flags for across all splits
         (e.g. "train", "test", "val") of the model
@@ -428,15 +427,18 @@ def log_bias_flags_to_mlflow(all_model_flags: list) -> None:
         for flag in FLAG_NAMES.keys():
             flag_name = FLAG_NAMES[flag]
             df_flag = (
-                df_model_flags[df_model_flags["flag"] == flag]
-                .sort_values(by="fnpr_percentage_difference", ascending=False)
+                df_model_flags[df_model_flags["flag"] == flag].sort_values(
+                    by="fnpr_percentage_difference", ascending=False
+                )
                 if df_model_flags.shape[0] > 0
                 else None
             )
             if df_flag is not None:
                 bias_tmp_path = f"/tmp/{flag_name}_flags.csv"
                 df_flag.to_csv(bias_tmp_path, index=False)
-                mlflow.log_artifact(local_path=bias_tmp_path, artifact_path="bias_flags")
+                mlflow.log_artifact(
+                    local_path=bias_tmp_path, artifact_path="bias_flags"
+                )
 
 
 def log_group_metrics_to_mlflow(
@@ -476,6 +478,7 @@ def log_subgroup_metrics_to_mlflow(
             mlflow.log_metric(
                 f"{split_name}_{group_col}_metrics/{metric}_subgroup", value
             )
+
 
 def plot_fnpr_group(fnpr_data: list) -> matplotlib.figure.Figure:
     """
