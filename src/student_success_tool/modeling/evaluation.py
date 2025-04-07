@@ -104,7 +104,7 @@ def load_model_and_predict(
     mlflow.log_figure(model_comp_fig, "model_comparison.png")
     plt.close()
     
-    logging.info("Saving model comparison plot under 'runs:/{run_id}/model_comparison.png")
+    logging.info("Run %s: logging model comparison plot", run_id)
 
     return model, df_pred
 
@@ -153,7 +153,7 @@ def evaluate_performance(
         # Closes all matplotlib figures in console to free memory
         plt.close('all')
 
-        logging.info(f"logged evaluation plots for {split_name}")
+        logging.info("Run %s: logging evaluation plots for %s", run_id, split_name)
 
 def get_top_run_ids(
     experiment_id: str,

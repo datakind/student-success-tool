@@ -244,7 +244,7 @@ for run_id in top_run_ids:
             df_pred,
             split_col,
             cfg.target_col,
-            cfg.pred_col,
+            cfg.pred_prob_col,
             cfg.pos_label,
         )
         

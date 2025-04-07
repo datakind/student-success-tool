@@ -440,7 +440,7 @@ def log_bias_flags_to_mlflow(all_model_flags: list) -> None:
 
 
 def log_group_metrics_to_mlflow(
-    metrics: dict,
+    group_metrics: list,
     split_name: str,
     group_col: str,
 ) -> None:
@@ -448,18 +448,18 @@ def log_group_metrics_to_mlflow(
     Saves and logs group-level bias metrics as a CSV artifact in MLflow.
 
     Args:
-        metrics (dict): Dictionary containing computed group-level bias metrics.
+        group_metrics (list): List of dictionaries containing computed group-level bias metrics.
         split_name (str): Name of the data split (e.g., "train", "test", "validation").
         group_col (str): Column name representing the group for bias evaluation.
     """
-    df_group_metrics = pd.DataFrame(metrics)
+    df_group_metrics = pd.DataFrame(group_metrics)
     metrics_tmp_path = f"/tmp/{split_name}_{group_col}_metrics.csv"
     df_group_metrics.to_csv(metrics_tmp_path, index=False)
     mlflow.log_artifact(local_path=metrics_tmp_path, artifact_path="group_metrics")
 
 
 def log_subgroup_metrics_to_mlflow(
-    metrics: dict,
+    subgroup_metrics: dict,
     split_name: str,
     group_col: str,
 ) -> None:
@@ -467,11 +467,11 @@ def log_subgroup_metrics_to_mlflow(
     Logs individual subgroup-level metrics to MLflow.
 
     Args:
-        metrics (dict): Dictionary of subgroup bias metrics.
+        subgroup_metrics (dict): Dictionary of subgroup bias metrics.
         split_name (str): Name of the data split (e.g., "train", "test", "validation").
         group_col (str): Column name representing the group for bias evaluation.
     """
-    for metric, value in metrics.items():
+    for metric, value in subgroup_metrics.items():
         if metric not in {"Subgroup", "Number of Samples"}:
             mlflow.log_metric(
                 f"{split_name}_{group_col}_metrics/{metric}_subgroup", value
