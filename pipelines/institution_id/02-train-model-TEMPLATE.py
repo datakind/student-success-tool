@@ -232,7 +232,7 @@ for run_id in top_run_ids:
         logging.info(
             "Run %s: Starting performance evaluation%s",
             run_id,
-            " and bias assessment" if evaluate_model_bias else ""
+            " and bias assessment" if evaluate_model_bias else "",
         )
         model = mlflow.sklearn.load_model(f"runs:/{run_id}/model")
         df_pred = df.assign(
