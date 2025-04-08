@@ -167,7 +167,7 @@ def compute_group_bias_metrics(
             sample_weights=(
                 subgroup_data[sample_weight_col] 
                 if sample_weight_col in subgroup_data.columns
-                else None,
+                else None
             ),
         )
         subgroup_metrics = format_subgroup_metrics(eval_metrics, fnpr_subgroup_data)
