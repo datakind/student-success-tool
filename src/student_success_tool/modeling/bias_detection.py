@@ -1,5 +1,7 @@
 import mlflow
+import typing as t
 import logging
+
 import pandas as pd
 import numpy as np
 import matplotlib.figure
@@ -30,16 +32,19 @@ FLAG_NAMES = {
 # where there are a lot of subgroups
 PALETTE = sns.color_palette("Paired")
 
+PosLabelType = t.Optional[int | float | bool | str]
+LOGGER = logging.getLogger(__name__)
+
 
 def evaluate_bias(
-    run_id: str,
     df_pred: pd.DataFrame,
-    split_col: str,
+    *,
     student_group_cols: list,
-    target_col: str,
-    pred_col: str,
-    pred_prob_col: str,
-    pos_label: str,
+    pos_label: PosLabelType,
+    split_col: str = "split",
+    target_col: str = "target",
+    pred_col: str = "pred",
+    pred_prob_col: str = "pred_prob",
 ) -> None:
     """
     Evaluates the bias in a model's predictions across different student groups for a split
@@ -90,9 +95,8 @@ def evaluate_bias(
                 plt.close()
 
                 for flag in group_flags:
-                    logging.info(
-                        "Run %s: %s on %s - %s, FNPR Difference: %.2f%% (%s) [%s]",
-                        run_id,
+                    LOGGER.info(
+                        "Bias Detected: %s on %s - %s, FNPR Difference: %.2f%% (%s) [%s]",
                         flag["group"],
                         flag["split_name"],
                         flag["subgroups"],

@@ -227,40 +227,41 @@ logging.info("top run ids = %s", top_run_ids)
 
 # COMMAND ----------
 
-# Iterate through runs and evaluate performance & bias
 for run_id in top_run_ids:
     with mlflow.start_run(run_id=run_id) as run:
-        model, df_pred = modeling.evaluation.load_model_and_predict(
-            experiment_id,
-            run_id,
-            cfg.modeling.training.primary_metric,
-            df,
-            df_features,
-            cfg.pred_col,
-            cfg.pred_prob_col,
+        logging.info("Run %s: Starting performance evaluation%s",
+                    run_id,
+                    " and bias assessment" if evaluate_model_bias else "")
+        model = mlflow.sklearn.load_model(f"runs:/{run_id}/model")
+        df_pred = df.assign(
+            **{
+                cfg.pred_col: model.predict(df_features),
+                cfg.pred_prob_col: modeling.inference.predict_probs(
+                    df_features,
+                    model,
+                    pos_label=cfg.pos_label,
+                ),
+            }
         )
+        model_comp_fig = modeling.evaluation.compare_trained_models_plot(
+            experiment_id, optimization_metric
+        )
+        mlflow.log_figure(model_comp_fig, "model_comparison.png")
+        plt.close()
 
         modeling.evaluation.evaluate_performance(
-            run_id,
             df_pred,
-            split_col,
-            cfg.target_col,
-            cfg.pred_prob_col,
-            cfg.pos_label,
+            target_col=cfg.target_col,
+            pos_label=cfg.pos_label,
         )
-
         if evaluate_model_bias:
             modeling.bias_detection.evaluate_bias(
-                run_id,
                 df_pred,
-                split_col,
-                cfg.student_group_cols,
-                cfg.target_col,
-                cfg.pred_col,
-                cfg.pred_prob_col,
-                cfg.pos_label,
+                student_group_cols=cfg.student_group_cols,
+                target_col=cfg.target_col,
+                pos_label=cfg.pos_label,
             )
-    logging.info("Run %s: finished processing", run_id)
+        logging.info("Run %s: Completed", run_id)
 mlflow.end_run()
 
 # COMMAND ----------

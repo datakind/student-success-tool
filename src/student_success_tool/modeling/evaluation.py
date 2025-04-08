@@ -1,3 +1,5 @@
+import mlflow
+import mlflow.artifacts
 import os
 import shutil
 import typing as t
@@ -8,8 +10,6 @@ from collections.abc import Sequence
 import matplotlib.colors as mcolors
 import matplotlib.figure
 import matplotlib.pyplot as plt
-import mlflow
-import mlflow.artifacts
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -26,6 +26,7 @@ from statsmodels.nonparametric.smoothers_lowess import lowess
 PALETTE = sns.color_palette("Paired")
 
 PosLabelType = t.Optional[int | float | bool | str]
+LOGGER = logging.getLogger(__name__)
 
 
 def extract_training_data_from_model(
@@ -65,64 +66,19 @@ def extract_training_data_from_model(
     return df_loaded
 
 
-def load_model_and_predict(
-    experiment_id: str,
-    run_id: str,
-    optimization_metric: str,
-    df: pd.DataFrame,
-    df_features: pd.DataFrame,
-    pred_col: str,
-    pred_prob_col: str,
-) -> tuple[sklearn.base.BaseEstimator, pd.DataFrame]:
-    """
-    Loads a trained MLflow model, generates predictions, logs a model comparison figure,
-    and returns a DataFrame containing predictions.
-
-    Args:
-        experiment_id: The MLflow experiment ID containing the trained models.
-        run_id: The specific MLflow run ID to load the model from.
-        optimization_metric: The metric used to compare and rank trained models.
-        df: The original DataFrame containing all relevant columns.
-        df_features: DataFrame but with only columns from model training features.
-        pred_col: Column name for the predictions.
-        pred_prob_col: Column name for predicted probabilities.
-
-    Returns:
-        model: The loaded model from experiment_id/run_id.
-        df_pred: A copy of the original DataFrame `df`, with two new columns with
-        class labels and predicted probabilities for the positive class.
-    """
-    model = mlflow.sklearn.load_model(f"runs:/{run_id}/model")
-    df_pred = df.assign(
-        **{
-            pred_col: model.predict(df_features),
-            pred_prob_col: model.predict_proba(df_features)[:, 1],
-        }
-    )
-
-    model_comp_fig = plot_trained_models_comparison(experiment_id, optimization_metric)
-    mlflow.log_figure(model_comp_fig, "model_comparison.png")
-    plt.close()
-
-    logging.info("Run %s: logging model comparison plot", run_id)
-
-    return model, df_pred
-
-
 def evaluate_performance(
-    run_id: str,
     df_pred: pd.DataFrame,
-    split_col: str,
-    target_col: str,
-    pred_prob_col: str,
-    pos_label: str,
+    *,
+    pos_label: PosLabelType,
+    split_col: str = "split",
+    target_col: str = "target",
+    pred_prob_col: str = "pred_prob",
 ) -> None:
     """
     Evaluates and logs model performance for each data split. Generates
     histogram, calibration, and sensitivity plots.
 
     Args:
-        run_id: The specific MLflow run ID to load the model from.
         df_pred: DataFrame containing prediction results with a column for splits.
         split_col: Column name indicating split column ("train", "test", or "val").
         target_col: Column name for the target variable.
@@ -160,7 +116,7 @@ def evaluate_performance(
         # Closes all matplotlib figures in console to free memory
         plt.close("all")
 
-        logging.info("Run %s: logging evaluation plots for %s", run_id, split_name)
+        LOGGER.info("Logging evaluation plots for %s dataset", split_name)
 
 
 def get_top_run_ids(
