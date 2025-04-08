@@ -179,6 +179,7 @@ def compute_group_bias_metrics(
 
     return group_metrics, fnpr_data
 
+
 def format_subgroup_metrics(eval_metrics: dict, fnpr_subgroup_data: dict) -> dict:
     """
     Formats the evaluation metrics and bias metrics together for logging into MLflow.
