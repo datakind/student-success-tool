@@ -10,7 +10,7 @@ import seaborn as sns
 import scipy.stats as st
 import sklearn.metrics
 
-from . import modeling
+from . import evaluation
 
 # Z-score for 95% confidence interval
 Z = st.norm.ppf(1 - (1 - 0.95) / 2)
