@@ -70,7 +70,7 @@ def evaluate_bias(
 
     for split_name, split_data in df_pred.groupby(split_col):
         for group_col in student_group_cols:
-            group_metrics, fnpr_data = compute_subgroup_bias_metrics(
+            group_metrics, fnpr_data = compute_group_bias_metrics(
                 split_data,
                 split_name,
                 group_col,
@@ -115,7 +115,7 @@ def evaluate_bias(
     log_bias_flags_to_mlflow(model_flags)
 
 
-def compute_subgroup_bias_metrics(
+def compute_group_bias_metrics(
     split_data: pd.DataFrame,
     split_name: str,
     group_col: str,
@@ -123,10 +123,10 @@ def compute_subgroup_bias_metrics(
     pred_col: str,
     pred_prob_col: str,
     pos_label: PosLabelType,
-    sample_weight_col: str = None,
+    sample_weight_col: str,
 ) -> tuple[list, list]:
     """
-    Computes subgroup metrics (including FNPR) based on evaluation parameters and logs them to MLflow.
+    Computes group metrics (including FNPR) based on evaluation parameters and logs them to MLflow.
 
     Args:
         split_data: Data for the current split to evaluate
@@ -149,29 +149,28 @@ def compute_subgroup_bias_metrics(
             labels, preds
         )
 
-        fnpr_subgroup_data = (
-            {
-                "group": group_col,
-                "subgroup": subgroup_name,
-                "fnpr": fnpr,
-                "split_name": split_name,
-                "ci": (fnpr_lower, fnpr_upper),
-                "size": len(subgroup_data),
-                "number_of_positive_samples": num_positives,
-            }
-        )
+        fnpr_subgroup_data = {
+            "group": group_col,
+            "subgroup": subgroup_name,
+            "fnpr": fnpr,
+            "split_name": split_name,
+            "ci": (fnpr_lower, fnpr_upper),
+            "size": len(subgroup_data),
+            "number_of_positive_samples": num_positives,
+        }
+
         eval_metrics = modeling.evaluation.compute_classification_perf_metrics(
             labels,
             preds,
             pred_probs,
             pos_label=pos_label,
-            sample_weights= (
-                subroup_data[sample_weight_col] 
-                if sample_weight_col is not None
+            sample_weights=(
+                subgroup_data[sample_weight_col] 
+                if sample_weight_col in subgroup_data.columns
                 else None,
             ),
         )
-        subgroup_metrics = format_metrics(eval_metrics, fnpr_subgroup_data)
+        subgroup_metrics = format_subgroup_metrics(eval_metrics, fnpr_subgroup_data)
 
         log_subgroup_metrics_to_mlflow(subgroup_metrics, split_name, group_col)
 
@@ -180,13 +179,10 @@ def compute_subgroup_bias_metrics(
 
     return group_metrics, fnpr_data
 
-def format_subgroup_metrics(
-    eval_metrics: dict,
-    fnpr_subgroup_data: dict
-) -> dict:
+def format_subgroup_metrics(eval_metrics: dict, fnpr_subgroup_data: dict) -> dict:
     """
     Formats the evaluation metrics and bias metrics together for logging into MLflow.
-    
+
     Args:
         eval_metrics: Dictionary performance metrics for subgroup
         fnpr_subgroup_data: List of dictionaries containing FNPR and CI information for each subgroup.
@@ -198,7 +194,9 @@ def format_subgroup_metrics(
         "Number of Samples": eval_metrics["num_samples"],
         "Number of Positive Samples": fnpr_subgroup_data["number_of_positive_samples"],
         "Actual Target Prevalence": round(eval_metrics["true_positive_prevalence"], 2),
-        "Predicted Target Prevalence": round(eval_metrics["pred_positive_prevalence"], 2),
+        "Predicted Target Prevalence": round(
+            eval_metrics["pred_positive_prevalence"], 2
+        ),
         # Bias Metrics
         "FNPR": round(fnpr_subgroup_data["fnpr"], 2),
         "FNPR CI Lower": round(fnpr_subgroup_data["ci"][0], 2),
@@ -211,6 +209,7 @@ def format_subgroup_metrics(
         "Log Loss": round(eval_metrics["log_loss"], 2),
         "ROC AUC": round(eval_metrics["roc_auc"], 2),
     }
+
 
 def flag_bias(
     fnpr_data: list,

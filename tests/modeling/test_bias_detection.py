@@ -47,7 +47,7 @@ def mock_helpers(monkeypatch):
     )
 
 
-def test_compute_subgroup_bias_metrics(mock_helpers):
+def test_compute_group_bias_metrics(mock_helpers):
     df = pd.DataFrame(
         {
             "group_col": ["A", "A", "B", "B"],
@@ -57,7 +57,7 @@ def test_compute_subgroup_bias_metrics(mock_helpers):
         }
     )
 
-    metrics, fnpr_data = bias_detection.compute_subgroup_bias_metrics(
+    metrics, fnpr_data = bias_detection.compute_group_bias_metrics(
         split_data=df,
         split_name="test",
         group_col="group_col",
