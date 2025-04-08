@@ -159,7 +159,7 @@ def compute_group_bias_metrics(
             "number_of_positive_samples": num_positives,
         }
 
-        eval_metrics = modeling.evaluation.compute_classification_perf_metrics(
+        eval_metrics = evaluation.compute_classification_perf_metrics(
             labels,
             preds,
             pred_probs,
