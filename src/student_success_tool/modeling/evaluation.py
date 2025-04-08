@@ -202,9 +202,6 @@ def compute_classification_perf_metrics(
         "log_loss": sklearn.metrics.log_loss(
             targets, pred_probs, sample_weight=sample_weights, labels=[False, True]
         ),
-        "roc_auc": sklearn.metrics.roc_auc_score(
-            targets, pred_probs, sample_weight=sample_weights
-        ),
     }
     return result
 

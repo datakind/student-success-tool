@@ -208,7 +208,6 @@ def format_subgroup_metrics(eval_metrics: dict, fnpr_subgroup_data: dict) -> dic
         "Recall": round(eval_metrics["recall"], 2),
         "F1 Score": round(eval_metrics["f1_score"], 2),
         "Log Loss": round(eval_metrics["log_loss"], 2),
-        "ROC AUC": round(eval_metrics["roc_auc"], 2),
     }
 
 
