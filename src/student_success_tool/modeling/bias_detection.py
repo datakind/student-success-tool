@@ -547,13 +547,13 @@ def plot_fnpr_group(fnpr_data: list) -> matplotlib.figure.Figure:
             label="FNPR" if i == 0 else "",
         )
 
-    ax.set_yticks(y_positions)
-    ax.set_yticklabels(subgroups)
-    ax.set_ylim(-1, len(subgroups))
-    ax.set_ylabel("Subgroup")
-    ax.set_xlabel("False Negative Parity Rate")
-    ax.set_title(
-        f"""FNPR @ 0.5 for {fnpr_data[0]["group"]} on {fnpr_data[0]["split_name"]}"""
+    ax.set(
+        yticks=y_positions,
+        yticklabels=subgroups,
+        ylim=(-1, len(subgroups)),
+        ylabel="Subgroup",
+        xlabel="False Negative Parity Rate",
+        title=f"""FNPR @ 0.5 for {fnpr_data[0]["group"]} on {fnpr_data[0]["split_name"]}"""
     )
     ax.tick_params(axis="both", labelsize=12)
     ax.grid(True, linestyle="--", alpha=0.6)
