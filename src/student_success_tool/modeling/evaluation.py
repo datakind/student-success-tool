@@ -159,7 +159,7 @@ def get_top_run_ids(
     return top_run_ids
 
 
-def compute_classification_eval_metrics(
+def compute_classification_perf_metrics(
     targets: pd.Series,
     preds: pd.Series,
     pred_probs: pd.Series,
@@ -191,7 +191,6 @@ def compute_classification_eval_metrics(
     )
     result = {
         "num_samples": len(targets),
-        "num_positives": targets.eq(pos_label).sum(),
         "true_positive_prevalence": targets.eq(pos_label).mean(),
         "pred_positive_prevalence": preds.eq(pos_label).mean(),
         "accuracy": sklearn.metrics.accuracy_score(

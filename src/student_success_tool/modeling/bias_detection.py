@@ -10,6 +10,8 @@ import seaborn as sns
 import scipy.stats as st
 import sklearn.metrics
 
+from . import modeling
+
 # Z-score for 95% confidence interval
 Z = st.norm.ppf(1 - (1 - 0.95) / 2)
 
@@ -45,6 +47,7 @@ def evaluate_bias(
     target_col: str = "target",
     pred_col: str = "pred",
     pred_prob_col: str = "pred_prob",
+    sample_weight_col: str = "sample_weight_col",
 ) -> None:
     """
     Evaluates the bias in a model's predictions across different student groups for a split
@@ -61,6 +64,7 @@ def evaluate_bias(
         pred_col: Column name for the model's predicted values
         pred_prob_col: Column name for the model's predicted probabilities
         pos_label: Label representing the positive class
+        sample_weight_col: Column name representing sample weights for the model.
     """
     model_flags = []
 
@@ -74,6 +78,7 @@ def evaluate_bias(
                 pred_col,
                 pred_prob_col,
                 pos_label,
+                sample_weight_col,
             )
             log_group_metrics_to_mlflow(group_metrics, split_name, group_col)
 
@@ -118,6 +123,7 @@ def compute_subgroup_bias_metrics(
     pred_col: str,
     pred_prob_col: str,
     pos_label: PosLabelType,
+    sample_weight_col: str = None,
 ) -> tuple[list, list]:
     """
     Computes subgroup metrics (including FNPR) based on evaluation parameters and logs them to MLflow.
@@ -143,7 +149,7 @@ def compute_subgroup_bias_metrics(
             labels, preds
         )
 
-        fnpr_data.append(
+        fnpr_subgroup_data = (
             {
                 "group": group_col,
                 "subgroup": subgroup_name,
@@ -154,45 +160,57 @@ def compute_subgroup_bias_metrics(
                 "number_of_positive_samples": num_positives,
             }
         )
+        eval_metrics = modeling.evaluation.compute_classification_perf_metrics(
+            labels,
+            preds,
+            pred_probs,
+            pos_label=pos_label,
+            sample_weights= (
+                subroup_data[sample_weight_col] 
+                if sample_weight_col is not None
+                else None,
+            ),
+        )
+        subgroup_metrics = format_metrics(eval_metrics, fnpr_subgroup_data)
 
-        subgroup_metrics = {
-            "Subgroup": subgroup_name,
-            "Number of Samples": len(subgroup_data),
-            "Number of Positive Samples": num_positives,
-            "Actual Target Prevalence": round(labels.mean(), 2),
-            "Predicted Target Prevalence": round(preds.mean(), 2),
-            "FNPR": round(fnpr, 2),
-            "FNPR CI Lower": round(fnpr_lower, 2),
-            "FNPR CI Upper": round(fnpr_upper, 2),
-            "Accuracy": round(sklearn.metrics.accuracy_score(labels, preds), 2),
-            "Precision": round(
-                sklearn.metrics.precision_score(
-                    labels,
-                    preds,
-                    pos_label=pos_label,
-                    zero_division=np.nan,
-                ),
-                2,
-            ),
-            "Recall": round(
-                sklearn.metrics.recall_score(
-                    labels,
-                    preds,
-                    pos_label=pos_label,
-                    zero_division=np.nan,
-                ),
-                2,
-            ),
-            "Log Loss": round(
-                sklearn.metrics.log_loss(labels, pred_probs, labels=[False, True]),
-                2,
-            ),
-        }
         log_subgroup_metrics_to_mlflow(subgroup_metrics, split_name, group_col)
+
         group_metrics.append(subgroup_metrics)
+        fnpr_data.append(fnpr_subgroup_data)
 
     return group_metrics, fnpr_data
 
+def format_subgroup_metrics(
+    eval_metrics: dict,
+    fnpr_subgroup_data: dict
+) -> dict:
+    """
+    Formats the evaluation metrics and bias metrics together for logging into MLflow.
+    
+    Args:
+        eval_metrics: Dictionary performance metrics for subgroup
+        fnpr_subgroup_data: List of dictionaries containing FNPR and CI information for each subgroup.
+    Returns:
+        Dictionary summarizing both performance & bias metrics
+    """
+    return {
+        "Subgroup": fnpr_subgroup_data["subgroup"],
+        "Number of Samples": eval_metrics["num_samples"],
+        "Number of Positive Samples": fnpr_subgroup_data["number_of_positive_samples"],
+        "Actual Target Prevalence": round(eval_metrics["true_positive_prevalence"], 2),
+        "Predicted Target Prevalence": round(eval_metrics["pred_positive_prevalence"], 2),
+        # Bias Metrics
+        "FNPR": round(fnpr_subgroup_data["fnpr"], 2),
+        "FNPR CI Lower": round(fnpr_subgroup_data["ci"][0], 2),
+        "FNPR CI Upper": round(fnpr_subgroup_data["ci"][1], 2),
+        # Performance Metrics
+        "Accuracy": round(eval_metrics["accuracy"], 2),
+        "Precision": round(eval_metrics["precision"], 2),
+        "Recall": round(eval_metrics["recall"], 2),
+        "F1 Score": round(eval_metrics["f1_score"], 2),
+        "Log Loss": round(eval_metrics["log_loss"], 2),
+        "ROC AUC": round(eval_metrics["roc_auc"], 2),
+    }
 
 def flag_bias(
     fnpr_data: list,
