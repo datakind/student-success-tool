@@ -79,18 +79,18 @@ def load_model_and_predict(
     and returns a DataFrame containing predictions.
 
     Args:
-        experiment_id (str): The MLflow experiment ID containing the trained models.
-        run_id (str): The specific MLflow run ID to load the model from.
-        optimization_metric (str): The metric used to compare and rank trained models.
-        df (pd.DataFrame): The original DataFrame containing all relevant columns.
-        df_features (pd.DataFrame): DataFrame but with only columns from model training features.
-        pred_col (str): Column name for the predictions.
-        pred_prob_col (str): Column name for predicted probabilities.
+        experiment_id: The MLflow experiment ID containing the trained models.
+        run_id: The specific MLflow run ID to load the model from.
+        optimization_metric: The metric used to compare and rank trained models.
+        df: The original DataFrame containing all relevant columns.
+        df_features: DataFrame but with only columns from model training features.
+        pred_col: Column name for the predictions.
+        pred_prob_col: Column name for predicted probabilities.
 
     Returns:
-        model (sklearn.base.BaseEstimator): The loaded model from experiment_id/run_id.
-        df_pred (pd.DataFrame): A copy of the original DataFrame `df`, with two new columns: pred_col: predicted
-        class labels and pred_probs_col: predicted probabilities for the positive class.
+        model: The loaded model from experiment_id/run_id.
+        df_pred: A copy of the original DataFrame `df`, with two new columns with
+        class labels and predicted probabilities for the positive class.
     """
     model = mlflow.sklearn.load_model(f"runs:/{run_id}/model")
     df_pred = df.assign(
@@ -122,12 +122,12 @@ def evaluate_performance(
     histogram, calibration, and sensitivity plots.
 
     Args:
-        run_id (str): The specific MLflow run ID to load the model from.
-        df_pred (pd.DataFrame): DataFrame containing prediction results with a column for splits.
-        split_col (str): Column indicating split column ("train", "test", or "val").
-        target_col (str): Column name for the target variable.
-        pred_prob_col (str): Column name for predicted probabilities.
-        pos_label (str): Positive class label.
+        run_id: The specific MLflow run ID to load the model from.
+        df_pred: DataFrame containing prediction results with a column for splits.
+        split_col: Column name indicating split column ("train", "test", or "val").
+        target_col: Column name for the target variable.
+        pred_prob_col: Column name for predicted probabilities.
+        pos_label: Positive class label.
     """
     calibration_dir = "calibration"
     preds_dir = "preds"
@@ -167,17 +167,17 @@ def get_top_run_ids(
     experiment_id: str,
     optimization_metric: str,
     topn_runs_included: int,
-) -> t.List[str]:
+) -> list[str]:
     """
     Retrieve top run IDs from an MLflow experiment using evaluation parameters.
 
     Args:
-        experiment_id (str): MLflow experiment ID.
-        optimization_metric (str): Metric used to optimize the model.
-        topn_runs_included (int): Number of top runs to return.
+        experiment_id: MLflow experiment ID.
+        optimization_metric: Metric used to optimize the model.
+        topn_runs_included: Number of top runs to return.
 
     Returns:
-        List[str]: List of top run IDs based on the optimization metric.
+        top_run_ids: List of top run IDs based on the optimization metric.
     """
     # Fetch all runs
     runs: pd.DataFrame = mlflow.search_runs(

@@ -47,14 +47,15 @@ def evaluate_bias(
     computed and any detected biases are flagged. Then, the metrics & plots are logged to MLflow.
 
     Args:
-        run_id (str): The ID of the MLflow run
-        df_pred (pd.DataFrame): Pandas DataFrame with predictions from the model
-        split_col (str): Column indicating split column ("train", "test", or "val")
-        student_group_cols (list): A list of columns representing student groups for bias analysis
-        target_col (str): Column name for the target (actual) values
-        pred_col (str): Column name for the model's predicted values
-        pred_prob_col (str): Column name for the model's predicted probabilities
-        pos_label (str or int): Label representing the positive class
+        run_id: The ID of the MLflow run
+        df_pred: Pandas DataFrame with predictions from the model. The following columns
+        need to be specified in df_pred: split_col, target_col, pred_col, and pred_probs_col.
+        split_col: Column indicating split column ("train", "test", or "val")
+        student_group_cols: A list of columns representing student groups for bias analysis
+        target_col: Column name for the target (actual) values
+        pred_col: Column name for the model's predicted values
+        pred_prob_col: Column name for the model's predicted probabilities
+        pos_label: Label representing the positive class
     """
     model_flags = []
 
@@ -118,13 +119,13 @@ def compute_subgroup_bias_metrics(
     Computes subgroup metrics (including FNPR) based on evaluation parameters and logs them to MLflow.
 
     Args:
-        split_data (pd.DataFrame): Data for the current split to evaluate
-        split_name (str): Name of the data split (e.g., "train", "test", or "val")
-        target_col (str): Column name for the target variable.
-        pred_col (str): Column name for the predictions.
-        pred_prob_col (str): Column name for predicted probabilities.
-        pos_label (str): Positive class label.
-        student_group_cols (list): List of columns for subgroups.
+        split_data: Data for the current split to evaluate
+        split_name: Name of the data split (e.g., "train", "test", or "val")
+        target_col: Column name for the target variable.
+        pred_col: Column name for the predictions.
+        pred_prob_col: Column name for predicted probabilities.
+        pos_label: Positive class label.
+        student_group_cols: List of columns for subgroups.
     """
     group_metrics = []
     fnpr_data = []
@@ -425,7 +426,7 @@ def log_bias_flags_to_mlflow(all_model_flags: list) -> None:
     Save and log bias flags to MLflow. If no flags exist for the model, then we do not log anything.
 
     Args:
-        all_model_flags (list): Bias flags for across all splits
+        all_model_flags: Bias flags for across all splits
         (e.g. "train", "test", "val") of the model
     """
     if all_model_flags:
@@ -456,9 +457,9 @@ def log_group_metrics_to_mlflow(
     Saves and logs group-level bias metrics as a CSV artifact in MLflow.
 
     Args:
-        group_metrics (list): List of dictionaries containing computed group-level bias metrics.
-        split_name (str): Name of the data split (e.g., "train", "test", "validation").
-        group_col (str): Column name representing the group for bias evaluation.
+        group_metrics: List of dictionaries containing computed group-level bias metrics.
+        split_name: Name of the data split (e.g., "train", "test", "validation").
+        group_col: Column name representing the group for bias evaluation.
     """
     df_group_metrics = pd.DataFrame(group_metrics)
     metrics_tmp_path = f"/tmp/{split_name}_{group_col}_metrics.csv"
@@ -475,9 +476,9 @@ def log_subgroup_metrics_to_mlflow(
     Logs individual subgroup-level metrics to MLflow.
 
     Args:
-        subgroup_metrics (dict): Dictionary of subgroup bias metrics.
-        split_name (str): Name of the data split (e.g., "train", "test", "validation").
-        group_col (str): Column name representing the group for bias evaluation.
+        subgroup_metrics: Dictionary of subgroup bias metrics.
+        split_name: Name of the data split (e.g., "train", "test", "validation").
+        group_col: Column name representing the group for bias evaluation.
     """
     for metric, value in subgroup_metrics.items():
         if metric not in {"Subgroup", "Number of Samples"}:
