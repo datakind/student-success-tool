@@ -229,9 +229,11 @@ logging.info("top run ids = %s", top_run_ids)
 
 for run_id in top_run_ids:
     with mlflow.start_run(run_id=run_id) as run:
-        logging.info("Run %s: Starting performance evaluation%s",
-                    run_id,
-                    " and bias assessment" if evaluate_model_bias else "")
+        logging.info(
+            "Run %s: Starting performance evaluation%s",
+            run_id,
+            " and bias assessment" if evaluate_model_bias else ""
+        )
         model = mlflow.sklearn.load_model(f"runs:/{run_id}/model")
         df_pred = df.assign(
             **{

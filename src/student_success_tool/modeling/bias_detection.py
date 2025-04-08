@@ -117,7 +117,7 @@ def compute_subgroup_bias_metrics(
     target_col: str,
     pred_col: str,
     pred_prob_col: str,
-    pos_label: str,
+    pos_label: PosLabelType,
 ) -> tuple[list, list]:
     """
     Computes subgroup metrics (including FNPR) based on evaluation parameters and logs them to MLflow.
