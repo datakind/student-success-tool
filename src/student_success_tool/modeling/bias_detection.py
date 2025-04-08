@@ -165,7 +165,7 @@ def compute_group_bias_metrics(
             pred_probs,
             pos_label=pos_label,
             sample_weights=(
-                subgroup_data[sample_weight_col] 
+                subgroup_data[sample_weight_col]
                 if sample_weight_col in subgroup_data.columns
                 else None
             ),

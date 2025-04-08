@@ -66,7 +66,7 @@ def test_compute_group_bias_metrics(mock_helpers):
         pred_col="pred",
         pred_prob_col="prob",
         pos_label=1,
-        sample_weight_col="sample_weight_col"
+        sample_weight_col="sample_weight_col",
     )
 
     assert isinstance(metrics, list)
