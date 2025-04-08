@@ -116,7 +116,7 @@ def evaluate_performance(
         # Closes all matplotlib figures in console to free memory
         plt.close("all")
 
-        LOGGER.info("Logging evaluation plots for %s dataset", split_name)
+        LOGGER.info(" Logging evaluation plots for %s dataset", split_name)
 
 
 def get_top_run_ids(

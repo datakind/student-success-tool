@@ -38,6 +38,7 @@
 import logging
 import mlflow
 import sklearn.metrics
+import matplotlib.pyplot as plt
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 
@@ -169,7 +170,7 @@ training_params = {
     "split_col": cfg.split_col,
     "sample_weight_col": cfg.sample_weight_col,
     "pos_label": cfg.pos_label,
-    "optimization_metric": cfg.modeling.training.primary_metric,
+    "primary_metric": cfg.modeling.training.primary_metric,
     "timeout_minutes": cfg.modeling.training.timeout_minutes,
     "exclude_frameworks": cfg.modeling.training.exclude_frameworks,
     "exclude_cols": sorted(
@@ -187,7 +188,7 @@ run_id = summary.best_trial.mlflow_run_id
 print(
     f"experiment_id: {experiment_id}"
     f"\nbest trial run_id: {run_id}"
-    f"\n{training_params['optimization_metric']} metric distribution = {summary.metric_distribution}"
+    f"\n{training_params['primary_metric']} metric distribution = {summary.metric_distribution}"
 )
 
 dbutils.jobs.taskValues.set(key="experiment_id", value=experiment_id)
@@ -241,12 +242,13 @@ for run_id in top_run_ids:
                 cfg.pred_prob_col: modeling.inference.predict_probs(
                     df_features,
                     model,
+                    feature_names=list(df_features.columns),
                     pos_label=cfg.pos_label,
                 ),
             }
         )
-        model_comp_fig = modeling.evaluation.compare_trained_models_plot(
-            experiment_id, optimization_metric
+        model_comp_fig = modeling.evaluation.plot_trained_models_comparison(
+            experiment_id, cfg.modeling.training.primary_metric
         )
         mlflow.log_figure(model_comp_fig, "model_comparison.png")
         plt.close()
