@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 import typing as t
@@ -18,6 +19,8 @@ import sklearn.metrics
 import sklearn.utils
 from sklearn.calibration import calibration_curve
 from statsmodels.nonparametric.smoothers_lowess import lowess
+
+LOGGER = logging.getLogger(__name__)
 
 # TODO: eventually we should use the custom_style.mplstyle colors, but currently
 # the color palette does not have distinct enough colors for calibration by group
@@ -64,7 +67,96 @@ def extract_training_data_from_model(
     return df_loaded
 
 
-def compute_classification_eval_metrics(
+def evaluate_performance(
+    df_pred: pd.DataFrame,
+    *,
+    pos_label: PosLabelType,
+    split_col: str = "split",
+    target_col: str = "target",
+    pred_prob_col: str = "pred_prob",
+) -> None:
+    """
+    Evaluates and logs model performance for each data split. Generates
+    histogram, calibration, and sensitivity plots.
+
+    Args:
+        df_pred: DataFrame containing prediction results with a column for splits.
+        split_col: Column name indicating split column ("train", "test", or "val").
+        target_col: Column name for the target variable.
+        pred_prob_col: Column name for predicted probabilities.
+        pos_label: Positive class label.
+    """
+    calibration_dir = "calibration"
+    preds_dir = "preds"
+    sensitivity_dir = "sensitivity"
+
+    for split_name, split_data in df_pred.groupby(split_col):
+        LOGGER.info("Evaluating model performance for '%s' split", split_name)
+        split_data.to_csv(f"/tmp/{split_name}_preds.csv", header=True, index=False)
+        mlflow.log_artifact(
+            local_path=f"/tmp/{split_name}_preds.csv",
+            artifact_path=preds_dir,
+        )
+        plt.close()
+
+        hist_fig, cal_fig, sla_fig = create_evaluation_plots(
+            split_data,
+            pred_prob_col,
+            target_col,
+            pos_label,
+            split_name,
+        )
+        mlflow.log_figure(hist_fig, os.path.join(preds_dir, f"{split_name}_hist.png"))
+        mlflow.log_figure(
+            cal_fig, os.path.join(calibration_dir, f"{split_name}_calibration.png")
+        )
+        mlflow.log_figure(
+            sla_fig, os.path.join(sensitivity_dir, f"{split_name}_sla.png")
+        )
+        # Closes all matplotlib figures in console to free memory
+        plt.close("all")
+
+
+def get_top_run_ids(
+    experiment_id: str,
+    optimization_metric: str,
+    topn_runs_included: int = 1,
+) -> list[str]:
+    """
+    Retrieve top run IDs from an MLflow experiment using evaluation parameters.
+
+    Args:
+        experiment_id: MLflow experiment ID.
+        optimization_metric: Metric used to optimize the model.
+        topn_runs_included: Number of top runs to return.
+
+    Returns:
+        top_run_ids: List of top run IDs based on the optimization metric.
+    """
+    # Fetch all runs
+    runs = mlflow.search_runs(
+        experiment_ids=[experiment_id],
+        order_by=["metrics.m DESC"],
+        output_format="pandas",
+    )
+    assert isinstance(runs, pd.DataFrame)  # type guard
+    # Retrieve validation metric for sorting
+    search_metric = (
+        f"metrics.val_{optimization_metric}"
+        if optimization_metric in ["log_loss", "roc_auc"]
+        else f"metrics.val_{optimization_metric}_score"
+    )
+    # Sort and select top run IDs based on min/max with loss vs. score
+    ascending_order = optimization_metric == "log_loss"
+    top_run_ids: list[str] = (
+        runs.sort_values(by=search_metric, ascending=ascending_order)
+        .iloc[:topn_runs_included]["run_id"]
+        .tolist()
+    )
+    return top_run_ids
+
+
+def compute_classification_perf_metrics(
     targets: pd.Series,
     preds: pd.Series,
     pred_probs: pd.Series,
@@ -106,11 +198,12 @@ def compute_classification_eval_metrics(
         "recall": recall,
         "f1_score": f1_score,
         "log_loss": sklearn.metrics.log_loss(
-            targets, pred_probs, sample_weight=sample_weights
+            targets, pred_probs, sample_weight=sample_weights, labels=[False, True]
         ),
-        "roc_auc": sklearn.metrics.roc_auc_score(
-            targets, pred_probs, sample_weight=sample_weights
-        ),
+        # TODO: add this back in, but handle errors for small N case
+        # "roc_auc": sklearn.metrics.roc_auc_score(
+        #     targets, pred_probs, sample_weight=sample_weights, labels=[False, True]
+        # ),
     }
     return result
 
@@ -642,59 +735,6 @@ def plot_shap_beeswarm(shap_values):
         transform=cbar.ax.transAxes,
     )
     return plt.gcf()
-
-
-def fnpr_group_plot(fnpr_data: list) -> matplotlib.figure.Figure:
-    """
-    Plots False Negative Prediction Rate (FNPR) for a group by subgroup on
-    a split (train/test/val) of data with confidence intervals.
-
-    Parameters:
-    - fnpr_data: List with dictionaries for each subgroup. Each dictionary
-    comprises of group, fnpr, ci (confidence interval), and split_name keys.
-    """
-    subgroups = [subgroup_data["subgroup"] for subgroup_data in fnpr_data]
-    fnpr = [subgroup_data["fnpr"] for subgroup_data in fnpr_data]
-    min_ci_errors = [
-        subgroup_data["fnpr"] - subgroup_data["ci"][0] for subgroup_data in fnpr_data
-    ]
-    max_ci_errors = [
-        subgroup_data["ci"][1] - subgroup_data["fnpr"] for subgroup_data in fnpr_data
-    ]
-
-    y_positions = list(range(len(subgroups)))
-    fig, ax = plt.subplots()
-
-    for i, (x, y, err_min, err_max) in enumerate(
-        zip(fnpr, y_positions, min_ci_errors, max_ci_errors)
-    ):
-        color = PALETTE[i % len(PALETTE)]
-        ax.errorbar(
-            x=x,
-            y=y,
-            xerr=[[err_min], [err_max]],
-            fmt="o",
-            capsize=5,
-            capthick=2,
-            markersize=8,
-            linewidth=2,
-            color=color,
-            label="FNPR" if i == 0 else "",
-        )
-
-    ax.set_yticks(y_positions)
-    ax.set_yticklabels(subgroups)
-    ax.set_ylim(-1, len(subgroups))
-    ax.set_ylabel("Subgroup")
-    ax.set_xlabel("False Negative Parity Rate")
-    ax.set_title(
-        f"""FNPR @ 0.5 for {fnpr_data[0]["group"]} on {fnpr_data[0]["split_name"]}"""
-    )
-    ax.tick_params(axis="both", labelsize=12)
-    ax.grid(True, linestyle="--", alpha=0.6)
-
-    plt.tight_layout()
-    return fig
 
 
 def _check_array_of_arrays(input_array: pd.Series) -> bool:
