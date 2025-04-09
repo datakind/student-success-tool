@@ -101,7 +101,7 @@ def evaluate_bias(
                 plt.close()
 
                 for flag in group_flags:
-                    LOGGER.info(
+                    LOGGER.warning(
                         " Bias detected for %s on %s - %s, FNPR Difference: %.2f%% (%s) [%s]",
                         flag["group"],
                         flag["split_name"],
