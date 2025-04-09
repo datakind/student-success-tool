@@ -1,15 +1,15 @@
-import mlflow
-import mlflow.artifacts
+import logging
 import os
 import shutil
 import typing as t
-import logging
 import uuid
 from collections.abc import Sequence
 
 import matplotlib.colors as mcolors
 import matplotlib.figure
 import matplotlib.pyplot as plt
+import mlflow
+import mlflow.artifacts
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -20,13 +20,14 @@ import sklearn.utils
 from sklearn.calibration import calibration_curve
 from statsmodels.nonparametric.smoothers_lowess import lowess
 
+LOGGER = logging.getLogger(__name__)
+
 # TODO: eventually we should use the custom_style.mplstyle colors, but currently
 # the color palette does not have distinct enough colors for calibration by group
 # where there are a lot of subgroups
 PALETTE = sns.color_palette("Paired")
 
 PosLabelType = t.Optional[int | float | bool | str]
-LOGGER = logging.getLogger(__name__)
 
 
 def extract_training_data_from_model(
@@ -90,6 +91,7 @@ def evaluate_performance(
     sensitivity_dir = "sensitivity"
 
     for split_name, split_data in df_pred.groupby(split_col):
+        LOGGER.info("Evaluating model performance for '%s' split", split_name)
         split_data.to_csv(f"/tmp/{split_name}_preds.csv", header=True, index=False)
         mlflow.log_artifact(
             local_path=f"/tmp/{split_name}_preds.csv",
@@ -104,7 +106,6 @@ def evaluate_performance(
             pos_label,
             split_name,
         )
-
         mlflow.log_figure(hist_fig, os.path.join(preds_dir, f"{split_name}_hist.png"))
         mlflow.log_figure(
             cal_fig, os.path.join(calibration_dir, f"{split_name}_calibration.png")
@@ -112,11 +113,8 @@ def evaluate_performance(
         mlflow.log_figure(
             sla_fig, os.path.join(sensitivity_dir, f"{split_name}_sla.png")
         )
-
         # Closes all matplotlib figures in console to free memory
         plt.close("all")
-
-        LOGGER.info(" Logging evaluation plots for %s dataset", split_name)
 
 
 def get_top_run_ids(
@@ -136,26 +134,24 @@ def get_top_run_ids(
         top_run_ids: List of top run IDs based on the optimization metric.
     """
     # Fetch all runs
-    runs: pd.DataFrame = mlflow.search_runs(
+    runs = mlflow.search_runs(
         experiment_ids=[experiment_id],
         order_by=["metrics.m DESC"],
     )
-
+    assert isinstance(runs, pd.DataFrame)  # type guard
     # Retrieve validation metric for sorting
     search_metric = (
         f"metrics.val_{optimization_metric}"
         if optimization_metric in ["log_loss", "roc_auc"]
         else f"metrics.val_{optimization_metric}_score"
     )
-
     # Sort and select top run IDs based on min/max with loss vs. score
     ascending_order = optimization_metric == "log_loss"
-    top_run_ids: t.List[str] = (
+    top_run_ids: list[str] = (
         runs.sort_values(by=search_metric, ascending=ascending_order)
         .iloc[:topn_runs_included]["run_id"]
         .tolist()
     )
-
     return top_run_ids
 
 
