@@ -1,12 +1,15 @@
-import mlflow.tracking
-import pytest
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
+import mlflow.tracking
+import numpy as np
+import pandas as pd
+import pytest
 
 from student_success_tool.modeling import bias_detection
 
 np.random.seed(42)
+
+# HACK: log artifacts to tmp dir so they don't clutter repo
+mlflow.set_tracking_uri("file:///tmp/mlflow")
 
 
 @pytest.fixture
