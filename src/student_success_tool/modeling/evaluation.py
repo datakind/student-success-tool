@@ -120,7 +120,7 @@ def evaluate_performance(
 def get_top_run_ids(
     experiment_id: str,
     optimization_metric: str,
-    topn_runs_included: int,
+    topn_runs_included: int = 1,
 ) -> list[str]:
     """
     Retrieve top run IDs from an MLflow experiment using evaluation parameters.
@@ -137,6 +137,7 @@ def get_top_run_ids(
     runs = mlflow.search_runs(
         experiment_ids=[experiment_id],
         order_by=["metrics.m DESC"],
+        output_format="pandas",
     )
     assert isinstance(runs, pd.DataFrame)  # type guard
     # Retrieve validation metric for sorting
@@ -187,6 +188,7 @@ def compute_classification_perf_metrics(
     )
     result = {
         "num_samples": len(targets),
+        "num_positives": targets.eq(pos_label).sum(),
         "true_positive_prevalence": targets.eq(pos_label).mean(),
         "pred_positive_prevalence": preds.eq(pos_label).mean(),
         "accuracy": sklearn.metrics.accuracy_score(
@@ -198,6 +200,10 @@ def compute_classification_perf_metrics(
         "log_loss": sklearn.metrics.log_loss(
             targets, pred_probs, sample_weight=sample_weights, labels=[False, True]
         ),
+        # TODO: add this back in, but handle errors for small N case
+        # "roc_auc": sklearn.metrics.roc_auc_score(
+        #     targets, pred_probs, sample_weight=sample_weights, labels=[False, True]
+        # ),
     }
     return result
 

@@ -126,7 +126,7 @@ def test_get_top_run_ids(
             }
         )
 
-    def _search_runs_patch(experiment_ids, order_by):
+    def _search_runs_patch(experiment_ids, order_by, output_format):
         return mock_data
 
     monkeypatch.setattr(mlflow, "search_runs", _search_runs_patch)

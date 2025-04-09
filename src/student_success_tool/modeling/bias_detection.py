@@ -170,6 +170,8 @@ def compute_group_bias_metrics(
                 else None
             ),
         )
+        # HACK: avoid duplicative metrics
+        eval_metrics.pop("num_positives", None)
         subgroup_metrics = format_subgroup_metrics(eval_metrics, fnpr_subgroup_data)
 
         log_subgroup_metrics_to_mlflow(subgroup_metrics, split_name, group_col)
