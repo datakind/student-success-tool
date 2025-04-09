@@ -1,16 +1,18 @@
-import mlflow
-import typing as t
 import logging
+import typing as t
 
-import pandas as pd
-import numpy as np
 import matplotlib.figure
 import matplotlib.pyplot as plt
-import seaborn as sns
+import mlflow
+import numpy as np
+import pandas as pd
 import scipy.stats as st
+import seaborn as sns
 import sklearn.metrics
 
 from . import evaluation
+
+LOGGER = logging.getLogger(__name__)
 
 # Z-score for 95% confidence interval
 Z = st.norm.ppf(1 - (1 - 0.95) / 2)
@@ -35,7 +37,6 @@ FLAG_NAMES = {
 PALETTE = sns.color_palette("Paired")
 
 PosLabelType = t.Optional[int | float | bool | str]
-LOGGER = logging.getLogger(__name__)
 
 
 def evaluate_bias(
