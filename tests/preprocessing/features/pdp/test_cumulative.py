@@ -89,18 +89,18 @@ def df_grped(df):
                     ],
                     "num_courses_cumsum": [3.0, 5.0, 7.0, 9.0, 10.0],
                     "took_course_subject_area_02_cummax": [
-                        True, 
-                        True, 
-                        True, 
-                        True, 
-                        True
+                        1.0, 
+                        1.0, 
+                        1.0, 
+                        1.0, 
+                        1.0
                     ],
                     "took_course_subject_area_05_06_cummax": [
-                        False,
-                        False,
-                        False,
-                        True,
-                        True,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0,
                     ],
                     "num_courses_course_level_0_cumfrac": [
                         0.667,
