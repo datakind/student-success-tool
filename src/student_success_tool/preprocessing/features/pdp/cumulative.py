@@ -2,6 +2,7 @@ import functools as ft
 import itertools
 import logging
 from collections.abc import Iterable
+import typing as t
 
 import pandas as pd
 from pandas.core.groupby import DataFrameGroupBy
@@ -25,10 +26,16 @@ def add_features(
         for col in df.columns
         if col.startswith(f"{constants.NUM_COURSE_FEATURE_COL_PREFIX}_")
     ]
+    dummy_course_cols = [
+        col
+        for col in df.columns
+        if col.startswith(f"{constants.DUMMY_COURSE_FEATURE_COL_PREFIX}_")
+    ]
     df_expanding_agg = (
         expanding_agg_features(
             df_grped,
             num_course_cols=num_course_cols,
+            dummy_course_cols=dummy_course_cols,
             col_aggs=[
                 ("term_id", "count"),
                 ("term_in_peak_covid", "sum"),
@@ -91,6 +98,7 @@ def expanding_agg_features(
     *,
     num_course_cols: list[str],
     col_aggs: list[tuple[str, str | list[str]]],
+    dummy_course_cols: t.Optional[list[str]] = None
 ) -> pd.DataFrame:
     """
     Compute various aggregate features over an expanding window per (student) group.
@@ -103,7 +111,7 @@ def expanding_agg_features(
     LOGGER.info("computing expanding window aggregate features ...")
     df_cumaggs = (
         df_grped.expanding()
-        .agg(dict(col_aggs) | {col: "sum" for col in num_course_cols})
+        .agg(dict(col_aggs) | {col: "sum" for col in num_course_cols} | {col: "max" for col in dummy_course_cols})
         # pandas does weird stuff when indexing on windowed operations
         # this should get us back to student_id_cols only on the index
         .reset_index(level=-1, drop=True)
