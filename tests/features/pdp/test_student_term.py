@@ -416,7 +416,7 @@ def test_student_term_enrollment_intensity(
             "cohort_start_dt",
             "term_start_dt",
             "term_end_dt",
-            pd.Series([273, 486, 1064], dtype="integer"),
+            pd.Series([273, 486, 1064], dtype="int"),
         ),
     ],
 )
