@@ -196,7 +196,7 @@ def test_multicol_grade_aggs_by_group(
 
 
 @pytest.mark.parametrize(
-    ["df", "ccol", "tcol", "exp"], 
+    ["df", "ccol", "tcol", "exp"],
     [
         (
             pd.DataFrame(
@@ -215,7 +215,9 @@ def test_multicol_grade_aggs_by_group(
 )
 def test_year_of_enrollment_at_cohort_inst(df, ccol, tcol, exp):
     obs = student_term.year_of_enrollment_at_cohort_inst(
-        df, cohort_start_dt_col=ccol, term_start_dt_col=tcol,
+        df,
+        cohort_start_dt_col=ccol,
+        term_start_dt_col=tcol,
     )
     assert isinstance(obs, pd.Series) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
@@ -280,7 +282,9 @@ def test_student_has_prior_degree(df, inst, exp):
 )
 def test_term_is_pre_cohort(df, ccol, tcol, exp):
     obs = student_term.term_is_pre_cohort(
-        df, cohort_start_dt_col=ccol, term_start_dt_col=tcol,
+        df,
+        cohort_start_dt_col=ccol,
+        term_start_dt_col=tcol,
     )
     assert isinstance(obs, pd.Series) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
@@ -406,7 +410,7 @@ def test_student_term_enrollment_intensity(
         (
             pd.DataFrame(
                 {
-                    # leaving cohort_start_dt in for now, but we may not need it 
+                    # leaving cohort_start_dt in for now, but we may not need it
                     "cohort_start_dt": ["2019-09-01", "2019-09-01", "2021-02-01"],
                     "term_start_dt": ["2020-02-01", "2020-09-01", "2023-09-01"],
                     "term_end_dt": ["2020-05-31", "2020-12-31", "2023-12-31"],
@@ -422,7 +426,10 @@ def test_student_term_enrollment_intensity(
 )
 def num_days_since_first_enrolled(df, ccol, tscol, tecol, exp):
     obs = student_term.term_is_pre_cohort(
-        df, cohort_start_dt_col=ccol, term_start_dt_col=tscol, term_end_dt_col=tecol, 
+        df,
+        cohort_start_dt_col=ccol,
+        term_start_dt_col=tscol,
+        term_end_dt_col=tecol,
     )
     assert isinstance(obs, pd.Series) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
