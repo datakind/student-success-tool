@@ -239,16 +239,24 @@ def num_days_since_first_enrolled(
     return (df[term_end_dt_col] - df[cohort_start_dt_col]).dt.days
 
 
-# def num_days_since_first_enrolled(  
-#    """ some schools have had misaligned cohort start dates and first term dates, which makes me think using term_start_dt might be better- but using cohort_start_dt would be easiest since that's consistent across rows. IDK if this is correctly grouping by student_guid first """ 
-#     df: pd.DataFrame,  
-#     *,    
-#     term_start_dt_col: str = "term_start_dt",  
-#     term_end_dt_col: str = "term_end_dt",  
-# ) -> pd.Series:  
-#     first_enrollment_date = df[term_start_dt_col].min() 
-#     return (df[term_end_dt_col] - first_enrollment_date).dt.days
-    # not sure if this does it correctly for each student-term, cumulatively 
+# some schools have had misaligned cohort start dates and first term dates, which makes me think using term_start_dt might be better- but using cohort_start_dt would be easiest since that's consistent across rows.
+# def num_days_since_first_enrolled(
+#     df: pd.DataFrame, 
+#     *,
+#     student_id_col: str = "student_guid", 
+#     term_start_dt_col: str = "term_start_dt", 
+#     term_end_dt_col: str = "term_end_dt",
+# ) -> pd.Series:    
+#     # Group by student id and find the first enrollment date  
+#     first_enrollment_dates = df.groupby(student_id_col)[term_start_dt_col].min()  
+  
+#     # Merge back onto the original dataframe  
+#     df = df.merge(first_enrollment_dates.rename('first_enrollment_date'), left_on=student_id_col, right_index=True)  
+  
+#     # Calculate the number of days since first enrollment  
+#     num_days_since_first_enrolled = (df[term_end_dt_col] - df['first_enrollment_date']).dt.days
+
+#     return num_days_since_first_enrolled
 
 
 def student_has_prior_degree(
