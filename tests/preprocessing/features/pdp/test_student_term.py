@@ -92,6 +92,59 @@ def test_sum_dummy_cols_by_group(df, grp_cols, agg_cols, exp):
                         "23-24 FALL",
                         "23-24 SPRING",
                     ],
+                    "course_type": ["CC", "CD", "CU", "CU", "CC", "CU"],
+                    "course_level": [1, 0, 1, 2, 0, 1],
+                    "grade": ["F", "F", "P", "W", "F", "P"],
+                }
+            ),
+            ["student_guid", "term_id"],
+            [
+                ("course_type", ["CC", "CD"]),
+                ("course_level", 0),
+                ("course_level", [2, 3]),
+                ("grade", ["0", "1", "F", "W"]),
+            ],
+            pd.DataFrame(
+                {
+                    "student_guid": ["123", "123", "456", "789"],
+                    "term_id": [
+                        "23-24 FALL",
+                        "23-24 SPRING",
+                        "23-24 FALL",
+                        "23-24 SPRING",
+                    ],
+                    "num_courses_course_type_CC|CD": [1, 0, 1, 0],
+                    "num_courses_course_level_0": [1, 0, 1, 0],
+                    "num_courses_course_level_2|3": [0, 0, 1, 0],
+                    "num_courses_grade_0|1|F|W": [1, 0, 1, 0],
+                }
+            ),
+        ),
+    ],
+)
+def test_equal_cols_by_group(df, grp_cols, agg_col_vals, exp):
+    obs = student_term.equal_cols_by_group(
+        df, grp_cols=grp_cols, agg_col_vals=agg_col_vals
+    )
+    assert isinstance(obs, pd.DataFrame) and not obs.empty
+    assert obs.equals(exp) or obs.compare(exp).empty
+
+
+@pytest.mark.parametrize(
+    ["df", "grp_cols", "agg_col_vals", "exp"],
+    [
+        (
+            pd.DataFrame(
+                {
+                    "student_guid": ["123", "123", "123", "456", "456", "789"],
+                    "term_id": [
+                        "23-24 FALL",
+                        "23-24 FALL",
+                        "23-24 SPRING",
+                        "23-24 FALL",
+                        "23-24 FALL",
+                        "23-24 SPRING",
+                    ],
                     "course_type": ["CU", "CD", "CU", "CU", "CC", "CU"],
                     "course_level": [1, 0, 1, 2, 0, 1],
                     "grade": ["F", "F", "P", "W", "F", "P"],
@@ -122,13 +175,14 @@ def test_sum_dummy_cols_by_group(df, grp_cols, agg_cols, exp):
         ),
     ],
 )
+
+
 def test_sum_val_equal_cols_by_group(df, grp_cols, agg_col_vals, exp):
     obs = student_term.sum_val_equal_cols_by_group(
         df, grp_cols=grp_cols, agg_col_vals=agg_col_vals
     )
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
-
 
 @pytest.mark.parametrize(
     [
