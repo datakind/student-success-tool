@@ -29,6 +29,8 @@ def df():
             "num_courses": [3, 2, 2, 2, 1],
             "num_courses_course_level_0": [2, 1, 0, 0, 0],
             "num_courses_course_level_1": [1, 1, 2, 2, 1],
+            "took_course_subject_area_02": [True, False, False, False, True],
+            "took_course_subject_area_05_06": [False, False, False, True, False],
             "course_ids": [
                 ["A101", "B101", "C201"],
                 ["A101", "D201"],
@@ -66,7 +68,7 @@ def df_grped(df):
     [
         (
             ["num_courses_course_level_0", "num_courses_course_level_1"],
-            ["took_course_subject_area_02", "took_course_subject_area_03_04"],
+            ["took_course_subject_area_02", "took_course_subject_area_05_06"],
             [
                 ("term_id", "count"),
                 ("term_is_pre_cohort", "sum"),
