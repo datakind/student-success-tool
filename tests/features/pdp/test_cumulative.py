@@ -66,7 +66,7 @@ def df_grped(df):
     [
         (
             ["num_courses_course_level_0", "num_courses_course_level_1"],
-            ["took_course_subject_area_02", "took_course_subject_area_03_04"]
+            ["took_course_subject_area_02", "took_course_subject_area_03_04"],
             [
                 ("term_id", "count"),
                 ("term_is_pre_cohort", "sum"),
