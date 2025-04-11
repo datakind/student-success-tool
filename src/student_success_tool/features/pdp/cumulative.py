@@ -273,8 +273,6 @@ def _compute_cumfrac_terms_enrolled(
     return cumfrac_terms_enrolled.astype("Float32")
 
 
-
-
 #######################
 # DEPRECATED / BACKUP #
 # only dig into these if databricks starts freaking out about expanding aggs func above
