@@ -62,10 +62,11 @@ def df_grped(df):
 
 
 @pytest.mark.parametrize(
-    ["num_course_cols", "col_aggs", "exp"],
+    ["num_course_cols", "dummy_course_cols", "col_aggs", "exp"],
     [
         (
             ["num_courses_course_level_0", "num_courses_course_level_1"],
+            ["took_course_subject_area_02", "took_course_subject_area_03_04"]
             [
                 ("term_id", "count"),
                 ("term_is_pre_cohort", "sum"),
@@ -98,6 +99,20 @@ def df_grped(df):
                         0.571,
                         0.667,
                         0.7,
+                    ],
+                    "took_course_subject_area_02_cummax": [
+                        True, 
+                        True, 
+                        True, 
+                        True, 
+                        True
+                    ],
+                    "took_course_subject_area_05_06_cummax": [
+                        False,
+                        False,
+                        False,
+                        True,
+                        True,
                     ],
                 }
             ),
