@@ -52,6 +52,7 @@ def aggregate_from_course_level_features(
         academic_year=("academic_year", "first"),
         academic_term=("academic_term", "first"),
         term_start_dt=("term_start_dt", "first"),
+        term_end_dt=("term_end_dt", "first"),
         term_rank=("term_rank", "first"),
         term_rank_core=("term_rank_core", "first"),
         term_rank_noncore=("term_rank_noncore", "first"),
@@ -185,6 +186,7 @@ def add_features(
                 num_courses_in_study_area,
                 study_area_col="term_program_of_study_area",
             ),
+            "num_days_since_first_enrolled": num_days_since_first_enrolled,
         }
         | {
             fc_col: ft.partial(compute_frac_courses, numer_col=nc_col)
@@ -224,6 +226,29 @@ def year_of_enrollment_at_cohort_inst(
 ) -> pd.Series:
     dts_diff = (df[term_start_dt_col].sub(df[cohort_start_dt_col])).dt.days
     return pd.Series(np.ceil((dts_diff + 1) / 365.25), dtype="Int8")
+
+
+def num_days_since_first_enrolled(  
+    df: pd.DataFrame,  
+    *,    
+    # using cohort_start_dt 
+    cohort_start_dt_col: str = "cohort_start_dt",
+    term_start_dt_col: str = "term_start_dt",  
+    term_end_dt_col: str = "term_end_dt",  
+) -> pd.Series:  
+    return (df[term_end_dt_col] - df[cohort_start_dt_col]).dt.days
+
+
+# def num_days_since_first_enrolled(  
+#    """ some schools have had misaligned cohort start dates and first term dates, which makes me think using term_start_dt might be better- but using cohort_start_dt would be easiest since that's consistent across rows. IDK if this is correctly grouping by student_guid first """ 
+#     df: pd.DataFrame,  
+#     *,    
+#     term_start_dt_col: str = "term_start_dt",  
+#     term_end_dt_col: str = "term_end_dt",  
+# ) -> pd.Series:  
+#     first_enrollment_date = df[term_start_dt_col].min() 
+#     return (df[term_end_dt_col] - first_enrollment_date).dt.days
+    # not sure if this does it correctly for each student-term, cumulatively 
 
 
 def student_has_prior_degree(
