@@ -26,7 +26,7 @@
 # install dependencies, most/all of which should come through our 1st-party SST package
 # NOTE: it's okay to use 'develop' or a feature branch while developing this nb
 # but when it's finished, it's best to pin to a specific version of the package
-# %pip install "student-success-tool == 0.1.0"
+# %pip install "student-success-tool == 0.2.0"
 # %pip install git+https://github.com/datakind/student-success-tool.git@develop
 
 # COMMAND ----------
@@ -76,7 +76,7 @@ if "../" not in sys.path:
     sys.path.insert(1, "../")
 
 # TODO: specify school's subpackage here
-from analysis import *  # noqa: F403
+from pipelines import *  # noqa: F403
 
 # COMMAND ----------
 
@@ -84,9 +84,7 @@ from analysis import *  # noqa: F403
 # it'll start out with just basic info: institution_id, institution_name
 # but as each step of the pipeline gets built, more parameters will be moved
 # from hard-coded notebook variables to shareable, persistent config fields
-cfg = dataio.read_config(
-    "./config-TEMPLATE.toml", schema=schemas.pdp.PDPProjectConfigV2
-)
+cfg = dataio.read_config("./config-TEMPLATE.toml", schema=schemas.pdp.PDPProjectConfig)
 cfg
 
 # COMMAND ----------
@@ -96,6 +94,9 @@ cfg
 
 # COMMAND ----------
 
+# TODO: if dataset info included in cfg, specify its name here
+dataset_name = "DATASET_NAME"
+
 # MAGIC %md
 # MAGIC ## course dataset
 
@@ -103,8 +104,8 @@ cfg
 
 # TODO: fill in the actual path to school's raw course file
 # okay to add it to project config now or later, whatever you prefer
-raw_course_file_path = cfg.datasets["labeled"].raw_course.file_path
-# raw_course_file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/SCHOOL_COURSE_AR_DEID_DTTM.csv"
+raw_course_file_path = cfg.datasets[dataset_name].raw_course.file_path
+# raw_course_file_path = "/Volumes/CATALOG/INST_ID_bronze/INST_ID_bronze_file_volume/SCHOOL_COURSE_AR_DEID_DTTM.csv"
 
 # COMMAND ----------
 
@@ -112,7 +113,6 @@ raw_course_file_path = cfg.datasets["labeled"].raw_course.file_path
 df_course_raw = dataio.pdp.read_raw_course_data(
     file_path=raw_course_file_path, schema=None, dttm_format="%Y%m%d.0"
 )
-print(f"rows x cols = {df_course_raw.shape}")
 df_course_raw.head()
 
 # COMMAND ----------
@@ -210,8 +210,8 @@ df_course
 
 # TODO: fill in the actual path to school's raw cohort file
 # okay to add it to project config now or later, whatever you prefer
-raw_cohort_file_path = cfg.datasets["labeled"].raw_cohort.file_path
-# raw_cohort_file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/SCHOOL_COHORT_AR_DEID_DTTM.csv"
+raw_cohort_file_path = cfg.datasets[dataset_name].raw_cohort.file_path
+# raw_cohort_file_path = "/Volumes/CATALOG/INST_ID_bronze/INST_ID_bronze_file_volume/SCHOOL_COHORT_AR_DEID_DTTM.csv"
 
 # COMMAND ----------
 
@@ -219,7 +219,6 @@ raw_cohort_file_path = cfg.datasets["labeled"].raw_cohort.file_path
 df_cohort_raw = dataio.pdp.read_raw_cohort_data(
     file_path=raw_cohort_file_path, schema=None
 )
-print(f"rows x cols = {df_cohort_raw.shape}")
 df_cohort_raw.head()
 
 # COMMAND ----------
@@ -374,7 +373,7 @@ df_course.isna().mean(axis="index").sort_values(ascending=False)
 # definitely confirm with SCHOOL stakeholders during data assessment presentation
 _ = msno.matrix(
     df_course.loc[df_course["course_prefix"].isna(), :].sort_values(
-        by=["academic_year", "student_guid"], ignore_index=True
+        by=["academic_year", cfg.student_id_col], ignore_index=True
     ),
     sparkline=False,
     labels=True,
@@ -399,11 +398,11 @@ df_course.loc[
 # COMMAND ----------
 
 # how many for transfers vs non transfers?
-missing_course = df_course.groupby("student_guid").filter(
+missing_course = df_course.groupby(cfg.student_id_col).filter(
     lambda x: x["course_prefix"].isna().all()
 )
 
-missing_course.groupby("student_guid")[
+missing_course.groupby(cfg.student_id_col)[
     "enrolled_at_other_institution_s"
 ].first().value_counts(dropna=False)
 
@@ -413,7 +412,7 @@ missing_course.groupby("student_guid")[
 _ = msno.matrix(
     (
         df_course[df_course["enrolled_at_other_institution_s"].eq("N")].sort_values(
-            by=["academic_year", "student_guid"]
+            by=["academic_year", cfg.student_id_col]
         )
     )
 )
@@ -449,7 +448,7 @@ df = (
     pd.merge(
         df_cohort,
         df_course,
-        on="student_guid",
+        on=cfg.student_id_col,
         how="outer",
         suffixes=("_cohort", "_course"),
         indicator=True,
@@ -489,7 +488,7 @@ df.loc[df["_merge"] != "both", :]
 # COMMAND ----------
 
 # which students don't appear in both datasets?
-df.loc[df["_merge"] != "both", "student_guid"].unique().tolist()
+df.loc[df["_merge"] != "both", cfg.student_id_col].unique().tolist()
 
 # COMMAND ----------
 
@@ -512,7 +511,7 @@ df.loc[df["_merge"] != "both", "student_guid"].unique().tolist()
             df.assign(
                 has_pre_cohort_courses=lambda df: df["cohort"].gt(df["academic_year"])
             )
-            .groupby(by=["student_guid", "cohort"])
+            .groupby(by=[cfg.student_id_col, "cohort"])
             .agg(has_pre_cohort_courses=("has_pre_cohort_courses", "any"))
             .reset_index(drop=False)
             .sort_values("cohort")
@@ -531,7 +530,7 @@ df_pre_cohort = df.loc[df["cohort"].gt(df["academic_year"]), :].assign(
     cohort_id=lambda df: df["cohort"].str.cat(df["cohort_term"], sep=" "),
     term_id=lambda df: df["academic_year"].str.cat(df["academic_term"], sep=" "),
 )
-df_pre_cohort[["student_guid", "cohort_id", "term_id", "enrollment_type"]]
+df_pre_cohort[[cfg.student_id_col, "cohort_id", "term_id", "enrollment_type"]]
 
 # COMMAND ----------
 
@@ -552,7 +551,7 @@ df_course_filtered.shape
 # COMMAND ----------
 
 # how many students remain?
-df_course_filtered["student_guid"].nunique()
+df_course_filtered[cfg.student_id_col].nunique()
 
 # COMMAND ----------
 
@@ -562,7 +561,7 @@ df_course_filtered["student_guid"].nunique()
 # COMMAND ----------
 
 df_cohort_filtered = df_cohort.loc[
-    df_cohort["student_guid"].isin(df_course_filtered["student_guid"]), :
+    df_cohort[cfg.student_id_col].isin(df_course_filtered[cfg.student_id_col]), :
 ]
 df_cohort_filtered
 
@@ -883,13 +882,13 @@ df_cohort[["race", "pell_status_first_year"]].groupby("race").value_counts(
 
 ax = sb.histplot(
     pd.merge(
-        df_course.groupby("student_guid")
-        # df_course_filtered.groupby("student_guid")
+        df_course.groupby(cfg.student_id_col)
+        # df_course_filtered.groupby(cfg.student_id_col)
         .size()
         .rename("num_courses_enrolled")
         .reset_index(drop=False),
-        df_cohort[["student_guid", "enrollment_intensity_first_term"]],
-        on="student_guid",
+        df_cohort[[cfg.student_id_col, "enrollment_intensity_first_term"]],
+        on=cfg.student_id_col,
         how="inner",
     ),
     x="num_courses_enrolled",
@@ -904,10 +903,10 @@ sb.move_legend(ax, loc="upper right", bbox_to_anchor=(1, 1))
 # COMMAND ----------
 
 jg = sb.jointplot(
-    df_course.groupby("student_guid").agg(
+    df_course.groupby(cfg.student_id_col).agg(
         {"number_of_credits_attempted": "sum", "number_of_credits_earned": "sum"}
     ),
-    # df_course_filtered.groupby("student_guid").agg(
+    # df_course_filtered.groupby(cfg.student_id_col).agg(
     #     {"number_of_credits_attempted": "sum", "number_of_credits_earned": "sum"}
     # ),
     x="number_of_credits_attempted",
@@ -942,7 +941,7 @@ jg.set_axis_labels("Number of Credits Attempted", "Number of Credits Earned")
 df_assoc_course = eda.compute_pairwise_associations(
     df_course,
     exclude_cols=[
-        "student_guid",
+        cfg.student_id_col,
         "institution_id",
         "student_age",
         "gender",
@@ -972,7 +971,7 @@ _ = ax.set_xticklabels(
 df_assoc_cohort = eda.compute_pairwise_associations(
     df_cohort,
     exclude_cols=[
-        "student_guid",
+        cfg.student_id_col,
         "institution_id",
         "student_age",
         "gender",
@@ -1013,5 +1012,5 @@ _ = ax.set_xticklabels(
 
 # MAGIC %md
 # MAGIC - [ ] If you haven't already, add school-specific data schemas and/or preprocessing functions into the appropriate directory in the [`student-success-intervention` repository](https://github.com/datakind/student-success-intervention)
-# MAGIC - [ ] Add file paths for the raw course/cohort datasets to the project config file's `datasets["labeled"].raw_course` and `datasets["labeled"].raw_cohort` blocks
+# MAGIC - [ ] Add file paths for the raw course/cohort datasets to the project config file's `datasets[DATASET_NAME].raw_course` and `datasets[DATASET_NAME].raw_cohort` blocks
 # MAGIC - [ ] Submit a PR including this notebook and any school-specific files added in order to run it
