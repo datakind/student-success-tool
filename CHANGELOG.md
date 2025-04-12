@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## 0.2.0 (2025-04)
+
+- Extended and modularized functionality into several new subpackages, with `pdp` as a secondary level, to make imports more intuitive and allow for extending code to support other 3rd-party data formats
+    - Consolidated functionality for reading/writing data in `dataio` (PR #71)
+    - Added new `targets` functions -- corresponding to and alongside existing functions -- with a more consistent, configurable, and modularized API (PR #76)
+    - Added `selection` and `checkpoints` subpackages for selecting student populations for modeling and identifying "checkpoint" student-terms for prediction, respectively, separate from target calculation (PR #77)
+    - Added general-purpose `converters` functions for transforming raw data such that it's parseable by the corresponding data schemas (PR #122, #134)
+    - Consolidated grab-bag "utility" functionality into a `utils` subpackage, and added more helpful functions to it (PR #86, #99, #100, #102)
+- Improved handling for raw PDP data with different student id columns, for columns added to raw PDP data as of 2025-01, and with more forgiving data validation to reduce the need for school-specific overrides (PR #84, #88, #90, #95)
+- Improved feature engineering with new configuration for "core terms" (and better associated features), simpler / more interpretable feature formulations, and a handful of new features (PR #101, #111, #120)
+- Added new methodology ("false negative parity rate") for model bias evaluation and incorporated it into model training process (PR #118, #124, #128, #129)
+- Fixed various rough edges and filled various gaps for better devx, including better type annotations, utility functions for working in Databricks, model naming standards, consistent parameter and function names (PR #75, #83, #115, #127)
+- Refactored template notebooks to better leverage project configs, more closely resemble actual school-specific "pipelines", more thoroughly assess data (PR #73, #108, #112, #123)
+- Improved calculation and visualization of SHAP model explanations (PR #92, #94, #96, #98)
+- Added matching logic to support mapping all* features to human-friendly feature names (PR #104)
+- Included formatting in "style" CI workflow to ensure consistency of code, and made GitHub actions safer (PR #72, #106, #107, #109)
+- Update setup instructions and add release instructions in readme (PR #117)
+- Added proof-of-concept standardized model inference pipeline that runs in Databricks (PR #78, #82, #105, #113, #114, #119)
+
 ## 0.1.1 (2025-02)
 
 - Added "project config" files for consolidating and storing most of the necessary parameters for tailoring general functionality to individual schools' needs (PR #44 #50 #56 #57)
