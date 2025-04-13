@@ -98,7 +98,7 @@ def expanding_agg_features(
     *,
     num_course_cols: list[str],
     col_aggs: list[tuple[str, str | list[str]]],
-    dummy_course_cols: t.Optional[list[str]] = None
+    dummy_course_cols: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:
     """
     Compute various aggregate features over an expanding window per (student) group.
@@ -111,7 +111,11 @@ def expanding_agg_features(
     LOGGER.info("computing expanding window aggregate features ...")
     df_cumaggs = (
         df_grped.expanding()
-        .agg(dict(col_aggs) | {col: "sum" for col in num_course_cols} | {col: "max" for col in dummy_course_cols})
+        .agg(
+            dict(col_aggs) 
+            | {col: "sum" for col in num_course_cols} 
+            | {col: "max" for col in dummy_course_cols}
+            )
         # pandas does weird stuff when indexing on windowed operations
         # this should get us back to student_id_cols only on the index
         .reset_index(level=-1, drop=True)

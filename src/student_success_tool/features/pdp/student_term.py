@@ -120,7 +120,14 @@ def aggregate_from_course_level_features(
         df, min_passing_grade=min_passing_grade, grp_cols=student_term_id_cols
     )
     return shared.merge_many_dataframes(
-        [df_passthrough, df_aggs, df_val_equals, df_dummy_equals, df_dummies, df_grade_aggs],
+        [
+            df_passthrough, 
+            df_aggs, 
+            df_val_equals, 
+            df_dummy_equals, 
+            df_dummies, 
+            df_grade_aggs
+        ],
         on=student_term_id_cols,
     )
 
