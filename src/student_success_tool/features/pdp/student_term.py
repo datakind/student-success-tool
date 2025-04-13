@@ -70,7 +70,7 @@ def aggregate_from_course_level_features(
         course_ids=course_ids_col_agg(),
         course_subjects=course_subjects_col_agg(),
         course_subject_areas=course_subject_areas_col_agg(),
-        course_id_nunique=course_id_nunique_col_agg(), 
+        course_id_nunique=course_id_nunique_col_agg(),
         course_subject_nunique=course_subject_nunique_col_agg(),
         course_subject_area_nunique=course_subject_area_nunique_col_agg(),
         course_level_mean=course_level_mean_col_agg(),
@@ -121,12 +121,12 @@ def aggregate_from_course_level_features(
     )
     return shared.merge_many_dataframes(
         [
-            df_passthrough, 
-            df_aggs, 
-            df_val_equals, 
-            df_dummy_equals, 
-            df_dummies, 
-            df_grade_aggs
+            df_passthrough,
+            df_aggs,
+            df_val_equals,
+            df_dummy_equals,
+            df_dummies,
+            df_grade_aggs,
         ],
         on=student_term_id_cols,
     )
@@ -440,6 +440,7 @@ def sections_num_students_completed_col_agg(
 ) -> pd.NamedAgg:
     return pd.NamedAgg(col, "sum")
 
+
 def sum_dummy_cols_by_group(
     df: pd.DataFrame, *, grp_cols: list[str], agg_cols: list[str]
 ) -> pd.DataFrame:
@@ -466,6 +467,7 @@ def sum_dummy_cols_by_group(
         .reset_index(drop=False)
     )
 
+
 def equal_cols_by_group(
     df: pd.DataFrame,
     *,
@@ -473,7 +475,7 @@ def equal_cols_by_group(
     agg_col_vals: list[tuple[str, t.Any]],
 ) -> pd.DataFrame:
     """
-    Compute equal to specified values for all ``agg_col_vals`` in ``df``, 
+    Compute equal to specified values for all ``agg_col_vals`` in ``df``,
     then group by ``grp_cols`` and aggregate with a "max".
 
     Args:
@@ -499,8 +501,10 @@ def equal_cols_by_group(
         .reset_index(drop=False)
     )
 
+
 def _rename_dummy_by_group_col(col: str) -> str:
     return f"{constants.DUMMY_COURSE_FEATURE_COL_PREFIX}_{col}"
+
 
 def sum_val_equal_cols_by_group(
     df: pd.DataFrame,

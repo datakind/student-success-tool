@@ -175,14 +175,13 @@ def test_equal_cols_by_group(df, grp_cols, agg_col_vals, exp):
         ),
     ],
 )
-
-
 def test_sum_val_equal_cols_by_group(df, grp_cols, agg_col_vals, exp):
     obs = student_term.sum_val_equal_cols_by_group(
         df, grp_cols=grp_cols, agg_col_vals=agg_col_vals
     )
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
+
 
 @pytest.mark.parametrize(
     [
