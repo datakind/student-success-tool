@@ -31,6 +31,7 @@ def df():
             "num_courses_course_level_1": [1, 1, 2, 2, 1],
             "took_course_subject_area_02": [True, False, False, False, True],
             "took_course_subject_area_05_06": [False, False, False, True, False],
+            "num_credits_earned_cumsum": [3, 12, 30, 45, 60],
             "course_ids": [
                 ["A101", "B101", "C201"],
                 ["A101", "D201"],
@@ -95,6 +96,14 @@ def df_grped(df):
                         0.0,
                         1.0,
                         1.0,
+                    ],
+                    "took_course_subject_area_02_cummax__within_12_credits": [1.0, 1.0, 1.0, 1.0, 1.0],
+                    "took_course_subject_area_05_06_cummax_within_12_credits": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
                     ],
                     "num_courses_course_level_0_cumfrac": [
                         0.667,
