@@ -117,9 +117,12 @@ def df_grped(df):
 )
 def test_expanding_agg_features(
     df_grped, num_course_cols, dummy_course_cols, col_aggs, exp
-    ):
+):
     obs = cumulative.expanding_agg_features(
-        df_grped, num_course_cols=num_course_cols, col_aggs=col_aggs, dummy_course_cols=dummy_course_cols
+        df_grped,
+        num_course_cols=num_course_cols,
+        col_aggs=col_aggs,
+        dummy_course_cols=dummy_course_cols,
     )
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     # raises error if not equal
