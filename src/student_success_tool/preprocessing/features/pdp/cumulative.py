@@ -109,17 +109,29 @@ def expanding_agg_features(
         col_aggs
     """
     LOGGER.info("computing expanding window aggregate features ...")
+    agg_dict = dict(col_aggs) | {col: "sum" for col in num_course_cols}
+    if dummy_course_cols is not None:
+        agg_dict |= {col: "max" for col in dummy_course_cols}
+
     df_cumaggs = (
         df_grped.expanding()
-        .agg(
-            dict(col_aggs)
-            | {col: "sum" for col in num_course_cols}
-            | {col: "max" for col in dummy_course_cols}
-        )
+        .agg(agg_dict)
         # pandas does weird stuff when indexing on windowed operations
         # this should get us back to student_id_cols only on the index
         .reset_index(level=-1, drop=True)
     )
+
+    # df_cumaggs = (
+    #     df_grped.expanding()
+    #     .agg(
+    #         dict(col_aggs)
+    #         | {col: "sum" for col in num_course_cols}
+    #         | {col: "max" for col in dummy_course_cols}
+    #     )
+    #     # pandas does weird stuff when indexing on windowed operations
+    #     # this should get us back to student_id_cols only on the index
+    #     .reset_index(level=-1, drop=True)
+    # )
     # unfortunately, expanding doesn't support the "named agg" syntax
     # so we have to (flatten and) rename the columns manually
     df_cumaggs.columns = [f"{col}_cum{fn}" for col, fn in df_cumaggs.columns]
