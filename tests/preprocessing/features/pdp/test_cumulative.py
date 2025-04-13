@@ -88,13 +88,7 @@ def df_grped(df):
                         0.884,
                     ],
                     "num_courses_cumsum": [3.0, 5.0, 7.0, 9.0, 10.0],
-                    "took_course_subject_area_02_cummax": [
-                        1.0, 
-                        1.0, 
-                        1.0, 
-                        1.0, 
-                        1.0
-                    ],
+                    "took_course_subject_area_02_cummax": [1.0, 1.0, 1.0, 1.0, 1.0],
                     "took_course_subject_area_05_06_cummax": [
                         0.0,
                         0.0,
@@ -116,13 +110,14 @@ def df_grped(df):
                         0.667,
                         0.7,
                     ],
-
                 }
             ),
         ),
     ],
 )
-def test_expanding_agg_features(df_grped, num_course_cols, dummy_course_cols, col_aggs, exp):
+def test_expanding_agg_features(
+    df_grped, num_course_cols, dummy_course_cols, col_aggs, exp
+    ):
     obs = cumulative.expanding_agg_features(
         df_grped, num_course_cols=num_course_cols, col_aggs=col_aggs, dummy_course_cols=dummy_course_cols
     )
