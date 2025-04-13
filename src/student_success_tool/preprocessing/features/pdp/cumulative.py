@@ -71,12 +71,26 @@ def add_features(
     df_cumnum_ur = cumnum_unique_and_repeated_features(
         df_grped, cols=["course_ids", "course_subjects", "course_subject_areas"]
     )
+    concat_dfs = [df,df_cumnum_ur, df_expanding_agg]
+    # add features that use other cumulative features 
+    if dummy_course_cols is not None:
+        df_within_credits = complete_action_within_x_credits(
+            df_expanding_agg,
+            credits=12, #todo take this as an input from the config
+            student_id_cols=student_id_cols,
+            sort_cols=sort_cols,
+            action_cols=[
+                f"{dummy_course}_cummax"
+                for dummy_course in dummy_course_cols
+            ],
+        )
+        concat_dfs = [concat_dfs, df_within_credits]
     return (
         # despite best efforts, the student-id index is dropped from df_cumnum_ur
         # and, through sheer pandas insanity, merge on student_id_cols produces
         # huge numbers of duplicate rows -- truly impossible shit, that
         # however, by definition, these transforms shouldn't alter the original indexing, so:
-        pd.concat([df, df_cumnum_ur, df_expanding_agg], axis="columns")
+        pd.concat(concat_dfs, axis="columns")
         # add a last couple features, which don't fit nicely into above logic
         .pipe(add_cumfrac_terms_enrolled_features, student_id_cols=student_id_cols)
         .pipe(
@@ -121,17 +135,6 @@ def expanding_agg_features(
         .reset_index(level=-1, drop=True)
     )
 
-    # df_cumaggs = (
-    #     df_grped.expanding()
-    #     .agg(
-    #         dict(col_aggs)
-    #         | {col: "sum" for col in num_course_cols}
-    #         | {col: "max" for col in dummy_course_cols}
-    #     )
-    #     # pandas does weird stuff when indexing on windowed operations
-    #     # this should get us back to student_id_cols only on the index
-    #     .reset_index(level=-1, drop=True)
-    # )
     # unfortunately, expanding doesn't support the "named agg" syntax
     # so we have to (flatten and) rename the columns manually
     df_cumaggs.columns = [f"{col}_cum{fn}" for col, fn in df_cumaggs.columns]
@@ -159,6 +162,30 @@ def expanding_agg_features(
         # drop our student-id(s) index, it just causes trouble
         .reset_index(drop=True)
     )
+
+def complete_action_within_x_credits(
+    df_expanding_agg: pd.DataFrame, *, credits: int, student_id_cols: list[str], sort_cols: list[str], action_cols: list[str]
+) -> pd.DataFrame:
+    """
+    Compute if a student has completed an action of interest, i.e. took a certain course 
+    within a certain credit limit
+
+    Args: 
+        credits
+        action_cols
+    """
+    df = df_expanding_agg[student_id_cols + sort_cols + action_cols + ['num_credits_earned_cumsum']].copy()
+
+    within_cols = []
+    for col in action_cols:
+        within_col = f"{col}_within_{credits}_credits"
+        df[within_col] = (df[col].astype(bool)) & (df["num_credits_earned_cumsum"] <= credits)
+        within_cols.append(within_col)
+
+    df = df.sort_values(by=student_id_cols + sort_cols, ignore_index=True)
+    action_status_df = df.groupby(student_id_cols, as_index=False)[within_cols].max()
+
+    return action_status_df
 
 
 def cumnum_unique_and_repeated_features(
