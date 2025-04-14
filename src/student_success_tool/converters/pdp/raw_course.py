@@ -10,6 +10,9 @@ def dedupe_by_renumbering_courses(df: pd.DataFrame) -> pd.DataFrame:
     Deduplicate rows in raw course data ``df`` by renumbering courses, such that
     the data passes data schema uniqueness requirements.
 
+    Args:
+        df: Raw course dataset
+
     Warning:
         This logic assumes that all rows are actually valid, and that the school's
         course numbering is wonky. This can happen if, for example, supplemental courses
