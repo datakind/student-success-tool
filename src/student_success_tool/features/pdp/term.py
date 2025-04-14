@@ -49,6 +49,12 @@ def add_features(
                 bound="start",
                 first_term_of_year=first_term_of_year,
             ),
+            term_end_dt=ft.partial(
+                shared.year_term_dt,
+                col="term_id",
+                bound="end",
+                first_term_of_year=first_term_of_year,
+            ),
             term_rank=ft.partial(term_rank, year_col=year_col, term_col=term_col),
             term_rank_core=ft.partial(
                 term_rank,

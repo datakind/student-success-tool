@@ -77,6 +77,16 @@ from student_success_tool.features.pdp import term
                             "2023-06-01",
                         ],
                     ),
+                    "term_end_dt": pd.to_datetime(
+                        [
+                            "2020-12-31",
+                            "2020-12-31",
+                            "2021-01-31",
+                            "2021-05-31",
+                            "2019-12-31",
+                            "2023-08-31",
+                        ],
+                    ),
                     "term_rank": [1, 1, 2, 3, 0, 4],
                     "term_rank_core": [1, 1, pd.NA, 2, 0, pd.NA],
                     "term_rank_noncore": [pd.NA, pd.NA, 0, pd.NA, pd.NA, 1],
