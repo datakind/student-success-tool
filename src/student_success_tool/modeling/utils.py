@@ -1,27 +1,19 @@
 import logging
-import pathlib
 import typing as t
-from collections.abc import Sequence
 
-import mlflow
 import numpy as np
 import pandas as pd
 import sklearn.utils
 
-try:
-    import tomllib  # noqa
-except ImportError:  # => PY3.10
-    import tomli as tomllib  # noqa
-
-
 LOGGER = logging.getLogger(__name__)
+
+_DEFAULT_SPLIT_LABEL_FRACS = {"train": 0.6, "test": 0.2, "validate": 0.2}
 
 
 def compute_dataset_splits(
     df: pd.DataFrame,
     *,
-    labels: Sequence[str] = ("train", "test", "validate"),
-    fracs: Sequence[float] = (0.6, 0.2, 0.2),
+    label_fracs: t.Optional[dict[str, float]] = None,
     shuffle: bool = True,
     seed: t.Optional[int] = None,
 ) -> pd.Series:
@@ -31,9 +23,8 @@ def compute_dataset_splits(
 
     Args:
         df
-        labels: Labels for each subset into which ``df`` is split.
-        fracs: Approximate proportions of each subset into which ``df`` is split;
-            corresponds 1:1 with each label in ``labels`` .
+        label_fracs: Mapping of subset label to the (approximate) proportion of ``df``
+            that gets split into it.
         shuffle: Whether or not to shuffle the data before splitting.
         seed: Optional integer used to set state for the underlying random generator;
             specify a value for reproducible splits, otherwise each call is unique.
@@ -41,12 +32,11 @@ def compute_dataset_splits(
     See Also:
         - :func:`sklearn.model_selection.train_test_split()`
     """
-    if len(labels) != len(fracs):
-        raise ValueError(
-            f"the number of specified labels ({len(labels)}) and fracs {len(fracs)} "
-            "must be the same"
-        )
+    if label_fracs is None:
+        label_fracs = _DEFAULT_SPLIT_LABEL_FRACS
 
+    labels = list(label_fracs.keys())
+    fracs = list(label_fracs.values())
     rng = np.random.default_rng(seed=seed)
     return pd.Series(
         data=rng.choice(labels, size=len(df), p=fracs, shuffle=shuffle),
@@ -84,59 +74,3 @@ def compute_sample_weights(
         dtype="float32",
         name="sample_weight",
     )
-
-
-def load_features_table(fpath: str) -> dict[str, dict[str, str]]:
-    """
-    Load a features table mapping columns to readable names and (optionally) descriptions
-    from a TOML file located at ``fpath``, which can either refer to a relative path in this
-    package or an absolute path loaded from local disk.
-
-    Args:
-        fpath: Path to features table TOML file relative to package root or absolute;
-            for example: "assets/pdp/features_table.toml" or "/path/to/features_table.toml".
-    """
-    pkg_root_dir = next(
-        p
-        for p in pathlib.Path(__file__).parents
-        if p.parts[-1] == "student_success_tool"
-    )
-    file_path = (
-        pathlib.Path(fpath)
-        if pathlib.Path(fpath).is_absolute()
-        else pkg_root_dir / fpath
-    )
-    with file_path.open(mode="rb") as f:
-        features_table = tomllib.load(f)
-    LOGGER.info("loaded features table from '%s'", file_path)
-    assert isinstance(features_table, dict)  # type guard
-    return features_table
-
-
-def load_mlflow_model(
-    model_uri: str,
-    framework: t.Optional[t.Literal["sklearn", "xgboost", "lightgbm"]] = None,
-) -> object:
-    """
-    Load a (registered) MLFlow model of whichever model type from a specified URI.
-
-    Args:
-        model_uri
-        framework
-
-    References:
-        - https://mlflow.org/docs/latest/python_api/mlflow.sklearn.html#mlflow.sklearn.load_model
-        - https://mlflow.org/docs/latest/python_api/mlflow.pyfunc.html#mlflow.pyfunc.load_model
-    """
-    load_model_func = (
-        mlflow.sklearn.load_model
-        if framework == "sklearn"
-        else mlflow.xgboost.load_model
-        if framework == "xgboost"
-        else mlflow.lightgbm.load_model
-        if framework == "lightgbm"
-        else mlflow.pyfunc.load_model
-    )
-    model = load_model_func(model_uri)
-    LOGGER.info("mlflow model loaded from '%s'", model_uri)
-    return model

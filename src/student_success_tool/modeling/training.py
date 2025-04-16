@@ -1,5 +1,6 @@
 import logging
 import time
+import typing as t
 
 import pandas as pd
 
@@ -13,7 +14,7 @@ def run_automl_classification(
     df: pd.DataFrame,
     *,
     target_col: str,
-    optimization_metric: str,
+    primary_metric: str,
     institution_id: str,
     job_run_id: str,
     student_id_col: str,
@@ -28,7 +29,7 @@ def run_automl_classification(
             as well as ``student_id_col`` and any other columns
             specified in the optional ``**kwargs``
         target_col: Column name for the target to be predicted
-        optimization_metric: Metric used to evaluate and rank model performance;
+        primary_metric: Metric used to evaluate and rank model performance;
             currently supported classification metrics include "f1", "log_loss",
             "precision", "accuracy", "roc_auc"
         institution_id: Unique identifier for the dataset's institution,
@@ -72,26 +73,57 @@ def run_automl_classification(
     if student_id_col is not None and student_id_col not in exclude_cols:
         exclude_cols.append(student_id_col)
 
-    # generate a very descriptive experiment name
-    experiment_name_components = [
-        institution_id,
-        target_col,
-        str(job_run_id),
-        optimization_metric,
-    ]
-    experiment_name_components.extend(f"{key}={val}" for key, val in kwargs.items())
-    experiment_name_components.append(time.strftime("%Y-%m-%dT%H:%M:%S"))
-    experiment_name = "_".join(experiment_name_components)
+    experiment_name = get_experiment_name(
+        institution_id=institution_id,
+        job_run_id=job_run_id,
+        primary_metric=primary_metric,
+        timeout_minutes=kwargs["timeout_minutes"],  # type: ignore
+        exclude_frameworks=kwargs.get("exclude_frameworks"),  # type: ignore
+    )
 
-    from databricks import automl  # importing here for mocking in tests
+    from databricks import automl  # type: ignore  # importing here for mocking in tests
 
     LOGGER.info("running experiment: %s ...", experiment_name)
     summary = automl.classify(
         dataset=df,
         target_col=target_col,
-        primary_metric=optimization_metric,
+        primary_metric=primary_metric,
         experiment_name=experiment_name,
         exclude_cols=exclude_cols,
         **kwargs,
     )
     return summary
+
+
+def get_experiment_name(
+    *,
+    institution_id: str,
+    job_run_id: str,
+    primary_metric: str,
+    timeout_minutes: int,
+    exclude_frameworks: t.Optional[list[str]] = None,
+) -> str:
+    """
+    Get a descriptive experiment name based on more important input parameters.
+
+    See Also:
+        - :func:`run_automl_classification()`
+
+    References:
+        - https://docs.databricks.com/en/machine-learning/automl/automl-api-reference.html#classify
+    """
+    name_components = [
+        institution_id,
+        f"{job_run_id=}",
+        f"{primary_metric=}",
+        f"{timeout_minutes=}",
+    ]
+    if exclude_frameworks:
+        name_components.append(f"exclude_frameworks={','.join(exclude_frameworks)}")
+    name_components.append(time.strftime("%Y-%m-%dT%H:%M:%S"))
+
+    name = "__".join(name_components)
+    if len(name) > 500:
+        LOGGER.warning("truncating long experiment name '%s' to first 500 chars", name)
+        name = name[:500]
+    return name

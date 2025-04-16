@@ -1,1 +1,9 @@
-from . import evaluation, feature_selection, inference, training, utils
+from . import (
+    bias_detection,
+    evaluation,
+    feature_selection,
+    inference,
+    registration,
+    training,
+    utils,
+)

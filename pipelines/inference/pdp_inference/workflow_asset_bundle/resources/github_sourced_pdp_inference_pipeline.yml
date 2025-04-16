@@ -1,0 +1,246 @@
+resources:
+  jobs:
+    github_sourced_pdp_inference_pipeline:
+      name: github_sourced_pdp_inference_pipeline
+      max_concurrent_runs: 2
+      tasks:
+        - task_key: data_ingestion
+          spark_python_task:
+            python_file: pipelines/tasks/pdp_data_ingestion/pdp_data_ingestion.py
+            source: GIT
+            parameters:
+              - --cohort_file_name
+              - "{{job.parameters.cohort_file_name}}"
+              - --course_file_name
+              - "{{job.parameters.course_file_name}}"
+              - --databricks_institution_name
+              - "{{job.parameters.databricks_institution_name}}"
+              - --db_run_id
+              - "{{job.parameters.db_run_id}}"
+              - --DB_workspace
+              - "{{job.parameters.DB_workspace}}"
+              - --gcp_bucket_name
+              - "{{job.parameters.gcp_bucket_name}}"
+              - --job_root_dir  
+              - "/Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/inference_jobs/{{job.parameters.db_run_id}}"
+              - --custom_schemas_path
+              - "{{job.parameters.custom_schemas_path}}"
+          job_cluster_key: pdp-inference-pipeline-cluster
+          libraries:
+            - pypi:
+                package: git+https://github.com/datakind/student-success-tool.git@${var.pip_install_branch}
+        - task_key: data_preprocessing
+          depends_on:
+            - task_key: data_ingestion
+          spark_python_task:
+            python_file: pipelines/tasks/pdp_data_preprocessing/pdp_data_preprocessing.py
+            source: GIT
+            parameters:
+              - --databricks_institution_name
+              - "{{job.parameters.databricks_institution_name}}"
+              - --db_run_id
+              - "{{job.parameters.db_run_id}}"
+              - --DB_workspace
+              - "{{job.parameters.DB_workspace}}"
+              - --model_name
+              - "{{job.parameters.model_name}}"
+              - --cohort_dataset_validated_path
+              - "{{tasks.data_ingestion.values.cohort_dataset_validated_path}}"
+              - --course_dataset_validated_path
+              - "{{tasks.data_ingestion.values.course_dataset_validated_path}}"
+              - --toml_file_path
+              - "/Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/configuration_files/{{job.parameters.databricks_institution_name}}_{{job.parameters.model_name}}_configuration_file.toml"
+              - --custom_schemas_path
+              - "{{job.parameters.custom_schemas_path}}"
+          job_cluster_key: pdp-inference-pipeline-cluster
+          libraries:
+            - pypi:
+                package: git+https://github.com/datakind/student-success-tool.git@${var.pip_install_branch}
+        # - task_key: data_validation
+        #   depends_on:
+        #     - task_key: data_preprocessing
+        #   spark_python_task:
+        #     python_file: pipelines/tasks/pdp_data_validation/pdp_data_validation.py
+        #     source: GIT
+        #   job_cluster_key: pdp-inference-pipeline-cluster
+        - task_key: data_validation
+          depends_on:
+            - task_key: data_preprocessing
+          spark_python_task:
+            python_file: pipelines/tasks/data_validation/data_validation_task.py
+            source: GIT
+            parameters:
+              - --input_table_path
+              - "{{tasks.data_preprocessing.values.processed_dataset_path}}"
+              - --input_schema_path
+              - /Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/configuration_files/schema.pbtxt # TODO(samroon2): Update once finalized.
+              - --output_artifact_path
+              - "{{tasks.data_ingestion.values.job_root_dir}}"
+              - --environment
+              - SERVING
+              - "{{job.parameters.fail_on_anomalies}}"
+          job_cluster_key: pdp-inference-pipeline-cluster
+        # - task_key: data_validation
+        #   depends_on:
+        #     - task_key: data_preprocessing
+        #   spark_python_task:
+        #     python_file: pipelines/tasks/pdp_data_validation/pdp_data_validation.py
+        #     source: GIT
+        #   job_cluster_key: pdp-inference-pipeline-cluster
+        - task_key: data_validation
+          depends_on:
+            - task_key: data_preprocessing
+          spark_python_task:
+            python_file: pipelines/tasks/data_validation/data_validation_task.py
+            source: GIT
+            parameters:
+              - --input_table_path
+              - "{{tasks.data_preprocessing.values.processed_dataset_path}}"
+              - --input_schema_path
+              - /Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/configuration_files/schema.pbtxt # TODO(samroon2): Update once finalized.
+              - --output_artifact_path
+              - "{{tasks.data_ingestion.values.job_root_dir}}"
+              - --environment
+              - SERVING
+              - "{{job.parameters.fail_on_anomalies}}"
+          job_cluster_key: pdp-inference-pipeline-cluster
+          libraries:
+            - pypi:
+                package: tensorflow_data_validation==1.16.1
+        - task_key: inference
+          depends_on:
+            - task_key: data_validation
+          spark_python_task:
+            python_file: pipelines/tasks/pdp_model_inference/pdp_model_inference.py
+            source: GIT
+            parameters:
+              - --databricks_institution_name
+              - "{{job.parameters.databricks_institution_name}}"
+              - --db_run_id
+              - "{{job.parameters.db_run_id}}"
+              - --DB_workspace
+              - "{{job.parameters.DB_workspace}}"
+              - --model_name
+              - "{{job.parameters.model_name}}"
+              - --model_type
+              - "{{job.parameters.model_type}}"
+              - --job_root_dir  
+              - "{{tasks.data_ingestion.values.job_root_dir}}"
+              - --toml_file_path
+              - "{{tasks.data_preprocessing.values.toml_file_path}}"
+              - --processed_dataset_path
+              - "{{tasks.data_preprocessing.values.processed_dataset_path}}"
+              - --notification_email
+              - "{{job.parameters.notification_email}}"
+              - --DK_CC_EMAIL
+              - "{{job.parameters.DK_CC_EMAIL}}"
+              - --modeling_table_path
+              - "{{job.parameters.DB_workspace}}.{{job.parameters.databricks_institution_name}}_gold.modeling_table"
+              - --custom_schemas_path
+              - "{{job.parameters.custom_schemas_path}}"
+          job_cluster_key: pdp-inference-pipeline-cluster
+          libraries:
+            - pypi:
+                package: git+https://github.com/datakind/student-success-tool.git@${var.pip_install_branch}
+            - pypi:
+                package: mlflow==2.19.0
+            - pypi:
+                package: category-encoders==2.6.3
+            - pypi:
+                package: cloudpickle==2.2.1
+            - pypi:
+                package: databricks-automl-runtime==0.2.21
+            - pypi:
+                package: holidays==0.45
+            - pypi:
+                package: lz4==4.3.2
+            - pypi:
+                package: psutil==5.9.0
+            - pypi:
+                package: scikit-learn==1.3.0
+            - pypi:
+                package: pandas==1.5.3
+        - task_key: output_publish
+          depends_on:
+            - task_key: inference
+          spark_python_task: 
+            python_file: pipelines/tasks/pdp_inference_output_publish/pdp_inference_output_publish.py
+            source: GIT
+            parameters:
+              - --DB_workspace
+              - "{{job.parameters.DB_workspace}}"
+              - --databricks_institution_name
+              - "{{job.parameters.databricks_institution_name}}"
+              - --db_run_id
+              - "{{job.parameters.db_run_id}}"
+              - --gcp_bucket_name
+              - "{{job.parameters.gcp_bucket_name}}"
+              - --notification_email
+              - "{{job.parameters.notification_email}}"
+          job_cluster_key: pdp-inference-pipeline-cluster
+          libraries:
+            - pypi:
+                package: git+https://github.com/datakind/student-success-tool.git@${var.pip_install_branch}
+      job_clusters:
+        - job_cluster_key: pdp-inference-pipeline-cluster
+          new_cluster:
+            cluster_name: ""
+            spark_version: 15.4.x-cpu-ml-scala2.12
+            spark_conf:
+              spark.master: local[*, 4]
+              spark.databricks.cluster.profile: singleNode
+            gcp_attributes:
+              use_preemptible_executors: false
+              google_service_account: ${var.pipeline_sa_email}
+              availability: ON_DEMAND_GCP
+              zone_id: HA
+            node_type_id: n2-standard-16
+            custom_tags:
+              ResourceClass: SingleNode
+              x-databricks-nextgen-cluster: "true"
+            enable_elastic_disk: true
+            data_security_mode: SINGLE_USER
+            runtime_engine: STANDARD
+            num_workers: 0
+      git_source:
+        git_url: https://github.com/datakind/student-success-tool
+        git_provider: gitHub
+        git_branch: develop
+      tags:
+        dev: pedro_melendez
+      queue:
+        enabled: true
+      parameters:
+        - name: cohort_file_name
+          default: 1740098728373_synthetic_STUDENT_SEMESTER_AR_DEIDENTIFIED.csv
+        - name: course_file_name
+          default: 1740098728372_synthetic_COURSE_LEVEL_AR_DEID.csv
+        - name: databricks_institution_name
+          default: uni_of_crystal_testing
+        - name: db_run_id
+          default: "{{job.run_id}}"
+        - name: DB_workspace
+          default: ${var.DB_workspace}
+        - name: gcp_bucket_name
+          default: dev_6782b2f451f84c17ae6e14e918432b65
+        - name: model_name
+          default: latest_enrollment_model
+        - name: model_type
+          default: sklearn
+        - name: notification_email
+          default: ${var.end_user_notification_email}
+        - name: version_id
+          default: "1"
+        - name: DK_CC_EMAIL
+          default: ${var.datakind_notification_email}
+        - name: fail_on_anomalies
+          default: --fail_on_anomalies_false
+        - name: custom_schemas_path
+          default: ${var.custom_schemas_path}
+      permissions:
+        - group_name: ${var.fellows_group_to_manage_workflow} 
+          level: CAN_MANAGE
+        - user_name: ${var.service_account_executer}
+          level: CAN_MANAGE_RUN
+        - group_name: ${var.datakind_group_to_manage_workflow} 
+          level: CAN_MANAGE

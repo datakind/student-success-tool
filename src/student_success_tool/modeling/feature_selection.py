@@ -134,8 +134,15 @@ def drop_low_variance_features(
         sklearn.feature_selection.VarianceThreshold(threshold=threshold)
         .fit(df_numeric)
     )  # fmt: skip
+    df_categorical = df.select_dtypes(include=["string", "category", "boolean"])
+    constant_value_cols = {
+        col
+        for col, nunique in df_categorical.nunique().eq(1).to_dict().items()
+        if nunique == 1
+    }
     low_variance_cols = list(
         set(df_numeric.columns) - set(selector.get_feature_names_out())
+        | constant_value_cols
     )
     if low_variance_cols:
         LOGGER.info(
@@ -241,9 +248,11 @@ def drop_collinear_features_iteratively(
 
     LOGGER.info("dropping %s collinear features", n_features_dropped_so_far)
 
-    assert all(
-        [col in df.columns for col in force_include_cols]
-    ), "The dataset with selected features is missing one of the force include variables!"
+    if not all([col in df.columns for col in force_include_cols]):
+        raise ValueError(
+            "The dataset with selected features is missing one of the force include variables!"
+        )
+
     return df
 
     # TODO: figure out why this below code gives different results from the original :/

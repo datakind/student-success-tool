@@ -16,8 +16,8 @@ section_num_students_enrolled_mean = { name = "avg. number of students enrolled 
 section_num_students_enrolled_std = { name = "std. dev. in number of students enrolled per section this term" }
 num_courses_core_course_y = { name = "number of core courses taken this term" }
 num_courses_enrolled_at_other_institution_s_y = { name = "number of courses taken this term while enrolled at another institution" }
-# "num_courses_course_subject_area_*" = { name = "TODO: number of courses taken in subject area this term" }
-# "num_courses_course_id_*" = { name = "TODO: number of times this course taken this term" }
+'num_courses_course_subject_area_(\d+)' = { name = "number of courses taken in subject area {} this term" }
+'num_courses_course_id_(.*)' = { name = "number of times course '{}' taken this term" }
 num_courses_course_type_cu = { name = "number of college-level, undergraduate courses taken this term" }
 num_courses_course_type_cg = { name = "number of college-level, graduate courses taken this term" }
 num_courses_course_type_cc = { name = "number of college developmental, remedial, or preparatory courses taken this term" }
@@ -44,6 +44,7 @@ num_courses_course_instructor_rank_4 = { name = "number of courses taken this te
 num_courses_course_instructor_rank_5 = { name = "number of courses taken this term with an associate professor (rank 5)" }
 num_courses_course_instructor_rank_6 = { name = "number of courses taken this term with a professor (rank 6)" }
 num_courses_course_instructor_rank_7 = { name = "number of courses taken this term with an 'other' instructor (rank 7)" }
+num_courses_course_level_0 = { name = "number of 000-level courses taken this term" }
 num_courses_course_level_1 = { name = "number of 100-level courses taken this term" }
 num_courses_course_level_2 = { name = "number of 200-level courses taken this term" }
 num_courses_course_level_3 = { name = "number of 300-level courses taken this term" }
@@ -52,6 +53,7 @@ num_courses_course_level_5 = { name = "number of 500-level courses taken this te
 num_courses_course_level_6 = { name = "number of 600-level courses taken this term" }
 num_courses_course_level_7 = { name = "number of 700-level courses taken this term" }
 num_courses_course_level_8 = { name = "number of 800-level courses taken this term" }
+num_courses_course_level_0_1 = { name = "number of intro-level courses taken this term" }
 num_courses_course_grade_a = { name = "number of A grades earned this term" }
 num_courses_course_grade_b = { name = "number of B grades earned this term" }
 num_courses_course_grade_c = { name = "number of C grades earned this term" }
@@ -66,7 +68,7 @@ math_placement = { name = "student's math placement upon enrollment" }
 english_placement = { name = "student's english placement upon enrollment" }
 reading_placement = { name = "student's reading placement upon enrollment" }
 dual_and_summer_enrollment = { name = "student's past dual and/or summer enrollment status" }
-pell_status_first_year = { name = "student's first-year Pell status" }
+student_is_pell_recipient_first_year = { name = "student is a Pell grant recipient in year 1" }
 credential_type_sought_year_1 = { name = "student's first-year credential type sought" }
 program_of_study_term_1 = { name = "student's first-term program of study" }
 program_of_study_year_1 = { name = "student's first-year program of study" }
@@ -92,18 +94,21 @@ frac_credits_earned_year_2 = { name = "fraction of credits earned in year 2" }
 frac_credits_earned_year_3 = { name = "fraction of credits earned in year 3" }
 frac_credits_earned_year_4 = { name = "fraction of credits earned in year 4" }
 year_of_enrollment_at_cohort_inst = { name = "year of enrollment at cohort institution" }
+student_has_prior_degree_at_cohort_inst = { name = "student has received a prior degree from cohort institution" }
+student_has_prior_degree_at_other_inst = { name = "student has received a prior degree from another institution" }
 term_is_pre_cohort = { name = "term occurred before student's cohort (enrollment) term" }
 term_is_while_student_enrolled_at_other_inst = { name = "term occurred while student is enrolled at another institution" }
 frac_credits_earned = { name = "fraction of credits earned this term" }
 student_term_enrollment_intensity = { name = "student's enrollment intensity this term" }
 num_courses_in_program_of_study_area_term_1 = { name = "number of courses taken this term in student's first-term program of study area" }
 num_courses_in_program_of_study_area_year_1 = { name = "number of courses taken this term in student's first-year program of study area" }
+num_courses_in_term_program_of_study_area = { name = "number of courses taken this term in student's current program of study area" }
 frac_courses_passed = { name = "fraction of courses passed this term" }
 frac_courses_completed = { name = "fraction of courses completed this term" }
 frac_courses_core_course_y = { name = "fraction of core courses taken this term" }
 frac_courses_enrolled_at_other_institution_s_y = { name = "fraction of courses taken this term while student enrolled at another institution" }
-# "frac_courses_course_subject_area_*" = { name = "TODO: fraction of courses taken in subject area this term" }
-# "frac_courses_course_id_*" = { name = "TODO: fraction of times this course taken this term" }
+'frac_courses_course_subject_area_(\d+)' = { name = "fraction of courses taken in subject area {} this term" }
+'frac_courses_course_id_(.*)' = { name = "fraction of times course '{}' taken this term" }
 frac_courses_course_type_cu = { name = "fraction of college-level, undergraduate courses taken this term" }
 frac_courses_course_type_cg = { name = "fraction of college-level, graduate courses taken this term" }
 frac_courses_course_type_cc = { name = "fraction of college developmental, remedial, or preparatory courses taken this term" }
@@ -130,6 +135,7 @@ frac_courses_course_instructor_rank_4 = { name = "fraction of courses taken this
 frac_courses_course_instructor_rank_5 = { name = "fraction of courses taken this term with an associate professor (rank 5)" }
 frac_courses_course_instructor_rank_6 = { name = "fraction of courses taken this term with a professor (rank 6)" }
 frac_courses_course_instructor_rank_7 = { name = "fraction of courses taken this term with an 'other' instructor (rank 7)" }
+frac_courses_course_level_0 = { name = "fraction of 000-level courses taken this term" }
 frac_courses_course_level_1 = { name = "fraction of 100-level courses taken this term" }
 frac_courses_course_level_2 = { name = "fraction of 200-level courses taken this term" }
 frac_courses_course_level_3 = { name = "fraction of 300-level courses taken this term" }
@@ -138,6 +144,7 @@ frac_courses_course_level_5 = { name = "fraction of 500-level courses taken this
 frac_courses_course_level_6 = { name = "fraction of 600-level courses taken this term" }
 frac_courses_course_level_7 = { name = "fraction of 700-level courses taken this term" }
 frac_courses_course_level_8 = { name = "fraction of 800-level courses taken this term" }
+frac_courses_course_level_0_1 = { name = "fraction of intro-level courses taken this term" }
 frac_courses_course_grade_a = { name = "fraction of A grades earned this term" }
 frac_courses_course_grade_b = { name = "fraction of B grades earned this term" }
 frac_courses_course_grade_c = { name = "fraction of C grades earned this term" }
@@ -145,6 +152,9 @@ frac_courses_course_grade_d = { name = "fraction of D grades earned this term" }
 frac_courses_course_grade_f = { name = "fraction of F grades earned this term" }
 frac_courses_grade_is_failing_or_withdrawal = { name = "fraction of courses failed or withdrawn this term" }
 frac_courses_grade_above_section_avg = { name = "fraction of courses this term with grades above the sections' avg. grades" }
+frac_courses_in_program_of_study_area_term_1 = { name = "fraction of courses taken this term in student's first-term program of study area" }
+frac_courses_in_program_of_study_area_year_1 = { name = "fraction of courses taken this term in student's first-year program of study area" }
+frac_courses_in_term_program_of_study_area = { name = "fraction of courses taken this term in student's current program of study area" }
 frac_sections_students_passed = { name = "fraction of section's students that passed the course" }
 frac_sections_students_completed = { name = "fraction of section's students that completed the course" }
 student_pass_rate_above_sections_avg = { name = "student's pass rate this term is above sections' avg. pass rate" }
@@ -156,7 +166,8 @@ cumnum_repeated_course_ids = { name = "number of courses repeated so far" }
 cumnum_repeated_course_subjects = { name = "number of course subjects repeated so far" }
 cumnum_repeated_course_subject_areas = { name = "number of course subject areas repeated so far" }
 cumnum_terms_enrolled = { name = "number of terms enrolled so far" }
-cumnum_fall_spring_terms_enrolled = { name = "number of fall or spring terms enrolled so far" }
+cumnum_core_terms_enrolled = { name = "number of 'core' terms enrolled so far" }
+cumnum_noncore_terms_enrolled = { name = "number of 'non-core' terms enrolled so far" }
 term_in_peak_covid_cumsum = { name = "number of terms so far that occurred in 'peak' COVID" }
 term_is_while_student_enrolled_at_other_inst_cumsum = { name = "number of terms so far that occurred while student was enrolled at another institution" }
 term_is_pre_cohort_cumsum = { name = "number of terms so far that occurred before student's cohort (enrollment) term" }
@@ -181,8 +192,8 @@ num_courses_passed_cumfrac = { name = "fraction of courses passed so far" }
 num_courses_completed_cumfrac = { name = "fraction of courses completed so far" }
 num_courses_core_course_y_cumfrac = { name = "fraction of core courses taken so far" }
 num_courses_enrolled_at_other_institution_s_y_cumfrac = { name = "fraction of courses taken so far while student enrolled at another institution" }
-# "num_courses_course_subject_area_*_cumfrac" = { name = "TODO: fraction of courses taken in subject area so far" }
-# "num_courses_course_id_*_cumfrac" = { name = "TODO: fraction of times this course taken so far" }
+'num_courses_course_subject_area_(\d+)_cumfrac' = { name = "fraction of courses taken in subject area {} so far" }
+'num_courses_course_id_(.*)_cumfrac' = { name = "fraction of times course '{}' taken so far" }
 num_courses_course_type_cu_cumfrac = { name = "fraction of college-level, undergraduate courses taken so far" }
 num_courses_course_type_cg_cumfrac = { name = "fraction of college-level, graduate courses taken so far" }
 num_courses_course_type_cc_cumfrac = { name = "fraction of college developmental, remedial, or preparatory courses taken so far" }
@@ -209,6 +220,7 @@ num_courses_course_instructor_rank_4_cumfrac = { name = "fraction of courses tak
 num_courses_course_instructor_rank_5_cumfrac = { name = "fraction of courses taken so far with an associate professor (rank 5)" }
 num_courses_course_instructor_rank_6_cumfrac = { name = "fraction of courses taken so far with a professor (rank 6)" }
 num_courses_course_instructor_rank_7_cumfrac = { name = "fraction of courses taken so far with an 'other' instructor (rank 7)" }
+num_courses_course_level_0_cumfrac = { name = "fraction of 000-level courses taken so far" }
 num_courses_course_level_1_cumfrac = { name = "fraction of 100-level courses taken so far" }
 num_courses_course_level_2_cumfrac = { name = "fraction of 200-level courses taken so far" }
 num_courses_course_level_3_cumfrac = { name = "fraction of 300-level courses taken so far" }
@@ -217,6 +229,7 @@ num_courses_course_level_5_cumfrac = { name = "fraction of 500-level courses tak
 num_courses_course_level_6_cumfrac = { name = "fraction of 600-level courses taken so far" }
 num_courses_course_level_7_cumfrac = { name = "fraction of 700-level courses taken so far" }
 num_courses_course_level_8_cumfrac = { name = "fraction of 800-level courses taken so far" }
+num_courses_course_level_0_1_cumfrac = { name = "fraction of intro-level courses taken so far" }
 num_courses_course_grade_a_cumfrac = { name = "fraction of A grades earned so far" }
 num_courses_course_grade_b_cumfrac = { name = "fraction of B grades earned so far" }
 num_courses_course_grade_c_cumfrac = { name = "fraction of C grades earned so far" }
@@ -226,11 +239,13 @@ num_courses_grade_is_failing_or_withdrawal_cumfrac = { name = "fraction of cours
 num_courses_grade_above_section_avg_cumfrac = { name = "fraction of courses so far with grades above the sections' avg. grades" }
 num_courses_in_program_of_study_area_term_1_cumfrac = { name = "number of courses taken so far in student's first-term program of study area" }
 num_courses_in_program_of_study_area_year_1_cumfrac = { name = "number of courses taken so far in student's first-year program of study area" }
-cumfrac_terms_unenrolled = { name = "fraction of skipped terms so far" }
-cumfrac_fall_spring_terms_unenrolled = { name = "fraction of skipped fall/spring terms so far" }
+cumfrac_terms_enrolled = { name = "fraction of all terms enrolled so far" }
+cumfrac_core_terms_enrolled = { name = "fraction of 'core' terms enrolled so far" }
+cumfrac_noncore_terms_enrolled = { name = "fraction of 'non-core' terms enrolled so far" }
 num_courses_diff_prev_term = { name = "change in number of courses taken this term compared to previous term" }
 num_credits_earned_diff_prev_term = { name = "change in number of credits earned this term compared to previous term" }
 course_grade_numeric_mean_diff_prev_term = { name = "change in avg. numeric grade this term compared to previous term" }
+course_level_mean_diff_prev_term = { name = "change in avg. course level this term compared to previous term" }
 num_courses_diff_term_1_to_term_2 = { name = "change in number of courses taken in term 2 compared to term 1" }
 num_courses_diff_term_2_to_term_3 = { name = "change in number of courses taken in term 3 compared to term 2" }
 num_courses_diff_term_3_to_term_4 = { name = "change in number of courses taken in term 4 compared to term 3" }
@@ -240,3 +255,6 @@ num_credits_earned_diff_term_3_to_term_4 = { name = "chang ein number of credits
 course_grade_numeric_mean_diff_term_1_to_term_2 = { name = "change in avg. numeric grade in term 2 compared to term 1" }
 course_grade_numeric_mean_diff_term_2_to_term_3 = { name = "change in avg. numeric grade in term 3 compared to term 2" }
 course_grade_numeric_mean_diff_term_3_to_term_4 = { name = "change in avg. numeric grade in term 4 compared to term 3" }
+course_level_mean_diff_term_1_to_term_2 = { name = "change in avg. course level in term 2 compared to term 1" }
+course_level_mean_diff_term_2_to_term_3 = { name = "change in avg. course level in term 3 compared to term 2" }
+course_level_mean_diff_term_3_to_term_4 = { name = "change in avg. course level in term 4 compared to term 3" }

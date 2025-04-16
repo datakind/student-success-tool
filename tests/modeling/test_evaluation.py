@@ -18,12 +18,12 @@ def patch_mlflow(monkeypatch):
 
 def test_check_array_of_arrays_true():
     input_array = pd.Series([[1, 0, 1], [0, 1, 0]])
-    assert evaluation.check_array_of_arrays(input_array)
+    assert evaluation._check_array_of_arrays(input_array)
 
 
 def test_check_array_of_arrays_false():
     input_array = pd.Series([1, 0, 1])
-    assert not evaluation.check_array_of_arrays(input_array)
+    assert not evaluation._check_array_of_arrays(input_array)
 
 
 @pytest.mark.parametrize(
@@ -89,9 +89,47 @@ def test_compare_trained_models(
     result, _ = evaluation.compare_trained_models("dummy_id", metric)
     print(result["tags.model_type"].tolist())
     assert isinstance(result, pd.DataFrame), "The result should be a pandas DataFrame."
-    assert (
-        result["tags.model_type"].tolist() == expected_order
-    ), "Models are not sorted in ascending order based on the metric."
-    assert all(
-        column in result.columns for column in expected_columns
-    ), "DataFrame should contain specific columns."
+    assert result["tags.model_type"].tolist() == expected_order, (
+        "Models are not sorted in ascending order based on the metric."
+    )
+    assert all(column in result.columns for column in expected_columns), (
+        "DataFrame should contain specific columns."
+    )
+
+
+@pytest.mark.parametrize(
+    ["optimization_metric", "ascending", "expected"],
+    [
+        ("recall", False, ["run_1", "run_2"]),
+        ("log_loss", True, ["run_2", "run_1"]),
+        ("f1", False, ["run_1", "run_2"]),
+    ],
+)
+def test_get_top_run_ids(
+    optimization_metric, ascending, expected, patch_mlflow, monkeypatch
+):
+    # Create mock DataFrame
+    if optimization_metric == "log_loss":
+        mock_data = pd.DataFrame(
+            {
+                "run_id": ["run_1", "run_2"],
+                "metrics.val_log_loss": [0.5, 0.3],
+            }
+        )
+    else:
+        mock_data = pd.DataFrame(
+            {
+                "run_id": ["run_1", "run_2"],
+                f"metrics.val_{optimization_metric}_score": [0.9, 0.8]
+                if not ascending
+                else [0.5, 0.3],
+            }
+        )
+
+    def _search_runs_patch(experiment_ids, order_by, output_format):
+        return mock_data
+
+    monkeypatch.setattr(mlflow, "search_runs", _search_runs_patch)
+
+    result = evaluation.get_top_run_ids("dummy_id", optimization_metric, 2)
+    assert result == expected

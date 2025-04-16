@@ -1,6 +1,6 @@
 [project]
 name = "student-success-tool"
-version = "0.1.1"
+version = "0.2.0"
 description = "School-agnostic lib for implementing Student Success Tool workflows."
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
@@ -8,13 +8,14 @@ dependencies = [
     "databricks-connect~=16.0",
     "databricks-sdk~=0.38.0",
     "faker>=20.1",
+    "google-cloud-storage~=2.17",
     "ipywidgets~=8.1",
     "matplotlib~=3.7",
     "missingno~=0.5",
     "mlflow~=2.13",
     "numpy~=1.26",
-    "pandas~=2.1",
-    "pandera~=0.21",
+    "pandas~=2.0",
+    "pandera~=0.23.0",
     "pyarrow~=16.0",
     "pydantic~=2.10",
     "pyyaml~=6.0",
@@ -34,7 +35,7 @@ dev = [
     "jupyterlab~=4.2",
     "mypy~=1.11",
     "pytest~=8.3",
-    "ruff~=0.8",
+    "ruff~=0.9",
 ]
 
 [build-system]

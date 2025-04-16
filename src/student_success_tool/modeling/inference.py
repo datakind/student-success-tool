@@ -1,9 +1,64 @@
+import logging
+import re
 import typing as t
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+import sklearn.base
 from shap import KernelExplainer
+
+LOGGER = logging.getLogger(__name__)
+
+
+def predict_probs(
+    features: pd.DataFrame | np.ndarray,
+    model: sklearn.base.BaseEstimator,
+    *,
+    feature_names: t.Optional[list[str]] = None,
+    pos_label: t.Optional[bool | str] = None,
+    dtypes: t.Optional[dict[str, object]] = None,
+) -> np.ndarray:
+    """
+    Predict target probabilities for examples in ``features`` using ``model`` .
+
+    Args:
+        features
+        model
+        feature_names: Names of features corresponding to each column in ``features`` ,
+            in cases where it must be passed as a numpy array. If not specified,
+            feature names are inferred from the model's "column_selector"
+            (a standard in models trained using Databricks AutoML).
+        pos_label: Value in ``model`` classes that constitutes a "positive" prediction,
+            often ``True`` in the case of binary classification.
+        dtypes: Mapping of column name to dtype in ``featuress`` that needs to be overridden
+            before passing it into ``model`` .
+
+    Returns:
+        Predicted probabilities, as a 1-dimensional array (when ``pos_label is True`` )
+            or an N-dimensional array, where N corresponds to the number of pred classes.
+    """
+    if not sklearn.base.is_classifier(model):
+        LOGGER.warning("predict_proba() expects a classifier, but received %s", model)
+
+    if feature_names is None:
+        feature_names = model.named_steps["column_selector"].get_params()["cols"]
+    assert isinstance(feature_names, list)  # type guard
+
+    assert features.shape[1] == len(feature_names)
+    if not isinstance(features, pd.DataFrame):
+        features = pd.DataFrame(data=features, columns=feature_names)
+
+    if dtypes:
+        features = features.astype(dtypes)
+
+    pred_probs = model.predict_proba(features)
+    assert isinstance(pred_probs, np.ndarray)  # type guard
+
+    if pos_label is not None:
+        return pred_probs[:, model.classes_.tolist().index(pos_label)]
+    else:
+        return pred_probs
 
 
 def select_top_features_for_display(
@@ -65,10 +120,7 @@ def select_top_features_for_display(
             zip(top_features, top_feature_values, top_shap_values), start=1
         ):
             feature_name = (
-                # HACK: lowercase feature column name in features table lookup
-                # TODO: we should *ensure* feature column names are lowercased
-                # before using them in a model; current behavior should be considered a bug
-                features_table.get(feature.lower(), {}).get("name", feature)
+                _get_mapped_feature_name(feature, features_table)
                 if features_table is not None
                 else feature
             )
@@ -85,6 +137,23 @@ def select_top_features_for_display(
 
         top_features_info.append(student_output)
     return pd.DataFrame(top_features_info)
+
+
+def _get_mapped_feature_name(
+    feature_col: str, features_table: dict[str, dict[str, str]]
+) -> str:
+    feature_col = feature_col.lower()  # just in case
+    if feature_col in features_table:
+        feature_name = features_table[feature_col]["name"]
+    else:
+        for fkey, fval in features_table.items():
+            if "(" in fkey and ")" in fkey:
+                if match := re.match(fkey, feature_col):
+                    feature_name = fval["name"].format(*match.groups())
+                    break
+        else:
+            feature_name = feature_col
+    return feature_name
 
 
 def calculate_shap_values_spark_udf(
@@ -132,7 +201,7 @@ def calculate_shap_values(
     *,
     feature_names: list[str],
     fillna_values: pd.Series,
-    student_id_col: str = "student_guid",
+    student_id_col: str = "student_id",
 ) -> pd.DataFrame:
     """
     Compute SHAP values for the features in ``df`` using ``explainer`` and return result
@@ -150,12 +219,12 @@ def calculate_shap_values(
         https://shap.readthedocs.io/en/stable/generated/shap.KernelExplainer.html
     """
     # preserve student ids
-    student_ids = df.loc[:, student_id_col]
+    student_ids = df.loc[:, student_id_col].reset_index(drop=True)
     # impute missing values and run shap values using just features
     features_imp = df.loc[:, feature_names].fillna(fillna_values)
-    shap_values = explainer.shap_values(features_imp)
+    explanation = explainer(features_imp)
     return (
-        pd.DataFrame(data=shap_values, columns=feature_names)
+        pd.DataFrame(data=explanation.values, columns=explanation.feature_names)
         # reattach student ids to their shap values
         .assign(**{student_id_col: student_ids})
     )
