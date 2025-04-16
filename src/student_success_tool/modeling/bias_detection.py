@@ -52,8 +52,9 @@ def evaluate_bias(
 ) -> None:
     """
     Evaluates the bias in a model's predictions across different student groups for a split
-    denoted by "split_name" across df_pred. For each student group, FNR (False Negative Rate) is
-    computed and any detected biases are flagged. Then, the metrics & plots are logged to MLflow.
+    denoted by "split_name" across df_pred. For each student group, FNR (False Negative Rate) 
+    Parity is computed using absolute FNR percentage differences and any detected biases are 
+    flagged using hypothesis testing. Then, the metrics & plots are logged to MLflow.
 
     Args:
         run_id: The ID of the MLflow run
@@ -66,6 +67,11 @@ def evaluate_bias(
         pred_prob_col: Column name for the model's predicted probabilities
         pos_label: Label representing the positive class
         sample_weight_col: Column name representing sample weights for the model.
+    
+    References: 
+        [1] https://fidelity.github.io/jurity/about_fairness.html
+        [2] https://docs.oracle.com/en-us/iaas/tools/automlx/latest/legacy/v23.2.3/fairness.html
+        [3] https://search.r-project.org/CRAN/refmans/fairness/html/fnr_parity.html
     """
     model_flags = []
 
@@ -94,7 +100,7 @@ def evaluate_bias(
             ]
 
             if group_flags:
-                fnpr_fig = plot_fnr_group(fnr_data)
+                fnr_fig = plot_fnr_group(fnr_data)
                 mlflow.log_figure(
                     fnr_fig, f"fnr_plots/{split_name}_{group_col}_fnr.png"
                 )
@@ -222,7 +228,7 @@ def flag_bias(
     min_sample_ratio: float = 0.15,
 ) -> list[dict]:
     """
-    Flags bias based on raw FNR differences and confidence interval overlap.
+    Flags bias based on FNR parity (absolute FNR percentage differences) and confidence interval overlap.
 
     Args:
         fnr_data: List of dictionaries containing FNR and CI information for each subgroup.
@@ -249,12 +255,12 @@ def flag_bias(
         (low_bias_thresh, "🟡 LOW BIAS", 0.1),
     ]
 
-    for i, current in enumerate(fnpr_data):
-        for other in fnpr_data[i + 1 :]:
-            if current["fnpr"] > 0 and other["fnpr"] > 0:
-                fnpr_diff = np.abs(current["fnpr"] - other["fnpr"])
-                p_value = z_test_fnpr_difference(
-                    current["fnpr"], other["fnpr"], current["size"], other["size"]
+    for i, current in enumerate(fnr_data):
+        for other in fnr_data[i + 1 :]:
+            if current["fnr"] > 0 and other["fnr"] > 0:
+                fnr_diff = np.abs(current["fnr"] - other["fnr"])
+                p_value = z_test_fnr_difference(
+                    current["fnr"], other["fnr"], current["size"], other["size"]
                 )
                 ci_overlap = check_ci_overlap(current["ci"], other["ci"])
 
@@ -267,20 +273,20 @@ def flag_bias(
                             current["group"],
                             current["subgroup"],
                             other["subgroup"],
-                            fnpr_diff,
+                            fnr_diff,
                             "Insufficient samples for statistical test",
                             current["split_name"],
                             "⚪ INSUFFICIENT DATA",
                             p_value,
                         )
                     )
-                elif fnpr_diff < low_bias_thresh or p_value > 0.1:
+                elif fnr_diff < low_bias_thresh or p_value > 0.1:
                     bias_flags.append(
                         generate_bias_flag(
                             current["group"],
                             current["subgroup"],
                             other["subgroup"],
-                            fnpr_diff,
+                            fnr_diff,
                             "No significant difference",
                             current["split_name"],
                             "🟢 NO BIAS",
@@ -289,7 +295,7 @@ def flag_bias(
                     )
                 else:
                     for threshold, flag, p_thresh in thresholds:
-                        if fnpr_diff >= threshold and p_value <= p_thresh:
+                        if fnr_diff >= threshold and p_value <= p_thresh:
                             reason = (
                                 "Overlapping CIs"
                                 if ci_overlap
@@ -300,7 +306,7 @@ def flag_bias(
                                     current["group"],
                                     current["subgroup"],
                                     other["subgroup"],
-                                    fnpr_diff,
+                                    fnr_diff,
                                     reason,
                                     current["split_name"],
                                     flag,
@@ -323,7 +329,7 @@ def calculate_fnr_and_ci(
     Args:
         targets: "Actual" labels from model output
         preds: Predictions from model output
-        min_fnpr_samples: Minimum number of true positives or false negatives for FNR calculation.
+        min_fnr_samples: Minimum number of true positives or false negatives for FNR calculation.
         apply_scaling: Boolean of whether log scaling should be applied. We default to True since we want to
         sufficiently dampen FNR variance in low sample sizes situations.
 
