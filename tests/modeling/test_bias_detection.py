@@ -40,9 +40,7 @@ def mock_mlflow(monkeypatch):
 @pytest.fixture
 def mock_helpers(monkeypatch):
     monkeypatch.setattr(bias_detection, "flag_bias", lambda fnr_data: fnr_data)
-    monkeypatch.setattr(
-        bias_detection, "plot_fnr_group", lambda fnr_data: plt.figure()
-    )
+    monkeypatch.setattr(bias_detection, "plot_fnr_group", lambda fnr_data: plt.figure())
     monkeypatch.setattr(
         bias_detection,
         "calculate_fnr_and_ci",

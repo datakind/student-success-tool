@@ -52,8 +52,8 @@ def evaluate_bias(
 ) -> None:
     """
     Evaluates the bias in a model's predictions across different student groups for a split
-    denoted by "split_name" across df_pred. For each student group, FNR (False Negative Rate) 
-    Parity is computed using absolute FNR percentage differences and any detected biases are 
+    denoted by "split_name" across df_pred. For each student group, FNR (False Negative Rate)
+    Parity is computed using absolute FNR percentage differences and any detected biases are
     flagged using hypothesis testing. Then, the metrics & plots are logged to MLflow.
 
     Args:
@@ -67,8 +67,8 @@ def evaluate_bias(
         pred_prob_col: Column name for the model's predicted probabilities
         pos_label: Label representing the positive class
         sample_weight_col: Column name representing sample weights for the model.
-    
-    References: 
+
+    References:
         [1] https://fidelity.github.io/jurity/about_fairness.html
         [2] https://docs.oracle.com/en-us/iaas/tools/automlx/latest/legacy/v23.2.3/fairness.html
         [3] https://search.r-project.org/CRAN/refmans/fairness/html/fnr_parity.html
@@ -152,9 +152,7 @@ def compute_group_bias_metrics(
         preds = subgroup_data[pred_col]
         pred_probs = subgroup_data[pred_prob_col]
 
-        fnr, fnr_lower, fnr_upper, num_positives = calculate_fnr_and_ci(
-            labels, preds
-        )
+        fnr, fnr_lower, fnr_upper, num_positives = calculate_fnr_and_ci(labels, preds)
 
         fnr_subgroup_data = {
             "group": group_col,
@@ -228,7 +226,7 @@ def flag_bias(
     min_sample_ratio: float = 0.15,
 ) -> list[dict]:
     """
-    Flags bias based on FNR parity (absolute FNR percentage differences) and confidence interval overlap.
+    Flags bias based on FNR Parity (via absolute FNR percentage differences) and confidence interval overlap.
 
     Args:
         fnr_data: List of dictionaries containing FNR and CI information for each subgroup.
@@ -350,9 +348,7 @@ def calculate_fnr_and_ci(
     fnr = fn / num_positives if num_positives > 0 else 0
 
     # Confidence Interval Calculation
-    margin = (
-        Z * np.sqrt((fnr * (1 - fnr)) / num_positives) if num_positives > 0 else 0
-    )
+    margin = Z * np.sqrt((fnr * (1 - fnr)) / num_positives) if num_positives > 0 else 0
     ci_min, ci_max = max(0, fnr - margin), min(1, fnr + margin)
 
     return fnr, ci_min, ci_max, fn + tp
@@ -403,8 +399,7 @@ def z_test_fnr_difference(
     ):  # Ensures valid sample sizes for z-test
         return np.nan
     std_error = np.sqrt(
-        ((fnr1 * (1 - fnr1)) / num_positives1)
-        + ((fnr2 * (1 - fnr2)) / num_positives2)
+        ((fnr1 * (1 - fnr1)) / num_positives1) + ((fnr2 * (1 - fnr2)) / num_positives2)
     )
     z_stat = (fnr1 - fnr2) / std_error
     return float(2 * (1 - st.norm.cdf(abs(z_stat))))  # Two-tailed p-value
