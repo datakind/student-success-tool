@@ -331,7 +331,7 @@ def create_evaluation_plots(
     split_type: str,
 ) -> tuple[matplotlib.figure.Figure, ...]:
     """
-    Create plots to evaluate a model overall - risk score histogram 
+    Create plots to evaluate a model overall - risk score histogram
     and calibration curve at low alert rates
 
     Args:
