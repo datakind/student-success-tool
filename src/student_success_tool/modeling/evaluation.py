@@ -359,7 +359,7 @@ def create_evaluation_plots_by_subgroup(
     pos_label: PosLabelType,
     group_col: str,
     split_type: str,
-) -> tuple[matplotlib.figure.Figure, ...]:
+) -> matplotlib.figure.Figure:
     """
     Create calibration curve plots to evaluate a model by group
 
