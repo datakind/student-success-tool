@@ -51,6 +51,7 @@ def add_features(
                 ("student_pass_rate_above_sections_avg", "sum"),
                 ("student_completion_rate_above_sections_avg", "sum"),
             ],
+            credits = 12,
         )
         # rename/dtype special cols for clarity in downstream calcs
         .astype(
@@ -100,6 +101,7 @@ def expanding_agg_features(
     num_course_cols: list[str],
     col_aggs: list[tuple[str, str | list[str]]],
     dummy_course_cols: t.Optional[list[str]] = None,
+    credits = 12,
 ) -> pd.DataFrame:
     """
     Compute various aggregate features over an expanding window per (student) group.
