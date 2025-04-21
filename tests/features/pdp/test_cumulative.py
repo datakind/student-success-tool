@@ -31,7 +31,7 @@ def df():
             "num_courses_course_level_1": [1, 1, 2, 2, 1],
             "took_course_subject_area_02": [True, False, False, False, True],
             "took_course_subject_area_05_06": [False, False, False, True, False],
-            "num_credits_earned_cumsum": [3, 12, 30, 45, 60],
+            "num_credits_earned": [3, 12, 15, 4, 15],
             "course_ids": [
                 ["A101", "B101", "C201"],
                 ["A101", "D201"],
@@ -68,7 +68,11 @@ def df_grped(df):
     ["num_course_cols", "dummy_course_cols", "col_aggs", "exp"],
     [
         (
-            ["num_courses_course_level_0", "num_courses_course_level_1"],
+            [
+                "num_courses_course_level_0",
+                "num_courses_course_level_1",
+                "num_credits_earned",
+            ],
             ["took_course_subject_area_02", "took_course_subject_area_05_06"],
             [
                 ("term_id", "count"),
@@ -89,6 +93,7 @@ def df_grped(df):
                         0.884,
                     ],
                     "num_courses_cumsum": [3.0, 5.0, 7.0, 9.0, 10.0],
+                    "num_credits_earned_cumsum": [3.0, 15.0, 30.0, 34.0, 49.0],
                     "took_course_subject_area_02_cummax": [1.0, 1.0, 1.0, 1.0, 1.0],
                     "took_course_subject_area_05_06_cummax": [
                         0.0,
@@ -96,14 +101,6 @@ def df_grped(df):
                         0.0,
                         1.0,
                         1.0,
-                    ],
-                    "took_course_subject_area_02_cummax__within_12_credits": [1.0, 1.0, 1.0, 1.0, 1.0],
-                    "took_course_subject_area_05_06_cummax_within_12_credits": [
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
                     ],
                     "num_courses_course_level_0_cumfrac": [
                         0.667,
@@ -118,6 +115,20 @@ def df_grped(df):
                         0.571,
                         0.667,
                         0.7,
+                    ],
+                    "took_course_subject_area_02_cummax_in_12_creds": [
+                        True,
+                        True,
+                        True,
+                        True,
+                        True,
+                    ],
+                    "took_course_subject_area_05_06_cummax_in_12_creds": [
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
                     ],
                 }
             ),
