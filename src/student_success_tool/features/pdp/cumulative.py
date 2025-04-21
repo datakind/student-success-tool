@@ -100,8 +100,8 @@ def expanding_agg_features(
     *,
     num_course_cols: list[str],
     col_aggs: list[tuple[str, str | list[str]]],
+    credits: int,
     dummy_course_cols: t.Optional[list[str]] = None,
-    credits: int = 12,
 ) -> pd.DataFrame:
     """
     Compute various aggregate features over an expanding window per (student) group.
