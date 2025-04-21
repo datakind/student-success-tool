@@ -143,6 +143,7 @@ def test_expanding_agg_features(
         num_course_cols=num_course_cols,
         col_aggs=col_aggs,
         dummy_course_cols=dummy_course_cols,
+        credits=12
     )
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     # raises error if not equal
