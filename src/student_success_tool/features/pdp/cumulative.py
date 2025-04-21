@@ -72,19 +72,6 @@ def add_features(
         df_grped, cols=["course_ids", "course_subjects", "course_subject_areas"]
     )
     concat_dfs = [df,df_cumnum_ur, df_expanding_agg]
-    # add features that use other cumulative features 
-    if dummy_course_cols is not None:
-        df_within_credits = complete_action_within_x_credits(
-            df_expanding_agg,
-            credits=12, #todo take this as an input from the config
-            student_id_cols=student_id_cols,
-            sort_cols=sort_cols,
-            action_cols=[
-                f"{dummy_course}_cummax"
-                for dummy_course in dummy_course_cols
-            ],
-        )
-        concat_dfs = [concat_dfs, df_within_credits]
     return (
         # despite best efforts, the student-id index is dropped from df_cumnum_ur
         # and, through sheer pandas insanity, merge on student_id_cols produces
@@ -154,38 +141,29 @@ def expanding_agg_features(
         .div(df_cumaggs["num_courses_cumsum"], axis="index")
         .rename(columns=lambda col: col.replace("cumsum", "cumfrac"))
     )
+    concat_dfs = [df_cumaggs, df_cumfracs]
+    if dummy_course_cols is not None:
+        action_cols=[
+                f"{dummy_course}_cummax"
+                for dummy_course in dummy_course_cols
+            ],
+        within_cols = []
+        for col in action_cols:
+            within_col = f"{col}_within_{credits}_credits"
+            df_cumaggs[within_col] = (df_cumaggs[col].astype(bool)) & (df_cumaggs["num_credits_earned_cumsum"] <= credits)
+            within_cols.append(within_col)
+
+        action_status_df = df_cumaggs[within_cols].groupby(level=df_cumaggs.index.names).max()
+        concat_dfs = [concat_dfs, action_status_df]
+
     return (
         # append cum-frac features to all cum-agg features
-        pd.concat([df_cumaggs, df_cumfracs], axis="columns")
+        pd.concat(concat_dfs, axis="columns")
         # *drop* the original cumsum columns, since the derived cumfracs are sufficient
         .drop(columns=num_courses_cumsum_cols)
         # drop our student-id(s) index, it just causes trouble
         .reset_index(drop=True)
     )
-
-def complete_action_within_x_credits(
-    df_expanding_agg: pd.DataFrame, *, credits: int, student_id_cols: list[str], sort_cols: list[str], action_cols: list[str]
-) -> pd.DataFrame:
-    """
-    Compute if a student has completed an action of interest, i.e. took a certain course 
-    within a certain credit limit
-
-    Args: 
-        credits
-        action_cols
-    """
-    df = df_expanding_agg[student_id_cols + sort_cols + action_cols + ['num_credits_earned_cumsum']].copy()
-
-    within_cols = []
-    for col in action_cols:
-        within_col = f"{col}_within_{credits}_credits"
-        df[within_col] = (df[col].astype(bool)) & (df["num_credits_earned_cumsum"] <= credits)
-        within_cols.append(within_col)
-
-    df = df.sort_values(by=student_id_cols + sort_cols, ignore_index=True)
-    action_status_df = df.groupby(student_id_cols, as_index=False)[within_cols].max()
-
-    return action_status_df
 
 
 def cumnum_unique_and_repeated_features(
