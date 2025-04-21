@@ -52,7 +52,25 @@ Please read the [CONTRIBUTING](CONTRIBUTING.md) to learn how to contribute to th
     - public PyPI: `%pip install student-success-tool == x.y.z`
 1. Restart Python: `dbutils.library.restartPython()` or `%restart_python`
 
+## Development
+
+- Run unit tests: `uv run python -m pytest [ARGS]` ([docs](https://docs.pytest.org/en/stable/))
+- Run code linter: `uv tool run ruff check [ARGS]` ([docs](https://docs.astral.sh/ruff/linter/))
+- Run code formatter: `uv tool run ruff format [ARGS]` ([docs](https://docs.astral.sh/ruff/formatter/))
+
 ## Package Management
+
+### modifying dependencies
+
+Package dependencies are declared in `pyproject.toml`, either in the `project.dependencies` array or in the `dependency_groups` mapping, where we also have `dev`-only dependencies; dependencies are _managed_ using the [`uv` tool](https://docs.astral.sh/uv/).
+
+1. Manually add/remove/update dependencies by editing `pyproject.toml` directly, or leverage `uv`'s `add`/`remove` commands, as described [here](https://docs.astral.sh/uv/concepts/projects/dependencies/)
+2. Ensure that entries are formatted according to the PyPA [dependency specifiers](https://packaging.python.org/en/latest/specifications/dependency-specifiers/) standard
+3. Once all dependencies have been modified, resolve them into the `uv.lock` lockfile by running the `uv lock` command, as described [here](https://docs.astral.sh/uv/concepts/projects/sync/)
+4. Optionally, sync your local environment with the new dependencies via `uv sync`
+5. If possible, submit a PR for the dependency changes only, rather than combining them with new features or other changes
+
+Note: Since `student_success_tool` is a "library" (in Python packaging parlance), it's generally recommended to be permissive when setting dependencies' version constraints: better to set a safe minimum version and a loose maximum version, and leave tight version pinning to "application" packages.
 
 ### releases
 
