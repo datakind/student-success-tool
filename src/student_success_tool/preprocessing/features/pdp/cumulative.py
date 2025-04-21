@@ -152,7 +152,8 @@ def expanding_agg_features(
         within_cols = []
         for col in action_cols:
             within_col = f"{col}_within_{credits}_credits"
-            df_cumaggs[within_col] = (df_cumaggs[col].astype(bool)) & (df_cumaggs["num_credits_earned_cumsum"] <= credits)
+            # df_cumaggs[within_col] = (df_cumaggs[col].astype(bool)) & (df_cumaggs["num_credits_earned_cumsum"] <= credits)
+            df_cumaggs[within_col] = (df_cumaggs[col].astype(bool)) 
             within_cols.append(within_col)
 
         action_status_df = df_cumaggs[within_cols].groupby(level=df_cumaggs.index.names).max()
