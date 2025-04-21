@@ -51,7 +51,7 @@ def add_features(
                 ("student_pass_rate_above_sections_avg", "sum"),
                 ("student_completion_rate_above_sections_avg", "sum"),
             ],
-            credits = 12,
+            credits=12,
         )
         # rename/dtype special cols for clarity in downstream calcs
         .astype(
@@ -72,7 +72,7 @@ def add_features(
     df_cumnum_ur = cumnum_unique_and_repeated_features(
         df_grped, cols=["course_ids", "course_subjects", "course_subject_areas"]
     )
-    concat_dfs = [df,df_cumnum_ur, df_expanding_agg]
+    concat_dfs = [df, df_cumnum_ur, df_expanding_agg]
     return (
         # despite best efforts, the student-id index is dropped from df_cumnum_ur
         # and, through sheer pandas insanity, merge on student_id_cols produces
@@ -101,7 +101,7 @@ def expanding_agg_features(
     num_course_cols: list[str],
     col_aggs: list[tuple[str, str | list[str]]],
     dummy_course_cols: t.Optional[list[str]] = None,
-    credits = 12,
+    credits=12,
 ) -> pd.DataFrame:
     """
     Compute various aggregate features over an expanding window per (student) group.
@@ -145,17 +145,18 @@ def expanding_agg_features(
     )
     concat_dfs = [df_cumaggs, df_cumfracs]
     if dummy_course_cols is not None:
-        action_cols=[
-                f"{dummy_course}_cummax"
-                for dummy_course in dummy_course_cols
-            ]
+        action_cols = [f"{dummy_course}_cummax" for dummy_course in dummy_course_cols]
         action_status_df = pd.DataFrame(index=df_cumaggs.index)
 
         for col in action_cols:
             within_col = f"{col}_in_{credits}_creds"
-            action_status_df[within_col] = (df_cumaggs[col].astype(bool)) & (df_cumaggs["num_credits_earned_cumsum"] <= credits)
+            action_status_df[within_col] = (df_cumaggs[col].astype(bool)) & (
+                df_cumaggs["num_credits_earned_cumsum"] <= credits
+            )
 
-        action_status_df = action_status_df.groupby(level=df_cumaggs.index.names).transform("max")
+        action_status_df = action_status_df.groupby(
+            level=df_cumaggs.index.names
+        ).transform("max")
         concat_dfs.append(action_status_df)
 
     return (
