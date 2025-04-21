@@ -148,7 +148,7 @@ def expanding_agg_features(
         action_cols=[
                 f"{dummy_course}_cummax"
                 for dummy_course in dummy_course_cols
-            ],
+            ]
         within_cols = []
         for col in action_cols:
             within_col = f"{col}_within_{credits}_credits"
