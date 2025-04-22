@@ -51,7 +51,7 @@ def add_features(
                 ("student_pass_rate_above_sections_avg", "sum"),
                 ("student_completion_rate_above_sections_avg", "sum"),
             ],
-            credits=12,
+            credits=constants.DEFAULT_COURSE_CREDIT_CHECK,
         )
         # rename/dtype special cols for clarity in downstream calcs
         .astype(
@@ -100,7 +100,7 @@ def expanding_agg_features(
     *,
     num_course_cols: list[str],
     col_aggs: list[tuple[str, str | list[str]]],
-    credits: int,
+    credits: t.Optional[int] = constants.DEFAULT_COURSE_CREDIT_CHECK,
     dummy_course_cols: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:
     """
@@ -110,6 +110,8 @@ def expanding_agg_features(
         df_grped
         num_course_cols
         col_aggs
+        credits: the number of credits to check if courses of interest were taken within
+        dummy_course_cols: the columns that were checked for whether a course was taken to check if they were taken within the number of credits of interest
     """
     LOGGER.info("computing expanding window aggregate features ...")
     agg_dict = dict(col_aggs) | {col: "sum" for col in num_course_cols}
