@@ -4,6 +4,7 @@ import typing as t
 import pydantic as pyd
 
 from ...features.pdp import constants
+from ...utils import types
 
 
 class FeaturesConfig(pyd.BaseModel):
@@ -60,7 +61,7 @@ class FeaturesConfig(pyd.BaseModel):
     )
 
 
-class TargetConfig(pyd.BaseModel):
+class SelectionConfig(pyd.BaseModel):
     student_criteria: dict[str, object] = pyd.Field(
         default_factory=dict,
         description=(
@@ -69,12 +70,35 @@ class TargetConfig(pyd.BaseModel):
             "Multiple criteria are combined with a logical 'AND'."
         ),
     )
-    # TODO: refine target functionality and expand on this configuration
+    intensity_time_limits: t.Optional[types.IntensityTimeLimitsType] = pyd.Field(
+        default=None,
+        description=(
+            "Mapping of enrollment intensity value (e.g. 'FULL-TIME') to the max number "
+            "years or terms (e.g. [4.0, 'year'], [12.0, 'term']) considered to be 'on-time' "
+            "for a given target (e.g. graduation, credits earned), "
+            "where the numeric values are for the time between 'checkpoint' and 'target' "
+            "terms. Passing special '*' as the only key applies the corresponding time limits "
+            "to all students, regardless of intensity."
+        ),
+    )
+    params: dict[str, object] = pyd.Field(
+        default_factory=dict,
+        description="Any additional parameters needed to configure student selection",
+    )
+
+
+class CheckpointConfig(pyd.BaseModel):
+    params: dict[str, object] = pyd.Field(default_factory=dict)
+
+
+class TargetConfig(pyd.BaseModel):
     params: dict[str, object] = pyd.Field(default_factory=dict)
 
 
 class PreprocessingConfig(pyd.BaseModel):
     features: FeaturesConfig
+    selection: SelectionConfig
+    checkpoint: CheckpointConfig
     target: TargetConfig
     splits: dict[t.Literal["train", "test", "validate"], float] = pyd.Field(
         default={"train": 0.6, "test": 0.2, "validate": 0.2},
