@@ -17,8 +17,6 @@ variables:
     description: "Datakind address used for email notifications"
   end_user_notification_email:
     description: "End user address used for email notifications"
-  fellows_group_to_manage_workflow:
-    description: "Temprorary fellow Group with permissions to manage the job"
   datakind_group_to_manage_workflow:
     description: "Group with permissions to manage the job"
   service_account_executer:
@@ -27,6 +25,8 @@ variables:
     description: "Account to run the pipeline"
   pip_install_branch:
     description: "SST github Branch used to install SST libraries from"
+  custom_schemas_path:
+    description: "Path to custom schemas"
 
 run_as:
   service_principal_name: ${var.service_principal_run_as}
