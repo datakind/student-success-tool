@@ -18,7 +18,7 @@ class ModelCard:
         self.client = MlflowClient()
         self.context = {}
         self.section_registry = SectionRegistry()
-        self.register_sections()
+        self._register_sections()
 
     def build(self):
         self.load_model()
@@ -93,3 +93,6 @@ class ModelCard:
         with open(self.output_path, "w") as file:
             file.write(filled)
         print("✅ Model card generated!")
+    
+    def _register_sections(self):
+        register_sections(self, self.section_registry)
