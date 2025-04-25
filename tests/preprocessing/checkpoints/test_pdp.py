@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from student_success_tool.checkpoints import pdp
+from student_success_tool.preprocessing.checkpoints import pdp
 
 
 @pytest.fixture(scope="module")
