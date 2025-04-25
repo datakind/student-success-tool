@@ -3,7 +3,7 @@ import logging
 
 import pandas as pd
 
-from ...utils import types
+from ....utils import types
 from . import constants, shared
 
 LOGGER = logging.getLogger(__name__)

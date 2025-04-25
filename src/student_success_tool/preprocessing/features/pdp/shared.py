@@ -6,7 +6,7 @@ from datetime import date
 
 import pandas as pd
 
-from ...utils import types
+from ....utils import types
 
 RE_YEAR_TERM = re.compile(
     r"(?P<start_yr>\d{4})-(?P<end_yr>\d{2}) (?P<term>FALL|WINTER|SPRING|SUMMER)",
