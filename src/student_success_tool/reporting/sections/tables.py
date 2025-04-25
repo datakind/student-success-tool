@@ -1,8 +1,8 @@
-def register_table_sections(self):
-    @self.section_registry.register("data_split_table")
+def register_table_sections(card, registry):
+    @registry.register("data_split_table")
     def data_split():
-        total_students = len(self.modeling_data)
-        splits = self.cfg.preprocessing.splits
+        total_students = len(card.modeling_data)
+        splits = card.cfg.preprocessing.splits
         labels = {"train": "Training", "validate": "Validation", "test": "Test"}
 
         rows = [
