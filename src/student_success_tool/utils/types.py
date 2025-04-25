@@ -2,6 +2,7 @@ import typing as t
 from collections.abc import Collection, Iterable
 
 TermType = t.Literal["FALL", "WINTER", "SPRING", "SUMMER"]
+IntensityTimeLimitsType = dict[str, tuple[float, t.Literal["year", "term"]]]
 
 
 def to_list(value: t.Any) -> list:
