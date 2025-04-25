@@ -42,11 +42,6 @@ dev = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.hatch.build]
-include = [
-    "student_success_tool/reporting/templates/*.md"
-]
-
 [tool.uv]
 default-groups = ["dev"]
 
