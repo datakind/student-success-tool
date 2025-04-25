@@ -3,8 +3,8 @@ from datetime import datetime
 from mlflow.tracking import MlflowClient
 import mlflow
 
-from sections import registry, register_sections
-from sections.registry import SectionRegistry
+from .sections import registry, register_sections
+from .sections.registry import SectionRegistry
 
 class ModelCard:
     def __init__(self, config, uc_model_name):
