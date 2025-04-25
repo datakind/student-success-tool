@@ -1,7 +1,7 @@
 def register_attribute_sections(card, registry):
     @registry.register("outcome_variable_section")
     def outcome_variable():
-        name = self.cfg.preprocessing.target.name.lower()
+        name = card.cfg.preprocessing.target.name.lower()
         if "graduation" in name or "grad" in name:
             return "graduation"
         elif "retention" in name or "ret" in name:
