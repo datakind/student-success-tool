@@ -9,14 +9,13 @@ from .. import dataio, modeling
 from .sections import registry, register_sections
 from .sections.registry import SectionRegistry
 
-package_dir = os.path.dirname(os.path.abspath(__file__))
 
 class ModelCard:
     def __init__(self, config, uc_model_name):
         self.cfg = config
         self.uc_model_name = uc_model_name
         self.model_name = self.uc_model_name.split('.')[-1]
-        self.template_path = os.path.join(package_dir, "..", "templates", "model-card-TEMPLATE.md")
+        self.template_path = os.path.join("templates", "model-card-TEMPLATE.md")
         self.output_path = os.path.join(os.getcwd(), f"model-card-{self.model_name}.md")
         self.client = MlflowClient()
         self.context = {}
