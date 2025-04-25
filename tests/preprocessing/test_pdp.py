@@ -29,7 +29,7 @@ SYNTHETIC_DATA_PATH = "synthetic-data/pdp"
     ],
 )
 def test_infer_first_term_of_year(series, exp):
-    obs = preprocessing.pdp.dataops.infer_first_term_of_year(series)
+    obs = preprocessing.pdp.infer_first_term_of_year(series)
     assert obs == exp
 
 
@@ -41,7 +41,7 @@ def test_infer_first_term_of_year(series, exp):
     ],
 )
 def test_infer_num_terms_in_year(series, exp):
-    obs = preprocessing.pdp.dataops.infer_num_terms_in_year(series)
+    obs = preprocessing.pdp.infer_num_terms_in_year(series)
     assert obs == exp
 
 
@@ -100,7 +100,7 @@ def test_infer_num_terms_in_year(series, exp):
     ],
 )
 def test_standardize_cohort_dataset(df, exp):
-    obs = preprocessing.pdp.dataops.standardize_cohort_dataset(df)
+    obs = preprocessing.pdp.standardize_cohort_dataset(df)
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
 
@@ -161,7 +161,7 @@ def test_standardize_cohort_dataset(df, exp):
     ],
 )
 def test_standardize_course_dataset(df, exp):
-    obs = preprocessing.pdp.dataops.standardize_course_dataset(df)
+    obs = preprocessing.pdp.standardize_course_dataset(df)
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
 
@@ -191,9 +191,7 @@ def test_standardize_course_dataset(df, exp):
     ],
 )
 def test_add_empty_cols_if_missing(df, col_val_dtypes, exp):
-    obs = preprocessing.pdp.dataops.add_empty_cols_if_missing(
-        df, col_val_dtypes=col_val_dtypes
-    )
+    obs = preprocessing.pdp.add_empty_cols_if_missing(df, col_val_dtypes=col_val_dtypes)
     assert pd.testing.assert_frame_equal(obs, exp) is None
 
 
@@ -285,7 +283,7 @@ def test_add_empty_cols_if_missing(df, col_val_dtypes, exp):
     ],
 )
 def test_clean_up_labeled_dataset_cols_and_vals(df, exp):
-    obs = preprocessing.pdp.dataops.clean_up_labeled_dataset_cols_and_vals(df)
+    obs = preprocessing.pdp.clean_up_labeled_dataset_cols_and_vals(df)
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     assert obs.equals(exp) or obs.compare(exp).empty
 
@@ -317,6 +315,6 @@ def test_make_student_term_dataset_against_checked_in_sample(
     )
     assert isinstance(course, pd.DataFrame)
     assert not course.empty
-    df = preprocessing.pdp.dataops.make_student_term_dataset(cohort, course)
+    df = preprocessing.pdp.make_student_term_dataset(cohort, course)
     assert isinstance(df, pd.DataFrame)
     assert not df.empty

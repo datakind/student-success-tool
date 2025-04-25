@@ -6,9 +6,9 @@ import typing as t
 
 import pandas as pd
 
-from ... import utils
-from .. import features
-from ..features.pdp import constants
+from .. import utils
+from . import features
+from .features.pdp import constants
 
 LOGGER = logging.getLogger(__name__)
 
