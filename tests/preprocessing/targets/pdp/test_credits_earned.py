@@ -3,7 +3,7 @@ import functools as ft
 import pandas as pd
 import pytest
 
-from student_success_tool.targets.pdp import credits_earned, shared
+from student_success_tool.preprocessing.targets.pdp import credits_earned, shared
 
 
 @pytest.mark.parametrize(
