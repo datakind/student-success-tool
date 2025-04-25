@@ -14,7 +14,8 @@ class ModelCard:
         self.uc_model_name = uc_model_name
         self.model_name = self.uc_model_name.split('.')[-1]
         self.template_path = os.path.join(package_dir, "..", "templates", "model-card-TEMPLATE.md")
-        self.output_path = os.path.join(os.getcwd(), f"model-card-{self.model_name}.md")        self.client = MlflowClient()
+        self.output_path = os.path.join(os.getcwd(), f"model-card-{self.model_name}.md")
+        self.client = MlflowClient()
         self.context = {}
         self.section_registry = SectionRegistry()
         self.register_sections()
