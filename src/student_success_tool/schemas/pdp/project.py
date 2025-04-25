@@ -3,7 +3,7 @@ import typing as t
 
 import pydantic as pyd
 
-from ...features.pdp import constants
+from ...preprocessing.features.pdp import constants
 from ...utils import types
 
 

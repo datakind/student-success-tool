@@ -5,7 +5,8 @@ from collections.abc import Collection
 import numpy as np
 import pandas as pd
 
-from ... import features, utils
+from ... import utils
+from ...preprocessing import features
 from . import shared
 
 LOGGER = logging.getLogger(__name__)
