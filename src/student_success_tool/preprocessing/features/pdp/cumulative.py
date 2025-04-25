@@ -6,7 +6,7 @@ from collections.abc import Iterable
 import pandas as pd
 from pandas.core.groupby import DataFrameGroupBy
 
-from ... import utils
+from .... import utils
 from . import constants
 
 LOGGER = logging.getLogger(__name__)
