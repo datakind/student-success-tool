@@ -12,7 +12,7 @@ def compute_target(
     *,
     min_num_credits: float,
     checkpoint: pd.DataFrame | t.Callable[[pd.DataFrame], pd.DataFrame],
-    intensity_time_limits: dict[str, tuple[float, t.Literal["year", "term"]]],
+    intensity_time_limits: utils.types.IntensityTimeLimitsType,
     num_terms_in_year: int = 4,
     student_id_cols: str | list[str] = "student_id",
     enrollment_intensity_col: str = "student_term_enrollment_intensity",

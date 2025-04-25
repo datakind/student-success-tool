@@ -43,9 +43,13 @@ def template_cfg_str():
     key_course_subject_areas = ["24", "51"]
     key_course_ids = ["ENGL101", "MATH101"]
 
+    [preprocessing.selection]
+    student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year_1 = "Bachelor's Degree" }
+
+    [preprocessing.checkpoint]
+
     [preprocessing.target]
     params = { min_num_credits_checkin = 30.0, min_num_credits_target = 60.0 }
-    student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year_1 = "Bachelor's Degree" }
 
     [modeling.feature_selection]
     incomplete_threshold = 0.5
@@ -100,7 +104,7 @@ def test_template_pdp_cfgs(template_cfg_str):
         ),
     ],
 )
-def test_bad_pdp_v2_cfgs(cfg_str, context):
+def test_bad_pdp_cfgs(cfg_str, context):
     cfg = tomllib.loads(cfg_str)
     with context:
         result = project.PDPProjectConfig.model_validate(cfg)
