@@ -3,7 +3,7 @@ import functools as ft
 import pandas as pd
 import pytest
 
-from student_success_tool.selection import pdp
+from student_success_tool.preprocessing.selection import pdp
 from student_success_tool.targets.pdp import shared
 
 
