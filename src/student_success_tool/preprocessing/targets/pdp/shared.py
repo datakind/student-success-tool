@@ -5,7 +5,7 @@ from collections.abc import Collection
 import numpy as np
 import pandas as pd
 
-from ... import utils
+from .... import utils
 
 LOGGER = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from student_success_tool.targets.pdp import retention
+from student_success_tool.preprocessing.targets.pdp import retention
 
 
 @pytest.mark.parametrize(
