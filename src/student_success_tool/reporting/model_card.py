@@ -2,6 +2,8 @@ import os
 import mlflow
 from mlflow.tracking import MlflowClient
 from datetime import datetime
+from importlib.resources import files
+
 
 # internal SST modules
 from .. import dataio, modeling
@@ -15,7 +17,7 @@ class ModelCard:
         self.cfg = config
         self.uc_model_name = uc_model_name
         self.model_name = self.uc_model_name.split('.')[-1]
-        self.template_path = os.path.join("templates", "model-card-TEMPLATE.md")
+        self.template_path = files("student_success_tool.reporting.templates").joinpath("model-card-TEMPLATE.md")
         self.output_path = os.path.join(os.getcwd(), f"model-card-{self.model_name}.md")
         self.client = MlflowClient()
         self.context = {}
