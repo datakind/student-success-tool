@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from student_success_tool.features.pdp import cumulative
+from student_success_tool.preprocessing.features.pdp import cumulative
 
 
 @pytest.fixture(scope="module")
