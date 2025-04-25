@@ -88,10 +88,12 @@ class SelectionConfig(pyd.BaseModel):
 
 
 class CheckpointConfig(pyd.BaseModel):
+    name: str = pyd.Field(default="checkpoint")
     params: dict[str, object] = pyd.Field(default_factory=dict)
 
 
 class TargetConfig(pyd.BaseModel):
+    name: str = pyd.Field(default="target")
     params: dict[str, object] = pyd.Field(default_factory=dict)
 
 
