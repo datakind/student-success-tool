@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from pandera.errors import SchemaErrors
 
-from student_success_tool import dataio, schemas
+from student_success_tool import dataio
 
 FIXTURES_PATH = "tests/fixtures"
 
@@ -14,8 +14,12 @@ FIXTURES_PATH = "tests/fixtures"
     ["file_name", "schema", "kwargs"],
     [
         ("raw_pdp_course_data.csv", None, None),
-        ("raw_pdp_course_data.csv", schemas.pdp.RawPDPCourseDataSchema, None),
-        ("raw_pdp_course_data.csv", schemas.pdp.RawPDPCourseDataSchema, {"nrows": 1}),
+        ("raw_pdp_course_data.csv", dataio.schemas.pdp.RawPDPCourseDataSchema, None),
+        (
+            "raw_pdp_course_data.csv",
+            dataio.schemas.pdp.RawPDPCourseDataSchema,
+            {"nrows": 1},
+        ),
     ],
 )
 def test_read_raw_pdp_course_data(file_name, schema, kwargs):
@@ -32,13 +36,13 @@ def test_read_raw_pdp_course_data(file_name, schema, kwargs):
     [
         (
             "raw_pdp_course_data_invalid.csv",
-            schemas.pdp.RawPDPCourseDataSchema,
+            dataio.schemas.pdp.RawPDPCourseDataSchema,
             None,
             pytest.raises(SchemaErrors),
         ),
         (
             "raw_pdp_course_data_invalid.csv",
-            schemas.pdp.RawPDPCourseDataSchema,
+            dataio.schemas.pdp.RawPDPCourseDataSchema,
             lambda df: df.drop_duplicates(subset=["institution_id", "student_guid"]),
             does_not_raise(),
         ),
@@ -61,10 +65,14 @@ def test_read_raw_pdp_course_data_convert(file_name, schema, converter_func, exp
     ["file_name", "schema", "kwargs"],
     [
         ("raw_pdp_cohort_data.csv", None, None),
-        ("raw_pdp_cohort_data.csv", schemas.pdp.RawPDPCohortDataSchema, None),
+        ("raw_pdp_cohort_data.csv", dataio.schemas.pdp.RawPDPCohortDataSchema, None),
         # Yes and No replace 1 and 0.
-        ("raw_pdp_cohort_data_ys.csv", schemas.pdp.RawPDPCohortDataSchema, None),
-        ("raw_pdp_cohort_data.csv", schemas.pdp.RawPDPCohortDataSchema, {"nrows": 1}),
+        ("raw_pdp_cohort_data_ys.csv", dataio.schemas.pdp.RawPDPCohortDataSchema, None),
+        (
+            "raw_pdp_cohort_data.csv",
+            dataio.schemas.pdp.RawPDPCohortDataSchema,
+            {"nrows": 1},
+        ),
     ],
 )
 def test_read_raw_pdp_cohort_data(file_name, schema, kwargs):
