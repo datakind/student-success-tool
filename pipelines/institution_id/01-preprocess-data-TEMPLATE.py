@@ -45,15 +45,8 @@ from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 from py4j.protocol import Py4JJavaError
 
-from student_success_tool import (
-    dataio,
-    eda,
-    features,
-    modeling,
-    preprocessing,
-    schemas,
-    targets,
-)
+from student_success_tool import configs, dataio, eda, modeling, preprocessing
+from student_success_tool.preprocessing import features, targets
 
 # COMMAND ----------
 
@@ -96,7 +89,7 @@ if "../" not in sys.path:
     sys.path.insert(1, "../")
 
 # TODO: specify school's subpackage
-from analysis import *  # noqa: F403
+from pipelines import *  # noqa: F403
 
 # COMMAND ----------
 
@@ -104,9 +97,7 @@ from analysis import *  # noqa: F403
 # it'll start out with just basic info: institution_id, institution_name
 # but as each step of the pipeline gets built, more parameters will be moved
 # from hard-coded notebook variables to shareable, persistent config fields
-cfg = dataio.read_config(
-    "./config-TEMPLATE.toml", schema=schemas.pdp.PDPProjectConfigV2
-)
+cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig)
 cfg
 
 # COMMAND ----------
@@ -124,7 +115,7 @@ cfg
 raw_course_file_path = cfg.datasets[dataset_name].raw_course.file_path
 df_course = dataio.pdp.read_raw_course_data(
     file_path=raw_course_file_path,
-    schema=schemas.pdp.RawPDPCourseDataSchema,
+    schema=dataio.schemas.pdp.RawPDPCourseDataSchema,
     dttm_format="%Y%m%d.0",
 )
 print(f"rows x cols = {df_course.shape}")
@@ -134,7 +125,7 @@ df_course.head()
 
 raw_cohort_file_path = cfg.datasets[dataset_name].raw_cohort.file_path
 df_cohort = dataio.pdp.read_raw_cohort_data(
-    file_path=raw_cohort_file_path, schema=schemas.pdp.RawPDPCohortDataSchema
+    file_path=raw_cohort_file_path, schema=dataio.schemas.pdp.RawPDPCohortDataSchema
 )
 print(f"rows x cols = {df_cohort.shape}")
 df_cohort.head()
@@ -212,8 +203,7 @@ df_student_terms.columns.tolist()
 # MAGIC Check out the `pdp.targets` module for options and more info.
 # MAGIC
 # MAGIC **TODO(Burton?):**
-# MAGIC - Separate filtering of student criteria + target variable calculation from the selection of featurized rows from which to make predictions
-# MAGIC - Output labels as a series and join to features separately, rather than adding directly to the featurized data under the hood.
+# MAGIC - Update these instructions to use new targets/selection/checkpoint functionality
 
 # COMMAND ----------
 

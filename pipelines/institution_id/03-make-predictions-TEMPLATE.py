@@ -46,7 +46,7 @@ from databricks.sdk.runtime import dbutils
 from py4j.protocol import Py4JJavaError
 from pyspark.sql.types import FloatType, StringType, StructField, StructType
 
-from student_success_tool import dataio, modeling, schemas
+from student_success_tool import configs, dataio, modeling
 from student_success_tool.modeling import inference
 
 # COMMAND ----------
@@ -106,7 +106,7 @@ logging.info(
 # but as each step of the pipeline gets built, more parameters will be moved
 # from hard-coded notebook variables to shareable, persistent config fields
 cfg = dataio.read_config(
-    "./config-TEMPLATE.toml", schema=schemas.pdp.PDPProjectConfigV2
+    "./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfigV2
 )
 cfg
 
@@ -117,7 +117,7 @@ cfg
 
 # COMMAND ----------
 
-df = schemas.pdp.PDPLabeledDataSchema(
+df = dataio.schemas.pdp.PDPLabeledDataSchema(
     dataio.read.from_delta_table(
         cfg.datasets[dataset_name].preprocessed.table_path,
         spark_session=spark,
