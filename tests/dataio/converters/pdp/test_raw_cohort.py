@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from student_success_tool.converters import pdp
+from student_success_tool.dataio.converters import pdp
 
 
 @pytest.fixture(scope="module")
