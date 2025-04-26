@@ -46,7 +46,7 @@ import seaborn as sb
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 
-from student_success_tool import dataio, eda, schemas
+from student_success_tool import configs, dataio, eda
 
 # COMMAND ----------
 
@@ -84,7 +84,7 @@ from pipelines import *  # noqa: F403
 # it'll start out with just basic info: institution_id, institution_name
 # but as each step of the pipeline gets built, more parameters will be moved
 # from hard-coded notebook variables to shareable, persistent config fields
-cfg = dataio.read_config("./config-TEMPLATE.toml", schema=schemas.pdp.PDPProjectConfig)
+cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig)
 cfg
 
 # COMMAND ----------
@@ -136,7 +136,7 @@ df_course_raw["course_begin_date"].describe()
 # try to read data while validating with the "base" PDP schema
 df_course = dataio.pdp.read_raw_course_data(
     file_path=raw_course_file_path,
-    schema=schemas.pdp.RawPDPCourseDataSchema,
+    schema=dataio.schemas.pdp.RawPDPCourseDataSchema,
     dttm_format="%Y%m%d.0",
 )
 df_course
@@ -150,7 +150,7 @@ df_course
 # MAGIC
 # MAGIC ```python
 # MAGIC # => any dupes? how to handle them??
-# MAGIC >>> course_unique_cols = pdp.schemas.RawPDPCourseDataSchema.Config.unique
+# MAGIC >>> course_unique_cols = dataio.schemas.pdp.RawPDPCourseDataSchema.Config.unique
 # MAGIC >>> df_course_raw.groupby(course_unique_cols).size().value_counts()
 # MAGIC # categorical values with non-standard values?
 # MAGIC >>> df_course_raw["co_requisite_course"].value_counts(dropna=False)
@@ -163,7 +163,7 @@ df_course
 # MAGIC import pandera as pda
 # MAGIC import pandera.typing as pt
 # MAGIC
-# MAGIC class RawSCHOOLCourseDataSchema(pdp.schemas.RawPDPCourseDataSchema):
+# MAGIC class RawSCHOOLCourseDataSchema(dataio.schemas.pdp.RawPDPCourseDataSchema):
 # MAGIC     co_requisite_course: pt.Series[pd.CategoricalDtype] = pda.Field(
 # MAGIC         nullable=True, dtype_kwargs={"categories": ["YES", "NO"]}
 # MAGIC     )
@@ -193,7 +193,7 @@ df_course
 # MAGIC     dttm_format="%Y%m%d.0",
 # MAGIC     preprocess_func=ft.partial(
 # MAGIC         course_data_preprocess_func,
-# MAGIC         unique_cols=pdp.schemas.RawPDPCourseDataSchema.Config.unique
+# MAGIC         unique_cols=dataio.schemas.pdp.RawPDPCourseDataSchema.Config.unique
 # MAGIC     ),
 # MAGIC )
 # MAGIC ```
@@ -225,7 +225,7 @@ df_cohort_raw.head()
 
 # try to read data while validating with the "base" PDP schema
 df_cohort = dataio.pdp.read_raw_cohort_data(
-    file_path=raw_cohort_file_path, schema=schemas.pdp.RawPDPCohortDataSchema
+    file_path=raw_cohort_file_path, schema=dataio.schemas.pdp.RawPDPCohortDataSchema
 )
 df_cohort
 
