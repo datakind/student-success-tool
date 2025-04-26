@@ -1,4 +1,6 @@
 
+<img src="assets/logo.png" alt="Model Comparison" width="180" />
+
 ## Model Card: {institution_name}
 
 ### Overview
