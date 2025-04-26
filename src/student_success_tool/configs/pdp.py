@@ -3,8 +3,9 @@ import typing as t
 
 import pydantic as pyd
 
-from ...preprocessing.features.pdp import constants
-from ...utils import types
+# TODO: set field defaults using literals here instead?
+from ..preprocessing.features.pdp import constants
+from ..utils import types
 
 
 class FeaturesConfig(pyd.BaseModel):
