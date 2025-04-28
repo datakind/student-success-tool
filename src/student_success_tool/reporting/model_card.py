@@ -82,7 +82,6 @@ class ModelCard:
     def get_basic_context(self):
         return {
             "logo": utils.download_static_asset(
-                        output_dir=self.output_dir,
                         description="Logo",
                         static_path=self.logo_path,
                         width=250,
@@ -132,9 +131,5 @@ class ModelCard:
 
     def _register_sections(self):
         register_sections(self, self.section_registry)
-
-    @property
-    def output_dir(self):
-        return os.path.dirname(os.path.abspath(self.output_path))
 
 

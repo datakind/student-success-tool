@@ -1,7 +1,6 @@
 def register_attribute_sections(card, registry):    
     @registry.register("outcome_section")
     def outcome():
-    
         name = card.cfg.preprocessing.target.name
         limits = card.cfg.preprocessing.selection.intensity_time_limits
 
