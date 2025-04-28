@@ -19,6 +19,14 @@ def register_attribute_sections(card, registry):
 
         def format_time(duration):
             num, unit = duration
+
+            # Format number cleanly
+            if isinstance(num, float):
+                if num.is_integer():
+                    num = int(num)
+                else:
+                    num = round(num, 2)  # Keep at most 1 decimals with no trailing zeros
+  
             unit = unit if num == 1 else unit + "s"
             return f"{num} {unit}"
 
