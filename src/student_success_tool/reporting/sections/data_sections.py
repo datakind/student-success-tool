@@ -1,4 +1,4 @@
-def register_table_sections(card, registry):
+def register_data_sections(card, registry):
     @registry.register("data_split_table")
     def data_split():
         total_students = len(card.modeling_data)
@@ -15,4 +15,5 @@ def register_table_sections(card, registry):
             "|------------|----------|------------|",
             *rows
         ])
+    
     

@@ -83,16 +83,18 @@
 
 - **Feature Importance Plot**
   - This figure below helps explain how individual features contribute to the model’s prediction for each student-term record. 
-  - Here's how to interpret it:
-    - Each dot represents a single labeled student-term record.
+  - Here are some guidelines for how to interpret it:
+    - Each dot represents a single student record.
     - Color of the dot corresponds to the feature value for that student (e.g., a higher or lower numeric value for that feature), while gray indicates a categorical feature.
     - The x-axis shows the SHAP value for that student-feature pair:
     - A higher SHAP value (further to the right) means the feature is pushing the prediction toward a greater need for support.
     - A lower SHAP value (further to the left) means the feature is contributing toward a lower need for support.
     - Features are ordered from top to bottom by their overall importance to the model — the most influential features appear at the top.
-    - Example Interpretation:
-      - If students have a low percentage of grades above the section average, they tend to have higher SHAP values, indicating a greater need of support in order to graduate on time.
+    - Example: _If students have a low percentage of grades above the section average, they tend to have higher SHAP values, indicating a greater need of support in order to graduate on time._
+
 
 {feature_importances_by_shap_plot}
 
 ## Appendix
+
+{evaluation_by_group_section}
