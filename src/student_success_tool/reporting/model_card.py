@@ -64,7 +64,7 @@ class ModelCard:
     def collect_metadata(self):
         self.context.update(self.get_basic_context())
         self.context.update(self.get_feature_metadata())
-        self.context["model_comparison_plot"] = self.download_artifact("Model Comparison", "model_comparison.png", width=400)
+        self.context.update(self.get_model_plots())
         self.context.update(self.section_registry.render_all())
 
     def get_basic_context(self):
@@ -81,8 +81,19 @@ class ModelCard:
             "number_of_features": feature_count,
             "collinearity_threshold": fs_cfg.collinear_threshold,
             "low_variance_threshold": fs_cfg.low_variance_threshold,
-            "incomplete_threshold": fs_cfg.incomplete_threshold
+            "incomplete_threshold": fs_cfg.incomplete_threshold,
         }
+
+    def get_model_plots(self):
+        return {
+            "model_comparison_plot": self.download_artifact("Model Comparison", "model_comparison.png", width=400),
+            "test_calibration_curve": self.download_artifact("Test Calibration Curve", "calibration/test_calibration.png", width=400),
+            "test_roc_curve": self.download_artifact("Test ROC Curve", "test_roc_curve.png", width=400),
+            "test_confusion_matrix": self.download_artifact("Test Confusion Matrix", "test_confusion_matrix.png", width=400),
+            "test_histogram": self.download_artifact("Test Histogram", "test_histogram.png", width=400),
+            "feature_importances_by_shap_plot": self.download_artifact("Feature Importances", "shap_summary_labeled_dataset_100_ref_rows.png", width=400),
+        }
+
 
     def download_artifact(self, description, artifact_path, width, local_folder="artifacts"):
         os.makedirs(local_folder, exist_ok=True)

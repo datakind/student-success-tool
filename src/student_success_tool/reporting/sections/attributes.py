@@ -49,26 +49,35 @@ def register_attribute_sections(card, registry):
         description += ", based on student, course, and academic data."
         return description
 
-
-    @registry.register("target_population_section")
     def target_population():
         criteria = card.cfg.preprocessing.selection.student_criteria
 
         if not criteria:
-            return "  - NOTE TO DATA SCIENTIST: Cannot detect information on student criteria filtering. Please specify in model card."
+            return "No specific student criteria were applied."
 
         def clean_key(key):
             return key.replace("_", " ").title()
 
-        lines = [f"    - {clean_key(k)} = {v}" for k, v in criteria.items()]
+        lines = []
+        for k, v in criteria.items():
+            field = clean_key(k)
+            lines.append(f"- **{field}**")
+
+            # Handle if value is a list or a single string
+            if isinstance(v, list):
+                for item in v:
+                    lines.append(f"  - {item}")
+            else:
+                lines.append(f"  - {v}")
+
         description = (
-            "  - We focused our final dataset on the following target population:\n" +
+            "We focused our final dataset on the following target population:\n" +
             "\n".join(lines)
         )
         return description
     
     @registry.register("checkpoint_section")
     def checkpoint():
-        # if "credits" in card.cfg.preprocessing.checkpoint.params: 
-        #     return card.cfg.preprocessing.checkpoint.params["min_num_credits"]
+        if "credit" in card.cfg.preprocessing.checkpoint.name: 
+            return card.cfg.preprocessing.checkpoint.params["min_num_credits"]
         return "ok"
