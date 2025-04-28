@@ -61,17 +61,17 @@ def register_attribute_sections(card, registry):
         lines = []
         for k, v in criteria.items():
             field = clean_key(k)
-            lines.append(f"{card.indent.level(2)}- {field}")
+            lines.append(f"{card.indent.level(3)}- {field}")
 
             # Handle if value is a list or a single string
             if isinstance(v, list):
                 for item in v:
-                    lines.append(f"{card.indent.level(3)}- {item}")
+                    lines.append(f"{card.indent.level(4)}- {item}")
             else:
-                lines.append(f"{card.indent.level(3)}- {v}")
+                lines.append(f"{card.indent.level(4)}- {v}")
 
         description = (
-            "We focused our final dataset on the following target population:\n" +
+            f"{card.indent.level(2)}- We focused our final dataset on the following target population:\n" +
             "\n".join(lines)
         )
         return description
