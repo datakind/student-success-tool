@@ -60,3 +60,9 @@
 ### Performance
 - **Model Performance Metric**
 {primary_metric_section}
+
+
+### Quantitative Bias Analysis
+
+- Our bias evaluation metric for our model includes utilizing False Negative Rate Parity, which measures the disproportionate rate of false negatives across subgroups. 
+- FNR Parity helps assess whether the model is underperforming for any specific group in terms of incorrectly predicting that a student is not in need of support when the true outcome is that the student is in need of support.

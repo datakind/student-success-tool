@@ -63,7 +63,7 @@ class ModelCard:
 
     def collect_metadata(self):
         self.context.update(self.get_basic_context())
-        self.context.update(self.get_feature_selection_metadata())
+        self.context.update(self.get_feature_metadata())
         self.context["model_comparison_plot"] = self.download_artifact("Model Comparison", "model_comparison.png", width=400)
         self.context.update(self.section_registry.render_all())
 
