@@ -16,6 +16,6 @@ def register_metric_sections(card, registry):
         used_weights = any(col.startswith("sample_weight") for col in card.training_data.columns)
         sw_note = None if used_weights else "  - Sample weights were used to stabilize training."
         mlops_note = (
-            f"  - Used Databricks AutoML with {card.context['num_runs_in_experiment']} experiments."
+            f"  - Utilizing Databricks and AutoML, we initiated an MLOps pipeline for data processing and model experimentation, processing {card.context['num_runs_in_experiment']} different machine-learning models to optimize our model."
         )
         return "\n".join(filter(None, [mlops_note, sw_note]))

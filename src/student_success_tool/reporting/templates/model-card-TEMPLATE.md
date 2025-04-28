@@ -40,7 +40,6 @@
   - This resulted in a training dataset of {training_dataset_size} students within the target timeframe.
 - **Model Development**
 {sample_weight_section}
-  - Outcome Variable Definition: {outcome_variable_section}
   - Model Experimentation Data Split:
 
 {data_split_table}
