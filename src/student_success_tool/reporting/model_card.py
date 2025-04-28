@@ -1,9 +1,9 @@
 import os
+import shutil
 import mlflow
 from mlflow.tracking import MlflowClient
 from datetime import datetime
 from importlib.resources import files
-
 
 # internal SST modules
 from .. import dataio, modeling
@@ -17,10 +17,11 @@ class ModelCard:
         self.cfg = config
         self.uc_model_name = uc_model_name
         self.model_name = self.uc_model_name.split('.')[-1]
-        self.template_path = files("student_success_tool.reporting.templates").joinpath("model-card-TEMPLATE.md")
-        self.output_path = os.path.join(os.getcwd(), f"model-card-{self.model_name}.md")
         self.client = MlflowClient()
         self.context = {}
+        self.output_path = os.path.join(os.getcwd(), f"model-card-{self.model_name}.md")
+        self.template_path = self._resolve_template("model-card-TEMPLATE.md")
+        self.logo_path = self._resolve_asset("logo.png")
         self.section_registry = SectionRegistry()
         self._register_sections()
 
@@ -61,25 +62,28 @@ class ModelCard:
         ).shape[0]
 
     def collect_metadata(self):
-        self.context.update({
+        self.context.update(self.get_basic_context())
+        self.context.update(self.get_feature_selection_metadata())
+        self.context["model_comparison_plot"] = self.download_artifact("Model Comparison", "model_comparison.png")
+        self.context.update(self.section_registry.render_all())
+
+    def get_basic_context(self):
+        return {
+            "logo": self.download_static_asset("Logo", self.logo_path)
             "institution_name": self.cfg.institution_name,
             "current_year": datetime.now().year,
-            **self.get_feature_selection_metadata(),
-            "number_of_features": self.get_feature_count(),
-            "model_comparison_plot": self.download_artifact("Model Comparison", "model_comparison.png"),
-            **self.section_registry.render_all()
-        })
+            "number_of_features": self.get_feature_count()
+        }
 
-    def get_feature_selection_metadata(self):
+    def get_feature_metadata(self):
+        feature_count = len(self.model.named_steps["column_selector"].get_params()["cols"])
         fs_cfg = self.cfg.modeling.feature_selection
         return {
+            "number_of_features": feature_count,
             "collinearity_threshold": fs_cfg.collinear_threshold,
             "low_variance_threshold": fs_cfg.low_variance_threshold,
             "incomplete_threshold": fs_cfg.incomplete_threshold
         }
-
-    def get_feature_count(self):
-        return len(self.model.named_steps["column_selector"].get_params()["cols"])
 
     def download_artifact(self, description, artifact_path, local_folder="artifacts"):
         os.makedirs(local_folder, exist_ok=True)
@@ -88,8 +92,18 @@ class ModelCard:
             artifact_path=artifact_path,
             dst_path=local_folder,
         )
-        return f"![{description}]({os.path.relpath(local_path, start=os.getcwd())})"
+        return self.embed_image(description, local_path, 400)
 
+    def download_static_asset(self, description, static_path, local_folder="artifacts"):
+        output_dir = os.path.dirname(os.path.abspath(self.output_path))
+        artifacts_dir = os.path.join(output_dir, local_folder)
+        os.makedirs(artifacts_dir, exist_ok=True)
+        shutil.copy(self.logo_path, os.path.join(artifacts_dir, static_path))
+        return self.embed_image(description, local_path, 300)
+
+    def embed_image(self, description, local_path, width):
+        return f'<img src="{os.path.relpath(local_path, start=os.getcwd())}" alt="{description}" width="{width}">'
+    
     def render(self):
         with open(self.template_path, "r") as file:
             template = file.read()
@@ -98,5 +112,11 @@ class ModelCard:
             file.write(filled)
         print("✅ Model card generated!")
     
+    def _resolve_template(self, filename):
+        return files("student_success_tool.reporting.templates").joinpath(filename)
+
+    def _resolve_asset(self, filename):
+        return files("student_success_tool.reporting.templates.assets").joinpath(filename)
+
     def _register_sections(self):
         register_sections(self, self.section_registry)
