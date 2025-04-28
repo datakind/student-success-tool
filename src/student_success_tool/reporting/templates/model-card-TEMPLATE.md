@@ -1,5 +1,5 @@
 
-<img src="assets/logo.png" alt="Model Comparison" width="180" />
+<img src="assets/logo.png" alt="Logo" width="180" />
 
 ## Model Card: {institution_name}
 
@@ -58,5 +58,5 @@
   - Leveraged SHAP to enhance interpretability & model transparency, while making model outputs more explainable and actionable.
 
 ### Performance
-- ** Model Performance Metric**
+- **Model Performance Metric**
 {primary_metric_section}
