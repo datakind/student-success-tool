@@ -51,6 +51,7 @@
   - Prioritized model quality with transparent and interpretable model outputs.
 
 {model_comparison_plot}
+_Comparison of Model Performance by Architecture_
 
 - **Model Interpretability** 
   - Utilized SHAP (Shapley Additive Explanations) values to quantify the contribution of individual features in top-performing models.
@@ -60,6 +61,17 @@
 - **Model Performance Metric**
 {primary_metric_section}
 
+{test_confusion_matrix}
+_Normalized Confusion Matrix on Test Data_
+
+{test_calibration_curve}
+_Calibration Curve on Test Data_
+
+{test_roc_curve}
+_ROC Curve on Test Data_
+
+{test_histogram}
+_Distribution of Support Scores on Test Data_
 
 ### Quantitative Bias Analysis
 
