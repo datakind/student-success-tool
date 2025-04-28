@@ -15,3 +15,4 @@ def register_table_sections(card, registry):
             "|------------|----------|------------|",
             *rows
         ])
+    

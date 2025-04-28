@@ -45,5 +45,6 @@ def register_attribute_sections(card, registry):
     
     @registry.register("checkpoint_section")
     def checkpoint():
-        if "credits" in card.cfg.preprocessing.checkpoint.params: 
-        return card.cfg.preprocessing.checkpoint.params["min_num_credits"]
+        # if "credits" in card.cfg.preprocessing.checkpoint.params: 
+        #     return card.cfg.preprocessing.checkpoint.params["min_num_credits"]
+        return "ok"
