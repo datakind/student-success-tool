@@ -72,7 +72,6 @@ class ModelCard:
             "logo": self.download_static_asset("Logo", self.logo_path, width=300),
             "institution_name": self.cfg.institution_name,
             "current_year": datetime.now().year,
-            "number_of_features": self.get_feature_count()
         }
 
     def get_feature_metadata(self):
