@@ -49,6 +49,7 @@ def register_attribute_sections(card, registry):
         description += ", based on student, course, and academic data."
         return description
 
+    @registry.register("target_population_section")
     def target_population():
         criteria = card.cfg.preprocessing.selection.student_criteria
 
