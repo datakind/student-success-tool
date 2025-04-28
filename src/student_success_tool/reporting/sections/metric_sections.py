@@ -1,4 +1,4 @@
-def register_metric_sections(card, registry):
+rdef register_metric_sections(card, registry):
     @registry.register("primary_metric_section")
     def primary_metric():
         metric_map = {

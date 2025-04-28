@@ -116,6 +116,17 @@ class ModelCard:
             for key, (description, path, width) in plots.items()
         }
 
+    def list_bias_group_artifacts(self, folder):
+        """Scan MLflow artifacts for available bias group CSVs."""
+        evaluation_artifacts = mlflow.artifacts.list_artifacts(self.run_id, path=folder)
+
+        bias_csvs = []
+        for artifact in evaluation_artifacts:
+            if artifact.path.startswith("bias_") and artifact.path.endswith(".csv"):
+                bias_csvs.append(artifact.path)
+
+        return bias_csvs
+
     def render(self):
         with open(self.template_path, "r") as file:
             template = file.read()
