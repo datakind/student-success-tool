@@ -20,18 +20,19 @@ def download_static_asset(description: str, static_path: pathlib.Path, width: in
 
     return embed_image(description, dst_path, width)
 
-def safe_mlflow_download_artifacts(run_id: str, artifact_path: str, dst_path: str):
+def safe_mlflow_download_artifacts(run_id: str, artifact_path: str, dst_path: str) -> str:
     @contextlib.contextmanager
-    def suppress_display_errors():
-        with open(os.devnull, "w") as fnull:
-            old_stdout = sys.stdout
-            sys.stdout = fnull
-            try:
-                yield
-            finally:
-                sys.stdout = old_stdout
+    def suppress_display():
+        try:
+            import IPython.display
+            old_display = IPython.display.display
+            IPython.display.display = lambda *args, **kwargs: None
+            yield
+        finally:
+            if 'IPython' in sys.modules:
+                IPython.display.display = old_display
 
-    with suppress_display_errors():
+    with suppress_display():
         local_path = mlflow.artifacts.download_artifacts(
             run_id=run_id,
             artifact_path=artifact_path,
