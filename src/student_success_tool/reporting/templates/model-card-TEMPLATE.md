@@ -1,5 +1,5 @@
 
-<img src="assets/logo.png" alt="Logo" width="180" />
+{logo}
 
 ## Model Card: {institution_name}
 
