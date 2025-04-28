@@ -85,21 +85,23 @@ class ModelCard:
             "incomplete_threshold": fs_cfg.incomplete_threshold
         }
 
-    def download_artifact(self, description, artifact_path, local_folder="artifacts"):
+    def download_artifact(self, description, artifact_path, width, local_folder="artifacts"):
         os.makedirs(local_folder, exist_ok=True)
         local_path = mlflow.artifacts.download_artifacts(
             run_id=self.run_id,
             artifact_path=artifact_path,
             dst_path=local_folder,
         )
-        return self.embed_image(description, local_path, 400)
+        return self.embed_image(description, local_path, width)
 
-    def download_static_asset(self, description, static_path, local_folder="artifacts"):
-        output_dir = os.path.dirname(os.path.abspath(self.output_path))
-        artifacts_dir = os.path.join(output_dir, local_folder)
+    def download_static_asset(self, description, static_path, width, local_folder="artifacts"):
+        artifacts_dir = os.path.join(self.output_dir, local_folder)
         os.makedirs(artifacts_dir, exist_ok=True)
-        shutil.copy(self.logo_path, os.path.join(artifacts_dir, static_path))
-        return self.embed_image(description, local_path, 300)
+
+        dst_path = os.path.join(artifacts_dir, static_path.name)
+        shutil.copy(static_path, dst_path)
+
+        return self.embed_image(description, dst_path, width)
 
     def embed_image(self, description, local_path, width):
         return f'<img src="{os.path.relpath(local_path, start=os.getcwd())}" alt="{description}" width="{width}">'
@@ -120,3 +122,8 @@ class ModelCard:
 
     def _register_sections(self):
         register_sections(self, self.section_registry)
+
+    @property
+    def output_dir(self):
+        return os.path.dirname(os.path.abspath(self.output_path))
+
