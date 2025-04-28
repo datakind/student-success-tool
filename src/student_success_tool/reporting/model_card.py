@@ -1,6 +1,7 @@
 import os
 import shutil
 import mlflow
+import logging
 from mlflow.tracking import MlflowClient
 from datetime import datetime
 from importlib.resources import files
@@ -11,6 +12,7 @@ from .. import dataio, modeling
 from .sections import registry, register_sections
 from .sections.registry import SectionRegistry
 
+LOGGER = logging.getLogger(__name__)
 
 class ModelCard:
     def __init__(self, config, uc_model_name):
@@ -62,10 +64,16 @@ class ModelCard:
         ).shape[0]
 
     def collect_metadata(self):
-        self.context.update(self.get_basic_context())
-        self.context.update(self.get_feature_metadata())
-        self.context.update(self.get_model_plots())
-        self.context.update(self.section_registry.render_all())
+        metadata_functions = [
+            self.get_basic_context,
+            self.get_feature_metadata,
+            self.get_model_plots,
+            self.section_registry.render_all,
+        ]
+
+        for func in metadata_functions:
+            LOGGER.info(f"Updating context from {func.__name__}()")
+            self.context.update(func())
 
     def get_basic_context(self):
         return {
@@ -85,15 +93,18 @@ class ModelCard:
         }
 
     def get_model_plots(self):
-        return {
-            "model_comparison_plot": self.download_artifact("Model Comparison", "model_comparison.png", width=400),
-            "test_calibration_curve": self.download_artifact("Test Calibration Curve", "calibration/test_calibration.png", width=400),
-            "test_roc_curve": self.download_artifact("Test ROC Curve", "test_roc_curve.png", width=400),
-            "test_confusion_matrix": self.download_artifact("Test Confusion Matrix", "test_confusion_matrix.png", width=400),
-            "test_histogram": self.download_artifact("Test Histogram", "test_histogram.png", width=400),
-            "feature_importances_by_shap_plot": self.download_artifact("Feature Importances", "shap_summary_labeled_dataset_100_ref_rows.png", width=400),
+        plots = {
+            "model_comparison_plot": ("Model Comparison", "model_comparison.png", 400),
+            "test_calibration_curve": ("Test Calibration Curve", "calibration/test_calibration.png", 400),
+            "test_roc_curve": ("Test ROC Curve", "test_roc_curve.png", 400),
+            "test_confusion_matrix": ("Test Confusion Matrix", "test_confusion_matrix.png", 400),
+            "test_histogram": ("Test Histogram", "test_histogram.png", 400),
+            "feature_importances_by_shap_plot": ("Feature Importances", "shap_summary_labeled_dataset_100_ref_rows.png", 400),
         }
-
+        return {
+            key: self.download_artifact(description, path, width)
+            for key, (description, path, width) in plots.items()
+        }
 
     def download_artifact(self, description, artifact_path, width, local_folder="artifacts"):
         os.makedirs(local_folder, exist_ok=True)
@@ -122,13 +133,13 @@ class ModelCard:
         filled = template.format(**self.context)
         with open(self.output_path, "w") as file:
             file.write(filled)
-        print("✅ Model card generated!")
+        LOGGER.info("✅ Model card generated!")
     
     def _resolve_template(self, filename):
-        return files("student_success_tool.reporting.templates").joinpath(filename)
+        return files("student_success_tool.reporting.template").joinpath(filename)
 
     def _resolve_asset(self, filename):
-        return files("student_success_tool.reporting.templates.assets").joinpath(filename)
+        return files("student_success_tool.reporting.template.assets").joinpath(filename)
 
     def _register_sections(self):
         register_sections(self, self.section_registry)
