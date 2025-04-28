@@ -4,7 +4,7 @@
 ## Model Card: {institution_name}
 
 ### Overview
-- The model predicts the risk of {outcome_variable_section} within {timeframe_section} based on student, course, and academic data.
+- {outcome_section}
 - The model makes this prediction when the student has completed {checkpoint_section}.
 - Developed by DataKind in {current_year}, Model Version {version_number}
 - If there are questions or concerns about the model, you can contact education@datakind.org or your client success manager.
