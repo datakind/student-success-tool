@@ -9,10 +9,14 @@ from importlib.resources import files
 # internal SST modules
 from .. import dataio, modeling
 
+# relative imports in 'reporting' module 
 from .sections import registry, register_sections
 from .sections.registry import SectionRegistry
+from . import utils
 
 LOGGER = logging.getLogger(__name__)
+
+ARTIFACTS_FOLDER = "artifacts"
 
 class ModelCard:
     def __init__(self, config, uc_model_name):
@@ -77,7 +81,13 @@ class ModelCard:
 
     def get_basic_context(self):
         return {
-            "logo": self.download_static_asset("Logo", self.logo_path, width=250),
+            "logo": utils.download_static_asset(
+                        output_dir=self.output_dir,
+                        description="Logo",
+                        static_path=self.logo_path,
+                        width=250,
+                        local_folder=ARTIFACTS_FOLDER
+                    ),
             "institution_name": self.cfg.institution_name,
             "current_year": datetime.now().year,
         }
@@ -102,31 +112,10 @@ class ModelCard:
             "feature_importances_by_shap_plot": ("Feature Importances", "shap_summary_labeled_dataset_100_ref_rows.png", 400),
         }
         return {
-            key: self.download_artifact(description, path, width)
+            key: utils.download_artifact(self.run_id, description, path, width, ARTIFACTS_FOLDER)
             for key, (description, path, width) in plots.items()
         }
 
-    def download_artifact(self, description, artifact_path, width, local_folder="artifacts"):
-        os.makedirs(local_folder, exist_ok=True)
-        local_path = mlflow.artifacts.download_artifacts(
-            run_id=self.run_id,
-            artifact_path=artifact_path,
-            dst_path=local_folder,
-        )
-        return self.embed_image(description, local_path, width)
-
-    def download_static_asset(self, description, static_path, width, local_folder="artifacts"):
-        artifacts_dir = os.path.join(self.output_dir, local_folder)
-        os.makedirs(artifacts_dir, exist_ok=True)
-
-        dst_path = os.path.join(artifacts_dir, static_path.name)
-        shutil.copy(static_path, dst_path)
-
-        return self.embed_image(description, dst_path, width)
-
-    def embed_image(self, description, local_path, width):
-        return f'<img src="{os.path.relpath(local_path, start=os.getcwd())}" alt="{description}" width="{width}">'
-    
     def render(self):
         with open(self.template_path, "r") as file:
             template = file.read()
@@ -147,4 +136,5 @@ class ModelCard:
     @property
     def output_dir(self):
         return os.path.dirname(os.path.abspath(self.output_path))
+
 
