@@ -66,9 +66,9 @@ def register_attribute_sections(card, registry):
             # Handle if value is a list or a single string
             if isinstance(v, list):
                 for item in v:
-                    lines.append(f"  - {item}")
+                    lines.append(f"      - {item}")
             else:
-                lines.append(f"  - {v}")
+                lines.append(f"      - {v}")
 
         description = (
             "\n  - We focused our final dataset on the following target population:\n" +
