@@ -1,5 +1,4 @@
 import os
-import shutil
 import mlflow
 import logging
 from mlflow.tracking import MlflowClient
@@ -10,10 +9,10 @@ from importlib.resources import files
 from .. import dataio, modeling
 
 # relative imports in 'reporting' module 
-from .sections import registry, register_sections
+from .sections import register_sections
 from .sections.registry import SectionRegistry
-from .formatting import Indentation
-from . import utils
+from .utils import utils
+from .utils.formatting import Indentation
 
 LOGGER = logging.getLogger(__name__)
 
