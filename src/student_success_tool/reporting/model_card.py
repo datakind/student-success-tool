@@ -12,6 +12,7 @@ from .. import dataio, modeling
 # relative imports in 'reporting' module 
 from .sections import registry, register_sections
 from .sections.registry import SectionRegistry
+from .formatting import Indentation
 from . import utils
 
 LOGGER = logging.getLogger(__name__)
@@ -28,6 +29,7 @@ class ModelCard:
         self.output_path = os.path.join(os.getcwd(), f"model-card-{self.model_name}.md")
         self.template_path = self._resolve_template("model-card-TEMPLATE.md")
         self.logo_path = self._resolve_asset("logo.png")
+        self.indent = Indentation(base_spaces=2)
         self.section_registry = SectionRegistry()
         self._register_sections()
 

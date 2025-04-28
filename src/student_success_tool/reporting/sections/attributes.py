@@ -5,7 +5,7 @@ def register_attribute_sections(card, registry):
         limits = card.cfg.preprocessing.selection.intensity_time_limits
 
         if not name or not limits:
-            return "\n  - NOTE TO DATA SCIENTIST: Cannot detect target information. Please specify in model card."
+            return f"{card.indent.level(1)}- NOTE TO DATA SCIENTIST: Cannot detect target information. Please specify in model card."
 
         if "graduation" in name.lower() or "grad" in name.lower():
             outcome = "graduation"
@@ -53,7 +53,7 @@ def register_attribute_sections(card, registry):
         criteria = card.cfg.preprocessing.selection.student_criteria
 
         if not criteria:
-            return "\n. - NOTE TO DATA SCIENTIST: Cannot detect target population information. Please specify in model card."
+            return "No specific student criteria were applied."
 
         def clean_key(key):
             return key.replace("_", " ").title()
@@ -61,17 +61,17 @@ def register_attribute_sections(card, registry):
         lines = []
         for k, v in criteria.items():
             field = clean_key(k)
-            lines.append(f"    - **{field}**")
+            lines.append(f"{card.indent.level(2)}- {field}")
 
             # Handle if value is a list or a single string
             if isinstance(v, list):
                 for item in v:
-                    lines.append(f"      - {item}")
+                    lines.append(f"{card.indent.level(3)}- {item}")
             else:
-                lines.append(f"      - {v}")
+                lines.append(f"{card.indent.level(3)}- {v}")
 
         description = (
-            "\n  - We focused our final dataset on the following target population:\n" +
+            "We focused our final dataset on the following target population:\n" +
             "\n".join(lines)
         )
         return description
