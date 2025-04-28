@@ -64,12 +64,12 @@ class ModelCard:
     def collect_metadata(self):
         self.context.update(self.get_basic_context())
         self.context.update(self.get_feature_selection_metadata())
-        self.context["model_comparison_plot"] = self.download_artifact("Model Comparison", "model_comparison.png")
+        self.context["model_comparison_plot"] = self.download_artifact("Model Comparison", "model_comparison.png", width=400)
         self.context.update(self.section_registry.render_all())
 
     def get_basic_context(self):
         return {
-            "logo": self.download_static_asset("Logo", self.logo_path),
+            "logo": self.download_static_asset("Logo", self.logo_path, width=300),
             "institution_name": self.cfg.institution_name,
             "current_year": datetime.now().year,
             "number_of_features": self.get_feature_count()
