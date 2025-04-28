@@ -1,16 +1,19 @@
 def register_attribute_sections(card, registry):    
     @registry.register("outcome_section")
     def outcome():
-        name = card.cfg.preprocessing.target.name.lower()
+    
+        name = card.cfg.preprocessing.target.name
+        limits = card.cfg.preprocessing.selection.intensity_time_limits
 
-        if "graduation" in name or "grad" in name:
+        if not name or not limits:
+            return "  - NOTE TO DATA SCIENTIST: Cannot detect target information. Please specify in model card."
+
+        if "graduation" in name.lower() or "grad" in name.lower():
             outcome = "graduation"
-        elif "retention" in name or "ret" in name:
+        elif "retention" in name.lower() or "ret" in name.lower():
             outcome = "retention"
         else:
             raise NameError("Unable to determine outcome variable from config.")
-
-        limits = card.cfg.preprocessing.selection.intensity_time_limits
 
         # Normalize intensity labels to support flexible formats
         normalized_limits = {
@@ -49,7 +52,20 @@ def register_attribute_sections(card, registry):
 
     @registry.register("target_population_section")
     def target_population():
-        return "ok"
+        criteria = card.cfg.preprocessing.selection.student_criteria
+
+        if not criteria:
+            return "  - NOTE TO DATA SCIENTIST: Cannot detect information on student criteria filtering. Please specify in model card."
+
+        def clean_key(key):
+            return key.replace("_", " ").title()
+
+        lines = [f"    - {clean_key(k)} = {v}" for k, v in criteria.items()]
+        description = (
+            "  - We focused our final dataset on the following target population:\n" +
+            "\n".join(lines)
+        )
+        return description
     
     @registry.register("checkpoint_section")
     def checkpoint():
