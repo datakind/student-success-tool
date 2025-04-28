@@ -98,7 +98,7 @@ class ModelCard:
             "test_calibration_curve": ("Test Calibration Curve", "calibration/test_calibration.png", 400),
             "test_roc_curve": ("Test ROC Curve", "test_roc_curve_plot.png", 400),
             "test_confusion_matrix": ("Test Confusion Matrix", "test_confusion_matrix.png", 400),
-            "test_histogram": ("Test Histogram", "test_histogram.png", 400),
+            "test_histogram": ("Test Histogram", "preds/test_hist.png", 400),
             "feature_importances_by_shap_plot": ("Feature Importances", "shap_summary_labeled_dataset_100_ref_rows.png", 400),
         }
         return {
