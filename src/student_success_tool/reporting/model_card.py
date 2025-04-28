@@ -69,7 +69,7 @@ class ModelCard:
 
     def get_basic_context(self):
         return {
-            "logo": self.download_static_asset("Logo", self.logo_path)
+            "logo": self.download_static_asset("Logo", self.logo_path),
             "institution_name": self.cfg.institution_name,
             "current_year": datetime.now().year,
             "number_of_features": self.get_feature_count()
