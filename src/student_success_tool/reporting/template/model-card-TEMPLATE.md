@@ -67,6 +67,32 @@
 {test_histogram}
 
 ### Quantitative Bias Analysis
+- **Model Bias Metric**
+  - Our bias evaluation metric for our model includes utilizing _False Negative Rate Parity_, which measures the disproportionate rate of false negatives across subgroups. 
+  - FNR Parity helps assess whether the model is underperforming for any specific group in terms of incorrectly predicting that a student is not in need of support when the true outcome is that the student is in need of support.
 
-- Our bias evaluation metric for our model includes utilizing False Negative Rate Parity, which measures the disproportionate rate of false negatives across subgroups. 
-- FNR Parity helps assess whether the model is underperforming for any specific group in terms of incorrectly predicting that a student is not in need of support when the true outcome is that the student is in need of support.
+### Limitations & Ethical Considerations
+
+### Important Features
+- **Analyzing Feature Importance**
+  - SHAP (Shapley Additive Explanations) is a method based on cooperative game theory that quantifies the contribution of each feature to a model's prediction for an individual instance.
+    - It helps answer: "How much did this feature contribute to predicting whether a student needs more or less support?"
+  - SHAP provides detailed insight into:
+    - How much each feature contributed for each individual
+    - Whether higher or lower feature values are associated with higher or lower need for support.
+
+- **Feature Importance Plot**
+  - This figure below helps explain how individual features contribute to the model’s prediction for each student-term record. 
+  - Here's how to interpret it:
+    - Each dot represents a single labeled student-term record.
+    - Color of the dot corresponds to the feature value for that student (e.g., a higher or lower numeric value for that feature), while gray indicates a categorical feature.
+    - The x-axis shows the SHAP value for that student-feature pair:
+    - A higher SHAP value (further to the right) means the feature is pushing the prediction toward a greater need for support.
+    - A lower SHAP value (further to the left) means the feature is contributing toward a lower need for support.
+    - Features are ordered from top to bottom by their overall importance to the model — the most influential features appear at the top.
+    - Example Interpretation:
+      - If students have a low percentage of grades above the section average, they tend to have higher SHAP values, indicating a greater need of support in order to graduate on time.
+
+{feature_importances_by_shap_plot}
+
+## Appendix
