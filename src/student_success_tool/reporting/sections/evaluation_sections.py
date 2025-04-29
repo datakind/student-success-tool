@@ -11,10 +11,10 @@ def register_evaluation_sections(card, registry):
     def make_group_metric_table(path, title):
         def group_metric_table():
             try:
-                local_path = utils.safe_mlflow_download_artifacts(
+                local_path = utils.download_artifact(
                     run_id=card.run_id,
+                    local_folder=card.assets_folder,
                     artifact_path=path,
-                    dst_path=card.assets_folder
                 )
                 df = pd.read_csv(local_path)
 
