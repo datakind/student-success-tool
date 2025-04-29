@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from student_success_tool import dataio, preprocessing, schemas
+from student_success_tool import dataio, preprocessing
 
 SYNTHETIC_DATA_PATH = "synthetic-data/pdp"
 
@@ -302,7 +302,8 @@ def test_make_student_term_dataset_against_checked_in_sample(
 ):
     full_cohort_file_path = os.path.join(SYNTHETIC_DATA_PATH, cohort_file_name)
     cohort = dataio.pdp.read_raw_cohort_data(
-        file_path=full_cohort_file_path, schema=schemas.pdp.RawPDPCohortDataSchema
+        file_path=full_cohort_file_path,
+        schema=dataio.schemas.pdp.RawPDPCohortDataSchema,
     )
     assert isinstance(cohort, pd.DataFrame)
     assert not cohort.empty
@@ -310,7 +311,7 @@ def test_make_student_term_dataset_against_checked_in_sample(
     full_course_file_path = os.path.join(SYNTHETIC_DATA_PATH, course_file_name)
     course = dataio.pdp.read_raw_course_data(
         file_path=full_course_file_path,
-        schema=schemas.pdp.RawPDPCourseDataSchema,
+        schema=dataio.schemas.pdp.RawPDPCourseDataSchema,
         dttm_format="%Y-%m-%d",
     )
     assert isinstance(course, pd.DataFrame)
