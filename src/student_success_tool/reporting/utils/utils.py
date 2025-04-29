@@ -30,9 +30,9 @@ def download_artifact(run_id: str, description: str, artifact_path: str, width: 
     local_path = safe_mlflow_download_artifacts(run_id, artifact_path, local_folder)
     return embed_image(description, local_path, width)
 
-def download_static_asset(description: str, static_path: pathlib.Path, width: int, local_folder: str) -> str:
+def download_static_asset(description: str, static_path: str, width: int, local_folder: str) -> str:
     os.makedirs(local_folder, exist_ok=True)
-    dst_path = os.path.join(local_folder, static_path.name)
+    dst_path = os.path.join(local_folder, static_path)
     shutil.copy(static_path, dst_path)
     return embed_image(description, dst_path, width)
 
