@@ -91,7 +91,7 @@ class ModelCard:
                         description="Logo",
                         static_path=self.logo_path,
                         width=250,
-                        local_folder=self.ASSETS_FOLDER
+                        local_folder=self.assets_folder
                     ),
             "institution_name": self.cfg.institution_name,
             "current_year": datetime.now().year,
@@ -117,7 +117,7 @@ class ModelCard:
             "feature_importances_by_shap_plot": ("Feature Importances", "shap_summary_labeled_dataset_100_ref_rows.png", 500),
         }
         return {
-            key: utils.download_artifact(self.run_id, description, path, width, self.ASSETS_FOLDER)
+            key: utils.download_artifact(self.run_id, description, path, width, self.assets_folder)
             for key, (description, path, width) in plots.items()
         }
 
@@ -137,10 +137,10 @@ class ModelCard:
         return os.path.join(os.getcwd(), filename)
 
     def _resolve_template(self, template_name):
-        return os.path.join(self.ASSETS_FOLDER, template_name)
+        return os.path.join(self.assets_folder, template_name)
 
     def _resolve_asset(self, asset_name):
-        return os.path.join(self.ASSETS_FOLDER, asset_name)
+        return os.path.join(self.assets_folder, asset_name)
     
     def _register_sections(self):
         register_sections(self, self.section_registry)
