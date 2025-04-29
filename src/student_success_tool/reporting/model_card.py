@@ -137,10 +137,10 @@ class ModelCard:
         return os.path.join(os.getcwd(), filename)
 
     def _resolve_template(self, filename):
-        return files("student_success_tool.reporting.templates").joinpath(filename)
+        return files("student_success_tool.reporting.template").joinpath(filename)
 
     def _resolve_asset(self, filename):
-        return files("student_success_tool.reporting.templates.assets").joinpath(filename)
+        return files("student_success_tool.reporting.template.assets").joinpath(filename)
 
     def _register_sections(self):
         register_sections(self, self.section_registry)
