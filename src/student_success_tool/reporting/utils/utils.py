@@ -81,8 +81,8 @@ def download_static_asset(
 
 def embed_image(
     description: str,
-    local_path: t.Optional[str, pathlib.Path],
-    width: t.Optional[int, None] = 400
+    local_path: t.Optional[str | pathlib.Path],
+    width: t.Optional[int | None] = 400
 ) -> str:
     """
     Embeds image in markdown by returning inline HTML to accomodate for flexibility with
