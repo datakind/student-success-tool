@@ -5,7 +5,7 @@ from ..utils import utils
 LOGGER = logging.getLogger(__name__)
 
 def register_evaluation_sections(card, registry):
-    evaluation_sections = ["#### Evaluation Metrics by Student Group\n\n"]
+    evaluation_sections = [f"{card.format.header_level(4)}Evaluation Metrics by Student Group\n"]
     group_eval_artifacts = utils.list_paths_in_directory(run_id=card.run_id, directory='group_metrics')
 
     def make_group_metric_table(path, title):
@@ -23,11 +23,11 @@ def register_evaluation_sections(card, registry):
                 separator = "| " + " | ".join(["---"] * len(df.columns)) + " |"
                 rows = ["| " + " | ".join(str(val) for val in row) + " |" for row in df.values]
 
-                return f"**{title} Metrics**\n\n" + "\n".join([headers, separator] + rows)
+                return f"{card.format.bold(f'{title} Metrics')}\n\n" + "\n".join([headers, separator] + rows)
 
             except Exception as e:
                 LOGGER.warning(f"Could not load evaluation metrics for {title}: {str(e)}")
-                return f"**{title} Metrics**\n\nCould not load data."
+                return f"{card.format.bold(f'{title} Metrics')}\n\nCould not load data."
         return group_metric_table
 
     for csv_path in group_eval_artifacts:
