@@ -110,11 +110,11 @@ def aggregate_from_course_level_features(
         )
     if key_course_ids is not None:
         agg_col_vals.extend(("course_id", kc) for kc in key_course_ids)
-    df_dummy_equals = equal_cols_by_group(
-        df, grp_cols=student_term_id_cols, agg_col_vals=agg_col_vals
-    )
     df_val_equals = sum_val_equal_cols_by_group(
         df, grp_cols=student_term_id_cols, agg_col_vals=agg_col_vals
+    )
+    df_dummy_equals = equal_cols_by_group(
+        df=df_val_equals, grp_cols=student_term_id_cols
     )
     df_grade_aggs = multicol_grade_aggs_by_group(
         df, min_passing_grade=min_passing_grade, grp_cols=student_term_id_cols
@@ -472,38 +472,24 @@ def equal_cols_by_group(
     df: pd.DataFrame,
     *,
     grp_cols: list[str],
-    agg_col_vals: list[tuple[str, t.Any]],
 ) -> pd.DataFrame:
     """
-    Compute equal to specified values for all ``agg_col_vals`` in ``df``,
-    then group by ``grp_cols`` and aggregate with a "max".
+    Compute dummy values for all of the num_course features 
 
     Args:
         df
         grp_cols
-        agg_col_vals
     """
-    temp_col_series = {}
-    for col, val in agg_col_vals:
-        # make multi-value col names nicer to read
-        temp_col = (
-            f"{col}_{'|'.join(str(item) for item in val)}"
-            if isinstance(val, list)
-            else f"{col}_{val}"
-        )
-        temp_col_series[temp_col] = shared.compute_values_equal(df[col], val)
-    return (
-        df.assign(**temp_col_series)
-        .reindex(columns=grp_cols + list(temp_col_series.keys()))
-        .groupby(by=grp_cols, observed=True, as_index=True)
-        .agg("max")
-        .rename(columns=_rename_dummy_by_group_col)
-        .reset_index(drop=False)
-    )
+    num_prefix = constants.NUM_COURSE_FEATURE_COL_PREFIX
+    dummy_prefix = constants.DUMMY_COURSE_FEATURE_COL_PREFIX
 
+    dummy_cols = {
+        col.replace(num_prefix, dummy_prefix, 1): df[col].ge(1)
+        for col in df.columns
+        if col.startswith(constants.NUM_COURSE_FEATURE_COL_PREFIX)
+    }
 
-def _rename_dummy_by_group_col(col: str) -> str:
-    return f"{constants.DUMMY_COURSE_FEATURE_COL_PREFIX}_{col}"
+    return df.assign(**dummy_cols).reindex(columns=grp_cols + list(dummy_cols.keys()))
 
 
 def sum_val_equal_cols_by_group(
