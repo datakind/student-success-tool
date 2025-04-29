@@ -33,7 +33,7 @@ def register_evaluation_sections(card, registry):
                 except Exception as e:
                     LOGGER.warning(f"Could not load evaluation metrics for {title}: {str(e)}")
 
-        evaluation_sections.append(f"{{group_metric_table_{group_name}}}")
+            evaluation_sections.append(f"{{group_metric_table_{group_name}}}")
 
     @registry.register("evaluation_by_group_section")
     def evaluation_section():
