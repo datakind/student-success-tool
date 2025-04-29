@@ -58,7 +58,7 @@ def register_bias_sections(card, registry):
 
             # Find plot
             normalized_name = group_name.lower().replace(' ', '_')
-            plot_artifact_path = f"fnr_plots/test_{normalized_name}_fnr_plot.png"
+            plot_artifact_path = f"fnr_plots/test_{normalized_name}_fnr.png"
 
             try:
                 local_plot_path = utils.safe_mlflow_download_artifacts(
