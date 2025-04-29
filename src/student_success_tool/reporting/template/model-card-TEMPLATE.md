@@ -95,6 +95,6 @@
 
 {feature_importances_by_shap_plot}
 
-## Appendix
+### Appendix
 
 {evaluation_by_group_section}
