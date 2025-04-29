@@ -3,6 +3,7 @@ import mlflow
 import logging
 from mlflow.tracking import MlflowClient
 from datetime import datetime
+import importlib.abc
 from importlib.resources import files
 
 # internal SST modules
@@ -85,7 +86,7 @@ class ModelCard:
             LOGGER.info(f"Updating context from {func.__name__}()")
             self.context.update(func())
 
-    def get_basic_context(self):
+    def get_basic_context(self) -> dict[str, str]:
         return {
             "logo": utils.download_static_asset(
                         description="Logo",
@@ -97,7 +98,7 @@ class ModelCard:
             "current_year": datetime.now().year,
         }
 
-    def get_feature_metadata(self):
+    def get_feature_metadata(self) -> dict[str, str]:
         feature_count = len(self.model.named_steps["column_selector"].get_params()["cols"])
         fs_cfg = self.cfg.modeling.feature_selection
         return {
@@ -107,7 +108,7 @@ class ModelCard:
             "incomplete_threshold": fs_cfg.incomplete_threshold,
         }
 
-    def get_model_plots(self):
+    def get_model_plots(self) -> dict[str, str]:
         plots = {
             "model_comparison_plot": ("Model Comparison", "model_comparison.png", 450),
             "test_calibration_curve": ("Test Calibration Curve", "calibration/test_calibration.png", 475),
@@ -117,7 +118,13 @@ class ModelCard:
             "feature_importances_by_shap_plot": ("Feature Importances", "shap_summary_labeled_dataset_100_ref_rows.png", 500),
         }
         return {
-            key: utils.download_artifact(self.run_id, description, path, width, self.assets_folder)
+            key: utils.download_artifact(
+                run_id=self.run_id, 
+                description=description,
+                artifact_path=path,
+                width=width,
+                local_folder=self.assets_folder
+            )
             for key, (description, path, width) in plots.items()
         }
 
@@ -129,17 +136,17 @@ class ModelCard:
             file.write(filled)
         LOGGER.info("✅ Model card generated!")
     
-    def _extract_model_name(self, uc_model_name):
+    def _extract_model_name(self, uc_model_name) -> str:
         return uc_model_name.split('.')[-1]
 
-    def _build_output_path(self):
+    def _build_output_path(self) -> str:
         filename = f"model-card-{self.model_name}.md"
         return os.path.join(os.getcwd(), filename)
 
-    def _resolve_template(self, filename):
+    def _resolve_template(self, filename) -> importlib.abc.Traversable:
         return files("student_success_tool.reporting.template").joinpath(filename)
 
-    def _resolve_asset(self, filename):
+    def _resolve_asset(self, filename) -> importlib.abc.Traversable:
         return files("student_success_tool.reporting.template.assets").joinpath(filename)
 
     def _register_sections(self):

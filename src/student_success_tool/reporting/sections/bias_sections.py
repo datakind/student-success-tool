@@ -17,22 +17,22 @@ def register_bias_sections(card, registry):
         except ValueError:
             return "Could not parse subgroup comparison."
         
-        percent = round(float(diff) * 100, 2)
+        percent = round(float(diff) * 100, 0)
 
         return (
             f"{group_label} disparity identified between {subgroup_1} and {subgroup_2} subgroups. "
             f"{subgroup_1} students have a {percent}% higher false negative rate (FNR) than {subgroup_2} students. "
-            f"Statistical analysis indicates {stat_summary}."
+            f"Statistical analysis indicates: {stat_summary}."
         )
 
     # Load bias flag CSVs and filter for test split
     for level in bias_levels:
         try:
             bias_path = f"bias_flags/{level}_bias_flags.csv"
-            local_path = utils.safe_mlflow_download_artifacts(
+            local_path = utils.download_artifact(
                 run_id=card.run_id,
+                local_folder=card.assets_folder,
                 artifact_path=bias_path,
-                dst_path=card.assets_folder
             )
             df = pd.read_csv(local_path)
 
@@ -61,13 +61,13 @@ def register_bias_sections(card, registry):
             plot_artifact_path = f"fnr_plots/test_{normalized_name}_fnr.png"
 
             try:
-                local_plot_path = utils.safe_mlflow_download_artifacts(
+                plot_md = utils.download_artifact(
                     run_id=card.run_id,
+                    local_folder=card.assets_folder,
                     artifact_path=plot_artifact_path,
-                    dst_path=card.assets_folder
+                    description=f"False Negative Parity Rate for {group_name} on Test Data",
+                    width=450
                 )
-                plot_filename = os.path.basename(local_plot_path)
-                plot_md = f"![{group_name} FNR Plot]({card.assets_folder}/{plot_filename})\n\n"
             except Exception as e:
                 LOGGER.warning(f"Could not load plot for {group_name}: {str(e)}")
                 plot_md = "*Plot not available.*\n\n"
