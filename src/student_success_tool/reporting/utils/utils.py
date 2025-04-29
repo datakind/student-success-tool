@@ -8,6 +8,9 @@ import pathlib
 def embed_image(description: str, local_path: str | pathlib.Path, width: int) -> str:
     return f'<img src="{os.path.relpath(local_path, start=os.getcwd())}" alt="{description}" width="{width}">'
 
+def list_artifacts(run_id: str, folder: str)
+    return mlflow.artifacts.list_artifacts(self.run_id, path=folder)
+
 def download_artifact(run_id: str, description: str, artifact_path: str, width: int, local_folder: str) -> str:
     os.makedirs(local_folder, exist_ok=True)
     local_path = safe_mlflow_download_artifacts(run_id, artifact_path, local_folder)
@@ -17,7 +20,6 @@ def download_static_asset(description: str, static_path: pathlib.Path, width: in
     os.makedirs(local_folder, exist_ok=True)
     dst_path = os.path.join(local_folder, static_path.name)
     shutil.copy(static_path, dst_path)
-
     return embed_image(description, dst_path, width)
 
 def safe_mlflow_download_artifacts(run_id: str, artifact_path: str, dst_path: str) -> str:
