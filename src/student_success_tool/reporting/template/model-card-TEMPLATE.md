@@ -71,6 +71,8 @@
   - Our bias evaluation metric for our model includes utilizing _False Negative Rate Parity_, which measures the disproportionate rate of false negatives across subgroups. 
   - FNR Parity helps assess whether the model is underperforming for any specific group in terms of incorrectly predicting that a student is not in need of support when the true outcome is that the student is in need of support.
 
+{bias_summary_section}
+
 ### Limitations & Ethical Considerations
 
 ### Important Features

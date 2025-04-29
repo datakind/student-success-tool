@@ -1,0 +1,86 @@
+import os
+import logging
+import pandas as pd
+from ..utils import utils
+
+LOGGER = logging.getLogger(__name__)
+
+def register_bias_sections(card, registry):
+    bias_levels = ['high', 'moderate', 'low']
+    bias_flags = {}
+    all_blocks = []
+
+    def generate_description(group, subgroups, diff, stat_summary):
+        group_label = group.replace("_", " ").title()
+        try:
+            subgroup_1, subgroup_2 = [s.strip() for s in subgroups.split("vs")]
+        except ValueError:
+            return "Could not parse subgroup comparison."
+        
+        percent = round(float(diff) * 100, 2)
+
+        return (
+            f"{group_label} disparity identified between {subgroup_1} and {subgroup_2} subgroups. "
+            f"{subgroup_1} students have a {percent}% higher false negative rate (FNR) than {subgroup_2} students. "
+            f"Statistical analysis indicates {stat_summary}."
+        )
+
+    # Load bias flag CSVs and filter for test split
+    for level in bias_levels:
+        try:
+            bias_path = f"bias_flags/{level}_bias_flags.csv"
+            local_path = utils.safe_mlflow_download_artifacts(
+                run_id=card.run_id,
+                artifact_path=bias_path,
+                dst_path=card.assets_folder
+            )
+            df = pd.read_csv(local_path)
+
+            if 'split_name' in df.columns:
+                df = df[df['split_name'] == 'test']
+
+            bias_flags[level] = df
+        except Exception as e:
+            LOGGER.warning(f"Could not load {level} bias flags: {str(e)}")
+            bias_flags[level] = pd.DataFrame()
+
+    # Build markdown blocks
+    for level in bias_levels:
+        df = bias_flags.get(level, pd.DataFrame())
+
+        for _, row in df.iterrows():
+            group_name = row['group']
+            subgroups = row['subgroups']
+            fnpr_diff = row['fnpr_percentage_difference']
+            stat_type = row['type']
+
+            description = generate_description(group_name, subgroups, fnpr_diff, stat_type)
+
+            # Find plot
+            normalized_name = group_name.lower().replace(' ', '_')
+            plot_artifact_path = f"fnr_plots/test_{normalized_name}_fnr_plot.png"
+
+            try:
+                local_plot_path = utils.safe_mlflow_download_artifacts(
+                    run_id=card.run_id,
+                    artifact_path=plot_artifact_path,
+                    dst_path=card.assets_folder
+                )
+                plot_filename = os.path.basename(local_plot_path)
+                plot_md = f"![{group_name} FNR Plot]({card.assets_folder}/{plot_filename})\n\n"
+            except Exception as e:
+                LOGGER.warning(f"Could not load plot for {group_name}: {str(e)}")
+                plot_md = "*Plot not available.*\n\n"
+
+            block = f"{card.format.header_level(5)}{group_name.replace('_', ' ').title()}\n\n"
+            block += f"{description}\n\n"
+            block += plot_md
+            all_blocks.append(block)
+
+    @registry.register("bias_summary_section")
+    def bias_summary_section():
+        if not all_blocks:
+            return "No flagged bias detected in test group evaluations."
+
+        section_header = f"{card.format.header_level(4)}Disparities by Student Group\n\n"
+        return section_header + "\n\n".join(all_blocks)
