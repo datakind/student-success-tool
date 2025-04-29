@@ -24,13 +24,13 @@ class ModelCard:
         self.uc_model_name = uc_model_name
         self.model_name = self.uc_model_name.split('.')[-1]
         self.client = MlflowClient()
-        self.context = {}
+        self.section_registry = SectionRegistry()
         self.indent = Indentation(base_spaces=2)
         self.output_path = os.path.join(os.getcwd(), f"model-card-{self.model_name}.md")
         self.template_path = self._resolve_template("model-card-TEMPLATE.md")
         self.logo_path = self._resolve_asset("logo.png")
-        self.section_registry = SectionRegistry()
-        
+        self.context = {}
+
     def build(self):
         self.load_model()
         self.find_model_version()

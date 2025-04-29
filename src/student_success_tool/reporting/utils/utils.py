@@ -8,11 +8,11 @@ import pathlib
 def embed_image(description: str, local_path: str | pathlib.Path, width: int) -> str:
     return f'<img src="{os.path.relpath(local_path, start=os.getcwd())}" alt="{description}" width="{width}">'
 
-def list_artifacts(run_id: str, artifact_path: Optional[str] = None) -> list[mlflow.entities.FileInfo]:
+def list_artifacts(run_id: str) -> list[mlflow.entities.FileInfo]:
     """
-    List artifacts for a given MLflow run. Optionally list artifacts under a subdirectory.
+    List artifacts for a given MLflow run.
     """
-    return mlflow.artifacts.list_artifacts(run_id=run_id, artifact_path=artifact_path)
+    return mlflow.artifacts.list_artifacts(run_id=run_id)
 
 def download_artifact(run_id: str, description: str, artifact_path: str, width: int, local_folder: str) -> str:
     os.makedirs(local_folder, exist_ok=True)
