@@ -12,7 +12,7 @@ from .. import dataio, modeling
 from .sections import register_sections
 from .sections.registry import SectionRegistry
 from .utils import utils
-from .utils.formatting import Indentation
+from .utils.formatting import Formatting
 
 LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ class ModelCard:
         self.model_name = self.uc_model_name.split('.')[-1]
         self.client = MlflowClient()
         self.section_registry = SectionRegistry()
-        self.indent = Indentation(base_spaces=2)
+        self.format = Formatting()
         self.output_path = os.path.join(os.getcwd(), f"model-card-{self.model_name}.md")
         self.template_path = self._resolve_template("model-card-TEMPLATE.md")
         self.logo_path = self._resolve_asset("logo.png")
