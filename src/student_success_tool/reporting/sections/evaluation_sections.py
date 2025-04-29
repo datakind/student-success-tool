@@ -6,7 +6,8 @@ LOGGER = logging.getLogger(__name__)
 
 def register_evaluation_sections(card, registry):
     evaluation_sections = []
-    group_eval_artifacts = utils.list_artifacts(run_id=card.run_id, folder="group_metrics")
+    artifacts = utils.list_artifacts(run_id=card.run_id)
+    group_eval_artifacts = [artifact.path for artifact in artifacts if artifact.path.startswith("group_metrics/test_")] 
 
     for csv_path in group_eval_artifacts:
         group_name = csv_path.replace("group_metrics/test_", "").replace("_metrics.csv", "")  # "ethnicity", "gender", etc.
