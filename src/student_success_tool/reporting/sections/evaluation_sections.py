@@ -35,11 +35,9 @@ def register_evaluation_sections(card, registry):
             group_name = csv_path.replace("group_metrics/test_", "").replace("_metrics.csv", "")
             group_title = group_name.replace("_", " ").title()
 
-            # Create and register the function using a factory to avoid late binding
-            registry.register(f"group_metric_table_{group_name}")(make_group_metric_table(csv_path, group_title))
-
-            # Add the placeholder string to the section list
-            evaluation_sections.append(f"{{group_metric_table_{group_name}}}")
+            group_table_func = make_group_metric_table(csv_path, group_title)
+            registry.register(f"group_metric_table_{group_name}")(group_table_func)
+            evaluation_sections.append(group_table_func())
 
     @registry.register("evaluation_by_group_section")
     def evaluation_section():
