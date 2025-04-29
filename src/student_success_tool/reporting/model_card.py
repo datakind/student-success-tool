@@ -16,20 +16,25 @@ from .utils.formatting import Formatting
 
 LOGGER = logging.getLogger(__name__)
 
-ARTIFACTS_FOLDER = "artifacts"
-
 class ModelCard:
-    def __init__(self, config, uc_model_name):
+    DEFAULT_ASSETS_FOLDER = "card_assets"
+    TEMPLATE_FILENAME = "model-card-TEMPLATE.md"
+    LOGO_FILENAME = "logo.png"
+
+    def __init__(self, config, uc_model_name, assets_path=None):
         self.cfg = config
         self.uc_model_name = uc_model_name
-        self.model_name = self.uc_model_name.split('.')[-1]
+        self.model_name = self._extract_model_name(uc_model_name)
+
         self.client = MlflowClient()
         self.section_registry = SectionRegistry()
         self.format = Formatting()
-        self.output_path = os.path.join(os.getcwd(), f"model-card-{self.model_name}.md")
-        self.template_path = self._resolve_template("model-card-TEMPLATE.md")
-        self.logo_path = self._resolve_asset("logo.png")
         self.context = {}
+
+        self.assets_folder = assets_path or self.DEFAULT_ASSETS_FOLDER
+        self.output_path = self._build_output_path()
+        self.template_path = self._resolve_template(self.TEMPLATE_FILENAME)
+        self.logo_path = self._resolve_asset(self.LOGO_FILENAME)
 
     def build(self):
         self.load_model()
@@ -86,7 +91,7 @@ class ModelCard:
                         description="Logo",
                         static_path=self.logo_path,
                         width=250,
-                        local_folder=ARTIFACTS_FOLDER
+                        local_folder=self.ASSETS_FOLDER
                     ),
             "institution_name": self.cfg.institution_name,
             "current_year": datetime.now().year,
@@ -109,10 +114,10 @@ class ModelCard:
             "test_roc_curve": ("Test ROC Curve", "test_roc_curve_plot.png", 500),
             "test_confusion_matrix": ("Test Confusion Matrix", "test_confusion_matrix.png", 425),
             "test_histogram": ("Test Histogram", "preds/test_hist.png", 475),
-            "feature_importances_by_shap_plot": ("Feature Importances", "shap_summary_labeled_dataset_100_ref_rows.png", 400),
+            "feature_importances_by_shap_plot": ("Feature Importances", "shap_summary_labeled_dataset_100_ref_rows.png", 500),
         }
         return {
-            key: utils.download_artifact(self.run_id, description, path, width, ARTIFACTS_FOLDER)
+            key: utils.download_artifact(self.run_id, description, path, width, self.ASSETS_FOLDER)
             for key, (description, path, width) in plots.items()
         }
 
@@ -124,12 +129,19 @@ class ModelCard:
             file.write(filled)
         LOGGER.info("✅ Model card generated!")
     
-    def _resolve_template(self, filename):
-        return files("student_success_tool.reporting.template").joinpath(filename)
+    def _extract_model_name(self, uc_model_name):
+        return uc_model_name.split('.')[-1]
 
-    def _resolve_asset(self, filename):
-        return files("student_success_tool.reporting.template.assets").joinpath(filename)
+    def _build_output_path(self):
+        filename = f"model-card-{self.model_name}.md"
+        return os.path.join(os.getcwd(), filename)
 
+    def _resolve_template(self, template_name):
+        return os.path.join(self.ASSETS_FOLDER, template_name)
+
+    def _resolve_asset(self, asset_name):
+        return os.path.join(self.ASSETS_FOLDER, asset_name)
+    
     def _register_sections(self):
         register_sections(self, self.section_registry)
 

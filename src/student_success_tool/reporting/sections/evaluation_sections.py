@@ -14,7 +14,7 @@ def register_evaluation_sections(card, registry):
                 local_path = utils.safe_mlflow_download_artifacts(
                     run_id=card.run_id,
                     artifact_path=path,
-                    dst_path="artifacts"
+                    dst_path=card.assets_folder
                 )
                 df = pd.read_csv(local_path)
 
