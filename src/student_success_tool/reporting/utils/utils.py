@@ -1,14 +1,16 @@
 import os 
-import mlflow
-import shutil
-import contextlib
 import sys
+import shutil
+import typing as t
+import mlflow
+
+import contextlib
 import pathlib
 
 def embed_image(description: str, local_path: str | pathlib.Path, width: int) -> str:
     return f'<img src="{os.path.relpath(local_path, start=os.getcwd())}" alt="{description}" width="{width}">'
 
-def list_paths_in_directory(run_id: str, directory: str) -> List[str]:
+def list_paths_in_directory(run_id: str, directory: str) -> t.List[str]:
     """
     List all artifact paths inside a specific directory for a run_id.
     Only retrieves immediate contents (non-recursive).
