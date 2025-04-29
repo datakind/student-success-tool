@@ -8,9 +8,9 @@ def register_evaluation_sections(card, registry):
     evaluation_sections = []
 
     try:
-        group_eval_artifacts = card.list_bias_group_artifacts()
+        group_eval_artifacts = card.list_bias_group_artifacts("group_metrics")
     except Exception as e:
-        LOGGER.warning(f"Could not list bias artifacts.")
+        LOGGER.warning(f"Could not list evaluation artifacts.")
 
     for csv_path in group_eval_artifacts:
         group_name = csv_path.replace("group_metrics/test_", "").replace("_metrics.csv", "")  # "ethnicity", "gender", etc.
