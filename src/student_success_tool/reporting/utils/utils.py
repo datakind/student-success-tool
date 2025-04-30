@@ -4,6 +4,8 @@ import typing as t
 import mlflow
 import pathlib
 from importlib.abc import Traversable
+from importlib.resources import as_file
+
 
 def download_artifact(
     run_id: str,
@@ -67,7 +69,10 @@ def download_static_asset(
     os.makedirs(local_folder, exist_ok=True)
 
     dst_path = os.path.join(local_folder, static_path.name)
-    shutil.copy(static_path, dst_path)
+
+    with as_file(static_path) as actual_path:
+        shutil.copy(actual_path, dst_path)
+    
     if dst_path.lower().endswith((".png", ".jpg", ".jpeg")):
         if description is None:
             description = os.path.basename(dst_path)

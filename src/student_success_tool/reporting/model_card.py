@@ -173,8 +173,8 @@ class ModelCard:
         feature_count = len(
             self.model.named_steps["column_selector"].get_params()["cols"]
         )
-        if not self.cfg.modeling.feature_selection:
-            raise ValueError("Missing feature selection criteria in config. This is a necessary section for the model card.")
+        if not self.cfg.modeling or not self.cfg.modeling.feature_selection:
+            raise ValueError("Modeling configuration or feature selection config is missing.")
         
         fs_cfg = self.cfg.modeling.feature_selection
 
