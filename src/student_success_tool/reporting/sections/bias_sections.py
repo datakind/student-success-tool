@@ -21,7 +21,7 @@ def register_bias_sections(card, registry):
         percent_higher = card.format.bold(f"{int(round(float(diff) * 100))}% higher")
 
         return (
-            f"{card.format.indent_level(1)}- {sg1} students have a {percent_higher} False Negative Rate (FNR) than {sg2} students. "
+            f"{card.format.indent_level(1)}- {sg1} students have a {percent_higher} False Negative Rate (FNR) than {sg2} students.\n"
             f"{card.format.indent_level(1)}- Statistical analysis indicates: {stat_summary}."
         )
 
