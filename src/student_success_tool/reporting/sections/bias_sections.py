@@ -17,13 +17,15 @@ def register_bias_sections(card, registry):
         except ValueError:
             return "Could not parse subgroup comparison."
         
-        percent = round(float(diff) * 100, 0)
+        sg1 = card.format.bold(card.format.italic(subgroup_1))
+        sg2 = card.format.bold(card.format.italic(subgroup_2))
+        percent_higher = card.format.bold(f"{int(round(float(diff) * 100))}% higher")
 
         return (
-            f"{group_label} disparity identified between {subgroup_1} and {subgroup_2} subgroups. "
-            f"{subgroup_1} students have a {percent}% higher false negative rate (FNR) than {subgroup_2} students. "
-            f"Statistical analysis indicates: {stat_summary}."
+            f"{card.format.indent_level(2)}- {sg1} students have a {percent_higher} False Negative Rate (FNR) than {sg2} students. "
+            f"{card.format.indent_level(2)}- Statistical analysis indicates: {stat_summary}."
         )
+
 
     # Load bias flag CSVs and filter for test split
     for level in bias_levels:
@@ -61,7 +63,7 @@ def register_bias_sections(card, registry):
             plot_artifact_path = f"fnr_plots/test_{normalized_name}_fnr.png"
 
             try:
-                plot_md = utils.download_artifact(
+                plot_md = utils.safe_mlflow_download_artifacts(
                     run_id=card.run_id,
                     local_folder=card.assets_folder,
                     artifact_path=plot_artifact_path,
@@ -72,7 +74,7 @@ def register_bias_sections(card, registry):
                 LOGGER.warning(f"Could not load plot for {group_name}: {str(e)}")
                 plot_md = "*Plot not available.*\n\n"
 
-            block = f"{card.format.header_level(5)}{group_name.replace('_', ' ').title()}\n\n"
+            block = f"{card.format.indent_level(1)}{group_name.replace('_', ' ').title()}\n\n"
             block += f"{description}\n\n"
             block += plot_md
             all_blocks.append(block)
@@ -82,5 +84,6 @@ def register_bias_sections(card, registry):
         if not all_blocks:
             return "No flagged bias detected in test group evaluations."
 
-        section_header = f"{card.format.header_level(4)}Disparities by Student Group\n\n"
+        section_header = f"{card.format.bold('Disparities by Student Group')}\n\n"
+        
         return section_header + "\n\n".join(all_blocks)
