@@ -11,7 +11,7 @@ class SectionRegistry:
     def __init__(self):
         self._sections = []
 
-    def register(self, key: str):
+    def register(self, key: str) -> t.Callable[[t.Callable[[], str]], t.Callable[[], str]]:
         """
         Registers a section-rendering function under a specific key.
 
