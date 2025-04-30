@@ -11,7 +11,7 @@ from importlib.resources import files
 from .. import dataio, modeling
 from ..configs.pdp import PDPProjectConfig
 
-# relative imports in 'reporting' module 
+# relative imports in 'reporting' module
 from .sections import register_sections
 from .sections.registry import SectionRegistry
 from .utils import utils
@@ -129,7 +129,7 @@ class ModelCard:
         institution name, and the current year.
 
         Returns: 
-            A dictionary with the keys as the variable names that will be called 
+            A dictionary with the keys as the variable names that will be called
             dynamically in template with values for each variable.
         """
         return {
@@ -149,7 +149,7 @@ class ModelCard:
         from the config file. 
 
         Returns:
-            A dictionary with the keys as the variable names that will be called 
+            A dictionary with the keys as the variable names that will be called
             dynamically in template with values for each variable.
         """
         feature_count = len(self.model.named_steps["column_selector"].get_params()["cols"])
@@ -167,7 +167,7 @@ class ModelCard:
         These will later be rendered in the template. 
         
         Returns: 
-            A dictionary with the keys as the plot names called in the template 
+            A dictionary with the keys as the plot names called in the template
             and the values are inline HTML (since these are all images) for each
             of the artifacts.
         """
@@ -200,7 +200,7 @@ class ModelCard:
         with open(self.output_path, "w") as file:
             file.write(filled)
         LOGGER.info("✅ Model card generated!")
-    
+
     def _extract_model_name(self, uc_model_name: str) -> str:
         """
         Extracts model name from unity catalog model name.

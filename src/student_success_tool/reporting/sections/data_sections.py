@@ -30,4 +30,4 @@ def register_data_sections(card, registry):
             ])
         else:
             LOGGER.warning("Unable to produce data split table. No splits found in config.")
-            return f"{card.format.bold('Could not parse data split')}"    
+            return f"{card.format.bold('Could not parse data split')}"

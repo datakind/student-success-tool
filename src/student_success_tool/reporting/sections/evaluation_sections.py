@@ -9,7 +9,7 @@ LOGGER = logging.getLogger(__name__)
 def register_evaluation_sections(card, registry):
     """
     Register evaluation metrics for each group. These metrics include both performance and bias.
-    We assume all necessary formatting in terms of rows and columns of the table is done in the 
+    We assume all necessary formatting in terms of rows and columns of the table is done in the
     mlflow artifact.
     """
     evaluation_sections = [f"{card.format.header_level(4)}Evaluation Metrics by Student Group\n"]
@@ -17,14 +17,14 @@ def register_evaluation_sections(card, registry):
 
     def make_group_metric_table(path: str, title: str) -> t.Callable[[], str]:
         """
-        This method is used for dynamic section registration based on the number 
+        This method is used for dynamic section registration based on the number
         of student groups. Later, the registry will render all of these functions to create
         tables for all of our student groups.
 
         Args:
             path: Artifact path to the csv file containing the evaluation metrics.
             title: Title of the group.
-        
+
         Returns:
             A function that returns a markdown table of the evaluation metrics for a group.
         """
