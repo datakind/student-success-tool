@@ -3,10 +3,10 @@ import typing as t
 
 LOGGER = logging.getLogger(__name__)
 
-def register_attribute_sections(card, registry):    
+def register_attribute_sections(card, registry):
     """
     Registers all attributes or characteristics of a model such as its outcome,
-    checkpoint, and target population. All of this information is gathered from the model's 
+    checkpoint, and target population. All of this information is gathered from the model's
     config.toml file.
     """
     @registry.register("outcome_section")
@@ -77,11 +77,11 @@ def register_attribute_sections(card, registry):
     @registry.register("target_population_section")
     def target_population():
         """
-        Produce a section for the target population. This method does a rough cleaning of 
-        turning underscores into spaces and capitalizing the first letter of each word. This 
+        Produce a section for the target population. This method does a rough cleaning of
+        turning underscores into spaces and capitalizing the first letter of each word. This
         will need to later be refined to support both PDP and custom institutions well.
 
-        TODO: Create an alias for column names. Custom schools will need to create their 
+        TODO: Create an alias for column names. Custom schools will need to create their
         own alias and feed it into the ModelCard as an attribute.
         """
         criteria = card.cfg.preprocessing.selection.student_criteria
@@ -109,13 +109,14 @@ def register_attribute_sections(card, registry):
             "\n".join(lines)
         )
         return description
-    
-    # TODO: Right now there are no standards in the config for the checkpoint section. 
+
+
+    # TODO: Right now there are no standards in the config for the checkpoint section.
     # HACK: This section assumes certain standards in the config.
     @registry.register("checkpoint_section")
     def checkpoint():
         """
-        Produce a section for the checkpoint. This method does a rough cleaning of 
+        Produce a section for the checkpoint. This method does a rough cleaning of
         turning underscores into spaces for semester or term checkpoints. We assume the
         checkpoint name has semester, term, or credit information.
         """

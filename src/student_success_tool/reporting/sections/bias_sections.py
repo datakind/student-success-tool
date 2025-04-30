@@ -8,7 +8,7 @@ LOGGER = logging.getLogger(__name__)
 
 def register_bias_sections(card, registry):
     """
-    Registers the bias section of the model card with FNR group plots and 
+    Registers the bias section of the model card with FNR group plots and
     subgroup disparity summaries. We focus on test data specifically for our reporting.
     
     This information is gathered from mlflow artifacts.
@@ -19,7 +19,7 @@ def register_bias_sections(card, registry):
 
     def generate_description(group: str, subgroups: str, diff: str, stat_summary: str) -> str:
         """
-        Filters description for a given bias flag under 'bias_flags' directory in mlflow run 
+        Filters description for a given bias flag under 'bias_flags' directory in mlflow run
         artifacts. The FNR difference will be multiplied by 100 to represent a percentage and
         then rounded to an integer.
 
@@ -116,6 +116,6 @@ def register_bias_sections(card, registry):
         if not all_blocks:
             LOGGER.warning("No disparities found or bias evaluation artifacts missing. Skipping bias summary section.")
             return f"{card.format.italic('No statistically significant disparities were found on test dataset across groups.')}"
-        
+
         section_header = f"{card.format.header_level(4)}Disparities by Student Group\n\n"
         return section_header + "\n\n".join(all_blocks)

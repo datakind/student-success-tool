@@ -51,7 +51,7 @@ def download_static_asset(
     """
     Downloads static asset from local folder and returns the path. This method
     does not use mlflow and is not associated with an mlflow run. This method
-    can be used for images, csv, and other files. We primarily utilize this 
+    can be used for images, csv, and other files. We primarily utilize this
     method to download the DataKind logo and this can be used for any static
     assets that will go in all model cards.
 
@@ -79,7 +79,7 @@ def download_static_asset(
 def embed_image(
     description: str,
     local_path: t.Optional[str | pathlib.Path],
-    width: t.Optional[int | None] = 400
+    width: t.Optional[int | None] = 400,
 ) -> str:
     """
     Embeds image in markdown by returning inline HTML to accomodate for flexibility with
@@ -97,15 +97,16 @@ def embed_image(
     rel_path = os.path.relpath(local_path_str, start=os.getcwd())
     return f'<img src="{rel_path}" alt="{description}" width="{width}">'
 
+
 def list_paths_in_directory(run_id: str, directory: str) -> t.List[str]:
     """
     List all artifact paths inside a specific directory for a run_id.
     Only retrieves immediate contents (non-recursive).
-    
+
     Args:
         run_id: The MLflow run ID.
         directory: The subfolder path (relative to run root).
-        
+
     Returns:
         List[str]: A list of file or subfolder paths (relative to run root).
     """
