@@ -95,14 +95,14 @@ class ModelCard:
                         local_folder=self.assets_folder
                     ),
             "institution_name": self.cfg.institution_name,
-            "current_year": datetime.now().year,
+            "current_year": str(datetime.now().year),
         }
 
     def get_feature_metadata(self) -> dict[str, str]:
         feature_count = len(self.model.named_steps["column_selector"].get_params()["cols"])
         fs_cfg = self.cfg.modeling.feature_selection
         return {
-            "number_of_features": feature_count,
+            "number_of_features": str(feature_count),
             "collinearity_threshold": fs_cfg.collinear_threshold,
             "low_variance_threshold": fs_cfg.low_variance_threshold,
             "incomplete_threshold": fs_cfg.incomplete_threshold,
@@ -136,17 +136,17 @@ class ModelCard:
             file.write(filled)
         LOGGER.info("✅ Model card generated!")
     
-    def _extract_model_name(self, uc_model_name) -> str:
+    def _extract_model_name(self, uc_model_name: str) -> str:
         return uc_model_name.split('.')[-1]
 
     def _build_output_path(self) -> str:
         filename = f"model-card-{self.model_name}.md"
         return os.path.join(os.getcwd(), filename)
 
-    def _resolve_template(self, filename) -> importlib.abc.Traversable:
+    def _resolve_template(self, filename: str) -> importlib.abc.Traversable:
         return files("student_success_tool.reporting.template").joinpath(filename)
 
-    def _resolve_asset(self, filename) -> importlib.abc.Traversable:
+    def _resolve_asset(self, filename: str) -> importlib.abc.Traversable:
         return files("student_success_tool.reporting.template.assets").joinpath(filename)
 
     def _register_sections(self):
