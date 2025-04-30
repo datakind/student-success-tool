@@ -4,7 +4,7 @@ import logging
 import typing as t
 from mlflow.tracking import MlflowClient
 from datetime import datetime
-frp, importlib.abc import Traversable
+from importlib.abc import Traversable
 from importlib.resources import files
 
 # internal SST modules
