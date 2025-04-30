@@ -22,8 +22,8 @@ def register_bias_sections(card, registry):
         percent_higher = card.format.bold(f"{int(round(float(diff) * 100))}% higher")
 
         return (
-            f"{card.format.indent_level(2)}- {sg1} students have a {percent_higher} False Negative Rate (FNR) than {sg2} students. "
-            f"{card.format.indent_level(2)}- Statistical analysis indicates: {stat_summary}."
+            f"{card.format.indent_level(2)}- {sg1} students have a {percent_higher} False Negative Rate (FNR) than {sg2} students.\n"
+            f"{card.format.indent_level(2)}- Statistical analysis indicates: {stat_summary}.\n"
         )
 
 
@@ -74,7 +74,7 @@ def register_bias_sections(card, registry):
                 LOGGER.warning(f"Could not load plot for {group_name}: {str(e)}")
                 plot_md = "*Plot not available.*\n\n"
 
-            block = f"{card.format.indent_level(1)}{group_name.replace('_', ' ').title()}\n\n"
+            block = f"- {card.format.indent_level(1)}{group_name.replace('_', ' ').title()}\n\n"
             block += f"{description}\n\n"
             block += plot_md
             all_blocks.append(block)
