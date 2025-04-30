@@ -129,7 +129,7 @@ def register_attribute_sections(card, registry):
         elif "semester" in checkpoint_name or "term" in checkpoint_name:
             # Try to extract a label from the name (e.g., "first_semester" → "First semester")
             friendly_label = checkpoint_name.replace("_", " ")
-            return f"The model makes this prediction when the student has completed {card.format.bold(f'{friendly_label}'}."
+            return f"The model makes this prediction when the student has completed {card.format.bold(f'{friendly_label}')}."
         else:
             LOGGER.warning("Unable to determine checkpoint information. Please specify in model card or in config.toml.")
             return f"{card.format.bold('Checkpoint Information Not Found')}"
