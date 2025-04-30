@@ -43,7 +43,7 @@ class ModelCard:
         self.client = MlflowClient()
         self.section_registry = SectionRegistry()
         self.format = Formatting()
-        self.context: dict[str, Any] = {}
+        self.context: dict[str, t.Any] = {}
 
         self.assets_folder = assets_path or self.DEFAULT_ASSETS_FOLDER
         self.output_path = self._build_output_path()
@@ -72,9 +72,18 @@ class ModelCard:
     def load_model(self):
         """
         Loads the MLflow model from the MLflow client based on the MLflow model URI.
-        Also, assigns the run id and experiment id from the config.
+        Also assigns the run ID and experiment ID from the config.
         """
-        model_cfg = self.cfg.models[self.model_name]
+        model_cfg = self.cfg.models.get(self.model_name)
+        if not model_cfg:
+            raise ValueError(f"Model configuration for '{self.model_name}' is missing.")
+
+        if not all([model_cfg.mlflow_model_uri, model_cfg.run_id, model_cfg.experiment_id]):
+            raise ValueError(
+                f"Incomplete model config for '{self.model_name}': "
+                f"URI, run_id, or experiment_id missing."
+            )
+
         self.model = dataio.models.load_mlflow_model(
             model_cfg.mlflow_model_uri,
             model_cfg.framework,
@@ -164,11 +173,16 @@ class ModelCard:
         feature_count = len(
             self.model.named_steps["column_selector"].get_params()["cols"]
         )
+        if not self.cfg.modeling.feature_selection:
+            raise ValueError("Missing feature selection criteria in config. This is a necessary section for the model card.")
+        
+        fs_cfg = self.cfg.modeling.feature_selection
+
         return {
             "number_of_features": str(feature_count),
-            "collinearity_threshold": str(self.cfg.modeling.feature_selection.collinear_threshold),
-            "low_variance_threshold": str(self.cfg.modeling.feature_selection.low_variance_threshold),
-            "incomplete_threshold": str(self.cfg.modeling.feature_selection.incomplete_threshold),
+            "collinearity_threshold": str(fs_cfg.collinear_threshold),
+            "low_variance_threshold": str(fs_cfg.low_variance_threshold),
+            "incomplete_threshold": str(fs_cfg.incomplete_threshold),
         }
 
 
