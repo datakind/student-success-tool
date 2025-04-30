@@ -1,5 +1,6 @@
 import typing as t
 
+
 class SectionRegistry:
     """
     Collects and manages all registered model card sections.
@@ -8,10 +9,14 @@ class SectionRegistry:
     keys (e.g., "outcome_section") and later rendered into a markdown-friendly format. This
     design supports modularity, scale, and unit testing of individual sections.
     """
+
     def __init__(self):
         self._sections = []
 
-    def register(self, key: str) -> t.Callable[[t.Callable[[], str]], t.Callable[[], str]]:
+    def register(
+        self,
+        key: str,
+    ) -> t.Callable[[t.Callable[[], str]], t.Callable[[], str]]:
         """
         Registers a section-rendering function under a specific key.
 
@@ -25,9 +30,11 @@ class SectionRegistry:
         Returns:
             A decorator that registers the section-generating function.
         """
+
         def decorator(fn: t.Callable[[], str]) -> t.Callable[[], str]:
             self._sections.append((key, fn))
             return fn
+
         return decorator
 
     def render_all(self) -> dict[str, str]:

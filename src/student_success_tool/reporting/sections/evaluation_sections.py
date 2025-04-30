@@ -12,8 +12,12 @@ def register_evaluation_sections(card, registry):
     We assume all necessary formatting in terms of rows and columns of the table is done in the
     mlflow artifact.
     """
-    evaluation_sections = [f"{card.format.header_level(4)}Evaluation Metrics by Student Group\n"]
-    group_eval_artifacts = utils.list_paths_in_directory(run_id=card.run_id, directory='group_metrics')
+    evaluation_sections = [
+        f"{card.format.header_level(4)}Evaluation Metrics by Student Group\n"
+    ]
+    group_eval_artifacts = utils.list_paths_in_directory(
+        run_id=card.run_id, directory='group_metrics'
+    )
 
     def make_group_metric_table(path: str, title: str) -> t.Callable[[], str]:
         """
@@ -28,6 +32,7 @@ def register_evaluation_sections(card, registry):
         Returns:
             A function that returns a markdown table of the evaluation metrics for a group.
         """
+
         def group_metric_table():
             try:
                 local_path = utils.download_artifact(
@@ -42,16 +47,25 @@ def register_evaluation_sections(card, registry):
                 separator = "| " + " | ".join(["---"] * len(df.columns)) + " |"
                 rows = ["| " + " | ".join(str(val) for val in row) + " |" for row in df.values]
 
-                return f"{card.format.bold(f'{title} Metrics')}\n\n" + "\n".join([headers, separator] + rows)
+                return f"{card.format.bold(f'{title} Metrics')}\n\n" + "\n".join(
+                    [headers, separator] + rows
+                )
 
             except Exception as e:
-                LOGGER.warning(f"Could not load evaluation metrics for {title}: {str(e)}")
+                LOGGER.warning(
+                    f"Could not load evaluation metrics for {title}: {str(e)}"
+                )
                 return f"{card.format.bold(f'{title} Metrics')}\n\nCould not load data."
+
         return group_metric_table
 
     for csv_path in group_eval_artifacts:
-        if csv_path.startswith("group_metrics/test_") and csv_path.endswith("_metrics.csv"):
-            group_name = csv_path.replace("group_metrics/test_", "").replace("_metrics.csv", "")
+        if csv_path.startswith("group_metrics/test_") and csv_path.endswith(
+            "_metrics.csv"
+        ):
+            group_name = (
+                csv_path.replace("group_metrics/test_", "").replace("_metrics.csv", "")
+            )
             group_title = group_name.replace("_", " ").title()
 
             group_table_func = make_group_metric_table(csv_path, group_title)
