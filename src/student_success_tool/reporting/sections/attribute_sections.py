@@ -1,6 +1,14 @@
-def register_attribute_sections(card, registry):    
+import logging
+import typing as t
+
+from ..model_card import ModelCard
+from .registry import SectionRegistry
+
+LOGGER = logging.getLogger(__name__)
+
+def register_attribute_sections(card: ModelCard, registry: SectionRegistry):    
     """
-    This method registers all attributes or characteristics of a model such as its outcome,
+    Registers all attributes or characteristics of a model such as its outcome,
     checkpoint, and target population. All of this information is gathered from the model's 
     config.toml file.
     """
@@ -16,21 +24,30 @@ def register_attribute_sections(card, registry):
         limits = card.cfg.preprocessing.selection.intensity_time_limits
 
         if not name or not limits:
-            return f"{card.format.indent_level(1)}- NOTE TO DATA SCIENTIST: Cannot detect target information. Please specify in model card."
+            LOGGER.warning("Unable to determine target or time limit for outcome information. Please specify in model card or in config.toml.")
+            return f"{card.format.bold('Target or Time Limit Information Not Found')}"
 
         if "graduation" in name.lower() or "grad" in name.lower():
             outcome = "graduation"
         elif "retention" in name.lower() or "ret" in name.lower():
             outcome = "retention"
         else:
-            raise NameError("Unable to determine outcome variable from config.")
+            LOGGER.warning("Unable to interpret target variable. Please specify in model card or in config.toml.")
+            return f"{card.format.bold('Target Variable Not Found')}"
 
         # Normalize intensity labels to support flexible formats
         normalized_limits = {
             k.strip().upper().replace(" ", "-"): v for k, v in limits.items()
         }
 
-        def format_time(duration):
+        def format_time(duration: t.Tuple[str, str]):
+            """
+            We want to format a intensity_limit within config.toml by unpacking
+            the value (3.0) and unit ("year"), for example.
+
+            Args:
+                duration: intensity limit in config (3.0, "year"), for example.
+            """
             num, unit = duration
 
             # Format number cleanly
@@ -47,7 +64,8 @@ def register_attribute_sections(card, registry):
         part_time = normalized_limits.get("PART-TIME")
 
         if not full_time:
-            raise ValueError("Full-time duration must be specified in intensity_time_limits.")
+            LOGGER.warning("Unable to determine timeframe of outcome for students. Please specify in model card or in config.toml..")
+            return f"{card.format.bold('Timeframe for Outcome Variable Not Found')}"
 
         full_str = format_time(full_time)
         description = f"The model predicts the risk of {outcome} within {full_str} for full-time students"
@@ -61,6 +79,14 @@ def register_attribute_sections(card, registry):
 
     @registry.register("target_population_section")
     def target_population():
+        """
+        Produce a section for the target population. This method does a rough cleaning of 
+        turning underscores into spaces and capitalizing the first letter of each word. This 
+        will need to later be refined to support both PDP and custom institutions well.
+
+        TODO: Create an alias for column names. Custom schools will need to create their 
+        own alias and feed it into the ModelCard as an attribute.
+        """
         criteria = card.cfg.preprocessing.selection.student_criteria
 
         if not criteria:
@@ -87,8 +113,26 @@ def register_attribute_sections(card, registry):
         )
         return description
     
+    # TODO: Right now there are no standards in the config for the checkpoint section. 
+    # HACK: This section assumes certain standards in the config.
     @registry.register("checkpoint_section")
     def checkpoint():
-        if "credit" in card.cfg.preprocessing.checkpoint.name: 
-            return card.cfg.preprocessing.checkpoint.params["min_num_credits"]
-        return "ok"
+        """
+        Produce a section for the checkpoint. This method does a rough cleaning of 
+        turning underscores into spaces for semester or term checkpoints. We assume the
+        checkpoint name has semester, term, or credit information.
+        """
+        checkpoint_name = model_card.cfg.preprocessing.checkpoint.name.lower()
+        params = cfg.preprocessing.checkpoint.params
+
+        if "credit" in checkpoint_name:
+            num_credits = params.get("min_num_credits", "X")
+            return f"The model makes this prediction when the student has completed {card.format.bold(f'{num_credits} credits')}**."
+
+        elif "semester" in checkpoint_name or "term" in checkpoint_name:
+            # Try to extract a label from the name (e.g., "first_semester" → "First semester")
+            friendly_label = checkpoint_name.replace("_", " ")
+            return f"The model makes this prediction when the student has completed {card.format.bold(f'{friendly_label}'}."
+        else:
+            LOGGER.warning("Unable to determine checkpoint information. Please specify in model card or in config.toml.")
+            return f"{card.format.bold('Checkpoint Information Not Found')}"

@@ -82,8 +82,6 @@
 
 {bias_summary_section}
 
-### Limitations & Ethical Considerations
-
 ### Important Features
 - **Analyzing Feature Importance**
   - SHAP (Shapley Additive Explanations) is a method based on cooperative game theory that quantifies the contribution of each feature to a model's prediction for an individual instance.

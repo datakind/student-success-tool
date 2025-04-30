@@ -1,14 +1,35 @@
 import logging
+import typing as t
 import pandas as pd
+
 from ..utils import utils
+from ..model_card import ModelCard
+from .registry import SectionRegistry
 
 LOGGER = logging.getLogger(__name__)
 
-def register_evaluation_sections(card, registry):
+def register_evaluation_sections(card: ModelCard, registry: SectionRegistry):
+    """
+    Register evaluation metrics for each group. These metrics include both performance and bias.
+    We assume all necessary formatting in terms of rows and columns of the table is done in the 
+    mlflow artifact.
+    """
     evaluation_sections = [f"{card.format.header_level(4)}Evaluation Metrics by Student Group\n"]
     group_eval_artifacts = utils.list_paths_in_directory(run_id=card.run_id, directory='group_metrics')
 
-    def make_group_metric_table(path, title):
+    def make_group_metric_table(path: str, title: str) -> t.Callable[[], str]:
+        """
+        This method is used for dynamic section registration based on the number 
+        of student groups. Later, the registry will render all of these functions to create
+        tables for all of our student groups.
+
+        Args:
+            path: Artifact path to the csv file containing the evaluation metrics.
+            title: Title of the group.
+        
+        Returns:
+            A function that returns a markdown table of the evaluation metrics for a group.
+        """
         def group_metric_table():
             try:
                 local_path = utils.download_artifact(
@@ -41,6 +62,9 @@ def register_evaluation_sections(card, registry):
 
     @registry.register("evaluation_by_group_section")
     def evaluation_section():
+        """
+        Returns the evaluation metrics section for the model card.
+        """
         if not evaluation_sections:
-            return "No group evaluation metrics available."
+            return f"{card.format.bold('No group evaluation metrics available')}."
         return "\n\n".join(evaluation_sections)
