@@ -3,12 +3,10 @@ import logging
 import pandas as pd
 
 from ..utils import utils
-from ..model_card import ModelCard
-from .registry import SectionRegistry
 
 LOGGER = logging.getLogger(__name__)
 
-def register_bias_sections(card: ModelCard, registry: SectionRegistry):
+def register_bias_sections(card, registry):
     """
     Registers the bias section of the model card with FNR group plots and 
     subgroup disparity summaries. We focus on test data specifically for our reporting.

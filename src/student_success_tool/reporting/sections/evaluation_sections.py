@@ -3,12 +3,10 @@ import typing as t
 import pandas as pd
 
 from ..utils import utils
-from ..model_card import ModelCard
-from .registry import SectionRegistry
 
 LOGGER = logging.getLogger(__name__)
 
-def register_evaluation_sections(card: ModelCard, registry: SectionRegistry):
+def register_evaluation_sections(card, registry):
     """
     Register evaluation metrics for each group. These metrics include both performance and bias.
     We assume all necessary formatting in terms of rows and columns of the table is done in the 
