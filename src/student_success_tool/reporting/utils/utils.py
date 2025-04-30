@@ -19,14 +19,14 @@ def download_artifact(
     returns the path. This method can be used for images, csv, and other files.
 
     Args:
-        run_id (str): MLflow run ID
-        local_folder (str): Local folder to download artifact to
-        artifact_path (str): Path to artifact
-        width (int): Width of image in pixels
-        description (str): Description of the image
+        run_id: MLflow run ID
+        local_folder: Local folder to download artifact to
+        artifact_path: Path to artifact
+        width: Width of image in pixels
+        description: Description of the image
 
     Returns:
-        str: Local path to artifact OR inline HTML string with path information if image
+        Local path to artifact OR inline HTML string with path information if image
     """
     os.makedirs(local_folder, exist_ok=True)
 
@@ -58,13 +58,13 @@ def download_static_asset(
     assets that will go in all model cards.
 
     Args:
-        description (str): Description of the image
-        static_path (pathlib.Path): Path to static asset
-        width (int): Width of image in pixels
-        local_folder (str): Local folder to download artifact to
+        description: Description of the image
+        static_path: Path to static asset
+        width: Width of image in pixels
+        local_folder: Local folder to download artifact to
 
     Returns:
-        str: Local path to artifact OR inline HTML string with path information if image
+        Local path to artifact OR inline HTML string with path information if image
     """
     os.makedirs(local_folder, exist_ok=True)
 
@@ -88,15 +88,16 @@ def embed_image(
     image size and name.
 
     Args:
-        description (str): Description of the image
-        local_path (str): Path to image
-        width (int): Width of image in pixels
+        description: Description of the image
+        local_path: Path to image
+        width: Width of image in pixels
 
     Returns:
         str: inline HTML string to be embedded in markdown
     """
-    return f'<img src="{os.path.relpath(local_path, start=os.getcwd())}" alt="{description}" width="{width}">'
-
+    local_path_str = str(local_path)
+    rel_path = os.path.relpath(local_path_str, start=os.getcwd())
+    return f'<img src="{rel_path}" alt="{description}" width="{width}">'
 
 def list_paths_in_directory(run_id: str, directory: str) -> t.List[str]:
     """
@@ -104,8 +105,8 @@ def list_paths_in_directory(run_id: str, directory: str) -> t.List[str]:
     Only retrieves immediate contents (non-recursive).
     
     Args:
-        run_id (str): The MLflow run ID.
-        directory (str): The subfolder path (relative to run root).
+        run_id: The MLflow run ID.
+        directory: The subfolder path (relative to run root).
         
     Returns:
         List[str]: A list of file or subfolder paths (relative to run root).

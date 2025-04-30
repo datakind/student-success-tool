@@ -62,7 +62,7 @@ def register_bias_sections(card, registry):
             plot_artifact_path = f"fnr_plots/test_{normalized_name}_fnr.png"
 
             try:
-                plot_md = utils.safe_mlflow_download_artifacts(
+                plot_md = utils.download_artifact(
                     run_id=card.run_id,
                     local_folder=card.assets_folder,
                     artifact_path=plot_artifact_path,
