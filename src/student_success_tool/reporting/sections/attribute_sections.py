@@ -1,6 +1,17 @@
 def register_attribute_sections(card, registry):    
+    """
+    This method registers all attributes or characteristics of a model such as its outcome,
+    checkpoint, and target population. All of this information is gathered from the model's 
+    config.toml file.
+    """
     @registry.register("outcome_section")
     def outcome():
+        """
+        Produce section for outcome variable based on config target definition. If target from
+        config does not explicitly state "graduation", "grad", "retention", or "ret", this method
+        will raise an error. The assumption is that only a graduation or retention model is in scope
+        with the SST.
+        """
         name = card.cfg.preprocessing.target.name
         limits = card.cfg.preprocessing.selection.intensity_time_limits
 
