@@ -37,7 +37,7 @@ def register_attribute_sections(card, registry):
             k.strip().upper().replace(" ", "-"): v for k, v in limits.items()
         }
 
-        def format_time(duration: t.Tuple[str, str]):
+        def format_time(duration: t.Tuple[str, str]) -> str:
             """
             We want to format a intensity_limit within config.toml by unpacking
             the value (3.0) and unit ("year"), for example.
@@ -120,7 +120,7 @@ def register_attribute_sections(card, registry):
         turning underscores into spaces for semester or term checkpoints. We assume the
         checkpoint name has semester, term, or credit information.
         """
-        checkpoint_name = model_card.cfg.preprocessing.checkpoint.name.lower()
+        checkpoint_name = card.cfg.preprocessing.checkpoint.name.lower()
         params = cfg.preprocessing.checkpoint.params
 
         if "credit" in checkpoint_name:

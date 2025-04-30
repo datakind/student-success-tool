@@ -3,7 +3,7 @@ import shutil
 import typing as t
 import mlflow
 import pathlib
-
+from importlib.abc import Traversable
 
 def download_artifact(
     run_id: str,
@@ -44,7 +44,7 @@ def download_artifact(
 
 def download_static_asset(
     description: str,
-    static_path: pathlib.Path,
+    static_path: Traversable,
     width: int,
     local_folder: str,
 ) -> str:

@@ -4,7 +4,7 @@ import logging
 import typing as t
 from mlflow.tracking import MlflowClient
 from datetime import datetime
-import importlib.abc
+frp, importlib.abc import Traversable
 from importlib.resources import files
 
 # internal SST modules
@@ -18,6 +18,7 @@ from .utils import utils
 from .utils.formatting import Formatting
 
 LOGGER = logging.getLogger(__name__)
+
 
 class ModelCard:
     DEFAULT_ASSETS_FOLDER = "card_assets"
@@ -42,12 +43,13 @@ class ModelCard:
         self.client = MlflowClient()
         self.section_registry = SectionRegistry()
         self.format = Formatting()
-        self.context = {}
+        self.context: dict[str, Any] = {}
 
         self.assets_folder = assets_path or self.DEFAULT_ASSETS_FOLDER
         self.output_path = self._build_output_path()
         self.template_path = self._resolve_template(self.TEMPLATE_FILENAME)
         self.logo_path = self._resolve_asset(self.LOGO_FILENAME)
+
 
     def build(self):
         """
@@ -66,6 +68,7 @@ class ModelCard:
         self.collect_metadata()
         self.render()
 
+
     def load_model(self):
         """
         Loads the MLflow model from the MLflow client based on the MLflow model URI.
@@ -79,6 +82,7 @@ class ModelCard:
         self.run_id = model_cfg.run_id
         self.experiment_id = model_cfg.experiment_id
 
+
     def find_model_version(self):
         """
         Retrieves the model version from the MLflow client based on the run ID.
@@ -91,11 +95,14 @@ class ModelCard:
         LOGGER.warning(f"Unable to find model version for run id: {self.run_id}")
         self.context["version_number"] = "Unknown"
 
+
     def extract_training_data(self):
         """
         Extracts the training data from the MLflow run utilizing SST internal subpackages (modeling).
         """
-        self.modeling_data = modeling.evaluation.extract_training_data_from_model(self.experiment_id)
+        self.modeling_data = modeling.evaluation.extract_training_data_from_model(
+            self.experiment_id
+        )
         self.training_data = self.modeling_data
         if self.cfg.split_col:
             self.training_data = self.modeling_data[
@@ -106,11 +113,12 @@ class ModelCard:
             experiment_ids=[self.experiment_id]
         ).shape[0]
 
+
     def collect_metadata(self):
         """
         Gathers all metadata for the model card. All of this data is dynamic and will
         depend on the institution and model. This calls functions that retrieves & downloads
-        mlflow artifacts and also retrieves config information. 
+        mlflow artifacts and also retrieves config information.
         """
         metadata_functions = [
             self.get_basic_context,
@@ -128,60 +136,71 @@ class ModelCard:
         Collects "basic" context which instantiates the DataKind logo, the
         institution name, and the current year.
 
-        Returns: 
+        Returns:
             A dictionary with the keys as the variable names that will be called
             dynamically in template with values for each variable.
         """
         return {
             "logo": utils.download_static_asset(
-                        description="Logo",
-                        static_path=self.logo_path,
-                        width=250,
-                        local_folder=self.assets_folder
-                    ),
+                description="Logo",
+                static_path=self.logo_path,
+                width=250,
+                local_folder=self.assets_folder,
+            ),
             "institution_name": self.cfg.institution_name,
             "current_year": str(datetime.now().year),
         }
 
+
     def get_feature_metadata(self) -> dict[str, str]:
         """
         Collects feature count from the MLflow run. Also, collects feature selection data
-        from the config file. 
+        from the config file.
 
         Returns:
             A dictionary with the keys as the variable names that will be called
             dynamically in template with values for each variable.
         """
-        feature_count = len(self.model.named_steps["column_selector"].get_params()["cols"])
-        fs_cfg = self.cfg.modeling.feature_selection
+        feature_count = len(
+            self.model.named_steps["column_selector"].get_params()["cols"]
+        )
         return {
             "number_of_features": str(feature_count),
-            "collinearity_threshold": fs_cfg.collinear_threshold,
-            "low_variance_threshold": fs_cfg.low_variance_threshold,
-            "incomplete_threshold": fs_cfg.incomplete_threshold,
+            "collinearity_threshold": str(self.cfg.modeling.feature_selection.collinear_threshold),
+            "low_variance_threshold": str(self.cfg.modeling.feature_selection.low_variance_threshold),
+            "incomplete_threshold": str(self.cfg.modeling.feature_selection.incomplete_threshold),
         }
+
 
     def get_model_plots(self) -> dict[str, str]:
         """
-        Collects model plots from the MLflow run, downloads them locally.
-        These will later be rendered in the template. 
-        
-        Returns: 
+        Collects model plots from the MLflow run, downloads them locally. These will later be
+        rendered in the template.
+
+        Returns:
             A dictionary with the keys as the plot names called in the template
             and the values are inline HTML (since these are all images) for each
             of the artifacts.
         """
         plots = {
             "model_comparison_plot": ("Model Comparison", "model_comparison.png", 450),
-            "test_calibration_curve": ("Test Calibration Curve", "calibration/test_calibration.png", 475),
+            "test_calibration_curve": (
+                "Test Calibration Curve",
+                "calibration/test_calibration.png",
+                475,
+            ),
             "test_roc_curve": ("Test ROC Curve", "test_roc_curve_plot.png", 500),
             "test_confusion_matrix": ("Test Confusion Matrix", "test_confusion_matrix.png", 425),
             "test_histogram": ("Test Histogram", "preds/test_hist.png", 475),
-            "feature_importances_by_shap_plot": ("Feature Importances", "shap_summary_labeled_dataset_100_ref_rows.png", 500),
+            "feature_importances_by_shap_plot": (
+                "Feature Importances",
+                "shap_summary_labeled_dataset_100_ref_rows.png",
+                500,
+            ),
         }
         return {
             key: utils.download_artifact(
-                run_id=self.run_id, 
+                run_id=self.run_id,
                 description=description,
                 artifact_path=path,
                 width=width,
@@ -189,6 +208,7 @@ class ModelCard:
             )
             for key, (description, path, width) in plots.items()
         }
+
 
     def render(self):
         """
@@ -201,11 +221,13 @@ class ModelCard:
             file.write(filled)
         LOGGER.info("✅ Model card generated!")
 
+
     def _extract_model_name(self, uc_model_name: str) -> str:
         """
         Extracts model name from unity catalog model name.
         """
-        return uc_model_name.split('.')[-1]
+        return uc_model_name.split(".")[-1]
+
 
     def _build_output_path(self) -> str:
         """
@@ -214,14 +236,15 @@ class ModelCard:
         filename = f"model-card-{self.model_name}.md"
         return os.path.join(os.getcwd(), filename)
 
-    def _resolve_template(self, filename: str) -> importlib.abc.Traversable:
+
+    def _resolve_template(self, filename: str) -> Traversable:
         """
         Resolves the template file path using importlib. Importlib is necessary
         since this template exists within the package itself.
         """
         return files("student_success_tool.reporting.template").joinpath(filename)
 
-    def _resolve_asset(self, filename: str) -> importlib.abc.Traversable:
+    def _resolve_asset(self, filename: str) -> Traversable:
         """
         Resolves the asset file path using importlib. Importlib is necessary
         since the asset exists within the package itself.
