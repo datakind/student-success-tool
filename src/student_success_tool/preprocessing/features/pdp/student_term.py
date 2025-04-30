@@ -474,7 +474,7 @@ def equal_cols_by_group(
     grp_cols: list[str],
 ) -> pd.DataFrame:
     """
-    Compute dummy values for all of the num_course features 
+    Compute dummy values for all of the num_course features
 
     Args:
         df
