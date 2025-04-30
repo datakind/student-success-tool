@@ -1,12 +1,9 @@
 import logging
 import typing as t
 
-from ..model_card import ModelCard
-from .registry import SectionRegistry
-
 LOGGER = logging.getLogger(__name__)
 
-def register_attribute_sections(card: ModelCard, registry: SectionRegistry):    
+def register_attribute_sections(card, registry):    
     """
     Registers all attributes or characteristics of a model such as its outcome,
     checkpoint, and target population. All of this information is gathered from the model's 

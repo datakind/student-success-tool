@@ -1,10 +1,8 @@
 import logging 
-from ..model_card import ModelCard
-from .registry import SectionRegistry
 
 LOGGER = logging.getLogger(__name__)
 
-def register_data_sections(card: ModelCard, registry: SectionRegistry):
+def register_data_sections(card, registry):
     """
     Registers sections related to data split and feature tables.
     It does not contain sections relevant to performance or bias. These tables
@@ -31,5 +29,5 @@ def register_data_sections(card: ModelCard, registry: SectionRegistry):
                 *rows
             ])
         else:
-            LOGGER.warning(f"Unable to produce data split table. No splits found in config.")
+            LOGGER.warning("Unable to produce data split table. No splits found in config.")
             return f"{card.format.bold('Could not parse data split')}"    

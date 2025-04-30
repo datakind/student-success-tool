@@ -1,12 +1,4 @@
-import logging
-import typing as t
-import pandas as pd
-
-from ..utils import utils
-from ..model_card import ModelCard
-from .registry import SectionRegistry
-
-def register_metric_sections(card: ModelCard, registry: SectionRegistry):
+def register_metric_sections(card, registry):
     """
     Registers metric sections for a model, specifically the training metric and sample weights.
     If sample weights are not used, then that particular section is skipped.
