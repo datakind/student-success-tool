@@ -1,28 +1,51 @@
 import os
 import logging
 import pandas as pd
+
 from ..utils import utils
+from ..model_card import ModelCard
+from .registry import SectionRegistry
 
 LOGGER = logging.getLogger(__name__)
 
-def register_bias_sections(card, registry):
+def register_bias_sections(card: ModelCard, registry: SectionRegistry):
+    """
+    Registers the bias section of the model card with FNR group plots and 
+    subgroup disparity summaries. We focus on test data specifically for our reporting.
+    
+    This information is gathered from mlflow artifacts.
+    """
     bias_levels = ['high', 'moderate', 'low']
     bias_flags = {}
     group_disparities = {}
 
-    def generate_description(group, subgroups, diff, stat_summary):
+    def generate_description(group: str, subgroups: str, diff: str, stat_summary: str) -> str:
+        """
+        Filters description for a given bias flag under 'bias_flags' directory in mlflow run 
+        artifacts. The FNR difference will be multiplied by 100 to represent a percentage and
+        then rounded to an integer.
+
+        Args:
+            group: student group
+            subgroups: student subgroups (e.g. "s1 vs. s2")
+            diff: FNR (False Negative Rate) difference decimal (e.g. "0.1451")
+            stat_summary: statistical summary with confidence interval & p-value information
+        Returns:
+            Description for a given bias flag
+        """
         group_label = group.replace("_", " ").title()
         try:
             subgroup_1, subgroup_2 = [s.strip() for s in subgroups.split("vs")]
         except ValueError:
-            return "Could not parse subgroup comparison."
+            LOGGER.warning(f"Could not parse subgroups for {group}: {subgroups}")
+            return f"{card.format.bold('Could not parse subgroup comparison')}"
 
         sg1 = card.format.bold(card.format.italic(subgroup_1))
         sg2 = card.format.bold(card.format.italic(subgroup_2))
-        percent_higher = card.format.bold(f"{int(round(float(diff) * 100))}% higher")
+        percent_higher = card.format.bold(f"{int(round(float(diff) * 100))}% difference")
 
         return (
-            f"{card.format.indent_level(1)}- {sg1} students have a {percent_higher} False Negative Rate (FNR) than {sg2} students."
+            f"{card.format.indent_level(1)}- {sg1} students have a {percent_higher} in False Negative Rate (FNR) than {sg2} students."
             f"{card.format.indent_level(1)} Statistical analysis indicates: {stat_summary}."
         )
 
@@ -35,10 +58,20 @@ def register_bias_sections(card, registry):
                 local_folder=card.assets_folder,
                 artifact_path=bias_path,
             )
+            if not os.path.exists(local_path):
+                LOGGER.warning(f"{level} bias flags file does not exist. Bias evaluation likely has not run.")
+                continue
+
             df = pd.read_csv(local_path)
 
-            if 'split_name' in df.columns:
-                df = df[df['split_name'] == 'test']
+            if df.empty or 'split_name' not in df.columns:
+                LOGGER.warning(f"{level} bias flags file exists but has no data or missing 'split_name' column.")
+                continue
+
+            df = df[df['split_name'] == 'test']
+            if df.empty:
+                LOGGER.info(f"{level} bias flags file has no rows for test split.")
+                continue
 
             # Group descriptions by group
             for _, row in df.iterrows():
@@ -53,6 +86,7 @@ def register_bias_sections(card, registry):
 
         except Exception as e:
             LOGGER.warning(f"Could not load {level} bias flags: {str(e)}")
+
 
     all_blocks = []
 
@@ -70,7 +104,7 @@ def register_bias_sections(card, registry):
             )
         except Exception as e:
             LOGGER.warning(f"Could not load plot for {group_name}: {str(e)}")
-            plot_md = "*Plot not available.*\n\n"
+            plot_md = f"{card.format.bold(f'Unable to retrieve plot for {group_name}')}\n"
 
         header = f"{card.format.header_level(5)}{group_name.replace('_', ' ').title()}\n\n"
         text_block = "\n\n".join(descriptions)
@@ -78,8 +112,12 @@ def register_bias_sections(card, registry):
 
     @registry.register("bias_summary_section")
     def bias_summary_section():
+        """
+        Returns a markdown string containing the bias summary section of the model card.
+        """
         if not all_blocks:
-            return "No flagged bias detected in test group evaluations."
-
+            LOGGER.warning("No disparities found or bias evaluation artifacts missing. Skipping bias summary section.")
+            return f"{card.format.italic('No statistically significant disparities were found on test dataset across groups.')}"
+        
         section_header = f"{card.format.header_level(4)}Disparities by Student Group\n\n"
         return section_header + "\n\n".join(all_blocks)

@@ -1,6 +1,7 @@
 import os
 import mlflow
 import logging
+import typing as t
 from mlflow.tracking import MlflowClient
 from datetime import datetime
 import importlib.abc
@@ -8,6 +9,7 @@ from importlib.resources import files
 
 # internal SST modules
 from .. import dataio, modeling
+from ..configs.pdp import PDPProjectConfig
 
 # relative imports in 'reporting' module 
 from .sections import register_sections
@@ -22,10 +24,20 @@ class ModelCard:
     TEMPLATE_FILENAME = "model-card-TEMPLATE.md"
     LOGO_FILENAME = "logo.png"
 
-    def __init__(self, config, uc_model_name, assets_path=None):
+    def __init__(
+        self,
+        config: PDPProjectConfig,
+        uc_model_name: str,
+        assets_path: t.Optional[str] = None,
+    ):
+        """
+        Initializes the ModelCard object with the given config and the model name
+        in unity catalog. If assets_path is not provided, the default assets folder is used.
+        """
         self.cfg = config
         self.uc_model_name = uc_model_name
         self.model_name = self._extract_model_name(uc_model_name)
+        LOGGER.info("Initializing ModelCard for model: %s", self.uc_model_name)
 
         self.client = MlflowClient()
         self.section_registry = SectionRegistry()
@@ -38,6 +50,15 @@ class ModelCard:
         self.logo_path = self._resolve_asset(self.LOGO_FILENAME)
 
     def build(self):
+        """
+        Builds the model card by performing the following steps:
+        1. Loads the MLflow model.
+        2. Finds the model version from the MLflow client based on the run ID.
+        3. Extracts the training data from the MLflow run.
+        4. Registers all sections in the section registry.
+        5. Collects all metadata for the model card.
+        6. Renders the model card using the template and context.
+        """
         self.load_model()
         self.find_model_version()
         self.extract_training_data()
@@ -46,6 +67,10 @@ class ModelCard:
         self.render()
 
     def load_model(self):
+        """
+        Loads the MLflow model from the MLflow client based on the MLflow model URI.
+        Also, assigns the run id and experiment id from the config.
+        """
         model_cfg = self.cfg.models[self.model_name]
         self.model = dataio.models.load_mlflow_model(
             model_cfg.mlflow_model_uri,
@@ -55,14 +80,21 @@ class ModelCard:
         self.experiment_id = model_cfg.experiment_id
 
     def find_model_version(self):
+        """
+        Retrieves the model version from the MLflow client based on the run ID.
+        """
         versions = self.client.search_model_versions(f"name='{self.uc_model_name}'")
         for v in versions:
             if v.run_id == self.run_id:
                 self.context["version_number"] = v.version
                 return
-        raise ValueError(f"No registered model version found for run_id={self.run_id}")
+        LOGGER.warning(f"Unable to find model version for run id: {self.run_id}")
+        self.context["version_number"] = "Unknown"
 
     def extract_training_data(self):
+        """
+        Extracts the training data from the MLflow run utilizing SST internal subpackages (modeling).
+        """
         self.modeling_data = modeling.evaluation.extract_training_data_from_model(self.experiment_id)
         self.training_data = self.modeling_data
         if self.cfg.split_col:
@@ -75,6 +107,11 @@ class ModelCard:
         ).shape[0]
 
     def collect_metadata(self):
+        """
+        Gathers all metadata for the model card. All of this data is dynamic and will
+        depend on the institution and model. This calls functions that retrieves & downloads
+        mlflow artifacts and also retrieves config information. 
+        """
         metadata_functions = [
             self.get_basic_context,
             self.get_feature_metadata,
@@ -87,6 +124,14 @@ class ModelCard:
             self.context.update(func())
 
     def get_basic_context(self) -> dict[str, str]:
+        """
+        Collects "basic" context which instantiates the DataKind logo, the
+        institution name, and the current year.
+
+        Returns: 
+            A dictionary with the keys as the variable names that will be called 
+            dynamically in template with values for each variable.
+        """
         return {
             "logo": utils.download_static_asset(
                         description="Logo",
@@ -99,6 +144,14 @@ class ModelCard:
         }
 
     def get_feature_metadata(self) -> dict[str, str]:
+        """
+        Collects feature count from the MLflow run. Also, collects feature selection data
+        from the config file. 
+
+        Returns:
+            A dictionary with the keys as the variable names that will be called 
+            dynamically in template with values for each variable.
+        """
         feature_count = len(self.model.named_steps["column_selector"].get_params()["cols"])
         fs_cfg = self.cfg.modeling.feature_selection
         return {
@@ -109,6 +162,15 @@ class ModelCard:
         }
 
     def get_model_plots(self) -> dict[str, str]:
+        """
+        Collects model plots from the MLflow run, downloads them locally.
+        These will later be rendered in the template. 
+        
+        Returns: 
+            A dictionary with the keys as the plot names called in the template 
+            and the values are inline HTML (since these are all images) for each
+            of the artifacts.
+        """
         plots = {
             "model_comparison_plot": ("Model Comparison", "model_comparison.png", 450),
             "test_calibration_curve": ("Test Calibration Curve", "calibration/test_calibration.png", 475),
@@ -129,6 +191,9 @@ class ModelCard:
         }
 
     def render(self):
+        """
+        Renders the model card using the template and context data.
+        """
         with open(self.template_path, "r") as file:
             template = file.read()
         filled = template.format(**self.context)
@@ -137,19 +202,36 @@ class ModelCard:
         LOGGER.info("✅ Model card generated!")
     
     def _extract_model_name(self, uc_model_name: str) -> str:
+        """
+        Extracts model name from unity catalog model name.
+        """
         return uc_model_name.split('.')[-1]
 
     def _build_output_path(self) -> str:
+        """
+        Builds the output path for the model card.
+        """
         filename = f"model-card-{self.model_name}.md"
         return os.path.join(os.getcwd(), filename)
 
     def _resolve_template(self, filename: str) -> importlib.abc.Traversable:
+        """
+        Resolves the template file path using importlib. Importlib is necessary
+        since this template exists within the package itself.
+        """
         return files("student_success_tool.reporting.template").joinpath(filename)
 
     def _resolve_asset(self, filename: str) -> importlib.abc.Traversable:
+        """
+        Resolves the asset file path using importlib. Importlib is necessary
+        since the asset exists within the package itself.
+        """
         return files("student_success_tool.reporting.template.assets").joinpath(filename)
 
     def _register_sections(self):
+        """
+        Registers all sections in the section registry.
+        """
         register_sections(self, self.section_registry)
 
 
