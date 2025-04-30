@@ -1,3 +1,4 @@
+import os
 import logging
 import pandas as pd
 from ..utils import utils
@@ -7,7 +8,7 @@ LOGGER = logging.getLogger(__name__)
 def register_bias_sections(card, registry):
     bias_levels = ['high', 'moderate', 'low']
     bias_flags = {}
-    all_blocks = []
+    group_disparities = {}
 
     def generate_description(group, subgroups, diff, stat_summary):
         group_label = group.replace("_", " ").title()
@@ -15,16 +16,15 @@ def register_bias_sections(card, registry):
             subgroup_1, subgroup_2 = [s.strip() for s in subgroups.split("vs")]
         except ValueError:
             return "Could not parse subgroup comparison."
-        
+
         sg1 = card.format.bold(card.format.italic(subgroup_1))
         sg2 = card.format.bold(card.format.italic(subgroup_2))
         percent_higher = card.format.bold(f"{int(round(float(diff) * 100))}% higher")
 
         return (
-            f"{card.format.indent_level(1)}- {sg1} students have a {percent_higher} False Negative Rate (FNR) than {sg2} students.\n"
-            f"{card.format.indent_level(1)}- Statistical analysis indicates: {stat_summary}."
+            f"{card.format.indent_level(1)}- {sg1} students have a {percent_higher} False Negative Rate (FNR) than {sg2} students."
+            f"{card.format.indent_level(1)} Statistical analysis indicates: {stat_summary}."
         )
-
 
     # Load bias flag CSVs and filter for test split
     for level in bias_levels:
@@ -40,43 +40,41 @@ def register_bias_sections(card, registry):
             if 'split_name' in df.columns:
                 df = df[df['split_name'] == 'test']
 
-            bias_flags[level] = df
+            # Group descriptions by group
+            for _, row in df.iterrows():
+                group = row['group']
+                desc = generate_description(
+                    group,
+                    row['subgroups'],
+                    row['fnpr_percentage_difference'],
+                    row['type'],
+                )
+                group_disparities.setdefault(group, []).append(desc)
+
         except Exception as e:
             LOGGER.warning(f"Could not load {level} bias flags: {str(e)}")
-            bias_flags[level] = pd.DataFrame()
 
-    # Build markdown blocks
-    for level in bias_levels:
-        df = bias_flags.get(level, pd.DataFrame())
+    all_blocks = []
 
-        for _, row in df.iterrows():
-            group_name = row['group']
-            subgroups = row['subgroups']
-            fnpr_diff = row['fnpr_percentage_difference']
-            stat_type = row['type']
+    for group_name, descriptions in group_disparities.items():
+        normalized_name = group_name.lower().replace(' ', '_')
+        plot_artifact_path = f"fnr_plots/test_{normalized_name}_fnr.png"
 
-            description = generate_description(group_name, subgroups, fnpr_diff, stat_type)
+        try:
+            plot_md = utils.download_artifact(
+                run_id=card.run_id,
+                local_folder=card.assets_folder,
+                artifact_path=plot_artifact_path,
+                description=f"False Negative Parity Rate for {group_name} on Test Data",
+                width=450
+            )
+        except Exception as e:
+            LOGGER.warning(f"Could not load plot for {group_name}: {str(e)}")
+            plot_md = "*Plot not available.*\n\n"
 
-            # Find plot
-            normalized_name = group_name.lower().replace(' ', '_')
-            plot_artifact_path = f"fnr_plots/test_{normalized_name}_fnr.png"
-
-            try:
-                plot_md = utils.download_artifact(
-                    run_id=card.run_id,
-                    local_folder=card.assets_folder,
-                    artifact_path=plot_artifact_path,
-                    description=f"False Negative Parity Rate for {group_name} on Test Data",
-                    width=450
-                )
-            except Exception as e:
-                LOGGER.warning(f"Could not load plot for {group_name}: {str(e)}")
-                plot_md = "*Plot not available.*\n\n"
-
-            block = f"{card.format.header_level(5)}{group_name.replace('_', ' ').title()}\n\n"
-            block += f"{description}\n\n"
-            block += plot_md
-            all_blocks.append(block)
+        header = f"{card.format.header_level(5)}{group_name.replace('_', ' ').title()}\n\n"
+        text_block = "\n\n".join(descriptions)
+        all_blocks.append(header + text_block + "\n\n" + plot_md)
 
     @registry.register("bias_summary_section")
     def bias_summary_section():
@@ -84,5 +82,4 @@ def register_bias_sections(card, registry):
             return "No flagged bias detected in test group evaluations."
 
         section_header = f"{card.format.header_level(4)}Disparities by Student Group\n\n"
-        
         return section_header + "\n\n".join(all_blocks)
