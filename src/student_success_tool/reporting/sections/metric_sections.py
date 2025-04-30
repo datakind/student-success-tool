@@ -3,6 +3,7 @@ def register_metric_sections(card, registry):
     Registers metric sections for a model, specifically the training metric and sample weights.
     If sample weights are not used, then that particular section is skipped.
     """
+
     @registry.register("primary_metric_section")
     def primary_metric():
         """
@@ -17,7 +18,10 @@ def register_metric_sections(card, registry):
             "f1": f"{card.format.indent_level(1)}- Our primary metric for training was F1-score to balance the trade-off between precision and recall.\n  - A higher F1-score indicates that the model is effectively identifying students in need while minimizing both false positives and false negatives.",
         }
         metric = card.cfg.modeling.training.primary_metric
-        return metric_map.get(metric, f"{card.format.indent_level(1)}- Default metric explanation.")
+        return metric_map.get(
+            metric,
+            f"{card.format.indent_level(1)}- Default metric explanation."
+        )
 
     @registry.register("sample_weight_section")
     def sample_weight():
@@ -26,9 +30,13 @@ def register_metric_sections(card, registry):
         will still print out how many experiments were run but the sample weight details are optional, depending
         on where a column with a substring of "sample_weight" exists in the training data.
         """
-        used_weights = any(col.startswith("sample_weight") for col in card.training_data.columns)
-        sw_note = None if used_weights else f"{card.format.indent_level(1)}- Sample weights were used to stabilize training."
-        mlops_note = (
-            f"{card.format.indent_level(1)}- Utilizing Databricks and AutoML, we initiated an MLOps pipeline for data processing and model experimentation, processing {card.context['num_runs_in_experiment']} different machine-learning models to optimize our model."
+        used_weights = any(
+            col.startswith("sample_weight") for col in card.training_data.columns
         )
+        sw_note = (
+            None
+            if used_weights
+            else f"{card.format.indent_level(1)}- Sample weights were used to stabilize training."
+        )
+        mlops_note = f"{card.format.indent_level(1)}- Utilizing Databricks and AutoML, we initiated an MLOps pipeline for data processing and model experimentation, processing {card.context['num_runs_in_experiment']} different machine-learning models to optimize our model."
         return "\n".join(filter(None, [mlops_note, sw_note]))

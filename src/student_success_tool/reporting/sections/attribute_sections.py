@@ -121,7 +121,7 @@ def register_attribute_sections(card, registry):
         checkpoint name has semester, term, or credit information.
         """
         checkpoint_name = card.cfg.preprocessing.checkpoint.name.lower()
-        params = cfg.preprocessing.checkpoint.params
+        params = card.cfg.preprocessing.checkpoint.params
 
         if "credit" in checkpoint_name:
             num_credits = params.get("min_num_credits", "X")

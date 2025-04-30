@@ -72,7 +72,7 @@ def download_static_asset(
 
     with as_file(static_path) as actual_path:
         shutil.copy(actual_path, dst_path)
-    
+
     if dst_path.lower().endswith((".png", ".jpg", ".jpeg")):
         if description is None:
             description = os.path.basename(dst_path)
