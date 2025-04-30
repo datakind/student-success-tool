@@ -37,9 +37,19 @@ core_terms = ["FALL", "SPRING"]
 key_course_subject_areas = ["24", "51"]
 key_course_ids = ["ENGL101", "MATH101"]
 
-[preprocessing.target]
-params = { min_num_credits_checkin = 30.0, min_num_credits_target = 60.0 }
+[preprocessing.selection]
 student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year_1 = "Bachelor's Degree" }
+intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
+
+[preprocessing.checkpoint]
+name = "30_credits_ckpt"
+params = { min_num_credits = 30.0, num_credits_col = "num_credits_earned_cumsum" }
+
+[preprocessing.target]
+name = "graduation_150pct_time"
+
+[preprocessing.target.params]
+intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
 
 [modeling.feature_selection]
 incomplete_threshold = 0.5
