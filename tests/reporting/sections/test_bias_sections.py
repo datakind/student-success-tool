@@ -25,7 +25,7 @@ def test_register_bias_sections_with_data(mock_download, mock_card, tmp_path):
             "subgroups": ["female vs male"],
             "fnpr_percentage_difference": [0.12],
             "type": ["p < 0.05"],
-            "split_name": ["test"]
+            "split_name": ["test"],
         }
     )
     df.to_csv(bias_csv, index=False)

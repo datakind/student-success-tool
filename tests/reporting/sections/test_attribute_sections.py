@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock
 from student_success_tool.reporting.sections.registry import SectionRegistry
 from student_success_tool.reporting.sections.attribute_sections import (
-    register_attribute_sections
+    register_attribute_sections,
 )
 from student_success_tool.reporting.utils.formatting import Formatting
 
@@ -26,7 +26,8 @@ def test_outcome_graduation_and_full_time_limit(mock_card):
     rendered = registry.render_all()
 
     assert (
-        "graduation within 2 years for full-time students" in rendered["outcome_section"]
+        "graduation within 2 years for full-time students"
+        in rendered["outcome_section"]
     )
     assert "within 3 years for part-time students" in rendered["outcome_section"]
 

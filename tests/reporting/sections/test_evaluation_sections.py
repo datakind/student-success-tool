@@ -3,7 +3,7 @@ import pandas as pd
 from unittest.mock import MagicMock, patch
 from student_success_tool.reporting.sections.registry import SectionRegistry
 from student_success_tool.reporting.sections.evaluation_sections import (
-    register_evaluation_sections
+    register_evaluation_sections,
 )
 from student_success_tool.reporting.utils.formatting import Formatting
 
@@ -28,10 +28,7 @@ def test_register_evaluation_sections_success(
 ):
     # Setup mock CSV file
     csv_path = tmp_path / "test_file.csv"
-    df = pd.DataFrame({
-        "Metric": ["Accuracy", "Recall"],
-        "Value": [0.9, 0.85]
-    })
+    df = pd.DataFrame({"Metric": ["Accuracy", "Recall"], "Value": [0.9, 0.85]})
     df.to_csv(csv_path, index=False)
 
     mock_list_paths.return_value = ["group_metrics/test_gender_metrics.csv"]
@@ -41,7 +38,9 @@ def test_register_evaluation_sections_success(
     register_evaluation_sections(mock_card, registry)
     rendered = registry.render_all()
 
-    assert "Evaluation Metrics by Student Group" in rendered["evaluation_by_group_section"]
+    assert (
+        "Evaluation Metrics by Student Group" in rendered["evaluation_by_group_section"]
+    )
     assert "Gender Metrics" in rendered["evaluation_by_group_section"]
     assert "| Accuracy | 0.9 |" in rendered["evaluation_by_group_section"]
 

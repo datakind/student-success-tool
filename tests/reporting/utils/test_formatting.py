@@ -1,6 +1,7 @@
 import pytest
 from student_success_tool.reporting.utils.formatting import Formatting
 
+
 @pytest.fixture
 def formatter():
     return Formatting()
