@@ -34,7 +34,7 @@ def register_bias_sections(card, registry):
         Returns:
             Description for a given bias flag
         """
-        group_label = group.replace("_", " ").title()
+        group_label = card.format.friendly_case(group)
         try:
             subgroup_1, subgroup_2 = [s.strip() for s in subgroups.split("vs")]
         except ValueError:
@@ -115,7 +115,7 @@ def register_bias_sections(card, registry):
             )
 
         header = (
-            f"{card.format.header_level(5)}{group_name.replace('_', ' ').title()}\n\n"
+            f"{card.format.header_level(5)}{card.format.friendly_case(group_name)}\n\n"
         )
         text_block = "\n\n".join(descriptions)
         all_blocks.append(header + text_block + "\n\n" + plot_md)
