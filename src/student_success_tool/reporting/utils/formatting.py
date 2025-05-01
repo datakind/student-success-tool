@@ -34,7 +34,7 @@ class Formatting:
         """
         return f"_{text}_"
     
-    def friendly_case(text: str, capitalize: bool = True) -> str:
+    def friendly_case(self, text: str, capitalize: bool = True) -> str:
         """
         Converts strings like 'bachelor's degree' or 'full-time' into human-friendly forms,
         preserving hyphens and apostrophes, with optional capitalization.
