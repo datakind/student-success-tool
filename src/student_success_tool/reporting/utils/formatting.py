@@ -1,5 +1,6 @@
 import re
 
+
 class Formatting:
     def __init__(self, base_spaces: int = 2):
         """
@@ -33,7 +34,7 @@ class Formatting:
         Apply Markdown italic formatting to a given text.
         """
         return f"_{text}_"
-    
+
     def friendly_case(self, text: str, capitalize: bool = True) -> str:
         """
         Converts strings like 'bachelor's degree' or 'full-time' into human-friendly forms,
@@ -61,5 +62,3 @@ class Formatting:
         # Regex preserves apostrophes and hyphens
         tokens = re.findall(r"[\w'-]+", text)
         return " ".join(smart_cap(tok) for tok in tokens)
-
-

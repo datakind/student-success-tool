@@ -9,10 +9,7 @@ from student_success_tool.reporting.model_card import ModelCard
 def mock_config():
     cfg = MagicMock()
     cfg.models.get.return_value = MagicMock(
-        mlflow_model_uri="uri",
-        framework="sklearn",
-        run_id="123",
-        experiment_id="456"
+        mlflow_model_uri="uri", framework="sklearn", run_id="123", experiment_id="456"
     )
     cfg.institution_name = "TestInstitution"
     cfg.modeling.feature_selection.collinear_threshold = 0.9
@@ -81,16 +78,24 @@ def test_get_basic_context(mock_datetime, mock_download, mock_config):
 def test_build_calls_all_steps(mock_config):
     card = ModelCard(config=mock_config, uc_model_name="catalog.schema.model_name")
     for method in [
-        "load_model", "find_model_version", "extract_training_data",
-        "_register_sections", "collect_metadata", "render"
+        "load_model",
+        "find_model_version",
+        "extract_training_data",
+        "_register_sections",
+        "collect_metadata",
+        "render",
     ]:
         setattr(card, method, MagicMock())
 
     card.build()
 
     for method in [
-        card.load_model, card.find_model_version, card.extract_training_data,
-        card._register_sections, card.collect_metadata, card.render
+        card.load_model,
+        card.find_model_version,
+        card.extract_training_data,
+        card._register_sections,
+        card.collect_metadata,
+        card.render,
     ]:
         method.assert_called_once()
 
@@ -103,17 +108,16 @@ def test_extract_training_data_with_split_call_load_model(
 ):
     mock_config.split_col = "split"
     df = pd.DataFrame({
-        "feature": [1, 2, 3, 4],
-        "split": ["train", "test", "train", "val"]
+        "feature": [1, 2, 3, 4], "split": ["train", "test", "train", "val"]
     })
     
     mock_extract_data.return_value = df
     mock_search_runs.return_value = pd.DataFrame({"run_id": ["123", "987"]})
-    
+
     card = ModelCard(config=mock_config, uc_model_name="catalog.schema.model_name_name")
     card.load_model()
     card.extract_training_data()
-    
+
     assert card.context["training_dataset_size"] == 2
     assert card.context["num_runs_in_experiment"] == 2
 

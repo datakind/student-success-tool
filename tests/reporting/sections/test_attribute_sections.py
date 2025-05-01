@@ -1,8 +1,11 @@
 import pytest
 from unittest.mock import MagicMock
 from student_success_tool.reporting.sections.registry import SectionRegistry
-from student_success_tool.reporting.sections.attribute_sections import register_attribute_sections
+from student_success_tool.reporting.sections.attribute_sections import (
+    register_attribute_sections
+)
 from student_success_tool.reporting.utils.formatting import Formatting
+
 
 @pytest.fixture
 def mock_card():
@@ -15,14 +18,16 @@ def test_outcome_graduation_and_full_time_limit(mock_card):
     mock_card.cfg.preprocessing.target.name = "graduation"
     mock_card.cfg.preprocessing.selection.intensity_time_limits = {
         "FULL-TIME": (2.0, "year"),
-        "PART-TIME": (3, "year")
+        "PART-TIME": (3, "year"),
     }
 
     registry = SectionRegistry()
     register_attribute_sections(mock_card, registry)
     rendered = registry.render_all()
 
-    assert "graduation within 2 years for full-time students" in rendered["outcome_section"]
+    assert (
+        "graduation within 2 years for full-time students" in rendered["outcome_section"]
+    )
     assert "within 3 years for part-time students" in rendered["outcome_section"]
 
 
@@ -34,13 +39,15 @@ def test_outcome_missing_target_or_limits(mock_card):
     register_attribute_sections(mock_card, registry)
     rendered = registry.render_all()
 
-    assert rendered["outcome_section"] == "**Target or Time Limit Information Not Found**"
+    assert (
+        rendered["outcome_section"] == "**Target or Time Limit Information Not Found**"
+    )
 
 
 def test_target_population_section(mock_card):
     mock_card.cfg.preprocessing.selection.student_criteria = {
         "degree": ["bachelor's", "associate's"],
-        "status": "full-time"
+        "status": "full-time",
     }
 
     registry = SectionRegistry()
@@ -50,7 +57,7 @@ def test_target_population_section(mock_card):
     assert "Degree" in rendered["target_population_section"]
     assert "- Bachelor's" in rendered["target_population_section"]
     assert "- Associate's" in rendered["target_population_section"]
-    assert "Status" in rendered['target_population_section']
+    assert "Status" in rendered["target_population_section"]
     assert "- Full-Time" in rendered["target_population_section"]
 
 
