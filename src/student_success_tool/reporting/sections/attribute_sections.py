@@ -3,12 +3,14 @@ import typing as t
 
 LOGGER = logging.getLogger(__name__)
 
+
 def register_attribute_sections(card, registry):
     """
     Registers all attributes or characteristics of a model such as its outcome,
     checkpoint, and target population. All of this information is gathered from the model's
     config.toml file.
     """
+
     @registry.register("outcome_section")
     def outcome():
         """
@@ -21,7 +23,9 @@ def register_attribute_sections(card, registry):
         limits = card.cfg.preprocessing.selection.intensity_time_limits
 
         if not name or not limits:
-            LOGGER.warning("Unable to determine target or time limit for outcome information. Please specify in model card or in config.toml.")
+            LOGGER.warning(
+                "Unable to determine target or time limit for outcome information. Please specify in model card or in config.toml."
+            )
             return f"{card.format.bold('Target or Time Limit Information Not Found')}"
 
         if "graduation" in name.lower() or "grad" in name.lower():
@@ -29,7 +33,9 @@ def register_attribute_sections(card, registry):
         elif "retention" in name.lower() or "ret" in name.lower():
             outcome = "retention"
         else:
-            LOGGER.warning("Unable to interpret target variable. Please specify in model card or in config.toml.")
+            LOGGER.warning(
+                "Unable to interpret target variable. Please specify in model card or in config.toml."
+            )
             return f"{card.format.bold('Target Variable Not Found')}"
 
         # Normalize intensity labels to support flexible formats
@@ -52,8 +58,10 @@ def register_attribute_sections(card, registry):
                 if num.is_integer():
                     num = int(num)
                 else:
-                    num = round(num, 2)  # Keep at most 1 decimals with no trailing zeros
-  
+                    num = round(
+                        num, 2
+                    )  # Keep at most 1 decimals with no trailing zeros
+
             unit = unit if num == 1 else unit + "s"
             return f"{num} {unit}"
 
@@ -61,7 +69,9 @@ def register_attribute_sections(card, registry):
         part_time = normalized_limits.get("PART-TIME")
 
         if not full_time:
-            LOGGER.warning("Unable to determine timeframe of outcome for students. Please specify in model card or in config.toml..")
+            LOGGER.warning(
+                "Unable to determine timeframe of outcome for students. Please specify in model card or in config.toml."
+            )
             return f"{card.format.bold('Timeframe for Outcome Variable Not Found')}"
 
         full_str = format_time(full_time)
@@ -132,5 +142,7 @@ def register_attribute_sections(card, registry):
             friendly_label = checkpoint_name.replace("_", " ")
             return f"The model makes this prediction when the student has completed {card.format.bold(f'{friendly_label}')}."
         else:
-            LOGGER.warning("Unable to determine checkpoint information. Please specify in model card or in config.toml.")
+            LOGGER.warning(
+                "Unable to determine checkpoint information. Please specify in model card or in config.toml."
+            )
             return f"{card.format.bold('Checkpoint Information Not Found')}"

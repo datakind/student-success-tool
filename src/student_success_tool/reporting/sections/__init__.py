@@ -4,6 +4,7 @@ from .data_sections import register_data_sections
 from .evaluation_sections import register_evaluation_sections
 from .bias_sections import register_bias_sections
 
+
 def register_sections(card, registry):
     register_metric_sections(card, registry)
     register_attribute_sections(card, registry)
