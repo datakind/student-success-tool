@@ -6,6 +6,7 @@ from student_success_tool.reporting.utils.formatting import Formatting
 def formatter():
     return Formatting()
 
+
 @pytest.mark.parametrize(
     "input_text,expected",
     [
@@ -20,6 +21,7 @@ def formatter():
 def test_friendly_case_capitalize_true(formatter, input_text, expected):
     result = formatter.friendly_case(input_text)
     assert result == expected
+
 
 @pytest.mark.parametrize(
     "input_text,expected",
