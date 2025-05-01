@@ -59,7 +59,7 @@ class Formatting:
             return text
 
         # Regex preserves apostrophes and hyphens
-        tokens = re.findall(r"[\\w'-]+", text)
+        tokens = re.findall(r"[\w'-]+", text)
         return " ".join(smart_cap(tok) for tok in tokens)
 
 
