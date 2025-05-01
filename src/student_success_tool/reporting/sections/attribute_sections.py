@@ -115,8 +115,8 @@ def register_attribute_sections(card, registry):
                 lines.append(f"{card.format.indent_level(4)}- {v}")
 
         description = (
-            f"{card.format.indent_level(2)}- We focused our final dataset on the following target population:\n" +
-            "\n".join(lines)
+            f"{card.format.indent_level(2)}- We focused our final dataset on the following target population:\n"
+            + "\n".join(lines)
         )
         return description
 

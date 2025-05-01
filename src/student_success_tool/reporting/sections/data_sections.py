@@ -9,6 +9,7 @@ def register_data_sections(card, registry):
     It does not contain sections relevant to performance or bias. These tables
     are gathered from a combination of config.toml and mlflow artifacts.
     """
+
     @registry.register("data_split_table")
     def data_split():
         """
@@ -28,7 +29,7 @@ def register_data_sections(card, registry):
                 [
                     "| Split      | Students | Percentage |",
                     "|------------|----------|------------|",
-                    *rows
+                    *rows,
                 ]
             )
         else:
