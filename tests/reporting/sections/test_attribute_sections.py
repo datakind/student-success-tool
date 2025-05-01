@@ -51,7 +51,7 @@ def test_target_population_section(mock_card):
     assert "- Bachelor's" in rendered["target_population_section"]
     assert "- Associate's" in rendered["target_population_section"]
     assert "Status" in rendered['target_population_section']
-    assert "- Full-time" in rendered["target_population_section"]
+    assert "- Full-Time" in rendered["target_population_section"]
 
 
 def test_checkpoint_section_with_credit(mock_card):

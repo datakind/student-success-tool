@@ -101,7 +101,6 @@ def test_build_calls_all_steps(mock_config):
 def test_extract_training_data_with_split_call_load_model(
     mock_load_model, mock_extract_data, mock_search_runs, mock_config
 ):
-    import pandas as pd
     mock_config.split_col = "split"
     df = pd.DataFrame({
         "feature": [1, 2, 3, 4],
