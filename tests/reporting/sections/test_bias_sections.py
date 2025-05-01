@@ -5,6 +5,7 @@ from student_success_tool.reporting.sections.registry import SectionRegistry
 from student_success_tool.reporting.sections.bias_sections import register_bias_sections
 from student_success_tool.reporting.utils.formatting import Formatting
 
+
 @pytest.fixture
 def mock_card(tmp_path):
     card = MagicMock()
@@ -18,13 +19,15 @@ def mock_card(tmp_path):
 def test_register_bias_sections_with_data(mock_download, mock_card, tmp_path):
     # Create mock bias CSV
     bias_csv = tmp_path / "high_bias_flags.csv"
-    df = pd.DataFrame({
-        "group": ["gender"],
-        "subgroups": ["female vs male"],
-        "fnpr_percentage_difference": [0.12],
-        "type": ["p < 0.05"],
-        "split_name": ["test"]
-    })
+    df = pd.DataFrame(
+        {
+            "group": ["gender"],
+            "subgroups": ["female vs male"],
+            "fnpr_percentage_difference": [0.12],
+            "type": ["p < 0.05"],
+            "split_name": ["test"]
+        }
+    )
     df.to_csv(bias_csv, index=False)
 
     def mock_download_side_effect(run_id, local_folder, artifact_path, **kwargs):
@@ -55,4 +58,6 @@ def test_register_bias_sections_no_data(mock_download, mock_card):
     register_bias_sections(mock_card, registry)
     rendered = registry.render_all()
 
-    assert "No statistically significant disparities were found" in rendered["bias_summary_section"]
+    assert (
+        "No statistically significant disparities were found" in rendered["bias_summary_section"]
+    )

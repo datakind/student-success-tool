@@ -10,7 +10,7 @@ def test_download_artifact_image(mock_download):
         local_folder="tmp",
         artifact_path="images/logo.png",
         width=300,
-        description="Logo"
+        description="Logo",
     )
     assert "<img src=" in result
     assert "alt=\"Logo\"" in result
@@ -32,8 +32,8 @@ def test_embed_image_relative_path(tmp_path):
     test_file.write_text("image content")
     result = utils.embed_image("Test Image", test_file, width=350)
     assert "img src=" in result
-    assert "width=\"350\"" in result
-    assert "alt=\"Test Image\"" in result
+    assert 'width="350"' in result
+    assert 'alt="Test Image"' in result
 
 
 @patch("student_success_tool.reporting.utils.utils.mlflow.artifacts.list_artifacts")

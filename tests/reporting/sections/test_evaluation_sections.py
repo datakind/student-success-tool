@@ -2,8 +2,11 @@ import pytest
 import pandas as pd
 from unittest.mock import MagicMock, patch
 from student_success_tool.reporting.sections.registry import SectionRegistry
-from student_success_tool.reporting.sections.evaluation_sections import register_evaluation_sections
+from student_success_tool.reporting.sections.evaluation_sections import (
+    register_evaluation_sections
+)
 from student_success_tool.reporting.utils.formatting import Formatting
+
 
 @pytest.fixture
 def mock_card(tmp_path):
@@ -14,9 +17,15 @@ def mock_card(tmp_path):
     return card
 
 
-@patch("student_success_tool.reporting.sections.evaluation_sections.utils.list_paths_in_directory")
-@patch("student_success_tool.reporting.sections.evaluation_sections.utils.download_artifact")
-def test_register_evaluation_sections_success(mock_download, mock_list_paths, mock_card, tmp_path):
+@patch(
+    "student_success_tool.reporting.sections.evaluation_sections.utils.list_paths_in_directory"
+)
+@patch(
+    "student_success_tool.reporting.sections.evaluation_sections.utils.download_artifact"
+)
+def test_register_evaluation_sections_success(
+    mock_download, mock_list_paths, mock_card, tmp_path
+):
     # Setup mock CSV file
     csv_path = tmp_path / "test_file.csv"
     df = pd.DataFrame({
@@ -37,9 +46,15 @@ def test_register_evaluation_sections_success(mock_download, mock_list_paths, mo
     assert "| Accuracy | 0.9 |" in rendered["evaluation_by_group_section"]
 
 
-@patch("student_success_tool.reporting.sections.evaluation_sections.utils.list_paths_in_directory")
-@patch("student_success_tool.reporting.sections.evaluation_sections.utils.download_artifact")
-def test_register_evaluation_sections_failure(mock_download, mock_list_paths, mock_card):
+@patch(
+    "student_success_tool.reporting.sections.evaluation_sections.utils.list_paths_in_directory"
+)
+@patch(
+    "student_success_tool.reporting.sections.evaluation_sections.utils.download_artifact"
+)
+def test_register_evaluation_sections_failure(
+    mock_download, mock_list_paths, mock_card
+):
     mock_list_paths.return_value = ["group_metrics/test_race_metrics.csv"]
     mock_download.side_effect = Exception("Download error")
 
