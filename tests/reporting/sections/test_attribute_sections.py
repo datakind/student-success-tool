@@ -48,7 +48,7 @@ def test_target_population_section(mock_card):
     register_attribute_sections(mock_card, registry)
     rendered = registry.render_all()
 
-    assert "College" in rendered["target_population_section"]
+    assert "Degree" in rendered["target_population_section"]
     assert "- Bachelor's" in rendered["target_population_section"]
     assert "- Associate's" in rendered["target_population_section"]
     assert "Status" in rendered['target_population_section']
