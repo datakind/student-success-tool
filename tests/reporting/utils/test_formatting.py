@@ -10,7 +10,7 @@ def formatter():
     ("full-time", "Full-Time"),
     ("associate's-degree", "Associate's-Degree"),
     ("first_generation", "First Generation"),
-    ("1st_semester". "1st Semester")
+    ("1st_semester", "1st Semester")
     ("STEM", "Stem"),  # no acronym preservation
 ])
 def test_friendly_case_capitalize_true(formatter, input_text, expected):
