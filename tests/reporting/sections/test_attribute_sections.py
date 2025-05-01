@@ -2,13 +2,12 @@ import pytest
 from unittest.mock import MagicMock
 from student_success_tool.reporting.sections.registry import SectionRegistry
 from student_success_tool.reporting.sections.attribute_sections import register_attribute_sections
-
+from student_success_tool.reporting.utils.formatting import Formatting
 
 @pytest.fixture
 def mock_card():
     card = MagicMock()
-    card.format.bold.side_effect = lambda x: f"**{x}**"
-    card.format.indent_level.side_effect = lambda level: "  " * level
+    card.format = Formatting()
     return card
 
 
