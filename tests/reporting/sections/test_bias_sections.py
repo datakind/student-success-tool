@@ -59,5 +59,6 @@ def test_register_bias_sections_no_data(mock_download, mock_card):
     rendered = registry.render_all()
 
     assert (
-        "No statistically significant disparities were found" in rendered["bias_summary_section"]
+        "No statistically significant disparities were found"
+        in rendered["bias_summary_section"]
     )
