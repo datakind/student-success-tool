@@ -71,7 +71,7 @@ def register_evaluation_sections(card, registry):
                 "_metrics.csv", ""
             )
 
-            group_title = friendly_case(group_name)
+            group_title = card.format.friendly_case(group_name)
 
             group_table_func = make_group_metric_table(csv_path, group_title)
             registry.register(f"group_metric_table_{group_name}")(group_table_func)
