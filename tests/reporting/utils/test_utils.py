@@ -13,16 +13,14 @@ def test_download_artifact_image(mock_download):
         description="Logo",
     )
     assert "<img src=" in result
-    assert "alt=\"Logo\"" in result
+    assert 'alt="Logo"' in result
 
 
 @patch("student_success_tool.reporting.utils.utils.mlflow.artifacts.download_artifacts")
 def test_download_artifact_file(mock_download):
     mock_download.return_value = "/some/folder/data.csv"
     result = utils.download_artifact(
-        run_id="abc123",
-        local_folder="tmp",
-        artifact_path="data/data.csv"
+        run_id="abc123", local_folder="tmp", artifact_path="data/data.csv"
     )
     assert result == "/some/folder/data.csv"
 
