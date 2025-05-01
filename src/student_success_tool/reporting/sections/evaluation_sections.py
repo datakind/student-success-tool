@@ -68,7 +68,9 @@ def register_evaluation_sections(card, registry):
             "_metrics.csv"
         ):
             group_name = (
-                csv_path.replace("group_metrics/test_", "").replace("_metrics.csv", "")
+                csv_path.replace("group_metrics/test_", "").replace(
+                    "_metrics.csv", ""
+                )
             )
             group_title = group_name.replace("_", " ").title()
 

@@ -43,8 +43,8 @@ def register_bias_sections(card, registry):
 
         sg1 = card.format.bold(card.format.italic(subgroup_1))
         sg2 = card.format.bold(card.format.italic(subgroup_2))
-        percent_higher = (
-            card.format.bold(f"{int(round(float(diff) * 100))}% difference")
+        percent_higher = card.format.bold(
+            f"{int(round(float(diff) * 100))}% difference"
         )
 
         return (

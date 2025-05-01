@@ -74,11 +74,10 @@ class ModelCard:
         """
         model_cfg = self.cfg.models.get(self.model_name)
         if not model_cfg:
-            raise ValueError(
-                f"Model configuration for '{self.model_name}' is missing."
-            )
-
-        if not all([model_cfg.mlflow_model_uri, model_cfg.run_id, model_cfg.experiment_id]):
+            raise ValueError(f"Model configuration for '{self.model_name}' is missing.")
+        if not all(
+            [model_cfg.mlflow_model_uri, model_cfg.run_id, model_cfg.experiment_id]
+        ):
             raise ValueError(
                 f"Incomplete model config for '{self.model_name}': "
                 f"URI, run_id, or experiment_id missing."
@@ -90,7 +89,6 @@ class ModelCard:
         )
         self.run_id = model_cfg.run_id
         self.experiment_id = model_cfg.experiment_id
-
 
     def find_model_version(self):
         """
@@ -174,7 +172,7 @@ class ModelCard:
             raise ValueError(
                 "Modeling configuration or feature selection config is missing."
             )
-        
+
         fs_cfg = self.cfg.modeling.feature_selection
 
         return {
@@ -202,7 +200,11 @@ class ModelCard:
                 475,
             ),
             "test_roc_curve": ("Test ROC Curve", "test_roc_curve_plot.png", 500),
-            "test_confusion_matrix": ("Test Confusion Matrix", "test_confusion_matrix.png", 425),
+            "test_confusion_matrix": (
+                "Test Confusion Matrix",
+                "test_confusion_matrix.png",
+                425,
+            ),
             "test_histogram": ("Test Histogram", "preds/test_hist.png", 475),
             "feature_importances_by_shap_plot": (
                 "Feature Importances",
@@ -216,7 +218,7 @@ class ModelCard:
                 description=description,
                 artifact_path=path,
                 width=width,
-                local_folder=self.assets_folder
+                local_folder=self.assets_folder,
             )
             for key, (description, path, width) in plots.items()
         }
@@ -257,7 +259,9 @@ class ModelCard:
         Resolves the asset file path using importlib. Importlib is necessary
         since the asset exists within the package itself.
         """
-        return files("student_success_tool.reporting.template.assets").joinpath(filename)
+        return files("student_success_tool.reporting.template.assets").joinpath(
+            filename
+        )
 
     def _register_sections(self):
         """
