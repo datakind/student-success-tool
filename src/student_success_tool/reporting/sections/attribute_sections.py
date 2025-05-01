@@ -104,15 +104,14 @@ def register_attribute_sections(card, registry):
 
         lines = []
         for k, v in criteria.items():
-            field = clean_key(k)
-            lines.append(f"{card.format.indent_level(3)}- {field}")
+            lines.append(f"{card.format.indent_level(3)}- {clean_key(field)}")
 
             # Handle if value is a list or a single string
             if isinstance(v, list):
                 for item in v:
-                    lines.append(f"{card.format.indent_level(4)}- {item}")
+                    lines.append(f"{card.format.indent_level(4)}- {clean_key(item)}")
             else:
-                lines.append(f"{card.format.indent_level(4)}- {v}")
+                lines.append(f"{card.format.indent_level(4)}- {clean_key(v)}")
 
         description = (
             f"{card.format.indent_level(2)}- We focused our final dataset on the following target population:\n"
@@ -137,7 +136,6 @@ def register_attribute_sections(card, registry):
             return f"The model makes this prediction when the student has completed {card.format.bold(f'{num_credits} credits')}**."
 
         elif "semester" in checkpoint_name or "term" in checkpoint_name:
-            # Try to extract a label from the name (e.g., "first_semester" → "First semester")
             friendly_label = checkpoint_name.replace("_", " ")
             return f"The model makes this prediction when the student has completed {card.format.bold(f'{friendly_label}')}."
         else:
