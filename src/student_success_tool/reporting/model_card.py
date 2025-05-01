@@ -50,7 +50,6 @@ class ModelCard:
         self.template_path = self._resolve_template(self.TEMPLATE_FILENAME)
         self.logo_path = self._resolve_asset(self.LOGO_FILENAME)
 
-
     def build(self):
         """
         Builds the model card by performing the following steps:
@@ -68,7 +67,6 @@ class ModelCard:
         self.collect_metadata()
         self.render()
 
-
     def load_model(self):
         """
         Loads the MLflow model from the MLflow client based on the MLflow model URI.
@@ -76,7 +74,9 @@ class ModelCard:
         """
         model_cfg = self.cfg.models.get(self.model_name)
         if not model_cfg:
-            raise ValueError(f"Model configuration for '{self.model_name}' is missing.")
+            raise ValueError(
+                f"Model configuration for '{self.model_name}' is missing."
+            )
 
         if not all([model_cfg.mlflow_model_uri, model_cfg.run_id, model_cfg.experiment_id]):
             raise ValueError(
@@ -104,7 +104,6 @@ class ModelCard:
         LOGGER.warning(f"Unable to find model version for run id: {self.run_id}")
         self.context["version_number"] = "Unknown"
 
-
     def extract_training_data(self):
         """
         Extracts the training data from the MLflow run utilizing SST internal subpackages (modeling).
@@ -121,7 +120,6 @@ class ModelCard:
         self.context["num_runs_in_experiment"] = mlflow.search_runs(
             experiment_ids=[self.experiment_id]
         ).shape[0]
-
 
     def collect_metadata(self):
         """
@@ -160,7 +158,6 @@ class ModelCard:
             "current_year": str(datetime.now().year),
         }
 
-
     def get_feature_metadata(self) -> dict[str, str]:
         """
         Collects feature count from the MLflow run. Also, collects feature selection data
@@ -174,7 +171,9 @@ class ModelCard:
             self.model.named_steps["column_selector"].get_params()["cols"]
         )
         if not self.cfg.modeling or not self.cfg.modeling.feature_selection:
-            raise ValueError("Modeling configuration or feature selection config is missing.")
+            raise ValueError(
+                "Modeling configuration or feature selection config is missing."
+            )
         
         fs_cfg = self.cfg.modeling.feature_selection
 
@@ -184,7 +183,6 @@ class ModelCard:
             "low_variance_threshold": str(fs_cfg.low_variance_threshold),
             "incomplete_threshold": str(fs_cfg.incomplete_threshold),
         }
-
 
     def get_model_plots(self) -> dict[str, str]:
         """
@@ -223,7 +221,6 @@ class ModelCard:
             for key, (description, path, width) in plots.items()
         }
 
-
     def render(self):
         """
         Renders the model card using the template and context data.
@@ -235,13 +232,11 @@ class ModelCard:
             file.write(filled)
         LOGGER.info("✅ Model card generated!")
 
-
     def _extract_model_name(self, uc_model_name: str) -> str:
         """
         Extracts model name from unity catalog model name.
         """
         return uc_model_name.split(".")[-1]
-
 
     def _build_output_path(self) -> str:
         """
@@ -249,7 +244,6 @@ class ModelCard:
         """
         filename = f"model-card-{self.model_name}.md"
         return os.path.join(os.getcwd(), filename)
-
 
     def _resolve_template(self, filename: str) -> Traversable:
         """
@@ -270,5 +264,3 @@ class ModelCard:
         Registers all sections in the section registry.
         """
         register_sections(self, self.section_registry)
-
-

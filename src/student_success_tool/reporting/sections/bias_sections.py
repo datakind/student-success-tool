@@ -10,10 +10,10 @@ def register_bias_sections(card, registry):
     """
     Registers the bias section of the model card with FNR group plots and
     subgroup disparity summaries. We focus on test data specifically for our reporting.
-    
+
     This information is gathered from mlflow artifacts.
     """
-    bias_levels = ['high', 'moderate', 'low']
+    bias_levels = ["high", "moderate", "low"]
     bias_flags = {}
     group_disparities = {}
 
