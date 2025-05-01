@@ -101,16 +101,18 @@ def test_build_calls_all_steps(mock_config):
 
 
 @patch("student_success_tool.reporting.model_card.mlflow.search_runs")
-@patch("student_success_tool.reporting.model_card.modeling.evaluation.extract_training_data_from_model")
+@patch(
+    "student_success_tool.reporting.model_card.modeling.evaluation.extract_training_data_from_model"
+)
 @patch("student_success_tool.reporting.model_card.dataio.models.load_mlflow_model")
 def test_extract_training_data_with_split_call_load_model(
     mock_load_model, mock_extract_data, mock_search_runs, mock_config
 ):
     mock_config.split_col = "split"
-    df = pd.DataFrame({
-        "feature": [1, 2, 3, 4], "split": ["train", "test", "train", "val"]
-    })
-    
+    df = pd.DataFrame(
+        {"feature": [1, 2, 3, 4], "split": ["train", "test", "train", "val"]}
+    )
+
     mock_extract_data.return_value = df
     mock_search_runs.return_value = pd.DataFrame({"run_id": ["123", "987"]})
 

@@ -11,6 +11,7 @@ def test_register_and_render_single_section():
     rendered = registry.render_all()
     assert rendered == {"test_section": "This is a test section."}
 
+
 def test_register_and_render_multiple_sections():
     registry = SectionRegistry()
 
