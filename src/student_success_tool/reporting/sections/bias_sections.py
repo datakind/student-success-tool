@@ -6,6 +6,7 @@ from ..utils import utils
 
 LOGGER = logging.getLogger(__name__)
 
+
 def register_bias_sections(card, registry):
     """
     Registers the bias section of the model card with FNR group plots and
@@ -17,7 +18,9 @@ def register_bias_sections(card, registry):
     bias_flags = {}
     group_disparities = {}
 
-    def generate_description(group: str, subgroups: str, diff: str, stat_summary: str) -> str:
+    def generate_description(
+        group: str, subgroups: str, diff: str, stat_summary: str
+    ) -> str:
         """
         Filters description for a given bias flag under 'bias_flags' directory in mlflow run
         artifacts. The FNR difference will be multiplied by 100 to represent a percentage and
@@ -40,7 +43,9 @@ def register_bias_sections(card, registry):
 
         sg1 = card.format.bold(card.format.italic(subgroup_1))
         sg2 = card.format.bold(card.format.italic(subgroup_2))
-        percent_higher = card.format.bold(f"{int(round(float(diff) * 100))}% difference")
+        percent_higher = (
+            card.format.bold(f"{int(round(float(diff) * 100))}% difference")
+        )
 
         return (
             f"{card.format.indent_level(1)}- {sg1} students have a {percent_higher} in False Negative Rate (FNR) than {sg2} students."
@@ -57,39 +62,42 @@ def register_bias_sections(card, registry):
                 artifact_path=bias_path,
             )
             if not os.path.exists(local_path):
-                LOGGER.warning(f"{level} bias flags file does not exist. Bias evaluation likely has not run.")
+                LOGGER.warning(
+                    f"{level} bias flags file does not exist. Bias evaluation likely has not run."
+                )
                 continue
 
             df = pd.read_csv(local_path)
 
-            if df.empty or 'split_name' not in df.columns:
-                LOGGER.warning(f"{level} bias flags file exists but has no data or missing 'split_name' column.")
+            if df.empty or "split_name" not in df.columns:
+                LOGGER.warning(
+                    f"{level} bias flags file exists but has no data or missing 'split_name' column."
+                )
                 continue
 
-            df = df[df['split_name'] == 'test']
+            df = df[df["split_name"] == "test"]
             if df.empty:
                 LOGGER.info(f"{level} bias flags file has no rows for test split.")
                 continue
 
             # Group descriptions by group
             for _, row in df.iterrows():
-                group = row['group']
+                group = row["group"]
                 desc = generate_description(
                     group,
-                    row['subgroups'],
-                    row['fnpr_percentage_difference'],
-                    row['type'],
+                    row["subgroups"],
+                    row["fnpr_percentage_difference"],
+                    row["type"],
                 )
                 group_disparities.setdefault(group, []).append(desc)
 
         except Exception as e:
             LOGGER.warning(f"Could not load {level} bias flags: {str(e)}")
 
-
     all_blocks = []
 
     for group_name, descriptions in group_disparities.items():
-        normalized_name = group_name.lower().replace(' ', '_')
+        normalized_name = group_name.lower().replace(" ", "_")
         plot_artifact_path = f"fnr_plots/test_{normalized_name}_fnr.png"
 
         try:
@@ -98,13 +106,17 @@ def register_bias_sections(card, registry):
                 local_folder=card.assets_folder,
                 artifact_path=plot_artifact_path,
                 description=f"False Negative Parity Rate for {group_name} on Test Data",
-                width=450
+                width=450,
             )
         except Exception as e:
             LOGGER.warning(f"Could not load plot for {group_name}: {str(e)}")
-            plot_md = f"{card.format.bold(f'Unable to retrieve plot for {group_name}')}\n"
+            plot_md = (
+                f"{card.format.bold(f'Unable to retrieve plot for {group_name}')}\n"
+            )
 
-        header = f"{card.format.header_level(5)}{group_name.replace('_', ' ').title()}\n\n"
+        header = (
+            f"{card.format.header_level(5)}{group_name.replace('_', ' ').title()}\n\n"
+        )
         text_block = "\n\n".join(descriptions)
         all_blocks.append(header + text_block + "\n\n" + plot_md)
 
@@ -114,8 +126,12 @@ def register_bias_sections(card, registry):
         Returns a markdown string containing the bias summary section of the model card.
         """
         if not all_blocks:
-            LOGGER.warning("No disparities found or bias evaluation artifacts missing. Skipping bias summary section.")
+            LOGGER.warning(
+                "No disparities found or bias evaluation artifacts missing. Skipping bias summary section."
+            )
             return f"{card.format.italic('No statistically significant disparities were found on test dataset across groups.')}"
 
-        section_header = f"{card.format.header_level(4)}Disparities by Student Group\n\n"
+        section_header = (
+            f"{card.format.header_level(4)}Disparities by Student Group\n\n"
+        )
         return section_header + "\n\n".join(all_blocks)

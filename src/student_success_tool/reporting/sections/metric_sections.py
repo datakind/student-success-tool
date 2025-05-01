@@ -19,8 +19,7 @@ def register_metric_sections(card, registry):
         }
         metric = card.cfg.modeling.training.primary_metric
         return metric_map.get(
-            metric,
-            f"{card.format.indent_level(1)}- Default metric explanation."
+            metric, f"{card.format.indent_level(1)}- Default metric explanation."
         )
 
     @registry.register("sample_weight_section")

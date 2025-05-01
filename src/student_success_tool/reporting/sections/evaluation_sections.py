@@ -6,6 +6,7 @@ from ..utils import utils
 
 LOGGER = logging.getLogger(__name__)
 
+
 def register_evaluation_sections(card, registry):
     """
     Register evaluation metrics for each group. These metrics include both performance and bias.
@@ -16,7 +17,7 @@ def register_evaluation_sections(card, registry):
         f"{card.format.header_level(4)}Evaluation Metrics by Student Group\n"
     ]
     group_eval_artifacts = utils.list_paths_in_directory(
-        run_id=card.run_id, directory='group_metrics'
+        run_id=card.run_id, directory="group_metrics"
     )
 
     def make_group_metric_table(path: str, title: str) -> t.Callable[[], str]:
@@ -45,7 +46,10 @@ def register_evaluation_sections(card, registry):
                 # Build markdown table
                 headers = "| " + " | ".join(df.columns) + " |"
                 separator = "| " + " | ".join(["---"] * len(df.columns)) + " |"
-                rows = ["| " + " | ".join(str(val) for val in row) + " |" for row in df.values]
+                rows = [
+                    "| " + " | ".join(str(val) for val in row) + " |"
+                    for row in df.values
+                ]
 
                 return f"{card.format.bold(f'{title} Metrics')}\n\n" + "\n".join(
                     [headers, separator] + rows

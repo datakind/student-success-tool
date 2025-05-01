@@ -2,6 +2,7 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+
 def register_data_sections(card, registry):
     """
     Registers sections related to data split and feature tables.
@@ -23,11 +24,15 @@ def register_data_sections(card, registry):
                 for k in ["train", "validate", "test"]
             ]
 
-            return "\n".join([
-                "| Split      | Students | Percentage |",
-                "|------------|----------|------------|",
-                *rows
-            ])
+            return "\n".join(
+                [
+                    "| Split      | Students | Percentage |",
+                    "|------------|----------|------------|",
+                    *rows
+                ]
+            )
         else:
-            LOGGER.warning("Unable to produce data split table. No splits found in config.")
+            LOGGER.warning(
+                "Unable to produce data split table. No splits found in config."
+            )
             return f"{card.format.bold('Could not parse data split')}"
