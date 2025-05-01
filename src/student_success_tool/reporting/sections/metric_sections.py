@@ -33,9 +33,9 @@ def register_metric_sections(card, registry):
             col.startswith("sample_weight") for col in card.training_data.columns
         )
         sw_note = (
-            None
+            f"{card.format.indent_level(1)}- Sample weights were used to stabilize training."
             if used_weights
-            else f"{card.format.indent_level(1)}- Sample weights were used to stabilize training."
+            else None
         )
         mlops_note = f"{card.format.indent_level(1)}- Utilizing Databricks and AutoML, we initiated an MLOps pipeline for data processing and model experimentation, processing {card.context['num_runs_in_experiment']} different machine-learning models to optimize our model."
         return "\n".join(filter(None, [mlops_note, sw_note]))
