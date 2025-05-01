@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from student_success_tool.reporting.sections.registry import SectionRegistry
 from student_success_tool.reporting.sections.metric_sections import (
     register_metric_sections
-)s
+)
 
 
 @pytest.fixture
