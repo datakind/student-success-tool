@@ -1,4 +1,3 @@
-import pytest
 from student_success_tool.reporting.sections.registry import SectionRegistry
 
 def test_register_and_render_single_section():
