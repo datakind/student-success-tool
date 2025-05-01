@@ -67,11 +67,10 @@ def register_evaluation_sections(card, registry):
         if csv_path.startswith("group_metrics/test_") and csv_path.endswith(
             "_metrics.csv"
         ):
-            group_name = (
-                csv_path.replace("group_metrics/test_", "").replace(
-                    "_metrics.csv", ""
-                )
+            group_name = csv_path.replace("group_metrics/test_", "").replace(
+                "_metrics.csv", ""
             )
+
             group_title = group_name.replace("_", " ").title()
 
             group_table_func = make_group_metric_table(csv_path, group_title)

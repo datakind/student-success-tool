@@ -120,7 +120,6 @@ def register_attribute_sections(card, registry):
         )
         return description
 
-
     # TODO: Right now there are no standards in the config for the checkpoint section.
     # HACK: This section assumes certain standards in the config.
     @registry.register("checkpoint_section")
