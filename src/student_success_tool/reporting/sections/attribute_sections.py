@@ -87,8 +87,7 @@ def register_attribute_sections(card, registry):
     @registry.register("target_population_section")
     def target_population():
         """
-        Produce a section for the target population. This method does a rough cleaning of
-        turning underscores into spaces and capitalizing the first letter of each word. This
+        Produce a section for the target population.  This
         will need to later be refined to support both PDP and custom institutions well.
 
         TODO: Create an alias for column names. Custom schools will need to create their
@@ -99,19 +98,16 @@ def register_attribute_sections(card, registry):
         if not criteria:
             return "No specific student criteria were applied."
 
-        def clean_key(key):
-            return key.replace("_", " ").title()
-
         lines = []
         for k, v in criteria.items():
-            lines.append(f"{card.format.indent_level(3)}- {clean_key(k)}")
+            lines.append(f"{card.format.indent_level(3)}- {card.format.friendly_case(k)}")
 
             # Handle if value is a list or a single string
             if isinstance(v, list):
                 for item in v:
-                    lines.append(f"{card.format.indent_level(4)}- {clean_key(item)}")
+                    lines.append(f"{card.format.indent_level(4)}- {card.format.friendly_case(item)}")
             else:
-                lines.append(f"{card.format.indent_level(4)}- {clean_key(v)}")
+                lines.append(f"{card.format.indent_level(4)}- {card.format.friendly_case(v)}")
 
         description = (
             f"{card.format.indent_level(2)}- We focused our final dataset on the following target population:\n"
@@ -124,8 +120,7 @@ def register_attribute_sections(card, registry):
     @registry.register("checkpoint_section")
     def checkpoint():
         """
-        Produce a section for the checkpoint. This method does a rough cleaning of
-        turning underscores into spaces for semester or term checkpoints. We assume the
+        Produce a section for the checkpoint. We assume the
         checkpoint name has semester, term, or credit information.
         """
         checkpoint_name = card.cfg.preprocessing.checkpoint.name.lower()
@@ -136,8 +131,7 @@ def register_attribute_sections(card, registry):
             return f"The model makes this prediction when the student has completed {card.format.bold(f'{num_credits} credits')}**."
 
         elif "semester" in checkpoint_name or "term" in checkpoint_name:
-            friendly_label = checkpoint_name.replace("_", " ")
-            return f"The model makes this prediction when the student has completed {card.format.bold(f'{friendly_label}')}."
+            return f"The model makes this prediction when the student has completed {card.format.bold(f'{card.format.friendly_case(checkpoint_name, capitalize=False)}')}."
         else:
             LOGGER.warning(
                 "Unable to determine checkpoint information. Please specify in model card or in config.toml."
