@@ -104,7 +104,7 @@ def register_attribute_sections(card, registry):
 
         lines = []
         for k, v in criteria.items():
-            lines.append(f"{card.format.indent_level(3)}- {clean_key(field)}")
+            lines.append(f"{card.format.indent_level(3)}- {clean_key(k)}")
 
             # Handle if value is a list or a single string
             if isinstance(v, list):
