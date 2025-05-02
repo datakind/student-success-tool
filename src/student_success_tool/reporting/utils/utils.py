@@ -96,7 +96,7 @@ def embed_image(
         width: Width of image in pixels
 
     Returns:
-        str: inline HTML string to be embedded in markdown
+        Inline HTML string to be embedded in markdown
     """
     local_path_str = str(local_path)
     rel_path = os.path.relpath(local_path_str, start=os.getcwd())
@@ -113,7 +113,7 @@ def list_paths_in_directory(run_id: str, directory: str) -> t.List[str]:
         directory: The subfolder path (relative to run root).
 
     Returns:
-        List[str]: A list of file or subfolder paths (relative to run root).
+        A list of file or subfolder paths (relative to run root).
     """
     artifacts = mlflow.artifacts.list_artifacts(run_id=run_id, artifact_path=directory)
     return [artifact.path for artifact in artifacts]
