@@ -5,9 +5,9 @@ class SectionRegistry:
     """
     Collects and manages all registered model card sections.
 
-    A SectionRegistry allows section-generating functions to be registered under specific
+    A SectionRegistry object allows section-generating functions to be registered under specific
     keys (e.g., "outcome_section") and later rendered into a markdown-friendly format. This
-    design supports modularity, scale, and unit testing of individual sections.
+    design supports modularity, scale, and unit testing of individual sections of the model card.
     """
 
     def __init__(self):

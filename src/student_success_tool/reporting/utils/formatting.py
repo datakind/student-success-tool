@@ -7,7 +7,7 @@ class Formatting:
         Initialize the formatter with a base indentation size.
 
         Args:
-            base_spaces (int): The number of spaces for each indent level. Default is 2.
+            base_spaces: The number of spaces for each indent level. Default is 2.
         """
         self.base_spaces = base_spaces
 
@@ -41,11 +41,11 @@ class Formatting:
         preserving hyphens and apostrophes, with optional capitalization.
 
         Args:
-            text (str): Raw string (e.g., from config)
-            capitalize (bool): Whether to title-case each word. If False, keeps original casing.
+            text: Text to be converted
+            capitalize: Whether to title-case each word. If False, keeps original casing.
 
         Returns:
-            str: Human-friendly string.
+            Human-friendly string.
         """
         text = text.replace("_", " ")
 
