@@ -3,8 +3,8 @@ import functools as ft
 import pandas as pd
 import pytest
 
+from student_success_tool.preprocessing import checkpoints
 from student_success_tool.preprocessing.selection import pdp
-from student_success_tool.preprocessing.targets.pdp import shared
 
 
 @pytest.fixture(scope="module")
@@ -210,7 +210,7 @@ def test_select_students_by_second_year_data(df_test, exp):
         (
             # first term as checkpoint via callable
             ft.partial(
-                shared.get_first_student_terms,
+                checkpoints.pdp.first_student_terms,
                 student_id_cols="student_id",
                 sort_cols="term_rank",
                 include_cols=["enrollment_intensity"],
@@ -219,10 +219,10 @@ def test_select_students_by_second_year_data(df_test, exp):
             "infer",
             pd.DataFrame(
                 data={
-                    "student_max_term_rank": [6, 5, 6],
+                    "student_max_term_rank": [5, 6, 6],
                     "max_term_rank": [8, 8, 8],
                 },
-                index=pd.Index(["03", "01", "04"], dtype="string", name="student_id"),
+                index=pd.Index(["01", "03", "04"], dtype="string", name="student_id"),
             ).astype("Int8"),
         ),
         (
