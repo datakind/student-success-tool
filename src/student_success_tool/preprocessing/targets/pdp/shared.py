@@ -1,6 +1,7 @@
 import logging
 import typing as t
 
+import numpy as np
 import pandas as pd
 
 from .... import utils
@@ -81,8 +82,9 @@ def get_students_with_max_target_term_in_dataset(
             student_id_cols + ["student_max_term_rank"],
         ]
         # get student ids from first eligible terms only
-        .drop_duplicates(ignore_index=True)
+        .drop_duplicates(subset=student_id_cols, ignore_index=True)
         .set_index(student_id_cols)
+        # include relevant other columns, mostly just for debugging
         .assign(max_term_rank=max_term_rank)
         .astype("Int8")
     )
@@ -90,10 +92,10 @@ def get_students_with_max_target_term_in_dataset(
     return df_out
 
 
-def get_students_by_second_year_data(
+def get_students_with_second_year_in_dataset(
     df: pd.DataFrame,
     *,
-    max_academic_year: int | t.Literal["infer"] = "infer",
+    max_academic_year: str | t.Literal["infer"] = "infer",
     student_id_cols: str | list[str] = "student_id",
     cohort_id_col: str = "cohort_id",
     term_id_col: str = "term_id",
@@ -108,31 +110,34 @@ def get_students_by_second_year_data(
         max_academic_year: Maximum academic year in the full dataset ``df`` , either inferred
             from ``df[term_id_col]`` itself or as a manually specified value which
             may be different from the actual max value in ``df`` , depending on use case.
-        student_id_cols: Column(s) that uniquely identify students in ``df`` ,
-            used to drop duplicates.
+            Note: Value must be a string formatted as "YYYY[-YY]".
+        student_id_cols: One or multiple columns uniquely identifying students.
         cohort_id_col: Column used to uniquely identify student cohorts.
         term_id_col: Colum used to uniquely identify academic terms.
     """
     if max_academic_year == "infer":
         max_academic_year = _extract_year_from_id(df[term_id_col]).max()
-    assert isinstance(max_academic_year, int)  # type guard
+    else:
+        max_academic_year = _extract_year_from_id(pd.Series(max_academic_year)).iat[0]
+    assert isinstance(max_academic_year, np.integer)  # type guard
 
     student_id_cols = utils.types.to_list(student_id_cols)
     nuq_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
     df_out = (
-        df.groupby(by=student_id_cols, as_index=False)
-        .agg(student_cohort_id=(cohort_id_col, "min"))
+        # distinct student ids set as index
+        df.groupby(by=student_id_cols, as_index=True)
+        # assume every value for a student's cohort id is the same, so "first" is fine
+        .agg(student_cohort_id=(cohort_id_col, "first"))
         .assign(
             student_cohort_year=lambda df: _extract_year_from_id(
                 df["student_cohort_id"]
             ),
-            max_academic_year=max_academic_year,
+            max_academic_year=max_academic_year,  # type: ignore
         )
         .loc[
             lambda df: df["student_cohort_year"].lt(max_academic_year),
-            student_id_cols + ["student_cohort_year", "max_academic_year"],
+            ["student_cohort_year", "max_academic_year"],
         ]
-        .set_index(student_id_cols)
         .astype("Int32")
     )
     _log_labelable_students(nuq_students_in, len(df_out))
