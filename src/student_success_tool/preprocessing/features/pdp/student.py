@@ -81,7 +81,7 @@ def student_is_pell_recipient_first_year(
     *,
     pell_col: str = "pell_status_first_year",
 ) -> pd.Series:
-    return df[pell_col].map({"Y": True, "N": False}).astype("boolean")
+    return df[pell_col].map({"Y": 1, "N": 0})
 
 
 def diff_gpa_term_1_to_year_1(
