@@ -61,6 +61,8 @@ def get_model_name(
 ) -> str:
     """
     Generate a standard model name from configuration target & checkpoint components.
+    Required components will be included and if missing, will raise a 'KeyError', while
+    optional components are omitted.
 
     Format:
     "{institution_id}_{target.category}_[T_{target.unit}{target.value}]_C_{checkpoint.unit}{checkpoint.value}_[{checkpoint.optional_desc}]"
@@ -69,9 +71,9 @@ def get_model_name(
     parts = [
         institution_id,
         target_config["category"],
-        f"T_{target_config['unit']}{target_config['value']}"
-            if target_config.get("unit") and target_config.get("value") else None,
-        f"C_{checkpoint_config.get('unit', '')}{checkpoint_config.get('value', '')}",
+        f"T_{target_config['value']}{target_config['unit']}"
+            if target_config.get("value") and target_config.get("unit") else None,
+        f"C_{checkpoint_config.get('value')}{checkpoint_config.get('unit')}",
         checkpoint_config.get("optional_desc")
     ]
 
