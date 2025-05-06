@@ -90,9 +90,9 @@ class SelectionConfig(pyd.BaseModel):
 
 class CheckpointConfig(pyd.BaseModel):
     params: dict[str, object] = pyd.Field(default_factory=dict)
-    unit: t.Optional[types.CheckpointUnitType] = None
-    value: t.Optional[int] = pyd.Field(
-        default=None,
+    unit: types.CheckpointUnitType = "credit"
+    value: int = pyd.Field(
+        default=30,
         description=(
             "Number of checkpoint units (e.g. 1 year, 1 term/semester, 30 credits)"
         ),

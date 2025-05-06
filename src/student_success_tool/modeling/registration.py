@@ -70,6 +70,34 @@ def get_model_name(
         model_name = f"{model_name}_{extra_info}"
     return model_name
 
+def get_model_name(
+    *,
+    institution_id: str,
+    checkpoint_config: dict,
+    target_config: dict,
+) -> str:
+    """
+    Generate a standard model name from configuration components.
+
+    Format:
+    "{institution_id}_{target.category}_{checkpoint.unit}_{checkpoint.value}_{checkpoint.optional_desc}"
+    """
+
+    # Extract checkpoint config components
+    checkpoint_parts = [
+        f"{checkpoint_config.get('unit')}",
+        f"{checkpoint_config.get('value')}"
+    ]
+    checkpoint_str = "_".join(checkpoint_parts)
+
+    # Combine parts
+    model_name = f"{institution_id}_{target_config.get('category')}_{checkpoint_str}"
+
+    optional_desc = checkpoint_config.get('optional_desc')
+    if optional_desc:
+        model_name += f"_{optional_desc}"
+
+    return model_name
 
 def get_mlflow_model_uri(
     *,
