@@ -65,16 +65,18 @@ def get_model_name(
     Format:
     "{institution_id}_{target.category}_[T_{target.unit}{target.value}]_C_{checkpoint.unit}{checkpoint.value}_[{checkpoint.optional_desc}]"
     """
-    category = target_config.get("category")
-    tgt = (
-        f"[T_{target_config['unit']}{target_config['value']}]"
-        if target_config.get("unit") and target_config.get("value")
-        else ""
-    )
-    ckpt = f"C_{checkpoint_config.get('unit', '')}{checkpoint_config.get('value', '')}"
-    desc = f"[{checkpoint_config['optional_desc']}]" if checkpoint_config.get("optional_desc") else ""
+    # Build model name components, skipping any optional values
+    parts = [
+        institution_id,
+        target_config["category"],
+        f"T_{target_config['unit']}{target_config['value']}"
+            if target_config.get("unit") and target_config.get("value") else None,
+        f"C_{checkpoint_config.get('unit', '')}{checkpoint_config.get('value', '')}",
+        checkpoint_config.get("optional_desc")
+    ]
 
-    return f"{institution_id}_{category}_{tgt}_{ckpt}_{desc}".strip("_")
+    # Filter out None or empty strings to avoid extra underscores
+    return "_".join(filter(None, parts))
 
 
 def get_mlflow_model_uri(
