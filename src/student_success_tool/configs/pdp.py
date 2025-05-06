@@ -105,7 +105,7 @@ class CheckpointConfig(pyd.BaseModel):
             "timing nuances."
         ),
     )
-    
+
     @pyd.model_validator(mode="after")
     def check_unit_and_value(self):
         if self.unit and self.value is None:
@@ -129,7 +129,7 @@ class TargetConfig(pyd.BaseModel):
             "Number of target units (e.g. 4 years, 4 terms, 120 credits, 150 completion %)"
         ),
     )
-    
+
     @pyd.model_validator(mode="after")
     def check_unit_and_value(self):
         if self.unit and self.value is None:
@@ -141,7 +141,6 @@ class TargetConfig(pyd.BaseModel):
                 "Checkpoint 'unit' must be provided when 'value' is specified."
             )
         return self
-
 
 
 class PreprocessingConfig(pyd.BaseModel):
