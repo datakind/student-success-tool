@@ -90,7 +90,7 @@ class SelectionConfig(pyd.BaseModel):
 
 class CheckpointConfig(pyd.BaseModel):
     params: dict[str, object] = pyd.Field(default_factory=dict)
-    unit: str = t.Optional[types.CheckpointUnitType] = None
+    unit: t.Optional[types.CheckpointUnitType] = None
     value: int = pyd.Field(
         default=30,
         description = (
@@ -100,24 +100,40 @@ class CheckpointConfig(pyd.BaseModel):
     optional_desc: t.Optional[str] = pyd.Field(
         default=None,
         description = (
-            "Optional further description of checkpoint that is not captured by unit "
-            "and value. For example, if a graduation model is specifically for a certain "
-            "student population or if the model is applied 1 term or 2 terms after reaching "
-            "the credit checkpoint. This field is meant to give more flexibility for the different "
-            "models that are created from SST."
+            "Optional description of the checkpoint beyond the unit and value. "
+            "Use to clarify context, such as specific student populations or checkpoint "
+            "timing nuances."
         ),
     )
+    
+    @pyd.root_validator
+    def check_unit_and_value(cls, values):
+        unit, value = values.get("unit"), values.get("value")
+        if unit and value is None:
+            raise ValueError("Checkpoint 'value' must be provided when 'unit' is specified.")
+        if value and unit is None:
+            raise ValueError("Checkpoint 'unit' must be provided when 'value' is specified.")
+        return values
 
 class TargetConfig(pyd.BaseModel):
     params: dict[str, object] = pyd.Field(default_factory=dict)
-    category: str = t.Literal("graduation", "retention")
-    unit: str = t.Optional[types.TargetUnitType] = None
+    category: t.Literal("graduation", "retention")
+    unit: t.Optional[types.TargetUnitType] = None
     value: int = pyd.Field(
         default=120,
         description = (
             "Number of target units (e.g. 4 years, 4 terms, 120 credits, 150 completion %)"
         )
     )
+    
+    @pyd.root_validator
+    def check_unit_and_value(cls, values):
+        unit, value = values.get("unit"), values.get("value")
+        if unit and value is None:
+            raise ValueError("Target 'value' must be provided when 'unit' is specified.")
+        if value and unit is None:
+            raise ValueError("Target 'unit' must be provided when 'value' is specified.")
+        return values
 
 
 class PreprocessingConfig(pyd.BaseModel):
