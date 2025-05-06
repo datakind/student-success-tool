@@ -93,46 +93,54 @@ class CheckpointConfig(pyd.BaseModel):
     unit: t.Optional[types.CheckpointUnitType] = None
     value: int = pyd.Field(
         default=30,
-        description = (
+        description=(
             "Number of checkpoint units (e.g. 1 year, 1 term/semester, 30 credits)"
         ),
     )
     optional_desc: t.Optional[str] = pyd.Field(
         default=None,
-        description = (
+        description=(
             "Optional description of the checkpoint beyond the unit and value. "
             "Use to clarify context, such as specific student populations or checkpoint "
             "timing nuances."
         ),
     )
     
-    @pyd.model_validator
+    @pyd.model_validator(mode="after")
     def check_unit_and_value(cls, values):
         unit, value = values.get("unit"), values.get("value")
         if unit and value is None:
-            raise ValueError("Checkpoint 'value' must be provided when 'unit' is specified.")
+            raise ValueError(
+                "Checkpoint 'value' must be provided when 'unit' is specified."
+            )
         if value and unit is None:
-            raise ValueError("Checkpoint 'unit' must be provided when 'value' is specified.")
+            raise ValueError(
+                "Checkpoint 'unit' must be provided when 'value' is specified."
+            )
         return values
 
 class TargetConfig(pyd.BaseModel):
     params: dict[str, object] = pyd.Field(default_factory=dict)
-    category: t.Literal("graduation", "retention")
+    category: t.Literal["graduation", "retention"]
     unit: t.Optional[types.TargetUnitType] = None
     value: int = pyd.Field(
         default=120,
-        description = (
+        description=(
             "Number of target units (e.g. 4 years, 4 terms, 120 credits, 150 completion %)"
-        )
+        ),
     )
     
-    @pyd.model_validator
+    @pyd.model_validator(mode="after")
     def check_unit_and_value(cls, values):
         unit, value = values.get("unit"), values.get("value")
         if unit and value is None:
-            raise ValueError("Target 'value' must be provided when 'unit' is specified.")
+            raise ValueError(
+                "Target 'value' must be provided when 'unit' is specified."
+            )
         if value and unit is None:
-            raise ValueError("Target 'unit' must be provided when 'value' is specified.")
+            raise ValueError(
+                "Target 'unit' must be provided when 'value' is specified."
+            )
         return values
 
 

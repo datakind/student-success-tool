@@ -171,9 +171,7 @@ features_table = dataio.read_features_table("assets/pdp/features_table.toml")
 
 # COMMAND ----------
 
-df_train = modeling.evaluation.extract_training_data_from_model(
-    cfg.model.experiment_id
-)
+df_train = modeling.evaluation.extract_training_data_from_model(cfg.model.experiment_id)
 if cfg.split_col:
     df_train = df_train.loc[df_train[cfg.split_col].eq("train"), :]
 df_train.shape
