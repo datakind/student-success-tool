@@ -14,7 +14,7 @@ from student_success_tool.modeling.registration import get_model_name
             "inst02",
             {"category": "graduation", "unit": "completion_pct", "value": "150"},
             {"unit": "semester", "value": "2"},
-            "inst03_graduation_T_150completion_pct_C_2semester",
+            "inst02_graduation_T_150completion_pct_C_2semester",
         ),
         (
             "inst03",
