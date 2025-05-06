@@ -42,14 +42,14 @@ student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year
 intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
 
 [preprocessing.checkpoint]
+params = { min_num_credits = 30.0, num_credits_col = "num_credits_earned_cumsum" }
 unit = "credit"
 value = 30
-params = { min_num_credits = 30.0, num_credits_col = "num_credits_earned_cumsum" }
 
 [preprocessing.target]
 category = "graduation"
 unit = "completion_pct"
-value = 150 
+value = 150
 
 [preprocessing.target.params]
 intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
