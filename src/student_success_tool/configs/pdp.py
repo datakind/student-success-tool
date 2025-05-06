@@ -107,17 +107,17 @@ class CheckpointConfig(pyd.BaseModel):
     )
     
     @pyd.model_validator(mode="after")
-    def check_unit_and_value(cls, values):
-        unit, value = values.get("unit"), values.get("value")
-        if unit and value is None:
+    def check_unit_and_value(self):
+        if self.unit and self.value is None:
             raise ValueError(
                 "Checkpoint 'value' must be provided when 'unit' is specified."
             )
-        if value and unit is None:
+        if self.value and self.unit is None:
             raise ValueError(
                 "Checkpoint 'unit' must be provided when 'value' is specified."
             )
-        return values
+        return self
+
 
 class TargetConfig(pyd.BaseModel):
     params: dict[str, object] = pyd.Field(default_factory=dict)
@@ -131,17 +131,17 @@ class TargetConfig(pyd.BaseModel):
     )
     
     @pyd.model_validator(mode="after")
-    def check_unit_and_value(cls, values):
-        unit, value = values.get("unit"), values.get("value")
-        if unit and value is None:
+    def check_unit_and_value(self):
+        if self.unit and self.value is None:
             raise ValueError(
-                "Target 'value' must be provided when 'unit' is specified."
+                "Checkpoint 'value' must be provided when 'unit' is specified."
             )
-        if value and unit is None:
+        if self.value and self.unit is None:
             raise ValueError(
-                "Target 'unit' must be provided when 'value' is specified."
+                "Checkpoint 'unit' must be provided when 'value' is specified."
             )
-        return values
+        return self
+
 
 
 class PreprocessingConfig(pyd.BaseModel):
