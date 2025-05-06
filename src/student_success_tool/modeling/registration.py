@@ -65,11 +65,15 @@ def get_model_name(
     Format:
     "{institution_id}_{target.category}_[T_{target.unit}{target.value}]_C_{checkpoint.unit}{checkpoint.value}_[{checkpoint.optional_desc}]"
     """
-    tgt = f"[T_{target_config['unit']}{target_config['value']}]" if target_config.get("unit") and target_config.get("value") else ""
+    tgt = (
+        f"[T_{target_config['unit']}{target_config['value']}]"
+        if target_config.get("unit") and target_config.get("value")
+        else ""
+    )
     ckpt = f"C_{checkpoint_config.get('unit', '')}{checkpoint_config.get('value', '')}"
     desc = f"[{checkpoint_config['optional_desc']}]" if checkpoint_config.get("optional_desc") else ""
 
-    return f"{institution_id}_{category}_{tgt}_target_{ckpt}_{desc}".strip("_")
+    return f"{institution_id}_{target_config.get("category")}_{tgt}_target_{ckpt}_{desc}".strip("_")
 
 
 def get_mlflow_model_uri(
