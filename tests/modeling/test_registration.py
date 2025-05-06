@@ -7,8 +7,8 @@ from student_success_tool.modeling.registration import get_model_name
         (
             "inst01",
             {"category": "graduation", "unit": "term", "value": "4"},
-            {"unit": "credit", "value": "90", "optional_desc": "after_1_term"},
-            "inst01_graduation_T_4term_C_90credit_after_1_term",
+            {"unit": "credit", "value": "90", "optional_desc": "after_1term"},
+            "inst01_graduation_T_4term_C_90credit_after_1term",
         ),
         (
             "inst02",
@@ -19,7 +19,7 @@ from student_success_tool.modeling.registration import get_model_name
         (
             "inst03",
             {"category": "retention"},
-            {"unit": "1", "value": "term"},
+            {"unit": "term", "value": "1"},
             "inst03_retention_C_1term",
         ),
     ]
