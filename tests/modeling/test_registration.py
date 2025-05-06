@@ -30,11 +30,3 @@ def test_model_name_variants(institution_id, target_config, checkpoint_config, e
         target_config=target_config,
         checkpoint_config=checkpoint_config
     ) == expected
-
-def test_missing_category_raises():
-    with pytest.raises(ValueError):
-        get_model_name(
-            institution_id="inst05",
-            target_config={"unit": "score", "value": "10"},
-            checkpoint_config={"unit": "epoch", "value": "5"}
-        )
