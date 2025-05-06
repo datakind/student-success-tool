@@ -43,7 +43,7 @@ intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
 
 [preprocessing.checkpoint]
 params = { min_num_credits = 30.0, num_credits_col = "num_credits_earned_cumsum" }
-unit = "credit"
+unit = "credit" 
 value = 30
 
 [preprocessing.target]

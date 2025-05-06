@@ -16,7 +16,7 @@ def template_cfg_str():
     institution_id = "INST_ID"
     institution_name = "INST NAME"
 
-    student_id_col = "student_guid"
+    student_id_col = "student_id"
     target_col = "target"
     split_col = "split"
     sample_weight_col = "sample_weight"
@@ -26,10 +26,18 @@ def template_cfg_str():
     pos_label = true
     random_state = 12345
 
-    [datasets.labeled]
-    raw_course = { file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/FILE_NAME_COURSE.csv" }
-    raw_cohort = { file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/FILE_NAME_COHORT.csv" }
-    preprocessed = { table_path = "CATALOG.SCHEMA.TABLE_NAME" }
+    [datasets.ingested_YYYYMMDD]
+    raw_course = { file_path = "/Volumes/CATALOG/INST_ID_bronze/INST_ID_bronze_file_volume/FILE_NAME_COURSE.csv" }
+    raw_cohort = { file_path = "/Volumes/CATALOG/INST_ID_bronze/INST_ID_bronze_file_volume/FILE_NAME_COHORT.csv" }
+    preprocessed = { table_path = "CATALOG.INST_ID_silver.DATASET_NAME_preprocessed" }
+    # optionally, if you want to save predictions on their own
+    # predictions = { table_path = "CATALOG.INST_ID_gold.DATASET_NAME_predictions" }
+    finalized = { table_path = "CATALOG.INST_ID_gold.INST_ID_advisor_output_ETC_YYYYMMDD" }
+
+    [model]
+    experiment_id = "EXPERIMENT_ID"
+    run_id = "RUN_ID"
+    framework = "sklearn"
 
     [preprocessing]
     splits = { train = 0.6, test = 0.2, validate = 0.2 }
@@ -39,32 +47,40 @@ def template_cfg_str():
     min_passing_grade = 1.0
     min_num_credits_full_time = 12
     # NOTE: single quotes *required* here; it's TOML syntax for literal strings
-    course_level_pattern = 'asdf'
+    course_level_pattern = '^TODO(?P<course_level>\d)TODO$'
+    core_terms = ["FALL", "SPRING"]
     key_course_subject_areas = ["24", "51"]
     key_course_ids = ["ENGL101", "MATH101"]
 
     [preprocessing.selection]
     student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year_1 = "Bachelor's Degree" }
+    intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
 
     [preprocessing.checkpoint]
+    params = { min_num_credits = 30.0, num_credits_col = "num_credits_earned_cumsum" }
+    unit = "credit" 
+    value = 30
 
     [preprocessing.target]
-    params = { min_num_credits_checkin = 30.0, min_num_credits_target = 60.0 }
+    category = "graduation"
+    unit = "completion_pct"
+    value = 150
+    params = { intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] } }
 
     [modeling.feature_selection]
     incomplete_threshold = 0.5
     low_variance_threshold = 0.0
     collinear_threshold = 10.0
+    # force_include_cols = []
 
     [modeling.training]
-    # exclude_frameworks = ["xgboost", "lightgbm"]
     primary_metric = "log_loss"
     timeout_minutes = 10
+    # exclude_frameworks = ["xgboost", "lightgbm"]
+    # exclude_cols = []
 
-    [models.graduation]
-    experiment_id = "EXPERIMENT_ID"
-    run_id = "RUN_ID"
-    framework = "sklearn"
+    [modeling.evaluation]
+    topn_runs_included = 3
 
     [inference]
     num_top_features = 5

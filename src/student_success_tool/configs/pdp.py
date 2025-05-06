@@ -91,7 +91,7 @@ class SelectionConfig(pyd.BaseModel):
 class CheckpointConfig(pyd.BaseModel):
     params: dict[str, object] = pyd.Field(default_factory=dict)
     unit: t.Optional[types.CheckpointUnitType] = None
-    value: int = pyd.Field(
+    value: t.Optional[int] = pyd.Field(
         default=None,
         description=(
             "Number of checkpoint units (e.g. 1 year, 1 term/semester, 30 credits)"
@@ -123,7 +123,7 @@ class TargetConfig(pyd.BaseModel):
     params: dict[str, object] = pyd.Field(default_factory=dict)
     category: t.Literal["graduation", "retention"]
     unit: t.Optional[types.TargetUnitType] = None
-    value: int = pyd.Field(
+    value: t.Optional[int] = pyd.Field(
         default=None,
         description=(
             "Number of target units (e.g. 4 years, 4 terms, 120 credits, 150 completion %)"
