@@ -106,7 +106,7 @@ class CheckpointConfig(pyd.BaseModel):
         ),
     )
     
-    @pyd.root_validator
+    @pyd.model_validator
     def check_unit_and_value(cls, values):
         unit, value = values.get("unit"), values.get("value")
         if unit and value is None:
@@ -126,7 +126,7 @@ class TargetConfig(pyd.BaseModel):
         )
     )
     
-    @pyd.root_validator
+    @pyd.model_validator
     def check_unit_and_value(cls, values):
         unit, value = values.get("unit"), values.get("value")
         if unit and value is None:
