@@ -19,7 +19,7 @@ preprocessed = { table_path = "CATALOG.INST_ID_silver.DATASET_NAME_preprocessed"
 # predictions = { table_path = "CATALOG.INST_ID_gold.DATASET_NAME_predictions" }
 finalized = { table_path = "CATALOG.INST_ID_gold.INST_ID_advisor_output_ETC_YYYYMMDD" }
 
-[models.TARGET_CHECKPOINT]
+[model]
 experiment_id = "EXPERIMENT_ID"
 run_id = "RUN_ID"
 framework = "sklearn"
@@ -42,11 +42,14 @@ student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year
 intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
 
 [preprocessing.checkpoint]
-name = "30_credits_ckpt"
+unit = "credit"
+value = 30
 params = { min_num_credits = 30.0, num_credits_col = "num_credits_earned_cumsum" }
 
 [preprocessing.target]
-name = "graduation_150pct_time"
+category = "graduation"
+unit = "completion_pct"
+value = 150 
 
 [preprocessing.target.params]
 intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }

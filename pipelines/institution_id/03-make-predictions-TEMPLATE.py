@@ -153,8 +153,8 @@ def predict_proba(
 # COMMAND ----------
 
 model = modeling.utils.load_mlflow_model(
-    cfg.models[model_name].mlflow_model_uri,
-    cfg.models[model_name].framework,
+    cfg.model.mlflow_model_uri,
+    cfg.model.framework,
 )
 model
 
@@ -172,7 +172,7 @@ features_table = dataio.read_features_table("assets/pdp/features_table.toml")
 # COMMAND ----------
 
 df_train = modeling.evaluation.extract_training_data_from_model(
-    cfg.models[model_name].experiment_id
+    cfg.model.experiment_id
 )
 if cfg.split_col:
     df_train = df_train.loc[df_train[cfg.split_col].eq("train"), :]
@@ -297,7 +297,7 @@ shap.summary_plot(
 )
 shap_fig = plt.gcf()
 # save shap summary plot via mlflow into experiment artifacts folder
-with mlflow.start_run(run_id=cfg.models[model_name].run_id) as run:
+with mlflow.start_run(run_id=cfg.model.run_id) as run:
     mlflow.log_figure(
         shap_fig, f"shap_summary_{dataset_name}_dataset_{df_ref.shape[0]}_ref_rows.png"
     )
@@ -328,5 +328,3 @@ result
 # MAGIC
 # MAGIC - how / where to save final results?
 # MAGIC - do we want to save predictions separately / additionally from the "display" format?
-
-# COMMAND ----------

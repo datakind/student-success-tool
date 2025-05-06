@@ -89,13 +89,35 @@ class SelectionConfig(pyd.BaseModel):
 
 
 class CheckpointConfig(pyd.BaseModel):
-    name: str = pyd.Field(default="checkpoint")
     params: dict[str, object] = pyd.Field(default_factory=dict)
-
+    unit: str = t.Optional[types.CheckpointUnitType] = None
+    value: int = pyd.Field(
+        default=30,
+        description = (
+            "Number of checkpoint units (e.g. 1 year, 1 term/semester, 30 credits)"
+        ),
+    )
+    optional_desc: t.Optional[str] = pyd.Field(
+        default=None,
+        description = (
+            "Optional further description of checkpoint that is not captured by unit "
+            "and value. For example, if a graduation model is specifically for a certain "
+            "student population or if the model is applied 1 term or 2 terms after reaching "
+            "the credit checkpoint. This field is meant to give more flexibility for the different "
+            "models that are created from SST."
+        ),
+    )
 
 class TargetConfig(pyd.BaseModel):
-    name: str = pyd.Field(default="target")
     params: dict[str, object] = pyd.Field(default_factory=dict)
+    category: str = t.Literal("graduation", "retention")
+    unit: str = t.Optional[types.TargetUnitType] = None
+    value: int = pyd.Field(
+        default=120,
+        description = (
+            "Number of target units (e.g. 4 years, 4 terms, 120 credits, 150 completion %)"
+        )
+    )
 
 
 class PreprocessingConfig(pyd.BaseModel):

@@ -3,6 +3,8 @@ from collections.abc import Collection, Iterable
 
 TermType = t.Literal["FALL", "WINTER", "SPRING", "SUMMER"]
 IntensityTimeLimitsType = dict[str, tuple[float, t.Literal["year", "term"]]]
+CheckpointUnitType = t.Literal["credit", "term", "year", "semester"]
+TargetUnitType = t.Literal["completion_pct", "credit", "term", "year", "semester"]
 
 
 def to_list(value: t.Any) -> list:
