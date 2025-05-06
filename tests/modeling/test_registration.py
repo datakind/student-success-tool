@@ -25,12 +25,14 @@ from student_success_tool.modeling.registration import get_model_name
         ),
     ],
 )
-def test_model_name_variants(institution_id, target_config, checkpoint_config, expected):
+def test_model_name_variants(
+    institution_id, target_config, checkpoint_config, expected
+):
     assert (
         get_model_name(
             institution_id=institution_id,
             target_config=target_config,
-            checkpoint_config=checkpoint_config
+            checkpoint_config=checkpoint_config,
         )
         == expected
     )
