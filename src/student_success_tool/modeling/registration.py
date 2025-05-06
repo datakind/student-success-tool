@@ -53,23 +53,6 @@ def register_mlflow_model(
         )
     LOGGER.info("model version successfully registered at '%s'", model_path)
 
-
-def get_model_name(
-    *,
-    institution_id: str,
-    target: str,
-    checkpoint: str,
-    extra_info: t.Optional[str] = None,
-) -> str:
-    """
-    Get a standard model name generated from key components, formatted as
-    "{institution_id}_{target}_{checkpoint}[_{extra_info}]"
-    """
-    model_name = f"{institution_id}_{target}_{checkpoint}"
-    if extra_info is not None:
-        model_name = f"{model_name}_{extra_info}"
-    return model_name
-
 def get_model_name(
     *,
     institution_id: str,
@@ -80,7 +63,7 @@ def get_model_name(
     Generate a standard model name from configuration components.
 
     Format:
-    "{institution_id}_{target.category}_{checkpoint.unit}_{checkpoint.value}_{checkpoint.optional_desc}"
+    "{institution_id}_{target.category}_{checkpoint.unit}_{checkpoint.value}[_{checkpoint.optional_desc}_]"
     """
 
     # Extract checkpoint config components

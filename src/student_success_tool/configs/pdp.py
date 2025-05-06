@@ -90,7 +90,7 @@ class SelectionConfig(pyd.BaseModel):
 
 class CheckpointConfig(pyd.BaseModel):
     params: dict[str, object] = pyd.Field(default_factory=dict)
-    unit: types.CheckpointUnitType = "credit"
+    unit: types.CheckpointUnitType
     value: int = pyd.Field(
         default=30,
         description=(
@@ -105,18 +105,6 @@ class CheckpointConfig(pyd.BaseModel):
             "timing nuances."
         ),
     )
-
-    @pyd.model_validator(mode="after")
-    def check_unit_and_value(self):
-        if self.unit and self.value is None:
-            raise ValueError(
-                "Checkpoint 'value' must be provided when 'unit' is specified."
-            )
-        if self.value and self.unit is None:
-            raise ValueError(
-                "Checkpoint 'unit' must be provided when 'value' is specified."
-            )
-        return self
 
 
 class TargetConfig(pyd.BaseModel):
