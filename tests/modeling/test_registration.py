@@ -1,6 +1,7 @@
 import pytest
 from student_success_tool.modeling.registration import get_model_name
 
+
 @pytest.mark.parametrize(
     "institution_id, target_config, checkpoint_config, expected",
     [
@@ -22,11 +23,14 @@ from student_success_tool.modeling.registration import get_model_name
             {"unit": "term", "value": "1"},
             "inst03_retention_C_1term",
         ),
-    ]
+    ],
 )
 def test_model_name_variants(institution_id, target_config, checkpoint_config, expected):
-    assert get_model_name(
-        institution_id=institution_id,
-        target_config=target_config,
-        checkpoint_config=checkpoint_config
-    ) == expected
+    assert (
+        get_model_name(
+            institution_id=institution_id,
+            target_config=target_config,
+            checkpoint_config=checkpoint_config
+        )
+        == expected
+    )
