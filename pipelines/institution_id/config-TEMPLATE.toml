@@ -50,9 +50,7 @@ value = 30
 category = "graduation"
 unit = "completion_pct"
 value = 150
-
-[preprocessing.target.params]
-intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
+params = { intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] } }
 
 [modeling.feature_selection]
 incomplete_threshold = 0.5
