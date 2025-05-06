@@ -63,7 +63,7 @@ def template_cfg_str():
 
     [preprocessing.target]
     category = "graduation"
-    unit = "completion_pct"
+    unit = "pct_completion"
     value = 150
     params = { intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] } }
 
