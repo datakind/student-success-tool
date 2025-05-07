@@ -72,10 +72,10 @@ def get_model_name(
     parts = [
         institution_id,
         target_config["category"],
-        f"T_{target_config['value']}{target_config['unit']}"
+        f"__{target_config['value']}{target_config['unit']}"
         if target_config.get("value") and target_config.get("unit")
         else None,
-        f"C_{checkpoint_config.get('value')}{checkpoint_config.get('unit')}",
+        f"__{checkpoint_config.get('value')}{checkpoint_config.get('unit')}",
         checkpoint_config.get("optional_desc"),
     ]
 
