@@ -83,7 +83,7 @@ class PDPProjectConfig(pyd.BaseModel):
         return value
 
     # NOTE: this is for *pydantic* model -- not ML model -- configuration
-    model_config = pyd.ConfigDict(extra="ignore", strict=True)
+    model_config = pyd.ConfigDict(extra="forbid", strict=True)
 
 
 class DatasetConfig(pyd.BaseModel):
