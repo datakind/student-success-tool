@@ -52,13 +52,14 @@ class PDPProjectConfig(pyd.BaseModel):
             "used to load the artifacts from storage"
         ),
     )
-    models: dict[str, "ModelConfig"] = pyd.Field(
-        default={},
+    model: t.Optional["ModelConfig"] = pyd.Field(
+        default=None,
         description=(
-            "Mapping of model name, e.g. 'graduation', to MLFlow metadata used to "
-            "load the trained artifact from storage"
+            "Essential metadata for identifying and loading trained model artifacts, "
+            "as produced by the pipeline represented here in this config"
         ),
     )
+
     # key steps in project pipeline
     preprocessing: t.Optional["PreprocessingConfig"] = None
     modeling: t.Optional["ModelingConfig"] = None
