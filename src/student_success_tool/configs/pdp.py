@@ -131,7 +131,7 @@ class PreprocessingConfig(pyd.BaseModel):
     features: "FeaturesConfig"
     selection: "SelectionConfig"
     checkpoint: "CheckpointConfig"
-    target: "TargetConfig"
+    target: "TargetGraduationConfig | TargetRetentionConfig | TargetCreditsEarnedConfig"
     splits: dict[t.Literal["train", "test", "validate"], float] = pyd.Field(
         default={"train": 0.6, "test": 0.2, "validate": 0.2},
         description=(
@@ -246,9 +246,33 @@ class CheckpointConfig(pyd.BaseModel):
     params: dict[str, object] = pyd.Field(default_factory=dict)
 
 
-class TargetConfig(pyd.BaseModel):
-    name: str = pyd.Field(default="target")
-    params: dict[str, object] = pyd.Field(default_factory=dict)
+class TargetBaseConfig(pyd.BaseModel):
+    name: str = pyd.Field(
+        default=...,
+        description="Descriptive name for target, used as a component in model name",
+    )
+    type_: t.Literal["graduation", "retention", "credits_earned"] = pyd.Field(
+        default=..., description="Type of target to which config is applied"
+    )
+
+
+class TargetGraduationConfig(TargetBaseConfig):
+    intensity_time_limits: types.IntensityTimeLimitsType
+    years_to_degree_col: str
+    num_terms_in_year: int = pyd.Field(default=4)
+    max_term_rank: int | t.Literal["infer"]
+
+
+class TargetRetentionConfig(TargetBaseConfig):
+    max_academic_year: str | t.Literal["infer"]
+
+
+class TargetCreditsEarnedConfig(TargetBaseConfig):
+    min_num_credits: float
+    # TODO: is there any way to represent checkpoint arg in toml, given its dtype?
+    intensity_time_limits: types.IntensityTimeLimitsType
+    num_terms_in_year: int = pyd.Field(default=4)
+    max_term_rank: int | t.Literal["infer"]
 
 
 class ModelingConfig(pyd.BaseModel):
