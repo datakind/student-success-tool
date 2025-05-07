@@ -88,6 +88,7 @@ def evaluate_performance(
     """
     calibration_dir = "calibration"
     preds_dir = "preds"
+    metrics_dir = "metrics"
 
     for split_name, split_data in df_pred.groupby(split_col):
         LOGGER.info("Evaluating model performance for '%s' split", split_name)
@@ -111,6 +112,28 @@ def evaluate_performance(
         )
         # Closes all matplotlib figures in console to free memory
         plt.close("all")
+
+
+        # Compute binary predictions
+        pred_probs = split_data[pred_prob_col]
+        preds = pred_probs >= threshold
+        targets = split_data[target_col]
+
+        # Compute metrics
+        perf_metrics = compute_classification_perf_metrics(
+            targets=targets,
+            preds=preds,
+            pred_probs=pred_probs,
+            pos_label=pos_label,
+        )
+        perf_metrics[split_col] = split_name
+        metrics_records.append(perf_metrics)
+
+    # Convert to DataFrame for display or saving
+    metrics_df = pd.DataFrame(metrics_records).set_index("split")
+    metrics_df.to_csv("/tmp/classification_metrics.csv")
+    mlflow.log_artifact("/tmp/classification_metrics.csv", artifact_path="metrics")
+    LOGGER.info("Classification performance metrics:\n%s", metrics_df)
 
 
 def get_top_run_ids(
