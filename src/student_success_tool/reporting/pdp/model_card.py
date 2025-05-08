@@ -244,7 +244,7 @@ class ModelCard:
         filled = template.format(**self.context)
         with open(self.output_path, "w") as file:
             file.write(filled)
-        LOGGER.info("✅ Model card generated at {self.output_path}")
+        LOGGER.info(f"✅ Model card generated at {self.output_path}")
 
     def reload_card(self):
         """
