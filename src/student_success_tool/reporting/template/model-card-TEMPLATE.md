@@ -14,7 +14,7 @@
     - Identify students who may need support in order to either retain or graduate on time. 
     - Empower academic advisors who provide intervention strategies with information on the factors impacting their need for support.
 - **Out-of-Scope Uses**
-    - Outside of the target population: _see below_
+    - Outside of the target population:  _see below_
     - Without intervention strategies carefully designed by academic advisors, student success professionals, and researchers. 
 
 ### Methodology
