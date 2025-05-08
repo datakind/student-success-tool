@@ -24,7 +24,7 @@
 - **Feature Development**
     - We then proceeded with feature engineering, which involved transforming raw data into meaningful representations by applying semantic abstractions, aggregating at varying levels of term, course, or section analysis, and comparing values cumulatively over time.
     - Stakeholder collaboration was also essential to our feature engineering effort, ensuring domain and use-case knowledge shaped the development of insightful features.
-    - Then, our next step was feature selection, applying the following processing:
+    - Then, our next step was feature selection, applying the following processing below.
         - Collinearity Threshold
             - Threshold Applied: Removed features with VIF greater than {collinearity_threshold} were removed to reduce multicollinearity and improve model stability.
             - Explanation: Variance Inflation Factor (VIF) measures how much a feature is linearly correlated with other features. A VIF of 1 would imply no multicollinearity, while a VIF of 10 indicates high collinearity, meaning the feature's information is largely redundant.
@@ -40,7 +40,7 @@
     - This resulted in a training dataset of {training_dataset_size} students within the target timeframe.
 - **Model Development**
 {sample_weight_section}
-    - Model Experimentation Data Split:
+    - Model Experimentation Data Split
 
 {data_split_table}
 
@@ -79,15 +79,12 @@
 
 ### Important Features
 - **Analyzing Feature Importance**
-    - SHAP (Shapley Additive Explanations) is a method based on cooperative game theory that quantifies the contribution of each feature to a model's prediction for an individual instance.
-        - It helps us understand how much did a particular feature contribute to predicting whether a student needs more or less support.
-    - SHAP provides detailed insight into:
-        - How much each feature contributed for each individual
-        - Whether higher or lower feature values are associated with higher or lower need for support.
+    - SHAP (Shapley Additive Explanations) is a method based on cooperative game theory that quantifies the contribution of each feature to a model's prediction for an individual instance. It helps us understand how much did a particular feature contribute to predicting whether a student needs more or less support.
+    - SHAP provides detailed insight into how much each feature contributed for each individual, as well as Whether higher or lower feature values are associated with higher or lower need for support.
 
 - **Feature Importance Plot**
     - This figure below helps explain how individual features contribute to the model’s prediction for each student-term record. 
-    - Here are some guidelines for how to interpret it:
+    - Here are some guidelines for how to interpret the plot below.
         - Each dot represents a single student record.
         - Color of the dot corresponds to the feature value for that student (e.g., a higher or lower numeric value for that feature), while gray indicates a categorical feature.
         - The x-axis shows the SHAP value for that student-feature pair:
