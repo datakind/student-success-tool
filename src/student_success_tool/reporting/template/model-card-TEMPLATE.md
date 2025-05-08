@@ -37,24 +37,24 @@
     - After our feature selection processes, {number_of_features} actionable, relevant, and non-redundant features were retained for modeling.
 - **Target Population**
 {target_population_section}
-  - This resulted in a training dataset of {training_dataset_size} students within the target timeframe.
+    - This resulted in a training dataset of {training_dataset_size} students within the target timeframe.
 - **Model Development**
 {sample_weight_section}
-  - Model Experimentation Data Split:
+    - Model Experimentation Data Split:
 
 {data_split_table}
 
 - **Model Evaluation**
-  - Evaluated top 10 models for performance across key metrics: accuracy, precision, AUC, recall, log loss, F-1.
-  - Evaluated SHAP values indicating relative importance in the models of key features for top-performing models.
-  - Evaluated initial model output for interpretability and actionability.
-  - Prioritized model quality with transparent and interpretable model outputs.
+    - Evaluated top 10 models for performance across key metrics: accuracy, precision, AUC, recall, log loss, F-1.
+    - Evaluated SHAP values indicating relative importance in the models of key features for top-performing models.
+    - Evaluated initial model output for interpretability and actionability.
+    - Prioritized model quality with transparent and interpretable model outputs.
 
 {model_comparison_plot}
 
 - **Model Interpretability** 
-  - Utilized SHAP (Shapley Additive Explanations) values to quantify the contribution of individual features in top-performing models.
-  - Leveraged SHAP to enhance interpretability & model transparency, while making model outputs more explainable and actionable.
+    - Utilized SHAP (Shapley Additive Explanations) values to quantify the contribution of individual features in top-performing models.
+    - Leveraged SHAP to enhance interpretability & model transparency, while making model outputs more explainable and actionable.
 
 ### Performance
 - **Model Performance Metric**
