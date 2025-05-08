@@ -101,22 +101,22 @@ def register_attribute_sections(card, registry):
         lines = []
         for k, v in criteria.items():
             lines.append(
-                f"{card.format.indent_level(3)}- {card.format.friendly_case(k)}"
+                f"{card.format.indent_level(2)}- {card.format.friendly_case(k)}"
             )
 
             # Handle if value is a list or a single string
             if isinstance(v, list):
                 for item in v:
                     lines.append(
-                        f"{card.format.indent_level(4)}- {card.format.friendly_case(item)}"
+                        f"{card.format.indent_level(3)}- {card.format.friendly_case(item)}"
                     )
             else:
                 lines.append(
-                    f"{card.format.indent_level(4)}- {card.format.friendly_case(v)}"
+                    f"{card.format.indent_level(3)}- {card.format.friendly_case(v)}"
                 )
 
         description = (
-            f"{card.format.indent_level(2)}- We focused our final dataset on the following target population:\n"
+            f"{card.format.indent_level(1)}- We focused our final dataset on the following target population.\n"
             + "\n".join(lines)
         )
         return description
