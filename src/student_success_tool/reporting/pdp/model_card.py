@@ -1,13 +1,16 @@
-import time
 import os
-import mlflow
 import logging
 import typing as t
-from mlflow.tracking import MlflowClient
 from datetime import datetime
-import markdown
+import mlflow
+from mlflow.tracking import MlflowClient
+
+# resolving files in templates module within package
 from importlib.abc import Traversable
 from importlib.resources import files
+
+# HTML & PDF rendering
+import markdown
 from weasyprint import HTML
 
 # internal SST modules
@@ -69,17 +72,12 @@ class ModelCard:
         5. Collects all metadata for the model card.
         6. Renders the model card using the template and context.
         """
-        def timed(label, func):
-            start = time.time()
-            func()
-            print(f"{label} took {time.time() - start:.2f}s")
-
-        timed("Loading model", self.load_model)
-        timed("Finding model version", self.find_model_version)
-        timed("Extracting training data", self.extract_training_data)
-        timed("Registering sections", self._register_sections)
-        timed("Collecting metadata", self.collect_metadata)
-        timed("Rendering card", self.render)
+        self.load_model()
+        self.find_model_version()
+        self.extract_training_data()
+        self._register_sections()
+        self.collect_metadata()
+        self.render()
 
     def load_model(self):
         """
@@ -248,7 +246,6 @@ class ModelCard:
             file.write(filled)
         LOGGER.info("✅ Model card generated!")
 
-
     def reload_card(self):
         """
         Reloads Markdown model card post user editing after rendering.
@@ -282,6 +279,7 @@ class ModelCard:
     def export_to_pdf(self):
         """
         Export CSS styled HTML to PDF utilizing weasyprint for conversion.
+        Also logs the card, so it can be accessed as a PDF in the run artifacts.
         """
         # Styles card using model_card.css
         self.style_card()
@@ -296,6 +294,9 @@ class ModelCard:
             LOGGER.info(f"✅ PDF model card saved to {self.pdf_path}")
         except Exception as e:
             raise RuntimeError(f"Failed to create PDF: {e}")
+        
+        # Log card as an ML artifact
+        utils.log_card(self.pdf_path)
 
     def _extract_model_name(self, uc_model_name: str) -> str:
         """

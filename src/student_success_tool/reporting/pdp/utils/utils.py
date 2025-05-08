@@ -1,10 +1,13 @@
 import os
 import shutil
 import typing as t
+import logging
 import mlflow
 import pathlib
 from importlib.abc import Traversable
 from importlib.resources import as_file
+
+LOGGER = logging.getLogger(__name__)
 
 
 def download_artifact(
@@ -80,6 +83,15 @@ def download_static_asset(
     else:
         return dst_path
 
+def log_card(local_path: str) -> None:
+    """
+    Logs card as an ML artifact in the run.
+
+    Args:
+        local_path: Path to model card PDF
+    """
+    mlflow.log_artifact(local_path, "model_card")
+    LOGGER.info("Logged model card PDF as an ML artifact")
 
 def embed_image(
     description: str,
