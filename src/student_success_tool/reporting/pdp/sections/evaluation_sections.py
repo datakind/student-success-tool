@@ -51,9 +51,10 @@ def register_evaluation_sections(card, registry):
                     for row in df.values
                 ]
 
-                return f"{card.format.header_level(5){title} Metrics}\n\n" + "\n".join(
+                return f"{card.format.header_level(5)}{title} Metrics\n\n" + "\n".join(
                     [headers, separator] + rows
                 )
+
 
             except Exception as e:
                 LOGGER.warning(
