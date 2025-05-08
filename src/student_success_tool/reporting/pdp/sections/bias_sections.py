@@ -120,6 +120,19 @@ def register_bias_sections(card, registry):
         text_block = "\n\n".join(descriptions)
         all_blocks.append(header + text_block + "\n\n" + plot_md)
 
+
+    @registry.register("bias_groups_section")
+    def bias_groups_section():
+        """
+        Returns bias groups for PDP. These groups will be static across
+        all institutions in PDP.
+        """
+        intro = f"{card.format.indent_level(1)}- Our assessment for FNR Parity was conducted across the following student groups:\n"
+        groups = ["Ethnicity", "First Generation Status", "Gender", "Race", "Student Age"]
+        nested = [f"{card.format.indent_level(2)}- {group}\n" for group in groups]
+        return intro + "".join(nested)
+
+
     @registry.register("bias_summary_section")
     def bias_summary_section():
         """

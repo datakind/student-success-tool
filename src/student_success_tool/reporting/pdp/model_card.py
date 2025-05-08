@@ -8,8 +8,8 @@ from importlib.abc import Traversable
 from importlib.resources import files
 
 # internal SST modules
-from .. import dataio, modeling
-from ..configs.pdp import PDPProjectConfig
+from ... import dataio, modeling
+from ...configs.pdp import PDPProjectConfig
 
 # relative imports in 'reporting' module
 from .sections import register_sections

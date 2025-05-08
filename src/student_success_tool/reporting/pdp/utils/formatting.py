@@ -2,12 +2,14 @@ import re
 
 
 class Formatting:
-    def __init__(self, base_spaces: int = 2):
+    def __init__(self, base_spaces: int = 4):
         """
         Initialize the formatter with a base indentation size.
 
         Args:
-            base_spaces: The number of spaces for each indent level. Default is 2.
+            base_spaces: The number of spaces for each indent level. The default
+            needs to be 4, since for markdown parsers and PDF export, this would
+            create a reliable interpretation of nested lists.
         """
         self.base_spaces = base_spaces
 
