@@ -7,12 +7,12 @@
 - {outcome_section}
 - The model makes this prediction when the student has completed {checkpoint_section}
 - Developed by DataKind in {current_year}, Model Version {version_number}
-- If there are questions or concerns about the model, you can contact education@datakind.org or your client success manager.
+- If there are questions or concerns about the model, you can contact **education@datakind.org** or your client success manager.
 
 ### Intended Use
 - **Primary Purpose**
     - Identify students who may need support in order to either retain or graduate on time. 
-  - Empower academic advisors who provide intervention strategies with information on the factors impacting their need for support.
+    - Empower academic advisors who provide intervention strategies with information on the factors impacting their need for support.
 - **Out-of-Scope Uses**
     - Outside of the target population: _see below_
     - Without intervention strategies carefully designed by academic advisors, student success professionals, and researchers. 
@@ -29,11 +29,11 @@
             - Threshold Applied: Removed features with VIF greater than {collinearity_threshold} were removed to reduce multicollinearity and improve model stability.
             - Explanation: Variance Inflation Factor (VIF) measures how much a feature is linearly correlated with other features. A VIF of 1 would imply no multicollinearity, while a VIF of 10 indicates high collinearity, meaning the feature's information is largely redundant.
     - Low Variance Threshold
-      - Threshold Applied: Removed features with variance less than {low_variance_threshold}.
-      - Explanation: Features with very low variance do not vary much across observations, meaning they carry little predictive signal. For example, features with variance below 0.01 are often considered near-constant.
+        - Threshold Applied: Removed features with variance less than {low_variance_threshold}.
+        - Explanation: Features with very low variance do not vary much across observations, meaning they carry little predictive signal. For example, features with variance below 0.01 are often considered near-constant.
     - Missing Data Threshold
-      - Threshold Applied: Removed features with more than {incomplete_threshold}% missing values.
-      - Explanation: Features with a high percentage of missing values may introduce noise or require extensive imputation.
+        - Threshold Applied: Removed features with more than {incomplete_threshold}% missing values.
+        - Explanation: Features with a high percentage of missing values may introduce noise or require extensive imputation.
     - After our feature selection processes, {number_of_features} actionable, relevant, and non-redundant features were retained for modeling.
 - **Target Population**
 {target_population_section}
@@ -95,7 +95,6 @@
         - A lower SHAP value (further to the left) means the feature is contributing toward a lower need for support.
         - Features are ordered from top to bottom by their overall importance to the model — the most influential features appear at the top.
         - Example: _If students have a low percentage of grades above the section average, they tend to have higher SHAP values, indicating a greater need of support in order to graduate on time._
-
 
 {feature_importances_by_shap_plot}
 
