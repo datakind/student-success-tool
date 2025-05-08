@@ -61,10 +61,10 @@ class ModelCard:
         5. Collects all metadata for the model card.
         6. Renders the model card using the template and context.
         """
-    def timed(label, func):
-        start = time.time()
-        func()
-        print(f"{label} took {time.time() - start:.2f}s")
+        def timed(label, func):
+            start = time.time()
+            func()
+            print(f"{label} took {time.time() - start:.2f}s")
 
         timed("Loading model", self.load_model)
         timed("Finding model version", self.find_model_version)
