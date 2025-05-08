@@ -5,8 +5,10 @@ import logging
 import typing as t
 from mlflow.tracking import MlflowClient
 from datetime import datetime
+import markdown
 from importlib.abc import Traversable
 from importlib.resources import files
+from weasyprint import HTML
 
 # internal SST modules
 from ... import dataio, modeling
@@ -48,8 +50,14 @@ class ModelCard:
 
         self.assets_folder = assets_path or self.DEFAULT_ASSETS_FOLDER
         self.output_path = self._build_output_path()
-        self.template_path = self._resolve_template(self.TEMPLATE_FILENAME)
-        self.logo_path = self._resolve_asset(self.LOGO_FILENAME)
+        self.template_path = self._resolve(
+            "student_success_tool.reporting.template",
+            self.TEMPLATE_FILENAME
+        )
+        self.logo_path = self._resolve(
+            "student_success_tool.reporting.template.assets",
+            self.LOGO_FILENAME
+        )
 
     def build(self):
         """
@@ -240,6 +248,55 @@ class ModelCard:
             file.write(filled)
         LOGGER.info("✅ Model card generated!")
 
+
+    def reload_card(self):
+        """
+        Reloads Markdown model card post user editing after rendering.
+        This offers flexibility in case user wants to utilize this class
+        as a base and then makes edits in markdown before exporting as a PDF.
+        """
+        # Read the Markdown output
+        with open(self.output_path, "r") as f:
+            self.md_content = f.read()
+        LOGGER.info(f"Reloaded model card content")
+
+    def style_card(self):
+        """
+        Styles card using CSS.
+        """
+        # Convert Markdown to HTML
+        html_content = markdown.markdown(
+            self.md_content,
+            extensions=["extra", "tables", "sane_lists", "toc", "smarty"]
+        )
+
+        # Load CSS from external file
+        css_path = self._resolve("student_success_tool.reporting.template.styles", "model_card.css")
+        with open(css_path, "r") as f:
+            style = f"<style>\n{f.read()}\n</style>"
+
+        # Prepend CSS to HTML
+        self.html_content = style + html_content
+        LOGGER.info(f"Applied CSS styling")
+
+    def export_to_pdf(self):
+        """
+        Export CSS styled HTML to PDF utilizing weasyprint for conversion.
+        """
+        # Styles card using model_card.css
+        self.style_card()
+
+        # Define PDF path
+        base_path = os.path.dirname(self.output_path) or "."
+        self.pdf_path = self.output_path.replace(".md", ".pdf")
+
+        # Render PDF
+        try:
+            HTML(string=self.html_content, base_url=base_path).write_pdf(self.pdf_path)
+            LOGGER.info(f"✅ PDF model card saved to {self.pdf_path}")
+        except Exception as e:
+            raise RuntimeError(f"Failed to create PDF: {e}")
+
     def _extract_model_name(self, uc_model_name: str) -> str:
         """
         Extracts model name from unity catalog model name.
@@ -253,24 +310,15 @@ class ModelCard:
         filename = f"model-card-{self.model_name}.md"
         return os.path.join(os.getcwd(), filename)
 
-    def _resolve_template(self, filename: str) -> Traversable:
-        """
-        Resolves the template file path using importlib. Importlib is necessary
-        since this template exists within the package itself.
-        """
-        return files("student_success_tool.reporting.template").joinpath(filename)
-
-    def _resolve_asset(self, filename: str) -> Traversable:
-        """
-        Resolves the asset file path using importlib. Importlib is necessary
-        since the asset exists within the package itself.
-        """
-        return files("student_success_tool.reporting.template.assets").joinpath(
-            filename
-        )
-
     def _register_sections(self):
         """
         Registers all sections in the section registry.
         """
         register_sections(self, self.section_registry)
+
+    def _resolve(self, package: str, filename: str) -> Traversable:
+        """
+        Resolves files using importlib. Importlib is necessary since
+        the file exists within the SST package itself.
+        """
+        return files(package).joinpath(filename)
