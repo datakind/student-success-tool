@@ -92,7 +92,7 @@ def log_card(local_path: str, run_id: str) -> None:
     """
     with mlflow.start_run(run_id=run_id) as run:
         mlflow.log_artifact(local_path, "model_card")
-        LOGGER.info(f"Logged model card PDF as an ML artifact at {run_id}")
+        LOGGER.info(f"Logged model card PDF as an ML artifact at '{run_id}'")
 
 def embed_image(
     description: str,
