@@ -137,7 +137,7 @@ def register_attribute_sections(card, registry):
             return f"The model makes this prediction when the student has completed {num_credits} credits."
 
         elif "semester" in checkpoint_name or "term" in checkpoint_name:
-            return f"The model makes this prediction when the student has completed {card.format.friendly_case(checkpoint_name, capitalize=False)}'."
+            return f"The model makes this prediction when the student has completed {card.format.friendly_case(checkpoint_name, capitalize=False)}."
         else:
             LOGGER.warning(
                 "Unable to determine checkpoint information. Please specify in model card or in config.toml."
