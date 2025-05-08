@@ -1,3 +1,4 @@
+import time
 import os
 import mlflow
 import logging
@@ -60,12 +61,17 @@ class ModelCard:
         5. Collects all metadata for the model card.
         6. Renders the model card using the template and context.
         """
-        self.load_model()
-        self.find_model_version()
-        self.extract_training_data()
-        self._register_sections()
-        self.collect_metadata()
-        self.render()
+    def timed(label, func):
+        start = time.time()
+        func()
+        print(f"{label} took {time.time() - start:.2f}s")
+
+        timed("Loading model", self.load_model)
+        timed("Finding model version", self.find_model_version)
+        timed("Extracting training data", self.extract_training_data)
+        timed("Registering sections", self._register_sections)
+        timed("Collecting metadata", self.collect_metadata)
+        timed("Rendering card", self.render)
 
     def load_model(self):
         """
