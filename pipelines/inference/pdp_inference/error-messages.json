@@ -1,9 +1,0 @@
-{ 
-    "-6": "Failure in publishing your output",
-    "-5": "Failure in your inference calculations",
-    "-4": "Failure in validating your data",
-    "-3": "Failure in preprocessing your data",
-    "-2": "Failure ingesting your data",
-    "-21": "Schema errors in the input file.",
-    "-1": "Inference Run failed"
-}
