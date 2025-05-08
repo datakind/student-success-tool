@@ -244,7 +244,7 @@ class ModelCard:
         filled = template.format(**self.context)
         with open(self.output_path, "w") as file:
             file.write(filled)
-        LOGGER.info("✅ Model card generated!")
+        LOGGER.info("✅ Model card generated at {self.output_path}")
 
     def reload_card(self):
         """
@@ -296,7 +296,10 @@ class ModelCard:
             raise RuntimeError(f"Failed to create PDF: {e}")
         
         # Log card as an ML artifact
-        utils.log_card(self.pdf_path)
+        utils.log_card(
+            local_path=self.pdf_path,
+            run_id=self.run_id
+        )
 
     def _extract_model_name(self, uc_model_name: str) -> str:
         """
