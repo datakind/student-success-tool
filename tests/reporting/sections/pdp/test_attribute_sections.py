@@ -13,7 +13,7 @@ def mock_card():
 
 
 @pytest.mark.parametrize("outcome_type, time_limits, extra_config, expected_snippet", [
-    ("retention", {}, {}, "This model predicts the risk of non-retention into the student's second academic year based on student, course, and academic data."),
+    ("retention", {}, {}, "The model predicts the risk of non-retention into the student's second academic year based on student, course, and academic data."),
 
     ("graduation",
      {"FULL-TIME": (2.0, "year"), "PART-TIME": (3.0, "year")},
@@ -47,6 +47,9 @@ def test_target_population_section(mock_card):
         "degree": ["bachelor's", "associate's"],
         "status": "full-time",
     }
+
+    # Patching checkpoint since we are testing target population
+    mock_card.cfg.preprocessing.checkpoint._type = "first"
 
     registry = SectionRegistry()
     pdp_attribute_sections.register_attribute_sections(mock_card, registry)
