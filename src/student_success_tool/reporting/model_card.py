@@ -32,7 +32,7 @@ class ModelCard(t.Generic[C]):
 
     def __init__(
         self,
-        config: pyd.BaseModel,
+        config: C,
         catalog: str,
         model_name: str,
         assets_path: t.Optional[str] = None,
