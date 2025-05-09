@@ -20,9 +20,10 @@ from .sections import register_sections
 from .sections.registry import SectionRegistry
 from .utils import utils
 from .utils.formatting import Formatting
+from .types import ModelCardConfig
 
 LOGGER = logging.getLogger(__name__)
-C = t.TypeVar("C", bound=pyd.BaseModel)
+C = t.TypeVar("C", bound=ModelCardConfig)
 
 
 class ModelCard(t.Generic[C]):
