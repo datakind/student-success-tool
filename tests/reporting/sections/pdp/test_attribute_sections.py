@@ -12,19 +12,28 @@ def mock_card():
     return card
 
 
-@pytest.mark.parametrize("outcome_type, time_limits, extra_config, expected_snippet", [
-    ("retention", {}, {}, "The model predicts the risk of non-retention into the student's second academic year based on student, course, and academic data."),
-
-    ("graduation",
-     {"FULL-TIME": (2.0, "year"), "PART-TIME": (3.0, "year")},
-     {},
-     "The model predicts the risk of not graduating on time within 2 years for full-time students, and within 3 years for part-time students, based on student, course, and academic data."),
-
-    ("credits_earned",
-     {"FULL-TIME": (1.5, "year")},
-     {"min_num_credits": 45},
-     "The model predicts the risk of not earning 45 credits within 1.5 years for full-time students, based on student, course, and academic data."),
-])
+@pytest.mark.parametrize("outcome_type, time_limits, extra_config, expected_snippet",
+    [
+        (
+            "retention",
+            {},
+            {},
+            "The model predicts the risk of non-retention into the student's second academic year based on student, course, and academic data."
+        ),
+        (
+            "graduation",
+            {"FULL-TIME": (2.0, "year"), "PART-TIME": (3.0, "year")},
+            {},
+            "The model predicts the risk of not graduating on time within 2 years for full-time students, and within 3 years for part-time students, based on student, course, and academic data."
+        ),
+        (
+            "credits_earned",
+            {"FULL-TIME": (1.5, "year")},
+            {"min_num_credits": 45},
+            "The model predicts the risk of not earning 45 credits within 1.5 years for full-time students, based on student, course, and academic data."
+        ),
+    ],
+)
 
 def test_outcome_variants(mock_card, outcome_type, time_limits, extra_config, expected_snippet):
     mock_card.cfg.preprocessing.target._type = outcome_type
@@ -62,14 +71,34 @@ def test_target_population_section(mock_card):
     assert "- Full-Time" in rendered["target_population_section"]
 
 
-@pytest.mark.parametrize("checkpoint_type,expected_output", [
-    ("nth", "The model makes this prediction when the student has completed their 3rd term"),
-    ("first", "The model makes this prediction when the student has completed their first term"),
-    ("last", "The model makes this prediction when the student has completed their last term"),
-    ("first_at_num_credits_earned", "The model makes this prediction when the student has earned 30 credits"),
-    ("first_within_cohort", "The model makes this prediction when the student has completed their first term within their cohort"),
-    ("last_in_enrollment_year", "The model makes this prediction when the student has completed their 2nd year of enrollment"),
-])
+@pytest.mark.parametrize("checkpoint_type,expected_output",
+    [
+        (
+            "nth",
+            "The model makes this prediction when the student has completed their 3rd term"
+        ),
+        (
+            "first",
+            "The model makes this prediction when the student has completed their first term"
+        ),
+        (
+            "last",
+            "The model makes this prediction when the student has completed their last term"
+        ),
+        (
+            "first_at_num_credits_earned",
+            "The model makes this prediction when the student has earned 30 credits"
+        ),
+        (
+            "first_within_cohort",
+            "The model makes this prediction when the student has completed their first term within their cohort"
+        ),
+        (
+            "last_in_enrollment_year",
+            "The model makes this prediction when the student has completed their 2nd year of enrollment"
+        ),
+    ],
+)
 
 def test_checkpoint_variants(mock_card, checkpoint_type, expected_output):
     mock_card.cfg.preprocessing.checkpoint._type = checkpoint_type
