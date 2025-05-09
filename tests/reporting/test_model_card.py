@@ -23,7 +23,7 @@ def mock_config():
 def test_init_defaults(mock_config):
     card = ModelCard(config=mock_config, catalog="catalog", model_name="inst_my_model")
     assert card.model_name == "inst_my_model"
-    assert card.uc_model_name == "inst_gold.inst_my_model"
+    assert card.uc_model_name == "catalog.inst_gold.inst_my_model"
     assert card.assets_folder == "card_assets"
     assert isinstance(card.context, dict)
 
