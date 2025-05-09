@@ -48,7 +48,7 @@ class ModelCard:
         self.cfg = config
         self.catalog = catalog
         self.model_name = model_name
-        self.uc_model_name = f"{catalog}.{cfg.institution_id}_gold.{model_name}"
+        self.uc_model_name = f"{catalog}.{self.cfg.institution_id}_gold.{model_name}"
         LOGGER.info("Initializing ModelCard for model: %s", self.uc_model_name)
 
         self.client = MlflowClient()
