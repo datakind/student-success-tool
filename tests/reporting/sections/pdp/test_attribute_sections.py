@@ -60,7 +60,7 @@ def test_target_population_section(mock_card):
     ("nth", "The model makes this prediction when the student has completed their 3rd term"),
     ("first", "The model makes this prediction when the student has completed their first term"),
     ("last", "The model makes this prediction when the student has completed their last term"),
-    ("first_at_num_credits_earned", "The model makes this prediction when the student has earned 45 credits"),
+    ("first_at_num_credits_earned", "The model makes this prediction when the student has earned 30 credits"),
     ("first_within_cohort", "The model makes this prediction when the student has completed their first term within their cohort"),
     ("last_in_enrollment_year", "The model makes this prediction when the student has completed their 2nd year of enrollment"),
 ])
@@ -70,7 +70,7 @@ def test_checkpoint_variants(mock_card, checkpoint_type, expected_output):
     if checkpoint_type == "nth":
         mock_card.cfg.preprocessing.checkpoint.n = 3
     if checkpoint_type == "first_at_num_credits_earned":
-        mock_card.cfg.preprocessing.checkpoint.min_num_credits = 45
+        mock_card.cfg.preprocessing.checkpoint.min_num_credits = 30
     if checkpoint_type == "last_in_enrollment_year":
         mock_card.cfg.preprocessing.checkpoint.enrollment_year = 2
 
