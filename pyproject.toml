@@ -88,5 +88,6 @@ warn_return_any = true
 disallow_incomplete_defs = true
 ignore_missing_imports = true
 follow_imports = "silent"
+cache_dir = ".mypy_cache"
 # in case of irreconcilable differences, consider telling mypy to ignore all errors
 # ignore_errors = true
