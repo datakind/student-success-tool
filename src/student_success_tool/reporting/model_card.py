@@ -6,8 +6,6 @@ from datetime import datetime
 import mlflow
 from mlflow.tracking import MlflowClient
 
-import pydantic as pyd
-
 # resolving files in templates module within package
 from importlib.abc import Traversable
 from importlib.resources import files
@@ -84,7 +82,7 @@ class ModelCard(t.Generic[C]):
         Loads the MLflow model from the MLflow client based on the MLflow model URI.
         Also assigns the run ID and experiment ID from the config.
         """
-        model_cfg = self.cfg.models.get(self.model_name)
+        model_cfg = self.cfg.model
         if not model_cfg:
             raise ValueError(f"Model configuration for '{self.model_name}' is missing.")
         if not all(
