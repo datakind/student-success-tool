@@ -52,6 +52,9 @@ def template_cfg_str():
     student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year_1 = "Bachelor's Degree" }
 
     [preprocessing.checkpoint]
+    name = "my_great_nth_checkpoint"
+    type_ = "nth"
+    n = 4
 
     [preprocessing.target]
     name = "my_great_retention_target"
