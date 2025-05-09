@@ -1,4 +1,4 @@
-from ..sections import (
+from .. import (
     register_metric_sections,
     register_data_sections,
     register_evaluation_sections,
