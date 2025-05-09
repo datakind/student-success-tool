@@ -294,12 +294,13 @@ class TargetBaseConfig(pyd.BaseModel):
         default=...,
         description="Descriptive name for target, used as a component in model name",
     )
-    type_: t.Literal["graduation", "retention", "credits_earned"] = pyd.Field(
+    type_: types.TargetTypeType = pyd.Field(
         default=..., description="Type of target to which config is applied"
     )
 
 
 class TargetGraduationConfig(TargetBaseConfig):
+    type_: types.TargetTypeType = "graduation"
     intensity_time_limits: types.IntensityTimeLimitsType
     years_to_degree_col: str
     num_terms_in_year: int = pyd.Field(default=4)
@@ -307,10 +308,12 @@ class TargetGraduationConfig(TargetBaseConfig):
 
 
 class TargetRetentionConfig(TargetBaseConfig):
+    type_: types.TargetTypeType = "retention"
     max_academic_year: str | t.Literal["infer"]
 
 
 class TargetCreditsEarnedConfig(TargetBaseConfig):
+    type_: types.TargetTypeType = "credits_earned"
     min_num_credits: float
     # TODO: is there any way to represent checkpoint arg in toml, given its dtype?
     intensity_time_limits: types.IntensityTimeLimitsType

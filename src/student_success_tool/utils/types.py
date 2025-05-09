@@ -11,6 +11,7 @@ CheckpointTypeType = t.Literal[
     "first_within_cohort",
     "last_in_enrollment_year",
 ]
+TargetTypeType = t.Literal["graduation", "retention", "credits_earned"]
 
 
 def to_list(value: t.Any) -> list:
