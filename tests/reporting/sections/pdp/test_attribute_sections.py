@@ -18,19 +18,19 @@ def mock_card():
             "retention",
             {},
             {},
-            "The model predicts the risk of non-retention into the student's second academic year based on student, course, and academic data."
+            "The model predicts the risk of non-retention into the student's second academic year based on student, course, and academic data.",
         ),
         (
             "graduation",
             {"FULL-TIME": (2.0, "year"), "PART-TIME": (3.0, "year")},
             {},
-            "The model predicts the risk of not graduating on time within 2 years for full-time students, and within 3 years for part-time students, based on student, course, and academic data."
+            "The model predicts the risk of not graduating on time within 2 years for full-time students, and within 3 years for part-time students, based on student, course, and academic data.",
         ),
         (
             "credits_earned",
             {"FULL-TIME": (1.5, "year")},
             {"min_num_credits": 45},
-            "The model predicts the risk of not earning 45 credits within 1.5 years for full-time students, based on student, course, and academic data."
+            "The model predicts the risk of not earning 45 credits within 1.5 years for full-time students, based on student, course, and academic data.",
         ),
     ],
 )
@@ -75,27 +75,27 @@ def test_target_population_section(mock_card):
     [
         (
             "nth",
-            "The model makes this prediction when the student has completed their 3rd term"
+            "The model makes this prediction when the student has completed their 3rd term",
         ),
         (
             "first",
-            "The model makes this prediction when the student has completed their first term"
+            "The model makes this prediction when the student has completed their first term",
         ),
         (
             "last",
-            "The model makes this prediction when the student has completed their last term"
+            "The model makes this prediction when the student has completed their last term",
         ),
         (
             "first_at_num_credits_earned",
-            "The model makes this prediction when the student has earned 30 credits"
+            "The model makes this prediction when the student has earned 30 credits",
         ),
         (
             "first_within_cohort",
-            "The model makes this prediction when the student has completed their first term within their cohort"
+            "The model makes this prediction when the student has completed their first term within their cohort",
         ),
         (
             "last_in_enrollment_year",
-            "The model makes this prediction when the student has completed their 2nd year of enrollment"
+            "The model makes this prediction when the student has completed their 2nd year of enrollment",
         ),
     ],
 )
