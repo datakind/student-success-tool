@@ -22,9 +22,10 @@ from .utils import utils
 from .utils.formatting import Formatting
 
 LOGGER = logging.getLogger(__name__)
+C = t.TypeVar("C", bound=pyd.BaseModel)
 
 
-class ModelCard:
+class ModelCard(t.Generic[C]):
     DEFAULT_ASSETS_FOLDER = "card_assets"
     TEMPLATE_FILENAME = "model-card-TEMPLATE.md"
     LOGO_FILENAME = "logo.png"

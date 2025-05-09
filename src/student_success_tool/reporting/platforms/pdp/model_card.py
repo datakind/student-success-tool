@@ -1,11 +1,11 @@
 import typing as t
 
 from ....configs.pdp import PDPProjectConfig
-from ..model_card import ModelCard
-from ..sections.pdp import register_sections as register_pdp_sections
+from ...model_card import ModelCard
+from ...sections.pdp import register_sections as register_pdp_sections
 
 
-class PDPModelCard(ModelCard):
+class PDPModelCard(ModelCard[PDPProjectConfig]):
     def __init__(
         self,
         config: PDPProjectConfig,
