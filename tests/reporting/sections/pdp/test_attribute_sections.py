@@ -14,7 +14,8 @@ def mock_card():
     return card
 
 
-@pytest.mark.parametrize("outcome_type, time_limits, extra_config, expected_snippet",
+@pytest.mark.parametrize(
+    "outcome_type, time_limits, extra_config, expected_snippet",
     [
         (
             "retention",
@@ -36,7 +37,6 @@ def mock_card():
         ),
     ],
 )
-
 def test_outcome_variants(
     mock_card, outcome_type, time_limits, extra_config, expected_snippet
 ):
@@ -107,7 +107,6 @@ def test_target_population_section(mock_card):
         ),
     ],
 )
-
 def test_checkpoint_variants(mock_card, checkpoint_type, expected_output):
     mock_card.cfg.preprocessing.checkpoint._type = checkpoint_type
     if checkpoint_type == "nth":

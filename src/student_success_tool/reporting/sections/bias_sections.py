@@ -47,9 +47,7 @@ def register_bias_sections(card, registry):
             f"{int(round(float(diff) * 100))}% difference"
         )
 
-        return (
-            f"- {sg1} students have a {percent_higher} in False Negative Rate (FNR) than {sg2} students. Statistical analysis indicates: {stat_summary}."
-        )
+        return f"- {sg1} students have a {percent_higher} in False Negative Rate (FNR) than {sg2} students. Statistical analysis indicates: {stat_summary}."
 
     # Load bias flag CSVs and filter for test split
     for level in bias_levels:
