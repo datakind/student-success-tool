@@ -55,7 +55,6 @@ def register_evaluation_sections(card, registry):
                     [headers, separator] + rows
                 )
 
-
             except Exception as e:
                 LOGGER.warning(
                     f"Could not load evaluation metrics for {title}: {str(e)}"

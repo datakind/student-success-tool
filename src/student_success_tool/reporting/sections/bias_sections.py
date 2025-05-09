@@ -117,7 +117,6 @@ def register_bias_sections(card, registry):
         text_block = "\n\n".join(descriptions)
         all_blocks.append(header + text_block + "\n\n" + plot_md)
 
-
     @registry.register("bias_groups_section")
     def bias_groups_section():
         """
@@ -125,7 +124,6 @@ def register_bias_sections(card, registry):
         """
         intro = f"{card.format.indent_level(1)}- Our assessment for FNR Parity was conducted across several student groups.\n"
         return intro
-
 
     @registry.register("bias_summary_section")
     def bias_summary_section():

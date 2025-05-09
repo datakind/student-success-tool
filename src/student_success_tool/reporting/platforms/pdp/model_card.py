@@ -1,6 +1,6 @@
 import typing as t
 
-from ....configs import PDPProjectConfig
+from ....configs.pdp import PDPProjectConfig
 from ..model_card import ModelCard
 from ..sections.pdp import register_sections as register_pdp_sections
 
@@ -14,7 +14,7 @@ class PDPModelCard(ModelCard):
         assets_path: t.Optional[str] = None,
     ):
         """
-        Initializes PDP model card by enforcing a PDP project config. 
+        Initializes PDP model card by enforcing a PDP project config.
         Otherwise, this class inherits and is functionally the same as the
         base ModelCard class.
         """
