@@ -20,15 +20,15 @@ def register_attribute_sections(card, registry):
         """
         outcome_type = card.cfg.preprocessing.target._type
 
-        if outcome_type is "retention":
+        if outcome_type == "retention":
             outcome = "non-retention into the second academic year"
             description = "The model predicts the risk of {outcome} based on student, course, and academic data."
         else:
             limits = card.cfg.preprocessing.selection.intensity_time_limits
             
-            if outcome_type is "graduation":
+            if outcome_type == "graduation":
                 outcome = "not graduating on time"
-            elif outcome_type is "credits_earned":
+            elif outcome_type == "credits_earned":
                 credit_thresh = card.cfg.preprocessing.target.min_num_credits
                 outcome = f"not earning {credit_thresh} credits"
 
@@ -101,19 +101,19 @@ def register_attribute_sections(card, registry):
         """
         checkpoint_type = card.cfg.preprocessing.checkpoint._type
         base_message = "The model makes this prediction when the student has"
-        if checkpoint_type is "nth":
+        if checkpoint_type == "nth":
             n_ckpt = card.cfg.preprocessing.checkpoint.n
             return f"{base_message} completed their {card.format.ordinal(n_ckpt)} term."
-        elif checkpoint_type is "first":
+        elif checkpoint_type == "first":
             return f"{base_message} completed their first term."
-        elif checkpoint_type is "last":
+        elif checkpoint_type == "last":
             return f"{base_message} completed their last term."
-        elif checkpoint_type is "first_at_num_credits_earned":
+        elif checkpoint_type == "first_at_num_credits_earned":
             credit_thresh = card.cfg.preprocessing.checkpoint.min_num_credits
             return f"{base_message} earned {credit_thresh} credits."
-        elif checkpoint_type is "first_within_cohort":
+        elif checkpoint_type == "first_within_cohort":
             return f"{base_message} completed their first term within their cohort."
-        elif checkpoint_type is "last_in_enrollment_year":
+        elif checkpoint_type == "last_in_enrollment_year":
             enrl_year = card.cfg.preprocessing.checkpoint.enrollment_year
             return f"{base_message} completed their {card.format.ordinal(enrl_year)} year of enrollment."
         else:
