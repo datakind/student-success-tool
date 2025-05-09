@@ -40,11 +40,11 @@ def mock_card():
 def test_outcome_variants(
     mock_card, outcome_type, time_limits, extra_config, expected_snippet
 ):
-    mock_card.cfg.preprocessing.target._type = outcome_type
+    mock_card.cfg.preprocessing.target.type_ = outcome_type
     mock_card.cfg.preprocessing.selection.intensity_time_limits = time_limits
 
     # Patching checkpoint since we are testing outcome
-    mock_card.cfg.preprocessing.checkpoint._type = "first"
+    mock_card.cfg.preprocessing.checkpoint.type_ = "first"
 
     if outcome_type == "credits_earned" and "min_num_credits" in extra_config:
         mock_card.cfg.preprocessing.target.min_num_credits = extra_config[
@@ -65,7 +65,7 @@ def test_target_population_section(mock_card):
     }
 
     # Patching checkpoint since we are testing target population
-    mock_card.cfg.preprocessing.checkpoint._type = "first"
+    mock_card.cfg.preprocessing.checkpoint.type_ = "first"
 
     registry = SectionRegistry()
     pdp_attribute_sections.register_attribute_sections(mock_card, registry)
@@ -108,7 +108,7 @@ def test_target_population_section(mock_card):
     ],
 )
 def test_checkpoint_variants(mock_card, checkpoint_type, expected_output):
-    mock_card.cfg.preprocessing.checkpoint._type = checkpoint_type
+    mock_card.cfg.preprocessing.checkpoint.type_ = checkpoint_type
     if checkpoint_type == "nth":
         mock_card.cfg.preprocessing.checkpoint.n = 3
     if checkpoint_type == "first_at_num_credits_earned":
@@ -124,7 +124,7 @@ def test_checkpoint_variants(mock_card, checkpoint_type, expected_output):
 
 
 def test_checkpoint_unknown_type_raises_error(mock_card):
-    mock_card.cfg.preprocessing.checkpoint._type = "unknown_metric"
+    mock_card.cfg.preprocessing.checkpoint.type_ = "unknown_metric"
 
     registry = SectionRegistry()
     pdp_attribute_sections.register_attribute_sections(mock_card, registry)

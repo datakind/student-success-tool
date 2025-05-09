@@ -17,7 +17,7 @@ def register_attribute_sections(card, registry):
         validation around the data schema and the config file, which enables us to assume
         that fields will be present.
         """
-        outcome_type = card.cfg.preprocessing.target._type
+        outcome_type = card.cfg.preprocessing.target.type_
 
         if outcome_type == "retention":
             outcome = "non-retention into the student's second academic year"
@@ -98,7 +98,7 @@ def register_attribute_sections(card, registry):
         Produce a section for the PDP checkpoint. Also defines an
         ordinal function
         """
-        checkpoint_type = card.cfg.preprocessing.checkpoint._type
+        checkpoint_type = card.cfg.preprocessing.checkpoint.type_
         base_message = "The model makes this prediction when the student has"
         if checkpoint_type == "nth":
             n_ckpt = card.cfg.preprocessing.checkpoint.n
