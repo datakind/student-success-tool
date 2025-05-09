@@ -75,7 +75,7 @@ class Formatting:
         tokens = re.findall(r"[\w'-]+", text)
         return " ".join(smart_cap(tok) for tok in tokens)
 
-    def format_intensity_time_limit(duration: t.Tuple[str, str]) -> str:
+    def format_intensity_time_limit(self, duration: t.Tuple[str, str]) -> str:
         """
         We want to format a intensity_limit within config.toml by unpacking
         the value (3.0) and unit ("year"), for example.
