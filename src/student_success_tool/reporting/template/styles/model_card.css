@@ -11,7 +11,7 @@
 }
 
 /* ================================
-   Global Typography
+   Font Selection
 ================================ */
 em {
     font-style: italic;
@@ -47,7 +47,7 @@ tr {
     break-after: auto;
 }
 
-/* Use landscape layout for content wrapped in <div class="wide"> */
+/* Using landscape layout for content wrapped in <div class="wide"> */
 .wide {
     page: wide-page;
 }
@@ -73,8 +73,9 @@ ul {
 ul ul {
     list-style-type: circle;
 }
+/* Avoiding oversized 'square' bullet */
 ul ul ul {
-    list-style-type: circle; /* avoids oversized 'square' bullet */
+    list-style-type: circle;
 }
 
 /* Numbering types by depth */

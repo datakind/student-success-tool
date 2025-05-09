@@ -123,13 +123,10 @@ def register_bias_sections(card, registry):
     @registry.register("bias_groups_section")
     def bias_groups_section():
         """
-        Returns bias groups for PDP. These groups will be static across
-        all institutions in PDP.
+        Returns just a filler text that can be used across any platform.
         """
-        intro = f"{card.format.indent_level(1)}- Our assessment for FNR Parity was conducted across the following student groups.\n"
-        groups = ["Ethnicity", "First Generation Status", "Gender", "Race", "Student Age"]
-        nested = [f"{card.format.indent_level(2)}- {group}\n" for group in groups]
-        return intro + "".join(nested)
+        intro = f"{card.format.indent_level(1)}- Our assessment for FNR Parity was conducted across several student groups.\n"
+        return intro
 
 
     @registry.register("bias_summary_section")
