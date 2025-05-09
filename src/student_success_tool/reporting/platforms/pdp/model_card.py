@@ -18,7 +18,7 @@ class PDPModelCard(ModelCard):
         Otherwise, this class inherits and is functionally the same as the
         base ModelCard class.
         """
-        assert isinstance(config, PDPProjectConfig): # type guard
+        assert isinstance(config, PDPProjectConfig) # type guard
         
         super().__init__(config, catalog, model_name, assets_path)
 
