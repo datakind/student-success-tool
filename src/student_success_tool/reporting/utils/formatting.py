@@ -36,15 +36,15 @@ class Formatting:
         Apply Markdown italic formatting to a given text.
         """
         return f"_{text}_"
-    
+
     def ordinal(self, n: int) -> str:
         """
         Converts an integer to its ordinal form (e.g. 1 -> 1st).
         """
         if 10 <= n % 100 <= 20:
-            suffix = 'th'
+            suffix = "th"
         else:
-            suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')
+            suffix = {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
         return f"{n}{suffix}"
 
     def friendly_case(self, text: str, capitalize: bool = True) -> str:
@@ -90,9 +90,7 @@ class Formatting:
             if num.is_integer():
                 num = int(num)
             else:
-                num = round(
-                    num, 2
-                )  # Keep at most 1 decimal with no trailing zeros
+                num = round(num, 2)
 
         unit = unit if num == 1 else unit + "s"
         return f"{num} {unit}"
