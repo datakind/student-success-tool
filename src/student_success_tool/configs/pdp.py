@@ -130,7 +130,7 @@ class ModelConfig(pyd.BaseModel):
 class PreprocessingConfig(pyd.BaseModel):
     features: "FeaturesConfig"
     selection: "SelectionConfig"
-    checkpoint: "CheckpointConfig"
+    checkpoint: "CheckpointNthConfig | CheckpointFirstConfig | CheckpointLastConfig | CheckpointFirstAtNumCreditsEarnedConfig | CheckpointFirstWithinCohortConfig | CheckpointLastInEnrollmentYearConfig"
     target: "TargetGraduationConfig | TargetRetentionConfig | TargetCreditsEarnedConfig"
     splits: dict[t.Literal["train", "test", "validate"], float] = pyd.Field(
         default={"train": 0.6, "test": 0.2, "validate": 0.2},
@@ -241,9 +241,52 @@ class SelectionConfig(pyd.BaseModel):
     )
 
 
-class CheckpointConfig(pyd.BaseModel):
-    name: str = pyd.Field(default="checkpoint")
-    params: dict[str, object] = pyd.Field(default_factory=dict)
+class CheckpointBaseConfig(pyd.BaseModel):
+    name: str = pyd.Field(
+        default=...,
+        description="Descriptive name for checkpoint, used as a component in model name",
+    )
+    type_: types.CheckpointTypeType = pyd.Field(
+        default=..., description="Type of checkpoint to which config is applied"
+    )
+    sort_cols: str | list[str] = pyd.Field(
+        default="term_rank",
+        description="Column(s) used to sort students' terms, typically chronologically.",
+    )
+    include_cols: t.Optional[list[str]] = pyd.Field(
+        default=None,
+        description="Optional subset of columns to include in checkpoint student-terms.",
+    )
+
+
+class CheckpointNthConfig(CheckpointBaseConfig):
+    type_: types.CheckpointTypeType = "nth"
+    n: int = pyd.Field(default=...)
+
+
+class CheckpointFirstConfig(CheckpointBaseConfig):
+    type_: types.CheckpointTypeType = "first"
+
+
+class CheckpointLastConfig(CheckpointBaseConfig):
+    type_: types.CheckpointTypeType = "last"
+
+
+class CheckpointFirstAtNumCreditsEarnedConfig(CheckpointBaseConfig):
+    type_: types.CheckpointTypeType = "first_at_num_credits_earned"
+    min_num_credits: float = pyd.Field(default=...)
+    num_credits_col: str = pyd.Field(default="num_credits_earned_cumsum")
+
+
+class CheckpointFirstWithinCohortConfig(CheckpointBaseConfig):
+    type_: types.CheckpointTypeType = "first_within_cohort"
+    term_is_pre_cohort_col: str = pyd.Field(default="term_is_pre_cohort")
+
+
+class CheckpointLastInEnrollmentYearConfig(CheckpointBaseConfig):
+    type_: types.CheckpointTypeType = "last_in_enrollment_year"
+    enrollment_year: float = pyd.Field(default=...)
+    enrollment_year_col: str = pyd.Field(default="year_of_enrollment_at_cohort_inst")
 
 
 class TargetBaseConfig(pyd.BaseModel):
