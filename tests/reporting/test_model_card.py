@@ -8,7 +8,7 @@ from student_success_tool.reporting.model_card import ModelCard
 @pytest.fixture
 def mock_config():
     cfg = MagicMock()
-    cfg.models.get.return_value = MagicMock(
+    cfg.model = MagicMock(
         mlflow_model_uri="uri", framework="sklearn", run_id="123", experiment_id="456"
     )
     cfg.institution_id = "inst"
