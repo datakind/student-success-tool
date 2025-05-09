@@ -11,6 +11,7 @@ def register_attribute_sections(card, registry):
     config.toml file.
     """
 
+    # HACK: This section assumes certain standards in the config
     @registry.register("outcome_section")
     def outcome():
         """
@@ -43,28 +44,6 @@ def register_attribute_sections(card, registry):
             k.strip().upper().replace(" ", "-"): v for k, v in limits.items()
         }
 
-        def format_time(duration: t.Tuple[str, str]) -> str:
-            """
-            We want to format a intensity_limit within config.toml by unpacking
-            the value (3.0) and unit ("year"), for example.
-
-            Args:
-                duration: intensity limit in config (3.0, "year"), for example.
-            """
-            num, unit = duration
-
-            # Format number cleanly
-            if isinstance(num, float):
-                if num.is_integer():
-                    num = int(num)
-                else:
-                    num = round(
-                        num, 2
-                    )  # Keep at most 1 decimals with no trailing zeros
-
-            unit = unit if num == 1 else unit + "s"
-            return f"{num} {unit}"
-
         full_time = normalized_limits.get("FULL-TIME")
         part_time = normalized_limits.get("PART-TIME")
 
@@ -74,11 +53,11 @@ def register_attribute_sections(card, registry):
             )
             return f"{card.format.bold('Timeframe for Outcome Variable Not Found')}"
 
-        full_str = format_time(full_time)
+        full_str = card.format.format_intensity_time_limit(full_time)
         description = f"The model predicts the risk of {outcome} within {full_str} for full-time students"
 
         if part_time:
-            part_str = format_time(part_time)
+            part_str = card.format.format_intensity_time_limit(part_time)
             description += f", and within {part_str} for part-time students"
 
         description += ", based on student, course, and academic data."
@@ -121,7 +100,6 @@ def register_attribute_sections(card, registry):
         )
         return description
 
-    # TODO: Right now there are no standards in the config for the checkpoint section.
     # HACK: This section assumes certain standards in the config.
     @registry.register("checkpoint_section")
     def checkpoint():

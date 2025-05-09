@@ -2,8 +2,11 @@ import os
 import logging
 import typing as t
 from datetime import datetime
+
 import mlflow
 from mlflow.tracking import MlflowClient
+
+import pydantic as pyd
 
 # resolving files in templates module within package
 from importlib.abc import Traversable
@@ -14,8 +17,8 @@ import markdown
 from weasyprint import HTML
 
 # internal SST modules
-from ... import dataio, modeling
-from ...configs.pdp import PDPProjectConfig
+from .. import dataio, modeling
+
 
 # relative imports in 'reporting' module
 from .sections import register_sections
@@ -33,8 +36,9 @@ class ModelCard:
 
     def __init__(
         self,
-        config: PDPProjectConfig,
-        uc_model_name: str,
+        config: pyd.BaseModel,
+        catalog: str,
+        model_name: str,
         assets_path: t.Optional[str] = None,
     ):
         """
@@ -42,8 +46,9 @@ class ModelCard:
         in unity catalog. If assets_path is not provided, the default assets folder is used.
         """
         self.cfg = config
-        self.uc_model_name = uc_model_name
-        self.model_name = self._extract_model_name(uc_model_name)
+        self.catalog = catalog
+        self.model_name = model_name
+        self.uc_model_name = f"{catalog}.{cfg.institution_id}_gold.{model_name}"
         LOGGER.info("Initializing ModelCard for model: %s", self.uc_model_name)
 
         self.client = MlflowClient()
@@ -300,12 +305,6 @@ class ModelCard:
             local_path=self.pdf_path,
             run_id=self.run_id
         )
-
-    def _extract_model_name(self, uc_model_name: str) -> str:
-        """
-        Extracts model name from unity catalog model name.
-        """
-        return uc_model_name.split(".")[-1]
 
     def _build_output_path(self) -> str:
         """

@@ -1,1 +1,1 @@
-from . import pdp
+from . import model_card
