@@ -3,6 +3,14 @@ from collections.abc import Collection, Iterable
 
 TermType = t.Literal["FALL", "WINTER", "SPRING", "SUMMER"]
 IntensityTimeLimitsType = dict[str, tuple[float, t.Literal["year", "term"]]]
+CheckpointTypeType = t.Literal[
+    "nth",
+    "first",
+    "last",
+    "first_at_num_credits_earned",
+    "first_within_cohort",
+    "last_in_enrollment_year",
+]
 
 
 def to_list(value: t.Any) -> list:
