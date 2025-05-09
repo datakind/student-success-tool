@@ -1,4 +1,6 @@
-from reporting.sections import bias_sections as base_bias_sections
+from .. import (
+    bias_sections as base_bias_sections
+)
 
 def register_bias_sections(card, registry):
 
