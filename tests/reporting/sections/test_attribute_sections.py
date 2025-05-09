@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
+
 from student_success_tool.reporting.sections.registry import SectionRegistry
 from student_success_tool.reporting.sections.attribute_sections import (
     register_attribute_sections,
