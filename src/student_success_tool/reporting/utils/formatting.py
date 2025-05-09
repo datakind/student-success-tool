@@ -1,6 +1,7 @@
 import re
 import typing as t
 
+
 class Formatting:
     def __init__(self, base_spaces: int = 4):
         """

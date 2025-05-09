@@ -24,7 +24,7 @@ def register_attribute_sections(card, registry):
             description = f"The model predicts the risk of {outcome} based on student, course, and academic data."
         else:
             limits = card.cfg.preprocessing.selection.intensity_time_limits
-            
+
             if outcome_type == "graduation":
                 outcome = "not graduating on time"
             elif outcome_type == "credits_earned":

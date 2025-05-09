@@ -53,8 +53,14 @@ class ModelCard:
 
         self.assets_folder = assets_path or self.DEFAULT_ASSETS_FOLDER
         self.output_path = self._build_output_path()
-        self.template_path = self._resolve("student_success_tool.reporting.template", self.TEMPLATE_FILENAME)
-        self.logo_path = self._resolve("student_success_tool.reporting.template.assets", self.LOGO_FILENAME)
+        self.template_path = self._resolve(
+            "student_success_tool.reporting.template",
+            self.TEMPLATE_FILENAME
+        )
+        self.logo_path = self._resolve(
+            "student_success_tool.reporting.template.assets",
+            self.LOGO_FILENAME
+        )
 
     def build(self):
         """
