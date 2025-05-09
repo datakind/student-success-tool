@@ -1,7 +1,9 @@
 import pytest
 from unittest.mock import MagicMock
 from student_success_tool.reporting.sections.registry import SectionRegistry
-from student_success_tool.reporting.sections.pdp import attribute_sections as pdp_attribute_sections
+from student_success_tool.reporting.sections.pdp import (
+    attribute_sections as pdp_attribute_sections,
+)
 from student_success_tool.reporting.utils.formatting import Formatting
 
 
@@ -35,7 +37,9 @@ def mock_card():
     ],
 )
 
-def test_outcome_variants(mock_card, outcome_type, time_limits, extra_config, expected_snippet):
+def test_outcome_variants(
+    mock_card, outcome_type, time_limits, extra_config, expected_snippet
+):
     mock_card.cfg.preprocessing.target._type = outcome_type
     mock_card.cfg.preprocessing.selection.intensity_time_limits = time_limits
 
@@ -43,13 +47,16 @@ def test_outcome_variants(mock_card, outcome_type, time_limits, extra_config, ex
     mock_card.cfg.preprocessing.checkpoint._type = "first"
 
     if outcome_type == "credits_earned" and "min_num_credits" in extra_config:
-        mock_card.cfg.preprocessing.target.min_num_credits = extra_config["min_num_credits"]
+        mock_card.cfg.preprocessing.target.min_num_credits = extra_config[
+            "min_num_credits"
+        ]
 
     registry = SectionRegistry()
     pdp_attribute_sections.register_attribute_sections(mock_card, registry)
     rendered = registry.render_all()
 
     assert expected_snippet in rendered["outcome_section"]
+
 
 def test_target_population_section(mock_card):
     mock_card.cfg.preprocessing.selection.student_criteria = {
@@ -71,7 +78,8 @@ def test_target_population_section(mock_card):
     assert "- Full-Time" in rendered["target_population_section"]
 
 
-@pytest.mark.parametrize("checkpoint_type,expected_output",
+@pytest.mark.parametrize(
+    "checkpoint_type,expected_output",
     [
         (
             "nth",

@@ -12,13 +12,9 @@ def register_metric_sections(card, registry):
         """
         metric_map = {
             "log_loss": f"{card.format.indent_level(1)}- Our primary metric for training was log loss to ensure that the model produces well-calibrated probability estimates.\n{card.format.indent_level(1)}- Lower log loss is better, as it indicates more accurate and confident probability predictions.",
-
             "recall": f"{card.format.indent_level(1)}- Our primary metric for training was recall in order to ensure that we correctly identify as many students in need of support as possible.\n{card.format.indent_level(1)}- Higher recall is better, as it indicates fewer students in need are missed.",
-
             "precision": f"{card.format.indent_level(1)}- Our primary metric for training was precision to ensure that when the model identifies a student as needing support, it is likely to be correct.\n{card.format.indent_level(1)}- Higher precision is better, as it indicates fewer students are incorrectly flagged.",
-
             "roc_auc": f"{card.format.indent_level(1)}- Our primary metric for training was ROC AUC, which measures the model's ability to distinguish between students who need support and those who do not.\n{card.format.indent_level(1)}- Higher ROC AUC is better, as it indicates stronger overall classification performance across all thresholds.",
-
             "f1": f"{card.format.indent_level(1)}- Our primary metric for training was F1-score to balance the trade-off between precision and recall.\n{card.format.indent_level(1)}- A higher F1-score indicates that the model is effectively identifying students in need while minimizing both false positives and false negatives.",
         }
         metric = card.cfg.modeling.training.primary_metric
