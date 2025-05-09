@@ -91,5 +91,7 @@ def test_checkpoint_unknown_type_raises_error(mock_card):
     mock_card.cfg.preprocessing.checkpoint._type = "unknown_metric"
 
     registry = SectionRegistry()
+    pdp_attribute_sections.register_attribute_sections(mock_card, registry)
+
     with pytest.raises(ValueError, match="Unknown checkpoint type: unknown_metric"):
-        pdp_attribute_sections.register_attribute_sections(mock_card, registry)
+        registry.render_all()
