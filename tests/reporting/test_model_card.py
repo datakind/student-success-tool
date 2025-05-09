@@ -11,6 +11,7 @@ def mock_config():
     cfg.models.get.return_value = MagicMock(
         mlflow_model_uri="uri", framework="sklearn", run_id="123", experiment_id="456"
     )
+    cfg.institution_id = "inst"
     cfg.institution_name = "TestInstitution"
     cfg.modeling.feature_selection.collinear_threshold = 0.9
     cfg.modeling.feature_selection.low_variance_threshold = 0.01
@@ -20,7 +21,7 @@ def mock_config():
 
 
 def test_init_defaults(mock_config):
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="schema.my_model")
+    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst.my_model")
     assert card.model_name == "my_model"
     assert card.assets_folder == "card_assets"
     assert isinstance(card.context, dict)
@@ -28,7 +29,7 @@ def test_init_defaults(mock_config):
 
 @patch("student_success_tool.reporting.model_card.dataio.models.load_mlflow_model")
 def test_load_model_success(mock_load_model, mock_config):
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="schema.my_model")
+    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst.my_model")
     card.load_model()
     mock_load_model.assert_called_once_with("uri", "sklearn")
     assert card.run_id == "123"
@@ -36,7 +37,7 @@ def test_load_model_success(mock_load_model, mock_config):
 
 
 def test_find_model_version_found(mock_config):
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="schema.my_model")
+    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst.my_model")
     card.run_id = "123"
     mock_version = MagicMock(run_id="123", version="5")
     card.client.search_model_versions = MagicMock(return_value=[mock_version])
@@ -45,7 +46,7 @@ def test_find_model_version_found(mock_config):
 
 
 def test_find_model_version_not_found(mock_config):
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="schema.my_model")
+    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst.my_model")
     card.run_id = "999"
     card.client.search_model_versions = MagicMock(return_value=[])
     card.find_model_version()
@@ -53,7 +54,7 @@ def test_find_model_version_not_found(mock_config):
 
 
 def test_get_feature_metadata_success(mock_config):
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="schema.my_model")
+    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst.my_model")
     card.model = MagicMock()
     card.model.named_steps = {
         "column_selector": MagicMock(get_params=lambda: {"cols": ["a", "b", "c"]})
@@ -68,7 +69,7 @@ def test_get_feature_metadata_success(mock_config):
 def test_get_basic_context(mock_datetime, mock_download, mock_config):
     mock_download.return_value = "<img>Logo</img>"
     mock_datetime.now.return_value.year = 2025
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="schema.my_model")
+    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst.my_model")
     result = card.get_basic_context()
     assert result["institution_name"] == "TestInstitution"
     assert result["current_year"] == "2025"
@@ -76,7 +77,7 @@ def test_get_basic_context(mock_datetime, mock_download, mock_config):
 
 
 def test_build_calls_all_steps(mock_config):
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="schema.my_model")
+    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst.my_model")
     for method in [
         "load_model",
         "find_model_version",
@@ -116,7 +117,7 @@ def test_extract_training_data_with_split_call_load_model(
     mock_extract_data.return_value = df
     mock_search_runs.return_value = pd.DataFrame({"run_id": ["123", "987"]})
 
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="schema.my_model")
+    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst.my_model")
     card.load_model()
     card.extract_training_data()
 
@@ -130,7 +131,7 @@ def test_render_template_and_output(mock_open, mock_config):
     mock_open.return_value.__enter__.return_value = mock_file
     mock_file.read.return_value = "Model: {institution_name}"
 
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="schema.my_model")
+    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst.my_model")
     card.template_path = "template.md"
     card.output_path = "output.md"
     card.context = {"institution_name": "TestInstitution"}
