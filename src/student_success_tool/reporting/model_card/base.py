@@ -6,6 +6,10 @@ from datetime import datetime
 import mlflow
 from mlflow.tracking import MlflowClient
 
+# export .md to .pdf
+import markdown
+from weasyprint import HTML
+
 # resolving files in templates module within package
 from importlib.abc import Traversable
 from importlib.resources import files
@@ -243,6 +247,61 @@ class ModelCard(t.Generic[C]):
         with open(self.output_path, "w") as file:
             file.write(filled)
         LOGGER.info(f"✅ Model card generated at {self.output_path}")
+
+    def reload_card(self):
+        """
+        Reloads Markdown model card post user editing after rendering.
+        This offers flexibility in case user wants to utilize this class
+        as a base and then makes edits in markdown before exporting as a PDF.
+        """
+        # Read the Markdown output
+        with open(self.output_path, "r") as f:
+            self.md_content = f.read()
+        LOGGER.info(f"Reloaded model card content")
+
+    def style_card(self):
+        """
+        Styles card using CSS.
+        """
+        # Convert Markdown to HTML
+        html_content = markdown.markdown(
+            self.md_content,
+            extensions=["extra", "tables", "sane_lists", "toc", "smarty"]
+        )
+
+        # Load CSS from external file
+        css_path = self._resolve("student_success_tool.reporting.template.styles", "model_card.css")
+        with open(css_path, "r") as f:
+            style = f"<style>\n{f.read()}\n</style>"
+
+        # Prepend CSS to HTML
+        self.html_content = style + html_content
+        LOGGER.info(f"Applied CSS styling")
+
+    def export_to_pdf(self):
+        """
+        Export CSS styled HTML to PDF utilizing weasyprint for conversion.
+        Also logs the card, so it can be accessed as a PDF in the run artifacts.
+        """
+        # Styles card using model_card.css
+        self.style_card()
+
+        # Define PDF path
+        base_path = os.path.dirname(self.output_path) or "."
+        self.pdf_path = self.output_path.replace(".md", ".pdf")
+
+        # Render PDF
+        try:
+            HTML(string=self.html_content, base_url=base_path).write_pdf(self.pdf_path)
+            LOGGER.info(f"✅ PDF model card saved to {self.pdf_path}")
+        except Exception as e:
+            raise RuntimeError(f"Failed to create PDF: {e}")
+        
+        # Log card as an ML artifact
+        utils.log_card(
+            local_path=self.pdf_path,
+            run_id=self.run_id
+        )
 
     def _build_output_path(self) -> str:
         """
