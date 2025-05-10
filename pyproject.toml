@@ -93,3 +93,6 @@ ignore_missing_imports = true
 follow_imports = "silent"
 # in case of irreconcilable differences, consider telling mypy to ignore all errors
 # ignore_errors = true
+
+[tool.poetry.dependencies]
+types-Markdown = "^1.0"
