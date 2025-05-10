@@ -26,7 +26,7 @@ dependencies = [
     "tomli~=2.0; python_version<'3.11'",
     "weasyprint~=60.2",
     "pydyf~=0.8.0",
-    “markdown~=3.5”,
+    "markdown~=3.5",
 ]
 
 [project.urls]
