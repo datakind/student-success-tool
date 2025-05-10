@@ -84,6 +84,18 @@ def download_static_asset(
         return dst_path
 
 
+def log_card(local_path: str, run_id: str) -> None:
+    """
+    Logs card as an ML artifact in the run.
+
+    Args:
+        local_path: Path to model card PDF
+    """
+    with mlflow.start_run(run_id=run_id) as run:
+        mlflow.log_artifact(local_path, "model_card")
+        LOGGER.info(f"Logged model card PDF as an ML artifact at '{run_id}'")
+
+
 def embed_image(
     description: str,
     local_path: t.Optional[str | pathlib.Path],
