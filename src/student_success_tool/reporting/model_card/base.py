@@ -266,11 +266,13 @@ class ModelCard(t.Generic[C]):
         # Convert Markdown to HTML
         html_content = markdown.markdown(
             self.md_content,
-            extensions=["extra", "tables", "sane_lists", "toc", "smarty"]
+            extensions=["extra", "tables", "sane_lists", "toc", "smarty"],
         )
 
         # Load CSS from external file
-        css_path = self._resolve("student_success_tool.reporting.template.styles", "model_card.css")
+        css_path = self._resolve(
+            "student_success_tool.reporting.template.styles", "model_card.css"
+        )
         with open(css_path, "r") as f:
             style = f"<style>\n{f.read()}\n</style>"
 
@@ -296,12 +298,9 @@ class ModelCard(t.Generic[C]):
             LOGGER.info(f"✅ PDF model card saved to {self.pdf_path}")
         except Exception as e:
             raise RuntimeError(f"Failed to create PDF: {e}")
-        
+
         # Log card as an ML artifact
-        utils.log_card(
-            local_path=self.pdf_path,
-            run_id=self.run_id
-        )
+        utils.log_card(local_path=self.pdf_path, run_id=self.run_id)
 
     def _build_output_path(self) -> str:
         """
