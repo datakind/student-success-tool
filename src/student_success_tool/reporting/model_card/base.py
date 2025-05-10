@@ -257,7 +257,7 @@ class ModelCard(t.Generic[C]):
         # Read the Markdown output
         with open(self.output_path, "r") as f:
             self.md_content = f.read()
-        LOGGER.info(f"Reloaded model card content")
+        LOGGER.info("Reloaded model card content")
 
     def style_card(self):
         """
@@ -276,7 +276,7 @@ class ModelCard(t.Generic[C]):
 
         # Prepend CSS to HTML
         self.html_content = style + html_content
-        LOGGER.info(f"Applied CSS styling")
+        LOGGER.info("Applied CSS styling")
 
     def export_to_pdf(self):
         """
