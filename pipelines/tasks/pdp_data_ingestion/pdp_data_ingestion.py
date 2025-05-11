@@ -34,7 +34,8 @@ class DataIngestionTask:
     Encapsulates the data ingestion logic for the SST pipeline.
     """
 
-    def __init__(self, args: argparse.Namespace):
+    def __init__(self, args: argparse.Namespace, course_converter_func=None,
+    cohort_converter_func=None):
         """
         Initializes the DataIngestionTask with parsed arguments.
         Args:
@@ -44,6 +45,8 @@ class DataIngestionTask:
         self.args = args
         self.storage_client = storage.Client()
         self.bucket = self.storage_client.bucket(self.args.gcp_bucket_name)
+        self.course_converter_func = course_converter_func
+        self.cohort_converter_func = cohort_converter_func
 
     def get_spark_session(self) -> DatabricksSession:
         """
@@ -112,12 +115,14 @@ class DataIngestionTask:
                 file_path=fpath_course,
                 schema=schemas.RawPDPCourseDataSchema,
                 dttm_format="ISO8601",
+                converter_func=self.course_converter_func
             )
         except ValueError:
             df_course = dataio.pdp.read_raw_course_data(
                 file_path=fpath_course,
                 schema=schemas.RawPDPCourseDataSchema,
                 dttm_format="%Y%m%d.0",
+                converter_func=self.course_converter_func
             )
         except Exception as e:
             logging.error("Error reading the files: %s", e)
@@ -125,7 +130,7 @@ class DataIngestionTask:
 
         logging.info("Course data read and schema validated.")
         df_cohort = dataio.pdp.read_raw_cohort_data(
-            file_path=fpath_cohort, schema=schemas.RawPDPCohortDataSchema
+            file_path=fpath_cohort, schema=schemas.RawPDPCohortDataSchema, converter_func=self.cohort_converter_func
         )
         logging.info("Cohort data read and schema validated.")
         return df_course, df_cohort
@@ -279,14 +284,23 @@ def parse_arguments() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_arguments()
+    sys.path.append(args.custom_schemas_path)
     try:
-        sys.path.append(args.custom_schemas_path)
         schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
         logging.info("Running task with custom schema")
     except Exception:
         print("Running task with default schema")
         from student_success_tool.schemas import pdp as schemas
-
         logging.info("Running task with default schema")
+    try:
+        converter_func = importlib.import_module(f"{args.databricks_institution_name}.dataio")
+        course_converter_func = converter_func.converter_func_course
+        cohort_converter_func = converter_func.converter_func_cohort
+        logging.info("Running task with custom converter func")
+    except ModuleNotFoundError:
+        print("Running task without custom converter func")
+        course_converter_func = None
+        cohort_converter_func = None
+        logging.info("Running task without custom converter func")
     task = DataIngestionTask(args)
     task.run()
