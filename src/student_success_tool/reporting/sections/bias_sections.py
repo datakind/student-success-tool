@@ -103,7 +103,6 @@ def register_bias_sections(card, registry):
                 local_folder=card.assets_folder,
                 artifact_path=plot_artifact_path,
                 description=f"False Negative Parity Rate for {group_name} on Test Data",
-                width=450,
             )
         except Exception as e:
             LOGGER.warning(f"Could not load plot for {group_name}: {str(e)}")

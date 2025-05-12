@@ -78,7 +78,7 @@ def download_static_asset(
     if dst_path.lower().endswith((".png", ".jpg", ".jpeg")):
         if description is None:
             description = os.path.basename(dst_path)
-        return embed_image(description, dst_path, 25)
+        return embed_image(description, dst_path, 25, "right")
     else:
         return dst_path
 
@@ -97,23 +97,37 @@ def log_card(local_path: str, run_id: str) -> None:
 def embed_image(
     description: str,
     local_path: t.Optional[str | pathlib.Path],
-    max_width_pct: int = 70,
+    max_width_pct: int = 75,
+    alignment: str = "center",
 ) -> str:
     """
     Embeds image in markdown with inline CSS to control rendering in WeasyPrint.
 
     Args:
-        description: Description of the image
-        local_path: Path to image
+        description: Description of the image.
+        local_path: Path to the image file.
+        max_width_pct: Maximum width of the image as a percentage of page/container width.
+        alignment: Horizontal alignment of the image ("left", "right", or "center").
 
     Returns:
-        Inline CSS string to be embedded in markdown
+        Inline HTML string to be embedded in markdown.
     """
     local_path_str = str(local_path)
     rel_path = os.path.relpath(local_path_str, start=os.getcwd())
+
+    alignment = alignment.lower()
+    if alignment == "left":
+        css_alignment = "display: block; margin-left: 0; margin-right: auto;"
+    elif alignment == "right":
+        css_alignment = "display: block; margin-left: auto; margin-right: 0;"
+    else:
+        # Default to center alignment
+        css_alignment = "display: block; margin: auto;"
+
+    # Construct the image HTML with inline styling
     return (
         f'<img src="{rel_path}" alt="{description}" '
-        f'style="max-width: {max_width_pct}%; height: auto;">'
+        f'style="{css_alignment} max-width: {max_width_pct}%; height: auto;">'
     )
 
 def list_paths_in_directory(run_id: str, directory: str) -> t.List[str]:
