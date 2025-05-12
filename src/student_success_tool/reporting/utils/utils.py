@@ -94,6 +94,7 @@ def log_card(local_path: str, run_id: str) -> None:
         mlflow.log_artifact(local_path, "model_card")
         LOGGER.info(f"Logged model card PDF as an ML artifact at '{run_id}'")
 
+
 def embed_image(
     description: str,
     local_path: t.Optional[str | pathlib.Path],
@@ -121,14 +122,13 @@ def embed_image(
     elif alignment == "right":
         css_alignment = "display: block; margin-left: auto; margin-right: 0;"
     else:
-        # Default to center alignment
         css_alignment = "display: block; margin: auto;"
 
-    # Construct the image HTML with inline styling
     return (
         f'<img src="{rel_path}" alt="{description}" '
         f'style="{css_alignment} max-width: {max_width_pct}%; height: auto;">'
     )
+
 
 def list_paths_in_directory(run_id: str, directory: str) -> t.List[str]:
     """
