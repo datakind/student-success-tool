@@ -11,6 +11,19 @@
 }
 
 /* ================================
+   Heading Alignment
+================================ */
+/* Center-align all h1/h2 (#/## in Markdown) */
+h1, h2 {
+    text-align: center;
+}
+
+/* Left-align all other headings */
+h3, h4, h5, h6, p {
+    text-align: left;
+}
+
+/* ================================
    Font Selection
 ================================ */
 em {

@@ -78,7 +78,7 @@ def download_static_asset(
     if dst_path.lower().endswith((".png", ".jpg", ".jpeg")):
         if description is None:
             description = os.path.basename(dst_path)
-        return embed_image(description, dst_path, 25, "right")
+        return embed_image(description, dst_path, 25, "left")
     else:
         return dst_path
 
