@@ -14,7 +14,6 @@ def download_artifact(
     run_id: str,
     local_folder: str,
     artifact_path: str,
-    width: t.Optional[int] = None,
     description: t.Optional[str] = None,
 ) -> str:
     """
@@ -25,7 +24,6 @@ def download_artifact(
         run_id: MLflow run ID
         local_folder: Local folder to download artifact to
         artifact_path: Path to artifact
-        width: Width of image in pixels
         description: Description of the image
 
     Returns:
@@ -42,7 +40,7 @@ def download_artifact(
     if local_path.lower().endswith((".png", ".jpg", ".jpeg")):
         if description is None:
             description = os.path.basename(local_path)
-        return embed_image(description, local_path, width)
+        return embed_image(description, local_path)
     else:
         return local_path
 
@@ -50,7 +48,6 @@ def download_artifact(
 def download_static_asset(
     description: str,
     static_path: Traversable,
-    width: int,
     local_folder: str,
 ) -> str:
     """
@@ -63,7 +60,6 @@ def download_static_asset(
     Args:
         description: Description of the image
         static_path: Path to static asset
-        width: Width of image in pixels
         local_folder: Local folder to download artifact to
 
     Returns:
@@ -79,7 +75,7 @@ def download_static_asset(
     if dst_path.lower().endswith((".png", ".jpg", ".jpeg")):
         if description is None:
             description = os.path.basename(dst_path)
-        return embed_image(description, dst_path, width)
+        return embed_image(description, dst_path)
     else:
         return dst_path
 
@@ -98,7 +94,6 @@ def log_card(local_path: str, run_id: str) -> None:
 def embed_image(
     description: str,
     local_path: t.Optional[str | pathlib.Path],
-    width: t.Optional[int | None] = 400,
 ) -> str:
     """
     Embeds image in markdown with inline CSS to control rendering in WeasyPrint.
@@ -106,7 +101,6 @@ def embed_image(
     Args:
         description: Description of the image
         local_path: Path to image
-        width: Width of image in pixels
 
     Returns:
         Inline CSS string to be embedded in markdown
@@ -115,7 +109,7 @@ def embed_image(
     rel_path = os.path.relpath(local_path_str, start=os.getcwd())
     return (
         f'<img src="{rel_path}" alt="{description}" '
-        f'style="max-width: 90%; height: auto;">'
+        f'style="max-width: 50%; height: auto;">'
     )
 
 def list_paths_in_directory(run_id: str, directory: str) -> t.List[str]:
