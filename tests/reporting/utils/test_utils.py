@@ -29,7 +29,7 @@ def test_embed_image_relative_path(tmp_path):
     test_file.write_text("image content")
     result = utils.embed_image("Test Image", test_file, max_width_pct=50, alignment="left")
     assert "img src=" in result
-    assert 'max-width : 50%' in result
+    assert 'max-width: 50%' in result
     assert 'alt="Test Image"' in result
     assert "display: block; margin-left: 0;" in result
 
