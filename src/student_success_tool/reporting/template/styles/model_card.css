@@ -18,7 +18,7 @@ h1, h2 {
     text-align: center;
 }
 
-/* Left-align all other headings */
+/* Left-align all other headings and paragraphs */
 h3, h4, h5, h6, p {
     text-align: left;
 }
@@ -41,6 +41,9 @@ table {
     border-collapse: collapse;
     margin-bottom: 1em;
     font-size: 12px;
+    white-space: normal;
+    break-inside: avoid;
+    page-break-inside: avoid;
 }
 th, td {
     border: 1px solid #000;
@@ -50,8 +53,8 @@ th, td {
     white-space: normal;
 }
 
-/* Page-break handling for long tables */
-table, thead, tbody, tr, td, th {
+/* Allow page-breaks within table content if necessary */
+thead, tbody, tr, td, th {
     page-break-inside: auto;
     break-inside: auto;
 }
@@ -63,26 +66,17 @@ tr {
 /* ================================
    List Styling
 ================================ */
-/* Top-level lists */
-ul, ol {
+/* Consistent list indentation */
+ul, ol, ul ul, ol ul, ul ol, ol ol {
     margin-left: 1.5em;
     padding-left: 0;
-}
-
-/* Nested lists */
-ul ul, ol ul, ul ol, ol ol {
-    margin-left: 1.5em;
 }
 
 /* Bullet types by depth */
 ul {
     list-style-type: disc;
 }
-ul ul {
-    list-style-type: circle;
-}
-/* Avoiding oversized 'square' bullet */
-ul ul ul {
+ul ul, ul ul ul {
     list-style-type: circle;
 }
 
