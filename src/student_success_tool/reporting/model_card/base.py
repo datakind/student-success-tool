@@ -163,7 +163,6 @@ class ModelCard(t.Generic[C]):
             "logo": utils.download_static_asset(
                 description="Logo",
                 static_path=self.logo_path,
-                width=150,
                 local_folder=self.assets_folder,
             ),
             "institution_name": self.cfg.institution_name,
@@ -207,23 +206,20 @@ class ModelCard(t.Generic[C]):
             of the artifacts.
         """
         plots = {
-            "model_comparison_plot": ("Model Comparison", "model_comparison.png", 450),
+            "model_comparison_plot": ("Model Comparison", "model_comparison.png"),
             "test_calibration_curve": (
                 "Test Calibration Curve",
                 "calibration/test_calibration.png",
-                475,
             ),
-            "test_roc_curve": ("Test ROC Curve", "test_roc_curve_plot.png", 500),
+            "test_roc_curve": ("Test ROC Curve", "test_roc_curve_plot.png"),
             "test_confusion_matrix": (
                 "Test Confusion Matrix",
                 "test_confusion_matrix.png",
-                425,
             ),
-            "test_histogram": ("Test Histogram", "preds/test_hist.png", 475),
+            "test_histogram": ("Test Histogram", "preds/test_hist.png"),
             "feature_importances_by_shap_plot": (
                 "Feature Importances",
                 "shap_summary_labeled_dataset_100_ref_rows.png",
-                500,
             ),
         }
         return {
@@ -231,10 +227,9 @@ class ModelCard(t.Generic[C]):
                 run_id=self.run_id,
                 description=description,
                 artifact_path=path,
-                width=width,
                 local_folder=self.assets_folder,
             )
-            for key, (description, path, width) in plots.items()
+            for key, (description, path) in plots.items()
         }
 
     def render(self):
