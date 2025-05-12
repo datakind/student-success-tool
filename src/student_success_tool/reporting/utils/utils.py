@@ -95,15 +95,13 @@ def log_card(local_path: str, run_id: str) -> None:
         mlflow.log_artifact(local_path, "model_card")
         LOGGER.info(f"Logged model card PDF as an ML artifact at '{run_id}'")
 
-
 def embed_image(
     description: str,
     local_path: t.Optional[str | pathlib.Path],
     width: t.Optional[int | None] = 400,
 ) -> str:
     """
-    Embeds image in markdown by returning inline HTML to accomodate for flexibility with
-    image size and name.
+    Embeds image in markdown with inline CSS to control rendering in WeasyPrint.
 
     Args:
         description: Description of the image
@@ -111,12 +109,14 @@ def embed_image(
         width: Width of image in pixels
 
     Returns:
-        Inline HTML string to be embedded in markdown
+        Inline CSS string to be embedded in markdown
     """
     local_path_str = str(local_path)
     rel_path = os.path.relpath(local_path_str, start=os.getcwd())
-    return f'<img src="{rel_path}" alt="{description}" width="{width}">'
-
+    return (
+        f'<img src="{rel_path}" alt="{description}" '
+        f'style="max-width: 90%; height: auto;">'
+    )
 
 def list_paths_in_directory(run_id: str, directory: str) -> t.List[str]:
     """

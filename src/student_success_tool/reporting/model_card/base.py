@@ -163,7 +163,7 @@ class ModelCard(t.Generic[C]):
             "logo": utils.download_static_asset(
                 description="Logo",
                 static_path=self.logo_path,
-                width=250,
+                width=150,
                 local_folder=self.assets_folder,
             ),
             "institution_name": self.cfg.institution_name,
