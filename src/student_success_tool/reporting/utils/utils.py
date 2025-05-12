@@ -15,6 +15,7 @@ def download_artifact(
     local_folder: str,
     artifact_path: str,
     description: t.Optional[str] = None,
+    max_width_pct: t.Optional[int] = None,
 ) -> str:
     """
     Downloads artifact from MLflow run using mlflow.artifacts.download_artifacts(...) and
@@ -25,6 +26,8 @@ def download_artifact(
         local_folder: Local folder to download artifact to
         artifact_path: Path to artifact
         description: Description of the image
+        max_width_pct: Maximum width rendered in CSS. The percentage represents how much
+        width the image has compared to the page width.
 
     Returns:
         Local path to artifact OR inline HTML string with path information if image
@@ -75,7 +78,7 @@ def download_static_asset(
     if dst_path.lower().endswith((".png", ".jpg", ".jpeg")):
         if description is None:
             description = os.path.basename(dst_path)
-        return embed_image(description, dst_path)
+        return embed_image(description, dst_path, 25)
     else:
         return dst_path
 
@@ -94,6 +97,7 @@ def log_card(local_path: str, run_id: str) -> None:
 def embed_image(
     description: str,
     local_path: t.Optional[str | pathlib.Path],
+    max_width_pct: int = 70,
 ) -> str:
     """
     Embeds image in markdown with inline CSS to control rendering in WeasyPrint.
@@ -109,7 +113,7 @@ def embed_image(
     rel_path = os.path.relpath(local_path_str, start=os.getcwd())
     return (
         f'<img src="{rel_path}" alt="{description}" '
-        f'style="max-width: 50%; height: auto;">'
+        f'style="max-width: {max_width_pct}%; height: auto;">'
     )
 
 def list_paths_in_directory(run_id: str, directory: str) -> t.List[str]:
