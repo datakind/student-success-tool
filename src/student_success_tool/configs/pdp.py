@@ -8,6 +8,159 @@ from ..preprocessing.features.pdp import constants
 from ..utils import types
 
 
+class PDPProjectConfig(pyd.BaseModel):
+    """Configuration schema for SST PDP projects."""
+
+    institution_id: str = pyd.Field(
+        ...,
+        description=(
+            "Unique (ASCII-only) identifier for institution; used in naming things "
+            "such as source directories, catalog schemas, keys in shared configs, etc."
+        ),
+    )
+    institution_name: str = pyd.Field(
+        ...,
+        description=(
+            "Readable 'display' name for institution, distinct from the 'id'; "
+            "probably just the school's 'official', public name"
+        ),
+    )
+
+    # shared parameters
+    student_id_col: str = "student_id"
+    target_col: str = "target"
+    split_col: t.Optional[str] = "split"
+    sample_weight_col: t.Optional[str] = "sample_weight"
+    student_group_cols: t.Optional[list[str]] = pyd.Field(
+        default=["student_age", "race", "ethnicity", "gender", "first_gen"],
+        description=(
+            "One or more column names in datasets containing student 'groups' "
+            "to use for model bias assessment, but *not* as model features"
+        ),
+    )
+    pred_col: str = "pred"
+    pred_prob_col: str = "pred_prob"
+    pos_label: t.Optional[int | bool | str] = True
+    random_state: t.Optional[int] = None
+
+    # key artifacts produced by project pipeline
+    datasets: dict[str, "DatasetConfig"] = pyd.Field(
+        default={},
+        description=(
+            "Mapping of dataset name, e.g. 'labeled', to file/table paths for each "
+            "derived form produced by steps in the data transformation pipeline, "
+            "used to load the artifacts from storage"
+        ),
+    )
+    model: t.Optional["ModelConfig"] = pyd.Field(
+        default=None,
+        description=(
+            "Essential metadata for identifying and loading trained model artifacts, "
+            "as produced by the pipeline represented here in this config"
+        ),
+    )
+
+    # key steps in project pipeline
+    preprocessing: t.Optional["PreprocessingConfig"] = None
+    modeling: t.Optional["ModelingConfig"] = None
+    inference: t.Optional["InferenceConfig"] = None
+
+    @pyd.computed_field  # type: ignore[misc]
+    @property
+    def non_feature_cols(self) -> list[str]:
+        return (
+            [self.student_id_col, self.target_col]
+            + ([self.split_col] if self.split_col else [])
+            + ([self.sample_weight_col] if self.sample_weight_col else [])
+            + (self.student_group_cols or [])
+        )
+
+    @pyd.field_validator("institution_id", mode="after")
+    @classmethod
+    def check_institution_id_isascii(cls, value: str) -> str:
+        if not re.search(r"^\w+$", value, flags=re.ASCII):
+            raise ValueError(f"institution_id='{value}' is not ASCII-only")
+        return value
+
+    # NOTE: this is for *pydantic* model -- not ML model -- configuration
+    model_config = pyd.ConfigDict(extra="forbid", strict=True)
+
+
+class DatasetConfig(pyd.BaseModel):
+    raw_course: "DatasetIOConfig"
+    raw_cohort: "DatasetIOConfig"
+    preprocessed: t.Optional["DatasetIOConfig"] = None
+    predictions: t.Optional["DatasetIOConfig"] = None
+    finalized: t.Optional["DatasetIOConfig"] = None
+
+
+class DatasetIOConfig(pyd.BaseModel):
+    table_path: t.Optional[str] = pyd.Field(
+        default=None,
+        description=(
+            "Path to a table in Unity Catalog where dataset is stored, "
+            "including the full three-level namespace: 'CATALOG.SCHEMA.TABLE'"
+        ),
+    )
+    file_path: t.Optional[str] = pyd.Field(
+        default=None,
+        description="Full, absolute path to dataset on disk, e.g. a Databricks Volume",
+    )
+    # TODO: if/when we allow different file formats, add this parameter ...
+    # file_format: t.Optional[t.Literal["csv", "parquet"]] = pyd.Field(default=None)
+
+    @pyd.model_validator(mode="after")
+    def check_some_nonnull_inputs(self):
+        if self.table_path is None and self.file_path is None:
+            raise ValueError("table_path and/or file_path must be non-null")
+        return self
+
+
+class ModelConfig(pyd.BaseModel):
+    experiment_id: str
+    run_id: str
+    framework: t.Optional[t.Literal["sklearn", "xgboost", "lightgbm"]] = None
+
+    @pyd.computed_field  # type: ignore[misc]
+    @property
+    def mlflow_model_uri(self) -> str:
+        return f"runs:/{self.run_id}/model"
+
+
+class PreprocessingConfig(pyd.BaseModel):
+    features: "FeaturesConfig"
+    selection: "SelectionConfig"
+    checkpoint: "CheckpointNthConfig | CheckpointFirstConfig | CheckpointLastConfig | CheckpointFirstAtNumCreditsEarnedConfig | CheckpointFirstWithinCohortConfig | CheckpointLastInEnrollmentYearConfig"
+    target: "TargetGraduationConfig | TargetRetentionConfig | TargetCreditsEarnedConfig"
+    splits: dict[t.Literal["train", "test", "validate"], float] = pyd.Field(
+        default={"train": 0.6, "test": 0.2, "validate": 0.2},
+        description=(
+            "Mapping of name to fraction of the full datset belonging to a given 'split', "
+            "which is a randomized subset used for different parts of the modeling process"
+        ),
+    )
+    sample_class_weight: t.Optional[t.Literal["balanced"] | dict[object, int]] = (
+        pyd.Field(
+            default=None,
+            description=(
+                "Weights associated with classes in the form ``{class_label: weight}`` "
+                "or 'balanced' to automatically adjust weights inversely proportional "
+                "to class frequencies in the input data. "
+                "If null (default), then sample weights are not computed."
+            ),
+        )
+    )
+
+    @pyd.field_validator("splits", mode="after")
+    @classmethod
+    def check_split_fractions(cls, value: dict) -> dict:
+        if (sum_fracs := sum(value.values())) != 1.0:
+            raise pyd.ValidationError(
+                f"split fractions must sum up to 1.0, but input sums up to {sum_fracs}"
+            )
+        return value
+
+
 class FeaturesConfig(pyd.BaseModel):
     min_passing_grade: float = pyd.Field(
         default=constants.DEFAULT_MIN_PASSING_GRADE,
@@ -88,48 +241,90 @@ class SelectionConfig(pyd.BaseModel):
     )
 
 
-class CheckpointConfig(pyd.BaseModel):
-    name: str = pyd.Field(default="checkpoint")
-    params: dict[str, object] = pyd.Field(default_factory=dict)
-
-
-class TargetConfig(pyd.BaseModel):
-    name: str = pyd.Field(default="target")
-    params: dict[str, object] = pyd.Field(default_factory=dict)
-
-
-class PreprocessingConfig(pyd.BaseModel):
-    features: FeaturesConfig
-    selection: SelectionConfig
-    checkpoint: CheckpointConfig
-    target: TargetConfig
-    splits: dict[t.Literal["train", "test", "validate"], float] = pyd.Field(
-        default={"train": 0.6, "test": 0.2, "validate": 0.2},
-        description=(
-            "Mapping of name to fraction of the full datset belonging to a given 'split', "
-            "which is a randomized subset used for different parts of the modeling process"
-        ),
+class CheckpointBaseConfig(pyd.BaseModel):
+    name: str = pyd.Field(
+        default=...,
+        description="Descriptive name for checkpoint, used as a component in model name",
     )
-    sample_class_weight: t.Optional[t.Literal["balanced"] | dict[object, int]] = (
-        pyd.Field(
-            default=None,
-            description=(
-                "Weights associated with classes in the form ``{class_label: weight}`` "
-                "or 'balanced' to automatically adjust weights inversely proportional "
-                "to class frequencies in the input data. "
-                "If null (default), then sample weights are not computed."
-            ),
-        )
+    type_: types.CheckpointTypeType = pyd.Field(
+        default=..., description="Type of checkpoint to which config is applied"
+    )
+    sort_cols: str | list[str] = pyd.Field(
+        default="term_rank",
+        description="Column(s) used to sort students' terms, typically chronologically.",
+    )
+    include_cols: t.Optional[list[str]] = pyd.Field(
+        default=None,
+        description="Optional subset of columns to include in checkpoint student-terms.",
     )
 
-    @pyd.field_validator("splits", mode="after")
-    @classmethod
-    def check_split_fractions(cls, value: dict) -> dict:
-        if (sum_fracs := sum(value.values())) != 1.0:
-            raise pyd.ValidationError(
-                f"split fractions must sum up to 1.0, but input sums up to {sum_fracs}"
-            )
-        return value
+
+class CheckpointNthConfig(CheckpointBaseConfig):
+    type_: types.CheckpointTypeType = "nth"
+    n: int = pyd.Field(default=...)
+
+
+class CheckpointFirstConfig(CheckpointBaseConfig):
+    type_: types.CheckpointTypeType = "first"
+
+
+class CheckpointLastConfig(CheckpointBaseConfig):
+    type_: types.CheckpointTypeType = "last"
+
+
+class CheckpointFirstAtNumCreditsEarnedConfig(CheckpointBaseConfig):
+    type_: types.CheckpointTypeType = "first_at_num_credits_earned"
+    min_num_credits: float = pyd.Field(default=...)
+    num_credits_col: str = pyd.Field(default="num_credits_earned_cumsum")
+
+
+class CheckpointFirstWithinCohortConfig(CheckpointBaseConfig):
+    type_: types.CheckpointTypeType = "first_within_cohort"
+    term_is_pre_cohort_col: str = pyd.Field(default="term_is_pre_cohort")
+
+
+class CheckpointLastInEnrollmentYearConfig(CheckpointBaseConfig):
+    type_: types.CheckpointTypeType = "last_in_enrollment_year"
+    enrollment_year: float = pyd.Field(default=...)
+    enrollment_year_col: str = pyd.Field(default="year_of_enrollment_at_cohort_inst")
+
+
+class TargetBaseConfig(pyd.BaseModel):
+    name: str = pyd.Field(
+        default=...,
+        description="Descriptive name for target, used as a component in model name",
+    )
+    type_: types.TargetTypeType = pyd.Field(
+        default=..., description="Type of target to which config is applied"
+    )
+
+
+class TargetGraduationConfig(TargetBaseConfig):
+    type_: types.TargetTypeType = "graduation"
+    intensity_time_limits: types.IntensityTimeLimitsType
+    years_to_degree_col: str
+    num_terms_in_year: int = pyd.Field(default=4)
+    max_term_rank: int | t.Literal["infer"]
+
+
+class TargetRetentionConfig(TargetBaseConfig):
+    type_: types.TargetTypeType = "retention"
+    max_academic_year: str | t.Literal["infer"]
+
+
+class TargetCreditsEarnedConfig(TargetBaseConfig):
+    type_: types.TargetTypeType = "credits_earned"
+    min_num_credits: float
+    # TODO: is there any way to represent checkpoint arg in toml, given its dtype?
+    intensity_time_limits: types.IntensityTimeLimitsType
+    num_terms_in_year: int = pyd.Field(default=4)
+    max_term_rank: int | t.Literal["infer"]
+
+
+class ModelingConfig(pyd.BaseModel):
+    feature_selection: t.Optional["FeatureSelectionConfig"] = None
+    training: "TrainingConfig"
+    evaluation: t.Optional["EvaluationConfig"] = None
 
 
 class FeatureSelectionConfig(pyd.BaseModel):
@@ -183,131 +378,7 @@ class EvaluationConfig(pyd.BaseModel):
     )
 
 
-class ModelingConfig(pyd.BaseModel):
-    feature_selection: t.Optional[FeatureSelectionConfig] = None
-    training: TrainingConfig
-    evaluation: t.Optional[EvaluationConfig] = None
-
-
 class InferenceConfig(pyd.BaseModel):
     num_top_features: int = pyd.Field(default=5)
     min_prob_pos_label: t.Optional[float] = 0.5
     # TODO: extend this configuration, maybe?
-
-
-class DatasetIOConfig(pyd.BaseModel):
-    table_path: t.Optional[str] = pyd.Field(
-        default=None,
-        description=(
-            "Path to a table in Unity Catalog where dataset is stored, "
-            "including the full three-level namespace: 'CATALOG.SCHEMA.TABLE'"
-        ),
-    )
-    file_path: t.Optional[str] = pyd.Field(
-        default=None,
-        description="Full, absolute path to dataset on disk, e.g. a Databricks Volume",
-    )
-    # TODO: if/when we allow different file formats, add this parameter ...
-    # file_format: t.Optional[t.Literal["csv", "parquet"]] = pyd.Field(default=None)
-
-    @pyd.model_validator(mode="after")
-    def check_some_nonnull_inputs(self):
-        if self.table_path is None and self.file_path is None:
-            raise ValueError("table_path and/or file_path must be non-null")
-        return self
-
-
-class DatasetConfig(pyd.BaseModel):
-    raw_course: DatasetIOConfig
-    raw_cohort: DatasetIOConfig
-    preprocessed: t.Optional[DatasetIOConfig] = None
-    predictions: t.Optional[DatasetIOConfig] = None
-    finalized: t.Optional[DatasetIOConfig] = None
-
-
-class ModelConfig(pyd.BaseModel):
-    experiment_id: str
-    run_id: str
-    framework: t.Optional[t.Literal["sklearn", "xgboost", "lightgbm"]] = None
-
-    @pyd.computed_field  # type: ignore[misc]
-    @property
-    def mlflow_model_uri(self) -> str:
-        return f"runs:/{self.run_id}/model"
-
-
-class PDPProjectConfig(pyd.BaseModel):
-    """Configuration schema for SST PDP projects."""
-
-    institution_id: str = pyd.Field(
-        ...,
-        description=(
-            "Unique (ASCII-only) identifier for institution; used in naming things "
-            "such as source directories, catalog schemas, keys in shared configs, etc."
-        ),
-    )
-    institution_name: str = pyd.Field(
-        ...,
-        description=(
-            "Readable 'display' name for institution, distinct from the 'id'; "
-            "probably just the school's 'official', public name"
-        ),
-    )
-
-    # shared parameters
-    student_id_col: str = "student_id"
-    target_col: str = "target"
-    split_col: t.Optional[str] = "split"
-    sample_weight_col: t.Optional[str] = "sample_weight"
-    student_group_cols: t.Optional[list[str]] = pyd.Field(
-        default=["student_age", "race", "ethnicity", "gender", "first_gen"],
-        description=(
-            "One or more column names in datasets containing student 'groups' "
-            "to use for model bias assessment, but *not* as model features"
-        ),
-    )
-    pred_col: str = "pred"
-    pred_prob_col: str = "pred_prob"
-    pos_label: t.Optional[int | bool | str] = True
-    random_state: t.Optional[int] = None
-
-    # key artifacts produced by project pipeline
-    datasets: dict[str, DatasetConfig] = pyd.Field(
-        default={},
-        description=(
-            "Mapping of dataset name, e.g. 'labeled', to file/table paths for each "
-            "derived form produced by steps in the data transformation pipeline, "
-            "used to load the artifacts from storage"
-        ),
-    )
-    models: dict[str, ModelConfig] = pyd.Field(
-        default={},
-        description=(
-            "Mapping of model name, e.g. 'graduation', to MLFlow metadata used to "
-            "load the trained artifact from storage"
-        ),
-    )
-    # key steps in project pipeline
-    preprocessing: t.Optional[PreprocessingConfig] = None
-    modeling: t.Optional[ModelingConfig] = None
-    inference: t.Optional[InferenceConfig] = None
-
-    @pyd.computed_field  # type: ignore[misc]
-    @property
-    def non_feature_cols(self) -> list[str]:
-        return (
-            [self.student_id_col, self.target_col]
-            + ([self.split_col] if self.split_col else [])
-            + ([self.sample_weight_col] if self.sample_weight_col else [])
-            + (self.student_group_cols or [])
-        )
-
-    @pyd.field_validator("institution_id", mode="after")
-    @classmethod
-    def check_institution_id_isascii(cls, value: str) -> str:
-        if not re.search(r"^\w+$", value, flags=re.ASCII):
-            raise ValueError(f"institution_id='{value}' is not ASCII-only")
-        return value
-
-    # NOTE: this is for *pydantic* model -- not ML model -- configuration
-    model_config = pyd.ConfigDict(extra="ignore", strict=True)

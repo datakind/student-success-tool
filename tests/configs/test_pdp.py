@@ -31,6 +31,11 @@ def template_cfg_str():
     raw_cohort = { file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/FILE_NAME_COHORT.csv" }
     preprocessed = { table_path = "CATALOG.SCHEMA.TABLE_NAME" }
 
+    [model]
+    experiment_id = "EXPERIMENT_ID"
+    run_id = "RUN_ID"
+    framework = "sklearn"
+
     [preprocessing]
     splits = { train = 0.6, test = 0.2, validate = 0.2 }
     sample_class_weight = "balanced"
@@ -47,9 +52,14 @@ def template_cfg_str():
     student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year_1 = "Bachelor's Degree" }
 
     [preprocessing.checkpoint]
+    name = "my_great_nth_checkpoint"
+    type_ = "nth"
+    n = 4
 
     [preprocessing.target]
-    params = { min_num_credits_checkin = 30.0, min_num_credits_target = 60.0 }
+    name = "my_great_retention_target"
+    type_ = "retention"
+    max_academic_year = "infer"
 
     [modeling.feature_selection]
     incomplete_threshold = 0.5
@@ -60,11 +70,6 @@ def template_cfg_str():
     # exclude_frameworks = ["xgboost", "lightgbm"]
     primary_metric = "log_loss"
     timeout_minutes = 10
-
-    [models.graduation]
-    experiment_id = "EXPERIMENT_ID"
-    run_id = "RUN_ID"
-    framework = "sklearn"
 
     [inference]
     num_top_features = 5
@@ -96,9 +101,18 @@ def test_template_pdp_cfgs(template_cfg_str):
             """
             institution_id = "inst_id"
             institution_name = "Inst Name"
-
             [datasets.labeled]
             foo = { "table_path" = "CATALOG.SCHEMA.TABLE_NAME" }
+            """,
+            pytest.raises(pyd.ValidationError),
+        ),
+        (
+            """
+            institution_id = "inst_id"
+            institution_name = "Inst Name"
+
+            [models.foo]
+            experiment_id = "EXPERIMENT_ID"
             """,
             pytest.raises(pyd.ValidationError),
         ),
