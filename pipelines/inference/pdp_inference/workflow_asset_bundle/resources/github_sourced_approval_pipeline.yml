@@ -36,7 +36,7 @@ resources:
               spark.databricks.cluster.profile: singleNode
             gcp_attributes:
               use_preemptible_executors: false
-              google_service_account: ${var.pipeline_sa_email}
+              # google_service_account: ${var.pipeline_sa_email}
               availability: ON_DEMAND_GCP
               zone_id: HA
             node_type_id: n2-standard-8
