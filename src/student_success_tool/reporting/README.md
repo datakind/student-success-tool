@@ -13,8 +13,9 @@ for unit testing and to scale our model card for our institution and organizatio
 ## Usage
 
 - We first instantiate a model card object using our config, catalog name, and model name.
-- Then, we build the model card. 
-- Finally, we have a model card markdown that is generated locally.
+- Then, we build the model card. After which, we have a model card markdown that is generated locally.
+- Since the markdown is available locally, the user has an option to edit the markdown, add information, etc. via the text editor in DB.
+- Once the markdown is finalized, we then reload the markdown, convert to HTML, and then produce a PDF as an MLflow artifact.
 ```
 from student_success_tool.reporting.model_card.pdp import PDPModelCard
 
@@ -23,4 +24,8 @@ card = PDPModelCard(config=cfg, catalog=catalog, model_name=model_name)
 
 # Build context and download artifacts
 card.build()
+
+# Reload & publish
+card.reload_card()
+card.export_to_pdf()
 ```
