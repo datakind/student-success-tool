@@ -19,6 +19,7 @@ def add_features(
     peak_covid_terms: set[tuple[str, str]] = constants.DEFAULT_PEAK_COVID_TERMS,
     year_col: str = "academic_year",
     term_col: str = "academic_term",
+    enrollment_intensity_col: str = "student_term_enrollment_intensity",
 ) -> pd.DataFrame:
     """
     Compute term-level features from pdp course dataset,
@@ -74,6 +75,9 @@ def add_features(
             ),
             term_is_noncore=ft.partial(
                 term_in_subset, terms_subset=noncore_terms, term_col=term_col
+            ),
+            term_is_full_time=ft.partial(
+                term_in_subset, terms_subset=["FULL-TIME"], term_col=enrollment_intensity_col
             ),
         )
     )

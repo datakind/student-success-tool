@@ -34,6 +34,7 @@ def add_features(
                 ("term_in_peak_covid", "sum"),
                 ("term_is_core", "sum"),
                 ("term_is_noncore", "sum"),
+                ("term_is_full_time", "sum"),
                 ("term_is_while_student_enrolled_at_other_inst", "sum"),
                 ("term_is_pre_cohort", "sum"),
                 ("course_level_mean", ["mean", "min", "std"]),
@@ -51,6 +52,7 @@ def add_features(
                 "term_id_cumcount": "Int8",
                 "term_is_core_cumsum": "Int8",
                 "term_is_noncore_cumsum": "Int8",
+                "term_is_full_time_cumsum": "Int8"
             }
         )
         .rename(
@@ -58,6 +60,7 @@ def add_features(
                 "term_id_cumcount": "cumnum_terms_enrolled",
                 "term_is_core_cumsum": "cumnum_core_terms_enrolled",
                 "term_is_noncore_cumsum": "cumnum_noncore_terms_enrolled",
+                "term_is_full_time_cumsum": "cumnum_full_time_terms_enrolled", 
             }
         )
     )
@@ -271,6 +274,18 @@ def _compute_cumfrac_terms_enrolled(
     cumnum_terms_total = (df[term_rank_col] - df[min_student_term_rank_col]) + 1
     cumfrac_terms_enrolled = df[cumnum_terms_enrolled_col] / cumnum_terms_total
     return cumfrac_terms_enrolled.astype("Float32")
+
+
+def _compute_cumfrac_terms_enrolled_full_time(
+    df: pd.DataFrame,
+    *,
+    term_rank_col: str = "term_rank",
+    min_student_term_rank_col: str = "min_student_term_rank",
+    cumnum_terms_enrolled_full_time_col: str = "cumnum_terms_enrolled_full_time",
+) -> pd.Series:
+    cumnum_terms_total = (df[term_rank_col] - df[min_student_term_rank_col]) + 1
+    cumfrac_terms_enrolled_full_time = df[cumnum_terms_enrolled_full_time_col] / cumnum_terms_total
+    return cumfrac_terms_enrolled_full_time.astype("Float32")
 
 
 #######################
