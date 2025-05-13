@@ -148,6 +148,7 @@ def test_cumnum_unique_and_repeated_features(df_grped, cols, exp):
                 "cumfrac_terms_enrolled": [1.0, 0.666, 0.75, 0.8, 0.556],
                 "cumfrac_core_terms_enrolled": [1.0, 1.0, pd.NA, 1.0, 0.8],
                 "cumfrac_noncore_terms_enrolled": [pd.NA, pd.NA, 1.0, pd.NA, pd.NA],
+                "cumfrac_full_time_terms_enrolled": [],
             }
         ).astype(
             {
@@ -157,6 +158,7 @@ def test_cumnum_unique_and_repeated_features(df_grped, cols, exp):
                 "cumfrac_terms_enrolled": "Float32",
                 "cumfrac_core_terms_enrolled": "Float32",
                 "cumfrac_noncore_terms_enrolled": "Float32",
+                "cumfrac_full_time_terms_enrolled": "Float32",
             }
         ),
     ],
@@ -167,6 +169,7 @@ def test_add_cumfrac_terms_enrolled_features(df, exp_new):
         cumnum_terms_enrolled=pd.Series([1.0, 2.0, 3.0, 4.0, 5.0]),
         cumnum_core_terms_enrolled=pd.Series([1.0, 2.0, 2.0, 3.0, 4.0]),
         cumnum_noncore_terms_enrolled=pd.Series([0.0, 0.0, 1.0, 1.0, 1.0]),
+        cumnum_full_time_terms_enrolled=pd.Series([]),
     )
     obs = cumulative.add_cumfrac_terms_enrolled_features(
         df, student_id_cols=["student_id"]
