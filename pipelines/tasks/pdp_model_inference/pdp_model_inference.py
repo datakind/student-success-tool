@@ -82,7 +82,7 @@ class ModelInferenceTask:
 
     def load_mlflow_model(self):
         """Loads the MLflow model."""
-        model_uri = f"runs:/{self.cfg.models['graduation'].run_id}/model"
+        model_uri = f"runs:/{self.cfg.model.run_id}/model"
 
         try:
             load_model_func = {

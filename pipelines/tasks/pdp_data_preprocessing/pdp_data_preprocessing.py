@@ -129,13 +129,14 @@ class DataProcessingTask:
             self.cfg.preprocessing.features.min_num_credits_full_time
         )
         course_level_pattern = self.cfg.preprocessing.features.course_level_pattern
+        core_terms = self.cfg.preprocessing.features.core_terms
         key_course_subject_areas = (
             self.cfg.preprocessing.features.key_course_subject_areas
         )
         key_course_ids = self.cfg.preprocessing.features.key_course_ids
 
         # Read preprocessing target parameters from config
-        student_criteria = self.cfg.preprocessing.target.params["student_criteria"]
+        student_criteria = self.cfg.preprocessing.selection.student_criteria
         student_id_col = self.cfg.student_id_col
 
         # Create student-term dataset
@@ -145,11 +146,12 @@ class DataProcessingTask:
             min_passing_grade=min_passing_grade,
             min_num_credits_full_time=min_num_credits_full_time,
             course_level_pattern=course_level_pattern,
+            core_terms=core_terms,
             key_course_subject_areas=key_course_subject_areas,
             key_course_ids=key_course_ids,
         )
 
-        eligible_students = targets.shared.select_students_by_criteria(
+        eligible_students = targets.shared.select_students_by_attributes(
             df_student_terms, student_id_cols=student_id_col, **student_criteria
         )
         max_term_rank = df_student_terms["term_rank"].max()
