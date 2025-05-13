@@ -14,7 +14,9 @@ for unit testing and to scale our model card for our institution and organizatio
 
 ## Usage
 
-- We produce a mode
+- We first instantiate a model card object using our config, catalog name, and model name.
+- Then, we build the model card. 
+- Finally, we have a model card markdown that is generated locally.
 ```
 # Initialize card
 card = PDPModelCard(config=cfg, catalog=catalog, model_name=model_name)
