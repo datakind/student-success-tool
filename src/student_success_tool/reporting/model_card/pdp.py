@@ -1,8 +1,8 @@
 import typing as t
 
-from ....configs.pdp import PDPProjectConfig
-from ...model_card import ModelCard
-from ...sections.pdp import register_sections as register_pdp_sections
+from ...configs.pdp import PDPProjectConfig
+from .base import ModelCard
+from ..sections.pdp import register_sections as register_pdp_sections
 
 
 class PDPModelCard(ModelCard[PDPProjectConfig]):
@@ -18,7 +18,8 @@ class PDPModelCard(ModelCard[PDPProjectConfig]):
         Otherwise, this class inherits and is functionally the same as the
         base ModelCard class.
         """
-        assert isinstance(config, PDPProjectConfig)  # type guard
+        if not isinstance(config, PDPProjectConfig): # type guard
+            raise TypeError("Expected config to be of type PDPProjectConfig")
 
         super().__init__(config, catalog, model_name, assets_path)
 

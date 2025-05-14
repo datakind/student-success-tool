@@ -11,14 +11,14 @@ from importlib.abc import Traversable
 from importlib.resources import files
 
 # internal SST modules
-from .. import dataio, modeling
+from ... import dataio, modeling
 
 # relative imports in 'reporting' module
-from .sections import register_sections
-from .sections.registry import SectionRegistry
-from .utils import utils
-from .utils.formatting import Formatting
-from .types import ModelCardConfig
+from ..sections import register_sections
+from ..sections.registry import SectionRegistry
+from ..utils import utils
+from ..utils.formatting import Formatting
+from ..utils.types import ModelCardConfig
 
 LOGGER = logging.getLogger(__name__)
 C = t.TypeVar("C", bound=ModelCardConfig)
