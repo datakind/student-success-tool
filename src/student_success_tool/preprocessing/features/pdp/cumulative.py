@@ -214,6 +214,12 @@ def add_cumfrac_terms_enrolled_features(
             min_student_term_rank_col="min_student_term_rank_noncore",
             cumnum_terms_enrolled_col="cumnum_noncore_terms_enrolled",
         ),
+        cumfrac_full_time_terms_enrolled=ft.partial(
+            _compute_cumfrac_terms_enrolled,
+            term_rank_col="term_rank_noncore",
+            min_student_term_rank_col="min_student_term_rank_noncore",
+            cumnum_terms_enrolled_col="cumnum_full_time_terms_enrolled",
+        ),
     )
 
 
@@ -274,18 +280,6 @@ def _compute_cumfrac_terms_enrolled(
     cumnum_terms_total = (df[term_rank_col] - df[min_student_term_rank_col]) + 1
     cumfrac_terms_enrolled = df[cumnum_terms_enrolled_col] / cumnum_terms_total
     return cumfrac_terms_enrolled.astype("Float32")
-
-
-def _compute_cumfrac_terms_enrolled_full_time(
-    df: pd.DataFrame,
-    *,
-    term_rank_col: str = "term_rank",
-    min_student_term_rank_col: str = "min_student_term_rank",
-    cumnum_terms_enrolled_full_time_col: str = "cumnum_terms_enrolled_full_time",
-) -> pd.Series:
-    cumnum_terms_total = (df[term_rank_col] - df[min_student_term_rank_col]) + 1
-    cumfrac_terms_enrolled_full_time = df[cumnum_terms_enrolled_full_time_col] / cumnum_terms_total
-    return cumfrac_terms_enrolled_full_time.astype("Float32")
 
 
 #######################
