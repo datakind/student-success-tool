@@ -11,8 +11,6 @@ SST tools for validating and extending data schemas using Pandera. It consists o
 ├── base_schema.json         # The core, organization-wide schema definition
 ├── validation.py            # Validation engine (hard- and soft-errors) using Pandera
 ├── generate_schema.py       # Schema extension generator for custom institution fields
-├── extensions/              # Output folder where generated extension schemas are saved
-│   └── <institution>_extension_schema.json
 └── README.md                # This file
 ```
 
@@ -42,7 +40,7 @@ This script performs full dataset validation:
 ```bash
 from validation import validate_dataset
 ingestion_data = pd.read_csv('data.csv')
-validate_dataset(ingestion_data, 'base_schema.json', [student | semester | course], 'institution_id', "/extensions/inst_id_extension_schema.json")
+validate_dataset(ingestion_data, [student | semester | course], 'institution_id')
 ```
 
 **example**
@@ -52,10 +50,8 @@ from validation import validate_dataset
 ingestion_data = pd.read_csv('nscc_student.csv')
 validate_dataset(
       df=ingestion_data, 
-      base_schema_path='base_schema.json', 
       models=[student], 
-      institution='nscc', 
-      extension_schema_path="/extensions/nscc_extension_schema.json")
+      institution='nscc')
 ```
 
 The script returns a JSON-like dict:
@@ -76,8 +72,7 @@ The script returns a JSON-like dict:
 This tool helps extend the base schema by inferring specs for columns not covered.
 
 1. **Validate Dataset**: Calls `validate_dataset(...)` to identify `extra_columns` in the input.
-2. **Infer Specs**: For each extra column, inspects data types and values to build a minimal Pandera‐style spec.
-3. **Load or Initialize** the institution’s extension JSON under `extensions/`.
+2. **Infer Specs**: For each extra column, inspects data types and values to build a minimal Pandera‐style spec, then write the extension to `/Volumes/databricks_schema/institution_id_bronze/<institution>_extension_schema.json``.
 4. **Update Extension**: Inserts inferred specs into the institution’s `data_models` & writes back.
 
 **Usage**:
@@ -85,10 +80,8 @@ This tool helps extend the base schema by inferring specs for columns not covere
 from generate_extensions import generate_extension_schema
 generate_extension_schema(
     df=base_data_from_institution.csv,
-    base_schema_path='base_schema.json',
     institution='institution_id',
-    models=[student or semester or course],
-    output_dir='extensions'
+    models=[student or semester or course]
 )
 ```
 
@@ -96,19 +89,11 @@ generate_extension_schema(
 ```bash
 from generate_extensions import generate_extension_schema
 generate_extension_schema(
-    df='nscc.csv',
-    base_schema_path='base_schema.json',
+    df='nscc.csv'
     institution='nscc',
-    models=[student],
-    output_dir='extensions'
+    models=[student]
 )
 ```
 
 * If no extra columns are found, the tool exits without modifying files.
-* Generated extension schemas are saved as `<output-dir>/<institution>_extension_schema.json`.
-
-#### Extensions Folder
-
-* Contains JSON files for institution-specific schema extensions.
-* Example: `extensions/pdp_extension_schema.json`.
-* Each extension JSON mirrors the base schema structure, adding only the extra columns for requested models.
+* Generated extension schemas are saved in the institution specific catalog `/Volumes/databricks_schema/institution_id_bronze/<institution>_extension_schema.json`.
