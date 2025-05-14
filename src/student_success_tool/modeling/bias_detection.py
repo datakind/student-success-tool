@@ -77,7 +77,7 @@ def evaluate_bias(
 
     for split_name, split_data in df_pred.groupby(split_col):
         for group_col in student_group_cols:
-            group_metrics, fnr_data = compute_group_bias_metrics(
+            bias_metrics, perf_metrics, fnr_data = compute_group_bias_metrics(
                 split_data,
                 split_name,
                 group_col,
@@ -87,7 +87,17 @@ def evaluate_bias(
                 pos_label,
                 sample_weight_col,
             )
-            log_group_metrics_to_mlflow(group_metrics, split_name, group_col)
+
+            log_group_metrics_to_mlflow(
+                bias_metrics,
+                f"bias_{split_name}",
+                group_col
+            )
+            log_group_metrics_to_mlflow(
+                perf_metrics,
+                f"perf_{split_name}",
+                group_col
+            )
 
             # Detect bias flags
             all_flags = flag_bias(fnr_data)
@@ -134,7 +144,8 @@ def compute_group_bias_metrics(
 ) -> tuple[list, list]:
     """
     Computes group metrics (including FNR) based on evaluation parameters and logs them to MLflow.
-
+    We split bias & performance metrics into separate dictionaries in our output to make the model
+    card more readable with two separate tables.
     Args:
         split_data: Data for the current split to evaluate
         split_name: Name of the data split (e.g., "train", "test", or "val")
@@ -144,7 +155,8 @@ def compute_group_bias_metrics(
         pos_label: Positive class label.
         student_group_cols: List of columns for subgroups.
     """
-    group_metrics = []
+    bias_group_metrics = []
+    perf_group_metrics = []
     fnr_data = []
 
     for subgroup_name, subgroup_data in split_data.groupby(group_col):
@@ -177,17 +189,34 @@ def compute_group_bias_metrics(
         )
         # HACK: avoid duplicative metrics
         eval_metrics.pop("num_positives", None)
-        subgroup_metrics = format_subgroup_metrics(eval_metrics, fnr_subgroup_data)
+        bias_subgroup_metrics, perf_subgroup_metrics = (
+            format_subgroup_metrics(
+                eval_metrics, fnr_subgroup_data
+            )
+        )
 
-        log_subgroup_metrics_to_mlflow(subgroup_metrics, split_name, group_col)
+        log_subgroup_metrics_to_mlflow(
+            bias_subgroup_metrics,
+            f"{split_name}_bias",
+            group_col
+        )
+        log_subgroup_metrics_to_mlflow(
+            perf_subgroup_metrics,
+            f"{split_name}_performance",
+            group_col
+        )
 
-        group_metrics.append(subgroup_metrics)
+        bias_group_metrics.append(bias_subgroup_metrics)
+        perf_group_metrics.append(perf_subgroup_metrics)
         fnr_data.append(fnr_subgroup_data)
 
-    return group_metrics, fnr_data
+    return bias_group_metrics, perf_group_metrics, fnr_data
 
 
-def format_subgroup_metrics(eval_metrics: dict, fnr_subgroup_data: dict) -> dict:
+def format_subgroup_metrics(
+    eval_metrics: dict,
+    fnr_subgroup_data: dict
+) -> tuple[dict, dict]:
     """
     Formats the evaluation metrics and bias metrics together for logging into MLflow.
 
@@ -195,9 +224,9 @@ def format_subgroup_metrics(eval_metrics: dict, fnr_subgroup_data: dict) -> dict
         eval_metrics: Dictionary performance metrics for subgroup
         fnr_subgroup_data: List of dictionaries containing FNR and CI information for each subgroup.
     Returns:
-        Dictionary summarizing both performance & bias metrics
+        Tuple of dictionaries summarizing both performance & bias metrics
     """
-    return {
+    bias_metrics = {
         "Subgroup": fnr_subgroup_data["subgroup"],
         "Number of Samples": eval_metrics["num_samples"],
         "Number of Positive Samples": fnr_subgroup_data["number_of_positive_samples"],
@@ -208,7 +237,9 @@ def format_subgroup_metrics(eval_metrics: dict, fnr_subgroup_data: dict) -> dict
         # Bias Metrics
         "FNR": round(fnr_subgroup_data["fnr"], 2),
         "FNR CI Lower": round(fnr_subgroup_data["ci"][0], 2),
-        "FNR CI Upper": round(fnr_subgroup_data["ci"][1], 2),
+        "FNR CI Upper": round(fnr_subgroup_data["ci"][1], 2)
+    }
+    performance_metrics = {
         # Performance Metrics
         "Accuracy": round(eval_metrics["accuracy"], 2),
         "Precision": round(eval_metrics["precision"], 2),
@@ -216,7 +247,7 @@ def format_subgroup_metrics(eval_metrics: dict, fnr_subgroup_data: dict) -> dict
         "F1 Score": round(eval_metrics["f1_score"], 2),
         "Log Loss": round(eval_metrics["log_loss"], 2),
     }
-
+    return bias_metrics, performance_metrics
 
 def flag_bias(
     fnr_data: list,
@@ -482,7 +513,8 @@ def log_group_metrics_to_mlflow(
     Saves and logs group-level bias metrics as a CSV artifact in MLflow.
 
     Args:
-        group_metrics: List of dictionaries containing computed group-level bias metrics.
+        group_metrics: List of dictionaries containing computed group-level bias
+        or performance metrics.
         split_name: Name of the data split (e.g., "train", "test", "validation").
         group_col: Column name representing the group for bias evaluation.
     """
