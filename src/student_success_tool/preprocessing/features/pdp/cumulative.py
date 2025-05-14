@@ -218,7 +218,7 @@ def add_cumfrac_terms_enrolled_features(
         cumfrac_full_time_terms_enrolled=ft.partial(
             _compute_cumfrac_terms_enrolled,
             term_rank_col="term_rank_full_time",
-            min_student_term_rank_col="min_student_term_rank_noncore",
+            min_student_term_rank_col="min_student_term_rank_full_time",
             cumnum_terms_enrolled_col="cumnum_full_time_terms_enrolled",
         ),
     )
