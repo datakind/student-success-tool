@@ -84,7 +84,9 @@ def add_features(
                 term_in_subset, terms_subset=noncore_terms, term_col=term_col
             ),
             term_is_full_time=ft.partial(
-                term_in_subset, terms_subset=full_time_terms, term_col=enrollment_intensity_col
+                term_in_subset,
+                terms_subset=full_time_terms,
+                term_col=enrollment_intensity_col,
             ),
         )
     )

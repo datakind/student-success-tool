@@ -53,7 +53,12 @@ def df():
             "term_is_pre_cohort": [True, False, False, False, False],
         }
     ).astype(
-        {"term_rank": "Int8", "term_rank_core": "Int8", "term_rank_noncore": "Int8",  "term_rank_full_time": "Int8"}
+        {
+            "term_rank": "Int8",
+            "term_rank_core": "Int8",
+            "term_rank_noncore": "Int8",
+            "term_rank_full_time": "Int8",
+        }
     )
 
 
