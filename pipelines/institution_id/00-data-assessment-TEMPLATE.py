@@ -102,6 +102,11 @@ dataset_name = "DATASET_NAME"
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## course dataset
+
+# COMMAND ----------
+
 # TODO: fill in the actual path to school's raw course file
 # okay to add it to project config now or later, whatever you prefer
 raw_course_file_path = cfg.datasets[dataset_name].raw_course.file_path
