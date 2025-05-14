@@ -28,7 +28,7 @@ def test_init_defaults(mock_config):
     assert isinstance(card.context, dict)
 
 
-@patch("student_success_tool.reporting.model_card.dataio.models.load_mlflow_model")
+@patch("student_success_tool.reporting.model_card.base.dataio.models.load_mlflow_model")
 def test_load_model_success(mock_load_model, mock_config):
     card = ModelCard(config=mock_config, catalog="catalog", model_name="inst_my_model")
     card.load_model()
@@ -65,8 +65,8 @@ def test_get_feature_metadata_success(mock_config):
     assert metadata["collinearity_threshold"] == "0.9"
 
 
-@patch("student_success_tool.reporting.model_card.utils.download_static_asset")
-@patch("student_success_tool.reporting.model_card.datetime")
+@patch("student_success_tool.reporting.model_card.base.utils.download_static_asset")
+@patch("student_success_tool.reporting.model_card.base.datetime")
 def test_get_basic_context(mock_datetime, mock_download, mock_config):
     mock_download.return_value = "<img>Logo</img>"
     mock_datetime.now.return_value.year = 2025
@@ -102,11 +102,11 @@ def test_build_calls_all_steps(mock_config):
         method.assert_called_once()
 
 
-@patch("student_success_tool.reporting.model_card.mlflow.search_runs")
+@patch("student_success_tool.reporting.model_card.base.mlflow.search_runs")
 @patch(
-    "student_success_tool.reporting.model_card.modeling.evaluation.extract_training_data_from_model"
+    "student_success_tool.reporting.model_card.base.modeling.evaluation.extract_training_data_from_model"
 )
-@patch("student_success_tool.reporting.model_card.dataio.models.load_mlflow_model")
+@patch("student_success_tool.reporting.model_card.base.dataio.models.load_mlflow_model")
 def test_extract_training_data_with_split_call_load_model(
     mock_load_model, mock_extract_data, mock_search_runs, mock_config
 ):
