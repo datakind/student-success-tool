@@ -259,6 +259,11 @@ explainer
 
 # COMMAND ----------
 
+# mapping pell status to 0/1 for shap 
+df_test["student_is_pell_recipient"] = df_test["student_is_pell_recipient"].map({True: 1, False: 0})
+
+# COMMAND ----------
+
 shap_schema = StructType(
     [StructField(cfg.student_id_col, StringType(), nullable=False)]
     + [StructField(col, FloatType(), nullable=False) for col in model_feature_names]
@@ -328,5 +333,3 @@ result
 # MAGIC
 # MAGIC - how / where to save final results?
 # MAGIC - do we want to save predictions separately / additionally from the "display" format?
-
-# COMMAND ----------
