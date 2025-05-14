@@ -18,7 +18,7 @@ class PDPModelCard(ModelCard[PDPProjectConfig]):
         Otherwise, this class inherits and is functionally the same as the
         base ModelCard class.
         """
-        if not isinstance(config, PDPProjectConfig): # type guard
+        if not isinstance(config, PDPProjectConfig):  # type guard
             raise TypeError("Expected config to be of type PDPProjectConfig")
 
         super().__init__(config, catalog, model_name, assets_path)

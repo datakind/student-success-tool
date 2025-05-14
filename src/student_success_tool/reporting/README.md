@@ -1,7 +1,7 @@
 # Model Cards 
 - This module is used to create model cards for each model developed by an institution. 
 - Inputs to this module generally-speaking are the `config.toml` file, catalog name, and model name.
-- A model card is produced via `config.toml` (source of truth, model definition) and MLflow artifacts (plots, tables, metrics).
+- A model card is produced via `config.toml` (source of truth, model definition) and mlflow artifacts from the selected model (plots, tables, metrics).
 
 ## Structure
 - `model_card`: This contains the "main" functions of the model card module and where the ModelCard base class is defined, as well as different overrides such as for PDP or Custom schools.
@@ -16,7 +16,8 @@ for unit testing and to scale our model card for our institution and organizatio
 - Then, we build the model card. 
 - Finally, we have a model card markdown that is generated locally.
 ```
-import 
+from student_success_tool.reporting.model_card.pdp import PDPModelCard
+
 # Initialize card
 card = PDPModelCard(config=cfg, catalog=catalog, model_name=model_name)
 
