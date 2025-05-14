@@ -60,7 +60,7 @@ def add_features(
                 "term_id_cumcount": "Int8",
                 "term_is_core_cumsum": "Int8",
                 "term_is_noncore_cumsum": "Int8",
-                "term_is_full_time_cumsum": "Int8"
+                "term_is_full_time_cumsum": "Int8",
             }
         )
         .rename(
@@ -68,7 +68,7 @@ def add_features(
                 "term_id_cumcount": "cumnum_terms_enrolled",
                 "term_is_core_cumsum": "cumnum_core_terms_enrolled",
                 "term_is_noncore_cumsum": "cumnum_noncore_terms_enrolled",
-                "term_is_full_time_cumsum": "cumnum_full_time_terms_enrolled", 
+                "term_is_full_time_cumsum": "cumnum_full_time_terms_enrolled",
             }
         )
     )
