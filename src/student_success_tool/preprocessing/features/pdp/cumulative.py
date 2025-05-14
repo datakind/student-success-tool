@@ -194,6 +194,7 @@ def add_cumfrac_terms_enrolled_features(
         min_student_term_rank=("term_rank", "min"),
         min_student_term_rank_core=("term_rank_core", "min"),
         min_student_term_rank_noncore=("term_rank_noncore", "min"),
+        min_student_term_rank_full_time=("term_rank_full_time", "min"),
     )
     return pd.merge(df, df_min_term_ranks, on=student_id_cols, how="inner").assign(
         cumfrac_terms_enrolled=ft.partial(
@@ -216,7 +217,7 @@ def add_cumfrac_terms_enrolled_features(
         ),
         cumfrac_full_time_terms_enrolled=ft.partial(
             _compute_cumfrac_terms_enrolled,
-            term_rank_col="term_rank_noncore",
+            term_rank_col="term_rank_full_time",
             min_student_term_rank_col="min_student_term_rank_noncore",
             cumnum_terms_enrolled_col="cumnum_full_time_terms_enrolled",
         ),
