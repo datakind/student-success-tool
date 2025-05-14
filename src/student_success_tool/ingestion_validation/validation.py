@@ -9,23 +9,20 @@ Reports:
   - failure_cases: row/check-level failure details (if any—treated as hard)
 """
 
-import sys
 import json
 import os
 import re
-import argparse
 from typing import Union, List, Dict, Any
 
 import pandas as pd
-import pandera as pa
 from pandera import Column, Check, DataFrameSchema
 from pandera.errors import SchemaErrors
 
 class HardValidationError(Exception):
     def __init__(
         self,
-        missing_required: List[str] = None,
-        extra_columns: List[str] = None,
+        missing_required: Any = None,
+        extra_columns: Any = None,
         schema_errors: Any = None,
         failure_cases: Any = None,
     ):
@@ -52,7 +49,7 @@ def normalize_col(name: str) -> str:
     )
 
 
-def load_json(path: str) -> dict:
+def load_json(path: str) -> Any:
     try:
         with open(path, 'r') as f:
             return json.load(f)
@@ -62,13 +59,13 @@ def load_json(path: str) -> dict:
 
 def merge_model_columns(
     base_schema: dict,
-    extension_schema: dict,
+    extension_schema: Any,
     institution: str,
     model: str
-) -> Dict[str, dict]:
+) -> dict:
     base_models = base_schema.get('base', {}).get('data_models', {})
     if model not in base_models:
-        logger.error(KeyError(f"Model '{model}' not in base schema"))
+        
         raise KeyError(f"Model '{model}' not in base schema")
     merged = dict(base_models[model].get('columns', {}))
     if extension_schema:

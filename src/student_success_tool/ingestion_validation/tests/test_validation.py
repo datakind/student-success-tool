@@ -1,12 +1,9 @@
 import json
-import os
 import pandas as pd
 import pytest
-from pandera.errors import SchemaErrors
 
 from validate_dataset import (
     normalize_col,
-    load_json,
     merge_model_columns,
     build_schema,
     validate_dataset,
