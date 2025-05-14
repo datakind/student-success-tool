@@ -12,6 +12,7 @@ Usage:
     --extension-schema pdp_extension_schema.json \
     --output-dir extensions
 """
+
 import sys
 import os
 import json
@@ -26,7 +27,7 @@ from validation import validate_dataset, normalize_col, HardValidationError
 def load_json(path: str) -> Any:
     """Load JSON from a file, returning {} on failure."""
     try:
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         return {}
@@ -42,10 +43,7 @@ def infer_column_schema(series: pd.Series, cate_threshold: int = 10) -> Any:
     uniques = non_null.unique().tolist()
     # small categorical
     if 1 < len(uniques) <= cate_threshold:
-        cats = [
-            (v.item() if isinstance(v, np.generic) else v)
-            for v in uniques
-        ]
+        cats = [(v.item() if isinstance(v, np.generic) else v) for v in uniques]
         return {
             "dtype": "category",
             "categories": cats,
@@ -53,9 +51,7 @@ def infer_column_schema(series: pd.Series, cate_threshold: int = 10) -> Any:
             "nullable": bool(series.isna().any()),
             "required": True,
             "aliases": [],
-            "checks": [
-                {"type": "isin", "args": [cats]}
-            ],
+            "checks": [{"type": "isin", "args": [cats]}],
         }
 
     # numeric / datetime / bool / string fallback
@@ -87,9 +83,7 @@ def infer_column_schema(series: pd.Series, cate_threshold: int = 10) -> Any:
 
 
 def generate_extension_schema(
-    df: Union[pd.DataFrame, str],
-    models: Union[str, List[str]],
-    institution_id: str
+    df: Union[pd.DataFrame, str], models: Union[str, List[str]], institution_id: str
 ) -> Any:
     """
     1) run validate_dataset(...) to detect hard errors or extra_columns
@@ -106,11 +100,7 @@ def generate_extension_schema(
     base_schema_path = "'/Volumes/staging_sst_01/default/schema/base_schema.json'"
     try:
         # no hard errors (i.e. no missing_required, extra_columns, or schema errors)
-        _ = validate_dataset(
-            df,
-            models,
-            institution_id
-        )
+        _ = validate_dataset(df, models, institution_id)
         extras: List[str] = []
     except HardValidationError as e:
         # if missing_required or schema_errors, cannot proceed
@@ -143,14 +133,14 @@ def generate_extension_schema(
         base_version = load_json(base_schema_path).get("version", "1.0.0")
         extension = {
             "version": base_version,
-            "institutions": {
-                institution_id: {"data_models": {}}
-            }
+            "institutions": {institution_id: {"data_models": {}}},
         }
 
-    inst_block = extension.setdefault("institutions", {}) \
-                            .setdefault(institution_id, {}) \
-                            .setdefault("data_models", {})
+    inst_block = (
+        extension.setdefault("institutions", {})
+        .setdefault(institution_id, {})
+        .setdefault("data_models", {})
+    )
 
     # ensure models is a list
     if isinstance(models, str):
