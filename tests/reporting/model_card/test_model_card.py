@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 import pandas as pd
 
-from student_success_tool.reporting.model_card import ModelCard
+from student_success_tool.reporting.model_card.base import ModelCard
 
 
 @pytest.fixture
