@@ -45,3 +45,9 @@ class SectionRegistry:
             A mapping of section keys to their rendered markdown strings.
         """
         return {key: fn() for key, fn in self._sections}
+
+    def clear(self) -> None:
+        """
+        Clears all registered sections for platform-specific processing & overrides.
+        """
+        self._sections.clear()

@@ -1,13 +1,16 @@
 import re
+import typing as t
 
 
 class Formatting:
-    def __init__(self, base_spaces: int = 2):
+    def __init__(self, base_spaces: int = 4):
         """
         Initialize the formatter with a base indentation size.
 
         Args:
-            base_spaces: The number of spaces for each indent level. Default is 2.
+            base_spaces: The number of spaces for each indent level. The default
+            needs to be 4, since for markdown parsers and PDF export, this would
+            create a reliable interpretation of nested lists.
         """
         self.base_spaces = base_spaces
 
@@ -34,6 +37,16 @@ class Formatting:
         Apply Markdown italic formatting to a given text.
         """
         return f"_{text}_"
+
+    def ordinal(self, n: int) -> str:
+        """
+        Converts an integer to its ordinal form (e.g. 1 -> 1st).
+        """
+        if 10 <= n % 100 <= 20:
+            suffix = "th"
+        else:
+            suffix = {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+        return f"{n}{suffix}"
 
     def friendly_case(self, text: str, capitalize: bool = True) -> str:
         """
@@ -62,3 +75,23 @@ class Formatting:
         # Regex preserves apostrophes and hyphens
         tokens = re.findall(r"[\w'-]+", text)
         return " ".join(smart_cap(tok) for tok in tokens)
+
+    def format_intensity_time_limit(self, duration: t.Tuple[str, str]) -> str:
+        """
+        We want to format a intensity_limit within config.toml by unpacking
+        the value (3.0) and unit ("year"), for example.
+
+        Args:
+            duration: intensity limit in config (3.0, "year"), for example.
+        """
+        num, unit = duration
+
+        # Format number cleanly
+        if isinstance(num, float):
+            if num.is_integer():
+                num = int(num)
+            else:
+                num = round(num, 2)
+
+        unit = unit if num == 1 else unit + "s"
+        return f"{num} {unit}"

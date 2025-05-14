@@ -1,10 +1,13 @@
 import os
 import shutil
 import typing as t
+import logging
 import mlflow
 import pathlib
 from importlib.abc import Traversable
 from importlib.resources import as_file
+
+LOGGER = logging.getLogger(__name__)
 
 
 def download_artifact(

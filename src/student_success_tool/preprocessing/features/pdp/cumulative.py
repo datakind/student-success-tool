@@ -2,6 +2,7 @@ import functools as ft
 import itertools
 import logging
 from collections.abc import Iterable
+import typing as t
 
 import pandas as pd
 from pandas.core.groupby import DataFrameGroupBy
@@ -25,10 +26,16 @@ def add_features(
         for col in df.columns
         if col.startswith(f"{constants.NUM_COURSE_FEATURE_COL_PREFIX}_")
     ]
+    dummy_course_cols = [
+        col
+        for col in df.columns
+        if col.startswith(f"{constants.DUMMY_COURSE_FEATURE_COL_PREFIX}_")
+    ]
     df_expanding_agg = (
         expanding_agg_features(
             df_grped,
             num_course_cols=num_course_cols,
+            dummy_course_cols=dummy_course_cols,
             col_aggs=[
                 ("term_id", "count"),
                 ("term_in_peak_covid", "sum"),
@@ -45,6 +52,7 @@ def add_features(
                 ("student_pass_rate_above_sections_avg", "sum"),
                 ("student_completion_rate_above_sections_avg", "sum"),
             ],
+            credits=constants.DEFAULT_COURSE_CREDIT_CHECK,
         )
         # rename/dtype special cols for clarity in downstream calcs
         .astype(
@@ -67,12 +75,13 @@ def add_features(
     df_cumnum_ur = cumnum_unique_and_repeated_features(
         df_grped, cols=["course_ids", "course_subjects", "course_subject_areas"]
     )
+    concat_dfs = [df, df_cumnum_ur, df_expanding_agg]
     return (
         # despite best efforts, the student-id index is dropped from df_cumnum_ur
         # and, through sheer pandas insanity, merge on student_id_cols produces
         # huge numbers of duplicate rows -- truly impossible shit, that
         # however, by definition, these transforms shouldn't alter the original indexing, so:
-        pd.concat([df, df_cumnum_ur, df_expanding_agg], axis="columns")
+        pd.concat(concat_dfs, axis="columns")
         # add a last couple features, which don't fit nicely into above logic
         .pipe(add_cumfrac_terms_enrolled_features, student_id_cols=student_id_cols)
         .pipe(
@@ -94,6 +103,8 @@ def expanding_agg_features(
     *,
     num_course_cols: list[str],
     col_aggs: list[tuple[str, str | list[str]]],
+    credits: t.Optional[int] = constants.DEFAULT_COURSE_CREDIT_CHECK,
+    dummy_course_cols: t.Optional[list[str]] = None,
 ) -> pd.DataFrame:
     """
     Compute various aggregate features over an expanding window per (student) group.
@@ -102,15 +113,22 @@ def expanding_agg_features(
         df_grped
         num_course_cols
         col_aggs
+        credits: the number of credits to check if courses of interest were taken within
+        dummy_course_cols: the columns that were checked for whether a course was taken to check if they were taken within the number of credits of interest
     """
     LOGGER.info("computing expanding window aggregate features ...")
+    agg_dict = dict(col_aggs) | {col: "sum" for col in num_course_cols}
+    if dummy_course_cols is not None:
+        agg_dict |= {col: "max" for col in dummy_course_cols}
+
     df_cumaggs = (
         df_grped.expanding()
-        .agg(dict(col_aggs) | {col: "sum" for col in num_course_cols})
+        .agg(agg_dict)
         # pandas does weird stuff when indexing on windowed operations
         # this should get us back to student_id_cols only on the index
         .reset_index(level=-1, drop=True)
     )
+
     # unfortunately, expanding doesn't support the "named agg" syntax
     # so we have to (flatten and) rename the columns manually
     df_cumaggs.columns = [f"{col}_cum{fn}" for col, fn in df_cumaggs.columns]
@@ -130,9 +148,25 @@ def expanding_agg_features(
         .div(df_cumaggs["num_courses_cumsum"], axis="index")
         .rename(columns=lambda col: col.replace("cumsum", "cumfrac"))
     )
+    concat_dfs = [df_cumaggs, df_cumfracs]
+    if dummy_course_cols is not None:
+        action_cols = [f"{dummy_course}_cummax" for dummy_course in dummy_course_cols]
+        action_status_df = pd.DataFrame(index=df_cumaggs.index)
+
+        for col in action_cols:
+            within_col = f"{col}_in_{credits}_creds"
+            action_status_df[within_col] = (df_cumaggs[col].astype(bool)) & (
+                df_cumaggs["num_credits_earned_cumsum"] <= credits
+            )
+
+        action_status_df = action_status_df.groupby(
+            level=df_cumaggs.index.names
+        ).transform("max")
+        concat_dfs.append(action_status_df)
+
     return (
         # append cum-frac features to all cum-agg features
-        pd.concat([df_cumaggs, df_cumfracs], axis="columns")
+        pd.concat(concat_dfs, axis="columns")
         # *drop* the original cumsum columns, since the derived cumfracs are sufficient
         .drop(columns=num_courses_cumsum_cols)
         # drop our student-id(s) index, it just causes trouble

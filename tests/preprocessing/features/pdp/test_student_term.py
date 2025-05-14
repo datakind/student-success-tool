@@ -78,6 +78,50 @@ def test_sum_dummy_cols_by_group(df, grp_cols, agg_cols, exp):
 
 
 @pytest.mark.parametrize(
+    ["df", "grp_cols", "exp"],
+    [
+        (
+            pd.DataFrame(
+                {
+                    "student_guid": ["123", "123", "456", "789"],
+                    "term_id": [
+                        "23-24 FALL",
+                        "23-24 SPRING",
+                        "23-24 FALL",
+                        "23-24 SPRING",
+                    ],
+                    "num_courses_course_type_CC|CD": [0, 3, 1, 0],
+                    "num_courses_course_level_0": [0, 0, 0, 0],
+                    "num_courses_course_level_1": [2, 1, 1, 1],
+                }
+            ),
+            ["student_guid", "term_id"],
+            pd.DataFrame(
+                {
+                    "student_guid": ["123", "123", "456", "789"],
+                    "term_id": [
+                        "23-24 FALL",
+                        "23-24 SPRING",
+                        "23-24 FALL",
+                        "23-24 SPRING",
+                    ],
+                    "took_course_course_type_CC|CD": [False, True, True, False],
+                    "took_course_course_level_0": [False, False, False, False],
+                    "took_course_course_level_1": [True, True, True, True],
+                }
+            ),
+        ),
+    ],
+)
+def test_equal_cols_by_group(df, grp_cols, exp):
+    obs = student_term.equal_cols_by_group(df, grp_cols=grp_cols)
+    print("obs columns", obs.columns)
+    print("exp cols", exp.columns)
+    assert isinstance(obs, pd.DataFrame) and not obs.empty
+    assert obs.equals(exp) or obs.compare(exp).empty
+
+
+@pytest.mark.parametrize(
     ["df", "grp_cols", "agg_col_vals", "exp"],
     [
         (
