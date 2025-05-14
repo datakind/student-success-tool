@@ -1,34 +1,39 @@
 import os
-import mlflow
 import logging
 import typing as t
-from mlflow.tracking import MlflowClient
 from datetime import datetime
+
+import mlflow
+from mlflow.tracking import MlflowClient
+
+# resolving files in templates module within package
 from importlib.abc import Traversable
 from importlib.resources import files
 
 # internal SST modules
-from .. import dataio, modeling
-from ..configs.pdp import PDPProjectConfig
+from ... import dataio, modeling
 
 # relative imports in 'reporting' module
-from .sections import register_sections
-from .sections.registry import SectionRegistry
-from .utils import utils
-from .utils.formatting import Formatting
+from ..sections import register_sections
+from ..sections.registry import SectionRegistry
+from ..utils import utils
+from ..utils.formatting import Formatting
+from ..utils.types import ModelCardConfig
 
 LOGGER = logging.getLogger(__name__)
+C = t.TypeVar("C", bound=ModelCardConfig)
 
 
-class ModelCard:
+class ModelCard(t.Generic[C]):
     DEFAULT_ASSETS_FOLDER = "card_assets"
     TEMPLATE_FILENAME = "model-card-TEMPLATE.md"
     LOGO_FILENAME = "logo.png"
 
     def __init__(
         self,
-        config: PDPProjectConfig,
-        uc_model_name: str,
+        config: C,
+        catalog: str,
+        model_name: str,
         assets_path: t.Optional[str] = None,
     ):
         """
@@ -36,8 +41,9 @@ class ModelCard:
         in unity catalog. If assets_path is not provided, the default assets folder is used.
         """
         self.cfg = config
-        self.uc_model_name = uc_model_name
-        self.model_name = self._extract_model_name(uc_model_name)
+        self.catalog = catalog
+        self.model_name = model_name
+        self.uc_model_name = f"{catalog}.{self.cfg.institution_id}_gold.{model_name}"
         LOGGER.info("Initializing ModelCard for model: %s", self.uc_model_name)
 
         self.client = MlflowClient()
@@ -47,8 +53,12 @@ class ModelCard:
 
         self.assets_folder = assets_path or self.DEFAULT_ASSETS_FOLDER
         self.output_path = self._build_output_path()
-        self.template_path = self._resolve_template(self.TEMPLATE_FILENAME)
-        self.logo_path = self._resolve_asset(self.LOGO_FILENAME)
+        self.template_path = self._resolve(
+            "student_success_tool.reporting.template", self.TEMPLATE_FILENAME
+        )
+        self.logo_path = self._resolve(
+            "student_success_tool.reporting.template.assets", self.LOGO_FILENAME
+        )
 
     def build(self):
         """
@@ -72,7 +82,7 @@ class ModelCard:
         Loads the MLflow model from the MLflow client based on the MLflow model URI.
         Also assigns the run ID and experiment ID from the config.
         """
-        model_cfg = self.cfg.models.get(self.model_name)
+        model_cfg = self.cfg.model
         if not model_cfg:
             raise ValueError(f"Model configuration for '{self.model_name}' is missing.")
         if not all(
@@ -232,13 +242,7 @@ class ModelCard:
         filled = template.format(**self.context)
         with open(self.output_path, "w") as file:
             file.write(filled)
-        LOGGER.info("✅ Model card generated!")
-
-    def _extract_model_name(self, uc_model_name: str) -> str:
-        """
-        Extracts model name from unity catalog model name.
-        """
-        return uc_model_name.split(".")[-1]
+        LOGGER.info(f"✅ Model card generated at {self.output_path}")
 
     def _build_output_path(self) -> str:
         """
@@ -247,24 +251,15 @@ class ModelCard:
         filename = f"model-card-{self.model_name}.md"
         return os.path.join(os.getcwd(), filename)
 
-    def _resolve_template(self, filename: str) -> Traversable:
-        """
-        Resolves the template file path using importlib. Importlib is necessary
-        since this template exists within the package itself.
-        """
-        return files("student_success_tool.reporting.template").joinpath(filename)
-
-    def _resolve_asset(self, filename: str) -> Traversable:
-        """
-        Resolves the asset file path using importlib. Importlib is necessary
-        since the asset exists within the package itself.
-        """
-        return files("student_success_tool.reporting.template.assets").joinpath(
-            filename
-        )
-
     def _register_sections(self):
         """
         Registers all sections in the section registry.
         """
         register_sections(self, self.section_registry)
+
+    def _resolve(self, package: str, filename: str) -> Traversable:
+        """
+        Resolves files using importlib. Importlib is necessary since
+        the file exists within the SST package itself.
+        """
+        return files(package).joinpath(filename)
