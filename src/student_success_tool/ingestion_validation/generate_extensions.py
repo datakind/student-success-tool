@@ -15,8 +15,7 @@ Usage:
 import sys
 import os
 import json
-import argparse
-from typing import Union, List, Dict
+from typing import Union, List, Any
 
 import pandas as pd
 
@@ -24,7 +23,7 @@ import pandas as pd
 from validation import validate_dataset, normalize_col, HardValidationError
 
 
-def load_json(path: str) -> dict:
+def load_json(path: str) -> Any:
     """Load JSON from a file, returning {} on failure."""
     try:
         with open(path, 'r') as f:
@@ -33,7 +32,7 @@ def load_json(path: str) -> dict:
         return {}
 
 
-def infer_column_schema(series: pd.Series, cate_threshold: int = 10) -> dict:
+def infer_column_schema(series: pd.Series, cate_threshold: int = 10) -> Any:
     """
     Infer a minimal Pandera‐style schema for a pandas Series.
     """
@@ -75,7 +74,7 @@ def infer_column_schema(series: pd.Series, cate_threshold: int = 10) -> dict:
         checks = [{"type": "not_null", "args": []}]
     else:
         dtype = "string"
-        checks = [{"type": "str_length", "kwargs": {"min_value": 1}}]
+        checks = []
 
     return {
         "dtype": dtype,
@@ -91,7 +90,7 @@ def generate_extension_schema(
     df: Union[pd.DataFrame, str],
     models: Union[str, List[str]],
     institution_id: str
-) -> Dict:
+) -> Any:
     """
     1) run validate_dataset(...) to detect hard errors or extra_columns
     2) infer schema for each extra column (for extension)
