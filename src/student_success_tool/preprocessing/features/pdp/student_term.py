@@ -113,11 +113,21 @@ def aggregate_from_course_level_features(
     df_val_equals = sum_val_equal_cols_by_group(
         df, grp_cols=student_term_id_cols, agg_col_vals=agg_col_vals
     )
+    df_dummy_equals = equal_cols_by_group(
+        df=df_val_equals, grp_cols=student_term_id_cols
+    )
     df_grade_aggs = multicol_grade_aggs_by_group(
         df, min_passing_grade=min_passing_grade, grp_cols=student_term_id_cols
     )
     return shared.merge_many_dataframes(
-        [df_passthrough, df_aggs, df_val_equals, df_dummies, df_grade_aggs],
+        [
+            df_passthrough,
+            df_aggs,
+            df_val_equals,
+            df_dummy_equals,
+            df_dummies,
+            df_grade_aggs,
+        ],
         on=student_term_id_cols,
     )
 
@@ -456,6 +466,30 @@ def sum_dummy_cols_by_group(
         .rename(columns=_rename_sum_by_group_col)
         .reset_index(drop=False)
     )
+
+
+def equal_cols_by_group(
+    df: pd.DataFrame,
+    *,
+    grp_cols: list[str],
+) -> pd.DataFrame:
+    """
+    Compute dummy values for all of the num_course features
+
+    Args:
+        df
+        grp_cols
+    """
+    num_prefix = constants.NUM_COURSE_FEATURE_COL_PREFIX
+    dummy_prefix = constants.DUMMY_COURSE_FEATURE_COL_PREFIX
+
+    dummy_cols = {
+        col.replace(num_prefix, dummy_prefix, 1): df[col].ge(1)
+        for col in df.columns
+        if col.startswith(constants.NUM_COURSE_FEATURE_COL_PREFIX)
+    }
+
+    return df.assign(**dummy_cols).reindex(columns=grp_cols + list(dummy_cols.keys()))
 
 
 def sum_val_equal_cols_by_group(
