@@ -34,7 +34,13 @@ def base_schema_file(tmp_path):
                             "nullable": False,
                             "required": True,
                             "aliases": ["guid", "study_id", "student_guid"],
-                            "checks": [{"type": "str_length", "args": [], "kwargs": {"min_value": 3}}],
+                            "checks": [
+                                {
+                                    "type": "str_length",
+                                    "args": [],
+                                    "kwargs": {"min_value": 3},
+                                }
+                            ],
                         },
                         "age": {
                             "dtype": "string",
@@ -42,7 +48,13 @@ def base_schema_file(tmp_path):
                             "nullable": False,
                             "required": False,
                             "aliases": [],
-                            "checks": [{"type": "str_length", "args": [], "kwargs": {"min_value": 2}}],
+                            "checks": [
+                                {
+                                    "type": "str_length",
+                                    "args": [],
+                                    "kwargs": {"min_value": 2},
+                                }
+                            ],
                         },
                         "disability_status": {
                             "dtype": "string",
@@ -99,7 +111,9 @@ def test_normalize_col():
 
 def test_merge_model_columns_base_only(base_schema_file):
     base = json.load(open(base_schema_file))
-    merged = merge_model_columns(base, extension_schema=None, institution="pdp", model="student")
+    merged = merge_model_columns(
+        base, extension_schema=None, institution="pdp", model="student"
+    )
     assert set(merged) == {"student_id", "age", "disability_status"}
 
 
@@ -135,7 +149,9 @@ def test_extra_columns_hard_error(tmp_path, base_schema_file):
         }
     )
     with pytest.raises(HardValidationError) as exc:
-        validate_dataset(df, base_schema_file, "student", "pdp", extension_schema_path=None)
+        validate_dataset(
+            df, base_schema_file, "student", "pdp", extension_schema_path=None
+        )
     err = exc.value
     assert "unexpected columns" in str(err).lower()
     assert err.extra_columns == ["unexpected"]
@@ -145,7 +161,9 @@ def test_extra_columns_hard_error(tmp_path, base_schema_file):
 def test_missing_required_hard_error(tmp_path, base_schema_file):
     df = pd.DataFrame({"age": ["U21"], "disability_status": ["Y"]})
     with pytest.raises(HardValidationError) as exc:
-        validate_dataset(df, base_schema_file, "student", "pdp", extension_schema_path=None)
+        validate_dataset(
+            df, base_schema_file, "student", "pdp", extension_schema_path=None
+        )
     err = exc.value
     assert "missing required columns" in str(err).lower()
     assert err.missing_required == ["student_id"]
@@ -156,7 +174,9 @@ def test_schema_type_errors(tmp_path, base_schema_file):
         {"student_id": ["AB"], "age": ["u21"], "disability_status": ["Y"]}
     )
     with pytest.raises(HardValidationError) as exc:
-        validate_dataset(df, base_schema_file, "student", "pdp", extension_schema_path=None)
+        validate_dataset(
+            df, base_schema_file, "student", "pdp", extension_schema_path=None
+        )
     err = exc.value
     assert err.schema_errors is not None
     assert isinstance(err.schema_errors, list)
@@ -186,6 +206,7 @@ def test_csv_input(tmp_path, base_schema_file):
 
 
 # ─── Now tests for generate_extensions.py ─────────────────────────────────────
+
 
 def test_ext_load_json_missing(tmp_path):
     # should return {} on missing or invalid JSON
