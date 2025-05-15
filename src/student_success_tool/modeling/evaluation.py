@@ -119,14 +119,25 @@ def evaluate_performance(
             preds=split_data[pred_col],
             pred_probs=split_data[pred_prob_col],
             pos_label=pos_label,
+        ).rename(
+            columns={
+                "num_samples": "Number of Samples",
+                "num_positives": "Number of Positive Samples",
+                "true_positive_prevalence": "Actual Target Prevalance",
+                "pred_positive_prevalence": "Predicted Target Prevalance",
+                "accuracy": "Accuracy",
+                "precision": "Precision",
+                "recall": "Recall",
+                "f1_score": "F1 Score",
+                "log_loss": "Log Loss",
+            }
         )
         perf_metrics[split_col] = split_name
         metrics_records.append(perf_metrics)
 
     # Convert to DataFrame for display or saving
-    metrics_df = pd.DataFrame(metrics_records).set_index("split")
-    metrics_df.to_csv("/tmp/classification_metrics.csv")
-    mlflow.log_artifact("/tmp/classification_metrics.csv", artifact_path="metrics")
+    metrics_df.to_csv("/tmp/performance_across_splits.csv", index=False)
+    mlflow.log_artifact("/tmp/performance_across_splits.csv", artifact_path="metrics")
     LOGGER.info("Creating summary of performance metrics across splits")
 
 

@@ -240,6 +240,7 @@ def format_subgroup_metrics(
         "FNR CI Upper": round(fnr_subgroup_data["ci"][1], 2)
     }
     performance_metrics = {
+        "Subgroup": fnr_subgroup_data["subgroup"],
         # Performance Metrics
         "Accuracy": round(eval_metrics["accuracy"], 2),
         "Precision": round(eval_metrics["precision"], 2),
