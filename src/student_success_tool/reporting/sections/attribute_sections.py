@@ -1,5 +1,4 @@
 import logging
-import typing as t
 
 LOGGER = logging.getLogger(__name__)
 
@@ -11,6 +10,7 @@ def register_attribute_sections(card, registry):
     config.toml file.
     """
 
+    # HACK: This section assumes certain standards in the config
     @registry.register("outcome_section")
     def outcome():
         """
@@ -43,28 +43,6 @@ def register_attribute_sections(card, registry):
             k.strip().upper().replace(" ", "-"): v for k, v in limits.items()
         }
 
-        def format_time(duration: t.Tuple[str, str]) -> str:
-            """
-            We want to format a intensity_limit within config.toml by unpacking
-            the value (3.0) and unit ("year"), for example.
-
-            Args:
-                duration: intensity limit in config (3.0, "year"), for example.
-            """
-            num, unit = duration
-
-            # Format number cleanly
-            if isinstance(num, float):
-                if num.is_integer():
-                    num = int(num)
-                else:
-                    num = round(
-                        num, 2
-                    )  # Keep at most 1 decimals with no trailing zeros
-
-            unit = unit if num == 1 else unit + "s"
-            return f"{num} {unit}"
-
         full_time = normalized_limits.get("FULL-TIME")
         part_time = normalized_limits.get("PART-TIME")
 
@@ -74,11 +52,11 @@ def register_attribute_sections(card, registry):
             )
             return f"{card.format.bold('Timeframe for Outcome Variable Not Found')}"
 
-        full_str = format_time(full_time)
+        full_str = card.format.format_intensity_time_limit(full_time)
         description = f"The model predicts the risk of {outcome} within {full_str} for full-time students"
 
         if part_time:
-            part_str = format_time(part_time)
+            part_str = card.format.format_intensity_time_limit(part_time)
             description += f", and within {part_str} for part-time students"
 
         description += ", based on student, course, and academic data."
@@ -101,27 +79,26 @@ def register_attribute_sections(card, registry):
         lines = []
         for k, v in criteria.items():
             lines.append(
-                f"{card.format.indent_level(3)}- {card.format.friendly_case(k)}"
+                f"{card.format.indent_level(2)}- {card.format.friendly_case(k)}"
             )
 
             # Handle if value is a list or a single string
             if isinstance(v, list):
                 for item in v:
                     lines.append(
-                        f"{card.format.indent_level(4)}- {card.format.friendly_case(item)}"
+                        f"{card.format.indent_level(3)}- {card.format.friendly_case(item)}"
                     )
             else:
                 lines.append(
-                    f"{card.format.indent_level(4)}- {card.format.friendly_case(v)}"
+                    f"{card.format.indent_level(3)}- {card.format.friendly_case(v)}"
                 )
 
         description = (
-            f"{card.format.indent_level(2)}- We focused our final dataset on the following target population:\n"
+            f"{card.format.indent_level(1)}- We focused our final dataset on the following target population.\n"
             + "\n".join(lines)
         )
         return description
 
-    # TODO: Right now there are no standards in the config for the checkpoint section.
     # HACK: This section assumes certain standards in the config.
     @registry.register("checkpoint_section")
     def checkpoint():
@@ -134,10 +111,10 @@ def register_attribute_sections(card, registry):
 
         if "credit" in checkpoint_name:
             num_credits = params.get("min_num_credits", "X")
-            return f"The model makes this prediction when the student has completed {card.format.bold(f'{num_credits} credits')}**."
+            return f"The model makes this prediction when the student has completed {num_credits} credits."
 
         elif "semester" in checkpoint_name or "term" in checkpoint_name:
-            return f"The model makes this prediction when the student has completed {card.format.bold(f'{card.format.friendly_case(checkpoint_name, capitalize=False)}')}."
+            return f"The model makes this prediction when the student has completed {card.format.friendly_case(checkpoint_name, capitalize=False)}."
         else:
             LOGGER.warning(
                 "Unable to determine checkpoint information. Please specify in model card or in config.toml."

@@ -29,6 +29,9 @@ def df():
             "num_courses": [3, 2, 2, 2, 1],
             "num_courses_course_level_0": [2, 1, 0, 0, 0],
             "num_courses_course_level_1": [1, 1, 2, 2, 1],
+            "took_course_subject_area_02": [True, False, False, False, True],
+            "took_course_subject_area_05_06": [False, False, False, True, False],
+            "num_credits_earned": [3, 12, 15, 4, 15],
             "course_ids": [
                 ["A101", "B101", "C201"],
                 ["A101", "D201"],
@@ -62,10 +65,15 @@ def df_grped(df):
 
 
 @pytest.mark.parametrize(
-    ["num_course_cols", "col_aggs", "exp"],
+    ["num_course_cols", "dummy_course_cols", "col_aggs", "exp"],
     [
         (
-            ["num_courses_course_level_0", "num_courses_course_level_1"],
+            [
+                "num_courses_course_level_0",
+                "num_courses_course_level_1",
+                "num_credits_earned",
+            ],
+            ["took_course_subject_area_02", "took_course_subject_area_05_06"],
             [
                 ("term_id", "count"),
                 ("term_is_pre_cohort", "sum"),
@@ -85,6 +93,15 @@ def df_grped(df):
                         0.884,
                     ],
                     "num_courses_cumsum": [3.0, 5.0, 7.0, 9.0, 10.0],
+                    "num_credits_earned_cumsum": [3.0, 15.0, 30.0, 34.0, 49.0],
+                    "took_course_subject_area_02_cummax": [1.0, 1.0, 1.0, 1.0, 1.0],
+                    "took_course_subject_area_05_06_cummax": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0,
+                    ],
                     "num_courses_course_level_0_cumfrac": [
                         0.667,
                         0.6,
@@ -99,14 +116,34 @@ def df_grped(df):
                         0.667,
                         0.7,
                     ],
+                    "took_course_subject_area_02_cummax_in_12_creds": [
+                        True,
+                        True,
+                        True,
+                        True,
+                        True,
+                    ],
+                    "took_course_subject_area_05_06_cummax_in_12_creds": [
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                    ],
                 }
             ),
         ),
     ],
 )
-def test_expanding_agg_features(df_grped, num_course_cols, col_aggs, exp):
+def test_expanding_agg_features(
+    df_grped, num_course_cols, dummy_course_cols, col_aggs, exp
+):
     obs = cumulative.expanding_agg_features(
-        df_grped, num_course_cols=num_course_cols, col_aggs=col_aggs
+        df_grped,
+        num_course_cols=num_course_cols,
+        col_aggs=col_aggs,
+        dummy_course_cols=dummy_course_cols,
+        credits=12,
     )
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     # raises error if not equal

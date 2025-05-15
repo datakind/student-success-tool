@@ -191,7 +191,7 @@ resources:
               spark.databricks.cluster.profile: singleNode
             gcp_attributes:
               use_preemptible_executors: false
-              google_service_account: ${var.pipeline_sa_email}
+              # google_service_account: ${var.pipeline_sa_email}
               availability: ON_DEMAND_GCP
               zone_id: HA
             node_type_id: n2-standard-16
@@ -207,7 +207,7 @@ resources:
         git_provider: gitHub
         git_branch: develop
       tags:
-        dev: pedro_melendez
+        dev: kayla_wilding
       queue:
         enabled: true
       parameters:
@@ -238,8 +238,6 @@ resources:
         - name: custom_schemas_path
           default: ${var.custom_schemas_path}
       permissions:
-        - group_name: ${var.fellows_group_to_manage_workflow} 
-          level: CAN_MANAGE
         - user_name: ${var.service_account_executer}
           level: CAN_MANAGE_RUN
         - group_name: ${var.datakind_group_to_manage_workflow} 
