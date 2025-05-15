@@ -287,24 +287,31 @@ def flag_bias(
     for i, current in enumerate(fnr_data):
         for other in fnr_data[i + 1 :]:
             if current["fnr"] > 0 and other["fnr"] > 0:
-                fnr_diff = np.abs(current["fnr"] - other["fnr"])
-                p_value = z_test_fnr_difference(
-                    current["fnr"], other["fnr"], current["size"], other["size"]
+                # Determine ordering based on FNR values
+                sg1, sg2 = (
+                    (current, other) 
+                    if current["fnr"] >= other["fnr"]
+                    else (other, current)
                 )
-                ci_overlap = check_ci_overlap(current["ci"], other["ci"])
+                # Guaranteed to be greater than zero
+                fnr_diff = sg1["fnr"] - sg2["fnr"]
+                p_value = z_test_fnr_difference(
+                    sg1["fnr"], sg2["fnr"], sg1["size"], sg2["size"]
+                )
+                ci_overlap = check_ci_overlap(sg1["ci"], sg2["ci"])
 
                 if np.isnan(p_value) or (
-                    (current["number_of_positive_samples"] < min_samples)
-                    or (other["number_of_positive_samples"] < min_samples)
+                    (sg1["number_of_positive_samples"] < min_samples)
+                    or (sg2["number_of_positive_samples"] < min_samples)
                 ):
                     bias_flags.append(
                         generate_bias_flag(
-                            current["group"],
-                            current["subgroup"],
-                            other["subgroup"],
+                            sg1["group"],
+                            sg1["subgroup"],
+                            sg2["subgroup"],
                             fnr_diff,
-                            "Insufficient samples for statistical test",
-                            current["split_name"],
+                            "insufficient samples for statistical test",
+                            sg1["split_name"],
                             "⚪ INSUFFICIENT DATA",
                             p_value,
                         )
@@ -312,12 +319,12 @@ def flag_bias(
                 elif fnr_diff < low_bias_thresh or p_value > 0.1:
                     bias_flags.append(
                         generate_bias_flag(
-                            current["group"],
-                            current["subgroup"],
-                            other["subgroup"],
+                            sg1["group"],
+                            sg1["subgroup"],
+                            sg2["subgroup"],
                             fnr_diff,
-                            "No significant difference",
-                            current["split_name"],
+                            "no significant difference",
+                            sg1["split_name"],
                             "🟢 NO BIAS",
                             p_value,
                         )
@@ -326,18 +333,18 @@ def flag_bias(
                     for threshold, flag, p_thresh in thresholds:
                         if fnr_diff >= threshold and p_value <= p_thresh:
                             reason = (
-                                "Overlapping CIs"
+                                "overlapping confidence intervals"
                                 if ci_overlap
-                                else "Non-overlapping CIs"
+                                else "non-overlapping confidence intervals"
                             )
                             bias_flags.append(
                                 generate_bias_flag(
-                                    current["group"],
-                                    current["subgroup"],
-                                    other["subgroup"],
+                                    sg1["group"],
+                                    sg1["subgroup"],
+                                    sg2["subgroup"],
                                     fnr_diff,
                                     reason,
-                                    current["split_name"],
+                                    sg1["split_name"],
                                     flag,
                                     p_value,
                                 )
@@ -469,7 +476,7 @@ def generate_bias_flag(
         "type": (
             bias_type
             if np.isnan(p_value)
-            else f"{bias_type}, p-value: {'< 0.001' if p_value < 0.001 else f'{p_value:.3f}'}"
+            else f"{bias_type}, p-value: {'less than 0.001' if p_value < 0.001 else f'{p_value:.3f}'}"
         ),
         "split_name": split_name,
         "flag": flag,
