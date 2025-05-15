@@ -2,19 +2,9 @@ import json
 import pandas as pd
 import pytest
 
-from student_success_tool.ingestion_validation.validation import (
-    normalize_col,
-    merge_model_columns,
-    build_schema,
-    validate_dataset,
-    HardValidationError,
-)
+from student_success_tool.ingestion_validation import validation
 
-from student_success_tool.ingestion_validation.generate_extensions import (
-    load_json as load_ext_json,
-    infer_column_schema,
-    generate_extension_schema,
-)
+from student_success_tool.ingestion_validation import generate_extensions
 
 
 @pytest.fixture
@@ -106,13 +96,13 @@ def ext_schema_file(tmp_path):
 
 
 def test_normalize_col():
-    assert normalize_col("  student_id ") == "student_id"
-    assert normalize_col("MIXED case") == "mixed_case"
+    assert validation.normalize_col("  student_id ") == "student_id"
+    assert validation.normalize_col("MIXED case") == "mixed_case"
 
 
 def test_merge_model_columns_base_only(base_schema_file):
     base = json.load(open(base_schema_file))
-    merged = merge_model_columns(
+    merged = validation.merge_model_columns(
         base, extension_schema=None, institution="pdp", model="student"
     )
     assert set(merged) == {"student_id", "age", "disability_status"}
@@ -121,7 +111,7 @@ def test_merge_model_columns_base_only(base_schema_file):
 def test_merge_model_columns_with_extension(base_schema_file, ext_schema_file):
     base = json.load(open(base_schema_file))
     ext = json.load(open(ext_schema_file))
-    merged = merge_model_columns(base, ext, "pdp", "student")
+    merged = validation.merge_model_columns(base, ext, "pdp", "student")
     assert set(merged) == {"student_id", "age", "disability_status", "enrollment_type"}
 
 
@@ -135,7 +125,7 @@ def test_build_schema_and_simple_validation(tmp_path, base_schema_file):
     )
     base = json.load(open(base_schema_file))
     specs = base["base"]["data_models"]["student"]["columns"]
-    schema = build_schema(specs)
+    schema = validation.build_schema(specs)
     validated = schema.validate(df)
     pd.testing.assert_frame_equal(validated, df)
 
@@ -149,8 +139,8 @@ def test_extra_columns_hard_error(tmp_path, base_schema_file):
             "unexpected": ["x"],
         }
     )
-    with pytest.raises(HardValidationError) as exc:
-        validate_dataset(
+    with pytest.raises(validation.HardValidationError) as exc:
+        validation.validate_dataset(
             df, base_schema_file, "student", "pdp", extension_schema_path=None
         )
     err = exc.value
@@ -161,8 +151,8 @@ def test_extra_columns_hard_error(tmp_path, base_schema_file):
 
 def test_missing_required_hard_error(tmp_path, base_schema_file):
     df = pd.DataFrame({"age": ["U21"], "disability_status": ["Y"]})
-    with pytest.raises(HardValidationError) as exc:
-        validate_dataset(
+    with pytest.raises(validation.HardValidationError) as exc:
+        validation.validate_dataset(
             df, base_schema_file, "student", "pdp", extension_schema_path=None
         )
     err = exc.value
@@ -174,8 +164,8 @@ def test_schema_type_errors(tmp_path, base_schema_file):
     df = pd.DataFrame(
         {"student_id": ["AB"], "age": ["u21"], "disability_status": ["Y"]}
     )
-    with pytest.raises(HardValidationError) as exc:
-        validate_dataset(
+    with pytest.raises(validation.HardValidationError) as exc:
+        validation.validate_dataset(
             df, base_schema_file, "student", "pdp", extension_schema_path=None
         )
     err = exc.value
@@ -185,7 +175,7 @@ def test_schema_type_errors(tmp_path, base_schema_file):
 
 def test_soft_pass(tmp_path, base_schema_file, ext_schema_file):
     df = pd.DataFrame({"student_id": ["ABC"], "disability_status": ["Y"]})
-    result = validate_dataset(
+    result = validation.validate_dataset(
         df,
         base_schema_file,
         "student",
@@ -202,7 +192,7 @@ def test_csv_input(tmp_path, base_schema_file):
     )
     csv = tmp_path / "in.csv"
     df.to_csv(csv, index=False)
-    result = validate_dataset(str(csv), base_schema_file, "student", "pdp")
+    result = validation.validate_dataset(str(csv), base_schema_file, "student", "pdp")
     assert result["validation_status"] in ("passed", "passed_with_soft_errors")
 
 
@@ -211,23 +201,23 @@ def test_csv_input(tmp_path, base_schema_file):
 
 def test_ext_load_json_missing(tmp_path):
     # should return {} on missing or invalid JSON
-    assert load_ext_json(str(tmp_path / "nope.json")) == {}
+    assert generate_extensions.load_json(str(tmp_path / "nope.json")) == {}
     bad = tmp_path / "bad.json"
     bad.write_text("not-json")
-    assert load_ext_json(str(bad)) == {}
+    assert generate_extensions.load_json(str(bad)) == {}
 
 
 def test_infer_column_schema_category_and_numeric():
     import numpy as np
 
     s_cat = pd.Series(["A", "B", "A", None])
-    spec_cat = infer_column_schema(s_cat, cate_threshold=5)
+    spec_cat = generate_extensions.infer_column_schema(s_cat, cate_threshold=5)
     assert spec_cat["dtype"] == "category"
     assert "A" in spec_cat["categories"]
     assert spec_cat["nullable"] is True
 
     s_num = pd.Series([0, 5, np.nan, 10])
-    spec_num = infer_column_schema(s_num)
+    spec_num = generate_extensions.infer_column_schema(s_num)
     assert spec_num["dtype"] == "float64"
     # should include a non-negative check
     assert any(chk["type"] in ("ge", "between") for chk in spec_num["checks"])
@@ -235,7 +225,7 @@ def test_infer_column_schema_category_and_numeric():
 
 def test_generate_extension_no_extras(tmp_path, base_schema_file, capsys):
     df = pd.DataFrame({"student_id": ["ABC"]})
-    out = generate_extension_schema(
+    out = generate_extensions.generate_extension_schema(
         df,
         base_schema_file,
         "pdp",
@@ -251,7 +241,7 @@ def test_generate_extension_no_extras(tmp_path, base_schema_file, capsys):
 
 def test_generate_extension_with_extras(tmp_path, base_schema_file):
     df = pd.DataFrame({"student_id": ["ABC"], "foo": [1.2], "bar": ["X"]})
-    ext = generate_extension_schema(
+    ext = generate_extensions.generate_extension_schema(
         df,
         base_schema_file,
         "pdp",
@@ -298,7 +288,7 @@ def test_generate_extension_updates_existing(tmp_path, base_schema_file):
     dest.write_text(json.dumps(existing))
 
     df = pd.DataFrame({"student_id": ["ABC"], "newcol": [5]})
-    ext = generate_extension_schema(
+    ext = generate_extensions.generate_extension_schema(
         df,
         base_schema_file,
         "pdp",
