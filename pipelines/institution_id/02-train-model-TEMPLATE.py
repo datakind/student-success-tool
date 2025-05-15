@@ -36,13 +36,14 @@
 # COMMAND ----------
 
 import logging
+
+import matplotlib.pyplot as plt
 import mlflow
 import sklearn.metrics
-import matplotlib.pyplot as plt
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 
-from student_success_tool import dataio, modeling, schemas, utils
+from student_success_tool import configs, dataio, modeling, utils
 
 # COMMAND ----------
 
@@ -84,7 +85,7 @@ assert run_type == "train"
 # it'll start out with just basic info: institution_id, institution_name
 # but as each step of the pipeline gets built, more parameters will be moved
 # from hard-coded notebook variables to shareable, persistent config fields
-cfg = dataio.read_config("./config-TEMPLATE.toml", schema=schemas.pdp.PDPProjectConfig)
+cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig)
 cfg
 
 # COMMAND ----------
