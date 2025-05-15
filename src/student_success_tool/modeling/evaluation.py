@@ -141,6 +141,7 @@ def evaluate_performance(
         metrics_records.append(perf_metrics)
 
     # Convert to DataFrame for display or saving
+    metrics_df = pd.DataFrame(metrics_records)
     metrics_df.to_csv("/tmp/performance_across_splits.csv", index=False)
     mlflow.log_artifact("/tmp/performance_across_splits.csv", artifact_path="metrics")
     LOGGER.info("Creating summary of performance metrics across splits")
