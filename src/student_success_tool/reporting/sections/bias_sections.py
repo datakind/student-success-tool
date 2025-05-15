@@ -51,45 +51,42 @@ def register_bias_sections(card, registry):
 
     # Load bias flag CSVs and filter for test split
     for level in bias_levels:
-        try:
-            bias_path = f"bias_flags/{level}_bias_flags.csv"
-            local_path = utils.download_artifact(
-                run_id=card.run_id,
-                local_folder=card.assets_folder,
-                artifact_path=bias_path,
+        bias_path = f"bias_flags/{level}_bias_flags.csv"
+        local_path = utils.download_artifact(
+            run_id=card.run_id,
+            local_folder=card.assets_folder,
+            artifact_path=bias_path,
+        )
+        if not os.path.exists(local_path):
+            LOGGER.warning(
+                f"{level} bias flags file does not exist. Bias evaluation likely has not run."
             )
-            if not os.path.exists(local_path):
-                LOGGER.warning(
-                    f"{level} bias flags file does not exist. Bias evaluation likely has not run."
-                )
-                continue
+            continue
 
-            df = pd.read_csv(local_path)
+        df = pd.read_csv(local_path)
 
-            if df.empty or "split_name" not in df.columns:
-                LOGGER.warning(
-                    f"{level} bias flags file exists but has no data or missing 'split_name' column."
-                )
-                continue
+        if df.empty or "split_name" not in df.columns:
+            LOGGER.warning(
+                f"{level} bias flags file exists but has no data or missing 'split_name' column."
+            )
+            continue
 
-            df = df[df["split_name"] == "test"]
-            if df.empty:
-                LOGGER.info(f"{level} bias flags file has no rows for test split.")
-                continue
+        df = df[df["split_name"] == "test"]
+        if df.empty:
+            LOGGER.info(f"{level} bias flags file has no rows for test split.")
+            continue
 
-            # Group descriptions by group
-            for _, row in df.iterrows():
-                group = row["group"]
-                desc = generate_description(
-                    group,
-                    row["subgroups"],
-                    row["fnpr_percentage_difference"],
-                    row["type"],
-                )
-                group_disparities.setdefault(group, []).append(desc)
+        # Group descriptions by group
+        for _, row in df.iterrows():
+            group = row["group"]
+            desc = generate_description(
+                group,
+                row["subgroups"],
+                row["fnpr_percentage_difference"],
+                row["type"],
+            )
+            group_disparities.setdefault(group, []).append(desc)
 
-        except Exception as e:
-            LOGGER.warning(f"Could not load {level} bias flags: {str(e)}")
 
     all_blocks = []
 
