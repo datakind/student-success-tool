@@ -2,6 +2,8 @@ import re
 import typing as t
 from collections.abc import Iterable
 
+from . import types
+
 RE_VARIOUS_PUNCTS = re.compile(r"[!()*+\,\-./:;<=>?[\]^_{|}~]")
 RE_QUOTATION_MARKS = re.compile(r"[\'\"\`]")
 
@@ -29,7 +31,7 @@ def convert_to_snake_case(col: str) -> str:
 
 def convert_intensity_time_limits(
     unit: t.Literal["term", "year"],
-    intensity_time_limits: dict[str, tuple[float, t.Literal["term", "year"]]],
+    intensity_time_limits: types.IntensityTimeLimitsType,
     *,
     num_terms_in_year: int,
 ) -> dict[str, float]:
