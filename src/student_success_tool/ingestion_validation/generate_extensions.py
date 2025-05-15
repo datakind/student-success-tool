@@ -6,7 +6,7 @@ from typing import Union, List, Any
 import pandas as pd
 
 # import your validator (assumes validate_dataset and HardValidationError live in validate_dataset.py)
-from validation import validate_dataset, normalize_col, HardValidationError
+from .validation import validate_dataset, normalize_col, HardValidationError
 
 
 def load_json(path: str) -> Any:
