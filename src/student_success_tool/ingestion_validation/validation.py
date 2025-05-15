@@ -1,7 +1,7 @@
 import json
 import os
 import re
-from typing import Union, List, Dict, Any
+from typing import Union, List, Dict, Any, Optional
 
 import pandas as pd
 from pandera import Column, Check, DataFrameSchema
@@ -83,17 +83,21 @@ def validate_dataset(
     df: Union[pd.DataFrame, str],
     models: Union[str, List[str]],
     institution_id: str,
+    base_schema_path: str = "/Volumes/staging_sst_01/default/schema/base_schema.json",
+    extension_schema_path: Optional[str] = None,
 ) -> Dict[str, Any]:
+    if extension_schema_path is None:
+        extension_schema_path = (
+            f"/Volumes/staging_sst_01/{institution_id}_bronze/schema/{institution_id}_schema_extension.json"
+        )
     if isinstance(df, str):
         df = pd.read_csv(df)
     df = df.rename(columns={c: normalize_col(c) for c in df.columns})
     incoming = set(df.columns)
 
     # 1) load schemas
-    base_schema_path = "/Volumes/staging_sst_01/default/schema/base_schema.json"
     base_schema = load_json(base_schema_path)
     ext_schema = None
-    extension_schema_path = f"/Volumes/staging_sst_01/{institution_id}_bronze/schema/{institution_id}_schema_extension.json"
     if extension_schema_path and os.path.exists(extension_schema_path):
         ext_schema = load_json(extension_schema_path)
 
