@@ -1,14 +1,3 @@
-"""
-Validate an incoming pandas DataFrame (or CSV) against one or more data models
-(from a base schema + optional institution extension) using Pandera.
-
-Reports:
-  - extra_columns: dataset cols not in the merged schema (canonical or alias)
-  - missing_required: merged-schema required cols not found in the dataset
-  - missing_optional: merged-schema optional cols not found (soft)
-  - failure_cases: row/check-level failure details (if any—treated as hard)
-"""
-
 import json
 import os
 import re
