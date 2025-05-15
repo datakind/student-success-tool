@@ -66,7 +66,7 @@ def ext_schema_file(tmp_path):
     """
     ext = {
         "institutions": {
-            "pdp": {
+            "institution": {
                 "data_models": {
                     "student": {
                         "columns": {
