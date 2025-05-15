@@ -1,18 +1,3 @@
-#!/usr/bin/env python3
-"""
-Generate or update institution extension schema based on dataset columns
-not covered by one or more base data models.
-
-Usage:
-  python generate_extensions.py \
-    --data-file students.csv \
-    --base-schema base_schema.json \
-    --models student course \
-    --institution pdp \
-    --extension-schema pdp_extension_schema.json \
-    --output-dir extensions
-"""
-
 import sys
 import os
 import json
