@@ -113,7 +113,7 @@ def evaluate_performance(
         # Closes all matplotlib figures in console to free memory
         plt.close("all")
 
-        # Compute metrics
+        # Compute performance metrics by split
         perf_metrics = compute_classification_perf_metrics(
             targets=split_data[target_col],
             preds=split_data[pred_col],
