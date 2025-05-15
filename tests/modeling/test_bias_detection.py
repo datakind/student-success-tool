@@ -157,7 +157,7 @@ def test_z_test_fnr_difference(fnr1, fnr2, denom1, denom2, expected_p):
             "Male",
             "Female",
             0.12,
-            "Non-overlapping CIs",
+            "non-overlapping confidence intervals",
             "train",
             "🔴 HIGH BIAS",
             0.005,
