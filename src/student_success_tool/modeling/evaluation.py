@@ -73,6 +73,7 @@ def evaluate_performance(
     pos_label: PosLabelType,
     split_col: str = "split",
     target_col: str = "target",
+    pred_col: str = "pred",
     pred_prob_col: str = "pred_prob",
 ) -> None:
     """
@@ -89,6 +90,7 @@ def evaluate_performance(
     calibration_dir = "calibration"
     preds_dir = "preds"
     metrics_dir = "metrics"
+    metrics_records = []
 
     for split_name, split_data in df_pred.groupby(split_col):
         LOGGER.info("Evaluating model performance for '%s' split", split_name)
@@ -97,8 +99,6 @@ def evaluate_performance(
             local_path=f"/tmp/{split_name}_preds.csv",
             artifact_path=preds_dir,
         )
-        plt.close()
-
         hist_fig, cal_fig = create_evaluation_plots(
             split_data,
             pred_prob_col,
@@ -113,17 +113,11 @@ def evaluate_performance(
         # Closes all matplotlib figures in console to free memory
         plt.close("all")
 
-
-        # Compute binary predictions
-        pred_probs = split_data[pred_prob_col]
-        preds = pred_probs >= threshold
-        targets = split_data[target_col]
-
         # Compute metrics
         perf_metrics = compute_classification_perf_metrics(
-            targets=targets,
-            preds=preds,
-            pred_probs=pred_probs,
+            targets=split_data[target_col],
+            preds=split_data[pred_col],
+            pred_probs=split_data[pred_prob_col],
             pos_label=pos_label,
         )
         perf_metrics[split_col] = split_name

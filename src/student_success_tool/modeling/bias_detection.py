@@ -141,7 +141,7 @@ def compute_group_bias_metrics(
     pred_prob_col: str,
     pos_label: PosLabelType,
     sample_weight_col: str,
-) -> tuple[list, list]:
+) -> tuple[list, list, list]:
     """
     Computes group metrics (including FNR) based on evaluation parameters and logs them to MLflow.
     We split bias & performance metrics into separate dictionaries in our output to make the model
