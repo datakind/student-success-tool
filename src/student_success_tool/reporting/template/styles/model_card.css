@@ -2,35 +2,42 @@
    Page Settings
 ================================ */
 @page {
-    size: A4; /* Standard portrait page */
+    size: A4;
     margin: 20mm;
 }
 @page wide-page {
-    size: A4 landscape; /* Used for extra-wide tables */
+    size: A4 landscape;
     margin: 20mm;
 }
 
 /* ================================
    Heading Alignment
 ================================ */
-/* Center-align all h1/h2 (#/## in Markdown) */
 h1, h2 {
     text-align: center;
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-weight: normal; /* Helvetica is naturally medium-weight; adjust if needed */
 }
 
-/* Left-align all other headings and paragraphs */
 h3, h4, h5, h6, p {
     text-align: left;
+    font-family: "Helvetica Light", "Helvetica", "Arial", sans-serif;
+    font-weight: 300; /* Light weight if supported */
 }
 
 /* ================================
-   Font Selection
+   Font Styling for Italics
 ================================ */
 em {
     font-style: italic;
 }
+
+/* ================================
+   Base Body Font
+================================ */
 body {
-    font-family: "Georgia", "Times New Roman", serif;
+    font-family: "Helvetica Light", "Helvetica", "Arial", sans-serif;
+    font-weight: 300;
 }
 
 /* ================================
@@ -66,13 +73,11 @@ tr {
 /* ================================
    List Styling
 ================================ */
-/* Consistent list indentation */
 ul, ol, ul ul, ol ul, ul ol, ol ol {
     margin-left: 1.5em;
     padding-left: 0;
 }
 
-/* Bullet types by depth */
 ul {
     list-style-type: disc;
 }
@@ -80,7 +85,6 @@ ul ul, ul ul ul {
     list-style-type: circle;
 }
 
-/* Numbering types by depth */
 ol {
     list-style-type: decimal;
 }
