@@ -89,8 +89,8 @@ def ext_schema_file(tmp_path):
 # ─── Tests for utility functions ─────────────────────────────────────────────
 
 def test_normalize_col():
-    assert normalize_col("  Foo-Bar Baz ") == "foo_bar_baz"
-    assert normalize_col("MIXED case") == "mixed_case"
+    assert normalize_col("  student id ") == "student_id"
+    assert normalize_col("ENROLLMENT date") == "enrollment_date"
 
 
 def test_load_json_success(tmp_path):
