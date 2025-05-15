@@ -477,7 +477,7 @@ def generate_bias_flag(
         "type": (
             bias_type
             if np.isnan(p_value)
-            else f"{bias_type}, p-value: {'less than 0.001' if p_value < 0.001 else f'{p_value:.3f}'}"
+            else f"{bias_type} with a p-value {'less than 0.001' if p_value < 0.001 else f'of {p_value:.3f}'}"
         ),
         "split_name": split_name,
         "flag": flag,
