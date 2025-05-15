@@ -1,8 +1,6 @@
 import json
-import os
 import pandas as pd
 import pytest
-from pandera.errors import SchemaErrors
 
 from student_success_tool.ingestion_validation.validation import (
     normalize_col,
