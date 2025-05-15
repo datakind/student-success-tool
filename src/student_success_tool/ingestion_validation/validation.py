@@ -87,9 +87,7 @@ def validate_dataset(
     extension_schema_path: Optional[str] = None,
 ) -> Dict[str, Any]:
     if extension_schema_path is None:
-        extension_schema_path = (
-            f"/Volumes/staging_sst_01/{institution_id}_bronze/schema/{institution_id}_schema_extension.json"
-        )
+        extension_schema_path = f"/Volumes/staging_sst_01/{institution_id}_bronze/schema/{institution_id}_schema_extension.json"
     if isinstance(df, str):
         df = pd.read_csv(df)
     df = df.rename(columns={c: normalize_col(c) for c in df.columns})
