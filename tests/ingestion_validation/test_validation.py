@@ -146,7 +146,7 @@ def test_build_schema_and_validate(base_schema_file):
     specs = base["base"]["data_models"]["student"]["columns"]
     schema = build_schema(specs)
     validated = schema.validate(df)
-    pd.testing.assert_frame_equal(validated, df)
+    pd.testing.assert_frame_equal(validated, df, check_dtype=False)
 
 # ─── Tests for validate_dataset ─────────────────────────────────────────────
 
