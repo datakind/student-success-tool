@@ -2,14 +2,14 @@ import json
 import pandas as pd
 import pytest
 
-from validate_dataset import (
+from student_success_tool.ingestion_validation.validation import (
     normalize_col,
     merge_model_columns,
     build_schema,
     validate_dataset,
     HardValidationError,
 )
-from generate_extensions import (
+from student_success_tool.ingestion_validation.generate_extensions import (
     load_json as load_ext_json,
     infer_column_schema,
     generate_extension_schema,
