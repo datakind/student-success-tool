@@ -127,7 +127,7 @@ def evaluate_performance(
     metrics_df = pd.DataFrame(metrics_records).set_index("split")
     metrics_df.to_csv("/tmp/classification_metrics.csv")
     mlflow.log_artifact("/tmp/classification_metrics.csv", artifact_path="metrics")
-    LOGGER.info("Classification performance metrics:\n%s", metrics_df)
+    LOGGER.info("Creating summary of performance metrics across splits")
 
 
 def get_top_run_ids(
