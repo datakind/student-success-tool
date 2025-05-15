@@ -1,4 +1,4 @@
 from . import (
     validation,
-    generate_extensions
+    generate_extensions,
 )
