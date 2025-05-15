@@ -113,25 +113,30 @@ def evaluate_performance(
         # Closes all matplotlib figures in console to free memory
         plt.close("all")
 
-        # Compute performance metrics by split
-        perf_metrics = compute_classification_perf_metrics(
+        METRICS_RENAME_MAP = {
+            "num_samples": "Number of Samples",
+            "num_positives": "Number of Positive Samples",
+            "true_positive_prevalence": "Actual Target Prevalence",
+            "pred_positive_prevalence": "Predicted Target Prevalence",
+            "accuracy": "Accuracy",
+            "precision": "Precision",
+            "recall": "Recall",
+            "f1_score": "F1 Score",
+            "log_loss": "Log Loss",
+        }
+        # Compute performance metrics by split (returns a dict)
+        perf_metrics_raw = compute_classification_perf_metrics(
             targets=split_data[target_col],
             preds=split_data[pred_col],
             pred_probs=split_data[pred_prob_col],
             pos_label=pos_label,
-        ).rename(
-            columns={
-                "num_samples": "Number of Samples",
-                "num_positives": "Number of Positive Samples",
-                "true_positive_prevalence": "Actual Target Prevalance",
-                "pred_positive_prevalence": "Predicted Target Prevalance",
-                "accuracy": "Accuracy",
-                "precision": "Precision",
-                "recall": "Recall",
-                "f1_score": "F1 Score",
-                "log_loss": "Log Loss",
-            }
         )
+
+        # Apply renaming
+        perf_metrics = {
+            METRICS_RENAME_MAP.get(k, k): v  # Fallback to original key if not in map
+            for k, v in perf_metrics_raw.items()
+        }
         perf_metrics[split_col] = split_name
         metrics_records.append(perf_metrics)
 
