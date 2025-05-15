@@ -13,7 +13,8 @@ from student_success_tool.ingestion_validation.validation import (
 
 # ─── Fixtures ────────────────────────────────────────────────────────────────
 
-@ pytest.fixture
+
+@pytest.fixture
 def base_schema_file(tmp_path):
     """
     Create a minimal base_schema.json with one model ('student')
@@ -30,7 +31,13 @@ def base_schema_file(tmp_path):
                             "nullable": False,
                             "required": True,
                             "aliases": ["guid", "study_id"],
-                            "checks": [{"type": "str_length", "args": [], "kwargs": {"min_value": 3}}]
+                            "checks": [
+                                {
+                                    "type": "str_length",
+                                    "args": [],
+                                    "kwargs": {"min_value": 3},
+                                }
+                            ],
                         },
                         "age": {
                             "dtype": "string",
@@ -38,7 +45,13 @@ def base_schema_file(tmp_path):
                             "nullable": False,
                             "required": False,
                             "aliases": [],
-                            "checks": [{"type": "str_length", "args": [], "kwargs": {"min_value": 2}}]
+                            "checks": [
+                                {
+                                    "type": "str_length",
+                                    "args": [],
+                                    "kwargs": {"min_value": 2},
+                                }
+                            ],
                         },
                         "disability_status": {
                             "dtype": "string",
@@ -46,8 +59,8 @@ def base_schema_file(tmp_path):
                             "nullable": True,
                             "required": False,
                             "aliases": [],
-                            "checks": []
-                        }
+                            "checks": [],
+                        },
                     }
                 }
             }
@@ -57,7 +70,8 @@ def base_schema_file(tmp_path):
     p.write_text(json.dumps(schema))
     return str(p)
 
-@ pytest.fixture
+
+@pytest.fixture
 def ext_schema_file(tmp_path):
     """
     Create an extension schema adding one optional column under 'student'.
@@ -74,7 +88,7 @@ def ext_schema_file(tmp_path):
                                 "nullable": True,
                                 "required": False,
                                 "aliases": ["enroll_type"],
-                                "checks": []
+                                "checks": [],
                             }
                         }
                     }
@@ -86,7 +100,9 @@ def ext_schema_file(tmp_path):
     p.write_text(json.dumps(ext))
     return str(p)
 
+
 # ─── Tests for utility functions ─────────────────────────────────────────────
+
 
 def test_normalize_col():
     assert normalize_col("  student id ") == "student_id"
@@ -104,7 +120,9 @@ def test_load_json_not_found(tmp_path):
     with pytest.raises(FileNotFoundError):
         load_json(str(tmp_path / "missing.json"))
 
+
 # malformed JSON also raises FileNotFoundError
+
 
 def test_load_json_malformed(tmp_path):
     bad = tmp_path / "bad.json"
@@ -112,11 +130,15 @@ def test_load_json_malformed(tmp_path):
     with pytest.raises(FileNotFoundError):
         load_json(str(bad))
 
+
 # merge_model_columns
+
 
 def test_merge_model_columns_base_only(base_schema_file):
     base = json.load(open(base_schema_file))
-    merged = merge_model_columns(base, extension_schema=None, institution="institution", model="student")
+    merged = merge_model_columns(
+        base, extension_schema=None, institution="institution", model="student"
+    )
     assert set(merged) == {"student_id", "age", "disability_status"}
 
 
@@ -132,29 +154,37 @@ def test_merge_model_columns_missing_model(base_schema_file):
     with pytest.raises(KeyError):
         merge_model_columns(base, None, "institution", "unknown_model")
 
+
 # build_schema
 
+
 def test_build_schema_and_validate(base_schema_file):
-    df = pd.DataFrame({
-        "student_id": ["ABC123", "DEF456"],
-        "age": ["21+", "<21"],
-        "disability_status": ["Y", None],
-    })
+    df = pd.DataFrame(
+        {
+            "student_id": ["ABC123", "DEF456"],
+            "age": ["21+", "<21"],
+            "disability_status": ["Y", None],
+        }
+    )
     base = json.load(open(base_schema_file))
     specs = base["base"]["data_models"]["student"]["columns"]
     schema = build_schema(specs)
     validated = schema.validate(df)
     pd.testing.assert_frame_equal(validated, df, check_dtype=False)
 
+
 # ─── Tests for validate_dataset ─────────────────────────────────────────────
 
+
 def test_validate_dataset_extra_columns(tmp_path, base_schema_file):
-    df = pd.DataFrame({
-        "student_id": ["ABC123"],
-        "age": ["21+"],
-        "disability_status": ["Y"],
-        "unexpected": [1],
-    })
+    df = pd.DataFrame(
+        {
+            "student_id": ["ABC123"],
+            "age": ["21+"],
+            "disability_status": ["Y"],
+            "unexpected": [1],
+        }
+    )
     with pytest.raises(HardValidationError) as exc:
         validate_dataset(
             df,
@@ -169,10 +199,12 @@ def test_validate_dataset_extra_columns(tmp_path, base_schema_file):
 
 
 def test_validate_dataset_missing_required(tmp_path, base_schema_file):
-    df = pd.DataFrame({
-        "age": ["21+"],
-        "disability_status": ["Y"],
-    })
+    df = pd.DataFrame(
+        {
+            "age": ["21+"],
+            "disability_status": ["Y"],
+        }
+    )
     with pytest.raises(HardValidationError) as exc:
         validate_dataset(
             df,
@@ -187,11 +219,13 @@ def test_validate_dataset_missing_required(tmp_path, base_schema_file):
 
 def test_validate_dataset_schema_errors(tmp_path, base_schema_file):
     # str_length min 3, provide too short
-    df = pd.DataFrame({
-        "student_id": ["AB"],
-        "age": ["21+"],
-        "disability_status": ["Y"],
-    })
+    df = pd.DataFrame(
+        {
+            "student_id": ["AB"],
+            "age": ["21+"],
+            "disability_status": ["Y"],
+        }
+    )
     with pytest.raises(HardValidationError) as exc:
         validate_dataset(
             df,
@@ -220,7 +254,9 @@ def test_validate_dataset_soft_pass(tmp_path, base_schema_file, ext_schema_file)
 
 
 def test_validate_dataset_csv_input(tmp_path, base_schema_file):
-    df = pd.DataFrame({"student_id": ["ABC123"], "age": ["21+"], "disability_status": ["N"]})
+    df = pd.DataFrame(
+        {"student_id": ["ABC123"], "age": ["21+"], "disability_status": ["N"]}
+    )
     csv = tmp_path / "in.csv"
     df.to_csv(csv, index=False)
     result = validate_dataset(
