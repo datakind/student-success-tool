@@ -37,7 +37,7 @@ def test_register_evaluation_sections_success(
     registry = SectionRegistry()
     register_evaluation_sections(mock_card, registry)
     rendered = registry.render_all()
-
+    print(rendered["evaluation_by_group_section"])
     assert (
         "Evaluation Metrics by Student Group" in rendered["evaluation_by_group_section"]
     )
