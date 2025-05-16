@@ -321,9 +321,9 @@ def test_generate_ranked_feature_table(ranked_feature_table_data, use_features_t
     assert result["Average SHAP Magnitude"].is_monotonic_decreasing
 
     if use_features_table:
-        assert "Age of Individual" in result["Feature Name"].values
+        assert "English or Math Gateway" in result["Feature Name"].values
     else:
-        assert "age" in result["Feature Name"].values
+        assert "term_gpa" in result["Feature Name"].values
 
 
 @pytest.mark.parametrize(
