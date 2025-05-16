@@ -143,7 +143,7 @@ def generate_ranked_feature_table(
     features: pd.DataFrame,
     shap_values: npt.NDArray[np.float64],
     features_table: t.Optional[dict[str, dict[str, str]]] = None,
-    wrap_width: int = 30,
+    wrap_width: int = 40,
 ) -> pd.DataFrame:
     """
     Creates a table of all selected features of the model ranked
