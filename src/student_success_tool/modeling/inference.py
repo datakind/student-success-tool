@@ -171,7 +171,11 @@ def generate_ranked_feature_table(
             else feature
         )
         dtype = features[feature].dtype
-        data_type = "Continuous" if pd.api.types.is_numeric_dtype(dtype) else "Categorical"
+        data_type = (
+            "Boolean" if pd.api.types.is_bool_dtype(dtype)
+            else "Continuous" if pd.api.types.is_numeric_dtype(dtype)
+            else "Categorical"
+        )
         avg_shap_magnitude_raw = np.mean(np.abs(shap_values[:, idx]))
         feature_metadata.append({
             "Feature Name": feature_name,
