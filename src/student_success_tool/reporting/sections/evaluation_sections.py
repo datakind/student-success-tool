@@ -1,6 +1,7 @@
 import logging
 import typing as t
 import pandas as pd
+import collections
 
 from ..utils import utils
 
@@ -55,15 +56,37 @@ def register_evaluation_sections(card, registry):
 
         return metric_table
 
+    # Evaluation by Group
+    group_parts = collections.defaultdict(dict)
+
+    # Group bias and performance parts for each group
     for csv_path in group_eval_artifacts:
-        if csv_path.startswith("group_metrics/test_") and csv_path.endswith("_metrics.csv"):
-            group_name = csv_path.replace("group_metrics/test_", "").replace("_metrics.csv", "")
-            group_title = f"{card.format.friendly_case(group_name)} Metrics"
+        if csv_path.startswith("group_metrics/bias_test_") and csv_path.endswith("_metrics.csv"):
+            group_name = csv_path.replace("group_metrics/bias_test_", "").replace("_metrics.csv", "")
+            group_parts[group_name]['bias'] = csv_path
 
-            group_table_func = make_metric_table(csv_path, group_title)
-            registry.register(f"metric_table_{group_name}")(group_table_func)
-            evaluation_sections.append(group_table_func())
+        if csv_path.startswith("group_metrics/perf_test_") and csv_path.endswith("_metrics.csv"):
+            group_name = csv_path.replace("group_metrics/perf_test_", "").replace("_metrics.csv", "")
+            group_parts[group_name]['perf'] = csv_path
 
+    # Render both tables under the same group title without labeling them separately
+    for group_name, parts in group_parts.items():
+        group_title = f"{card.format.friendly_case(group_name)} Metrics"
+        section_text = [f"{card.format.header_level(5)}{group_title}\n"]
+
+        if 'bias' in parts:
+            bias_table_func = make_metric_table(parts['bias'], group_title)
+            registry.register(f"metric_table_{group_name}_bias")(bias_table_func)
+            section_text.append(bias_table_func())
+
+        if 'perf' in parts:
+            perf_table_func = make_metric_table(parts['perf'], group_title)
+            registry.register(f"metric_table_{group_name}_perf")(perf_table_func)
+            section_text.append(perf_table_func())
+
+        evaluation_sections.append("\n\n".join(section_text))
+
+    # Performance Across Splits
     for csv_path in split_artifacts:
         if csv_path.startswith("metrics/") and csv_path.endswith("_splits.csv"):
             title = "Performance across Splits"
