@@ -61,11 +61,11 @@ def register_evaluation_sections(card, registry):
 
     # Group bias and performance parts for each group
     for csv_path in group_eval_artifacts:
-        if csv_path.startswith("group_metrics/bias_test_") and csv_path.endswith("_metrics.csv"):
+        if csv_path.startswith("group_metrics/bias_test_") and csv_path.endswith(".csv"):
             group_name = csv_path.replace("group_metrics/bias_test_", "").replace("_metrics.csv", "")
             group_parts[group_name]['bias'] = csv_path
 
-        if csv_path.startswith("group_metrics/perf_test_") and csv_path.endswith("_metrics.csv"):
+        if csv_path.startswith("group_metrics/perf_test_") and csv_path.endswith(".csv"):
             group_name = csv_path.replace("group_metrics/perf_test_", "").replace("_metrics.csv", "")
             group_parts[group_name]['perf'] = csv_path
 
