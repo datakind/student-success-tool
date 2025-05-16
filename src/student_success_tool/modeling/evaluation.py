@@ -139,7 +139,7 @@ def evaluate_performance(
         }
         perf_split_col = f"Dataset {split_col.capitalize()}"
         split_map = {"test": "Test", "train": "Training", "validate": "Validation"}
-        perf_metrics[perf_split_col] = split_map.get(split_col)
+        perf_metrics[perf_split_col] = split_map.get(split_name)
         metrics_records.append(perf_metrics)
 
     # Convert to DataFrame for display or saving
