@@ -314,7 +314,7 @@ def test_generate_ranked_feature_table(ranked_feature_table_data, use_features_t
 
     assert isinstance(result, pd.DataFrame) and not result.empty
     assert set(result.columns) == {
-        "Feature Variable", "Feature Name", "Data Type", "Average SHAP Magnitude"
+        "Feature Name", "Data Type", "Average SHAP Magnitude"
     }
 
     # Verify descending sort order by Average SHAP Magnitude
