@@ -309,7 +309,24 @@ with mlflow.start_run(run_id=cfg.models[model_name].run_id) as run:
 
 # COMMAND ----------
 
+# Load PDP feature table from assets
 features_table = dataio.read_features_table("assets/pdp/features_table.toml")
+
+# COMMAND ----------
+
+# Generate table of all selected features and log as an artifact
+selected_features_df = inference.generate_ranked_feature_table(
+    features,
+    df_shap_values[model_feature_names].to_numpy(),
+    feature_tables=features_table,
+)
+with mlflow.start_run(run_id=cfg.models[model_name].run_id) as run:
+    selected_features_df.to_csv("/tmp/ranked_selected_features.csv")
+    mlflow.log_artifact("/tmp/ranked_selected_features.csv", artifact_path="selected_features")
+
+# COMMAND ----------
+
+# Provide output using top features, SHAP values, and support scores
 result = inference.select_top_features_for_display(
     features,
     unique_ids,
@@ -328,5 +345,3 @@ result
 # MAGIC
 # MAGIC - how / where to save final results?
 # MAGIC - do we want to save predictions separately / additionally from the "display" format?
-
-# COMMAND ----------
