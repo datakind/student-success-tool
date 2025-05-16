@@ -121,22 +121,7 @@ def evaluate_performance(
             pos_label=pos_label,
         )
         
-        # Apply renaming
-        perf_metrics = {
-            "Number of Samples": int(perf_metrics_raw["num_samples"]),
-            "Number of Positive Samples": int(perf_metrics_raw["num_positives"]),
-            "Actual Target Prevalence": round(
-                float(perf_metrics_raw["true_positive_prevalence"]),
-                2),
-            "Predicted Target Prevalence": round(
-                float(perf_metrics_raw["pred_positive_prevalence"]),
-                2),
-            "Accuracy": round(float(perf_metrics_raw["accuracy"]), 2),
-            "Precision": round(float(perf_metrics_raw["precision"]), 2),
-            "Recall": round(float(perf_metrics_raw["recall"]), 2),
-            "F1 Score": round(float(perf_metrics_raw["f1_score"]), 2),
-            "Log Loss": round(float(perf_metrics_raw["log_loss"]), 2),
-        }
+        perf_metrics = format_perf_metrics(perf_metrics_raw)
         perf_split_col = f"Dataset {split_col.capitalize()}"
         split_map = {"test": "Test", "train": "Training", "validate": "Validation"}
         perf_metrics[perf_split_col] = split_map.get(split_name)
@@ -147,6 +132,29 @@ def evaluate_performance(
     metrics_df.to_csv("/tmp/performance_across_splits.csv")
     mlflow.log_artifact("/tmp/performance_across_splits.csv", artifact_path="metrics")
     LOGGER.info("Creating summary of performance metrics across splits")
+
+
+def format_perf_metrics(perf_metrics_raw: dict) -> dict:
+    """
+    Formats performance metrics from raw metric dictionary.
+
+    Args:
+        perf_metrics_raw: Dictionary containing raw performance metrics.
+
+    Returns:
+        Dictionary summarizing the formatted performance metrics.
+    """
+    return {
+        "Number of Samples": int(perf_metrics_raw["num_samples"]),
+        "Number of Positive Samples": int(perf_metrics_raw["num_positives"]),
+        "Actual Target Prevalence": round(float(perf_metrics_raw["true_positive_prevalence"]), 2),
+        "Predicted Target Prevalence": round(float(perf_metrics_raw["pred_positive_prevalence"]), 2),
+        "Accuracy": round(float(perf_metrics_raw["accuracy"]), 2),
+        "Precision": round(float(perf_metrics_raw["precision"]), 2),
+        "Recall": round(float(perf_metrics_raw["recall"]), 2),
+        "F1 Score": round(float(perf_metrics_raw["f1_score"]), 2),
+        "Log Loss": round(float(perf_metrics_raw["log_loss"]), 2),
+    }
 
 
 def get_top_run_ids(
