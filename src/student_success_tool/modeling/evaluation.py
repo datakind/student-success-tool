@@ -136,7 +136,8 @@ def evaluate_performance(
 
 def format_perf_metrics(perf_metrics_raw: dict) -> dict:
     """
-    Formats performance metrics from raw metric dictionary.
+    Formats performance metrics from raw metrics. This is for a model cards
+    table that presents performance by splits.
 
     Args:
         perf_metrics_raw: Dictionary containing raw performance metrics.
