@@ -71,15 +71,14 @@ def register_evaluation_sections(card, registry):
 
     # Render both tables under the same group title without labeling them separately
     for group_name, parts in group_parts.items():
-        group_title = f"{card.format.friendly_case(group_name)} Metrics"
-        section_text = [f"{card.format.header_level(5)}{group_title}\n"]
-
         if 'bias' in parts:
+            group_title = f"{card.format.friendly_case(group_name)} Bias Metrics"
             bias_table_func = make_metric_table(parts['bias'], group_title)
             registry.register(f"metric_table_{group_name}_bias")(bias_table_func)
             section_text.append(bias_table_func())
 
         if 'perf' in parts:
+            group_title = f"{card.format.friendly_case(group_name)} Performance Metrics"
             perf_table_func = make_metric_table(parts['perf'], group_title)
             registry.register(f"metric_table_{group_name}_perf")(perf_table_func)
             section_text.append(perf_table_func())
