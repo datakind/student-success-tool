@@ -314,11 +314,13 @@ with mlflow.start_run(run_id=cfg.models[model_name].run_id) as run:
 selected_features_df = inference.generate_ranked_feature_table(
     features,
     df_shap_values[model_feature_names].to_numpy(),
-    feature_tables=features_table,
+    features_table=features_table,
 )
-with mlflow.start_run(run_id=cfg.models[model_name].run_id) as run:
-    selected_features_df.to_csv("/tmp/ranked_selected_features.csv")
+with mlflow.start_run(run_id=cfg.model.run_id) as run:
+    selected_features_df.to_csv("/tmp/ranked_selected_features.csv", index=False)
     mlflow.log_artifact("/tmp/ranked_selected_features.csv", artifact_path="selected_features")
+
+selected_features_df
 
 # COMMAND ----------
 
