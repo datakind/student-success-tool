@@ -139,10 +139,16 @@ def select_top_features_for_display(
     return pd.DataFrame(top_features_info)
 
 
+import pandas as pd
+import numpy as np
+import typing as t
+import numpy.typing as npt
+
 def generate_ranked_feature_table(
     features: pd.DataFrame,
     shap_values: npt.NDArray[np.float64],
     features_table: t.Optional[dict[str, dict[str, str]]] = None,
+    wrap_width: int = 30,
 ) -> pd.DataFrame:
     """
     Creates a table of all selected features of the model ranked
@@ -151,12 +157,18 @@ def generate_ranked_feature_table(
     from the SHAP values and focuses specifically on importance. This table
     is used in the model cards to provide a comprehensive summary of the model's
     features.
+
     Args:
         features: feature data used in modeling where columns are the feature
-        column names
+            column names
         shap_values: array of arrays of SHAP values, of shape len(unique_ids)
         features_table: Optional mapping of column to human-friendly feature name/desc,
-            loaded via :func:`utils.load_features_table()
+            loaded via :func:`utils.load_features_table()`
+        wrap_width: Optional integer to wrap long feature names at this character width.
+            Defaults to 30.
+
+    Returns:
+        A ranked pandas DataFrame by average shap magnitude
     """
     feature_metadata = []
 
@@ -166,24 +178,28 @@ def generate_ranked_feature_table(
             if features_table is not None
             else feature
         )
-        
         dtype = features[feature].dtype
-        if pd.api.types.is_numeric_dtype(dtype):
-            data_type = "Continuous"
-        else:
-            data_type = "Categorical"
-
+        data_type = "Continuous" if pd.api.types.is_numeric_dtype(dtype) else "Categorical"
         avg_shap_magnitude = np.mean(np.abs(shap_values[:, idx]))
-
+        formatted_magnitude = (
+            "<0.0000" if round(avg_shap_magnitude, 4) == 0 else round(avg_shap_magnitude, 4)
+        )
         feature_metadata.append({
             "Feature Variable": feature,
             "Feature Name": feature_name,
             "Data Type": data_type,
-            "Average SHAP Magnitude": round(avg_shap_magnitude, 2),
+            "Average SHAP Magnitude": formatted_magnitude,
         })
 
-    return pd.DataFrame(feature_metadata).sort_values(by="Average SHAP Magnitude", ascending=False)
-    
+    df = pd.DataFrame(feature_metadata).sort_values(
+        by="Average SHAP Magnitude", ascending=False
+    ).reset_index(drop=True)
+
+    # Wrap feature names for better display
+    df["Feature Name"] = df["Feature Name"].astype(str).str.wrap(width=wrap_width)
+
+    return df
+
 
 def _get_mapped_feature_name(
     feature_col: str, features_table: dict[str, dict[str, str]]
