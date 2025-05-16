@@ -31,7 +31,7 @@ def test_register_evaluation_sections_success(mock_download, mock_list_paths, mo
     # Mock the artifact paths
     mock_list_paths.side_effect = [
         ["group_metrics/bias_test_gender_metrics.csv", "group_metrics/perf_test_gender_metrics.csv"],
-        []  # No split artifacts in this test
+        [],
     ]
 
     # Mock the download to return bias first, then perf
@@ -40,6 +40,8 @@ def test_register_evaluation_sections_success(mock_download, mock_list_paths, mo
     registry = SectionRegistry()
     register_evaluation_sections(mock_card, registry)
     rendered = registry.render_all()
+
+    print(rendered["evaluation_by_group_section"])
 
     assert "Evaluation Metrics by Student Group" in rendered["evaluation_by_group_section"]
     assert "Gender Bias Metrics" in rendered["evaluation_by_group_section"]
@@ -54,7 +56,7 @@ def test_register_evaluation_sections_failure(mock_download, mock_list_paths, mo
     # Mock available bias artifact but simulate download failure
     mock_list_paths.side_effect = [
         ["group_metrics/bias_test_race_metrics.csv"],
-        []  # No split artifacts in this test
+        []
     ]
 
     mock_download.side_effect = Exception("Download error")
@@ -62,6 +64,8 @@ def test_register_evaluation_sections_failure(mock_download, mock_list_paths, mo
     registry = SectionRegistry()
     register_evaluation_sections(mock_card, registry)
     rendered = registry.render_all()
+
+    print(rendered["evaluation_by_group_section"])
 
     assert "Race Bias Metrics" in rendered["evaluation_by_group_section"]
     assert "Could not load data." in rendered["evaluation_by_group_section"]
