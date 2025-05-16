@@ -106,9 +106,14 @@ logging.info(
 # but as each step of the pipeline gets built, more parameters will be moved
 # from hard-coded notebook variables to shareable, persistent config fields
 cfg = dataio.read_config(
-    "./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfigV2
+    "./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig
 )
 cfg
+
+# COMMAND ----------
+
+# Load human-friendly PDP feature names
+features_table = dataio.read_features_table("assets/pdp/features_table.toml")
 
 # COMMAND ----------
 
@@ -152,9 +157,9 @@ def predict_proba(
 
 # COMMAND ----------
 
-model = modeling.utils.load_mlflow_model(
-    cfg.models[model_name].mlflow_model_uri,
-    cfg.models[model_name].framework,
+model = dataio.models.load_mlflow_model(
+    cfg.model.mlflow_model_uri,
+    cfg.model.framework,
 )
 model
 
@@ -167,12 +172,8 @@ logging.info(
 
 # COMMAND ----------
 
-features_table = dataio.read_features_table("assets/pdp/features_table.toml")
-
-# COMMAND ----------
-
 df_train = modeling.evaluation.extract_training_data_from_model(
-    cfg.models[model_name].experiment_id
+    cfg.model.experiment_id
 )
 if cfg.split_col:
     df_train = df_train.loc[df_train[cfg.split_col].eq("train"), :]
@@ -306,11 +307,6 @@ with mlflow.start_run(run_id=cfg.models[model_name].run_id) as run:
 
 # MAGIC %md
 # MAGIC # finalize results
-
-# COMMAND ----------
-
-# Load PDP feature table from assets
-features_table = dataio.read_features_table("assets/pdp/features_table.toml")
 
 # COMMAND ----------
 
