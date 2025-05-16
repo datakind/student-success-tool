@@ -143,7 +143,7 @@ def generate_ranked_feature_table(
     features: pd.DataFrame,
     shap_values: npt.NDArray[np.float64],
     features_table: t.Optional[dict[str, dict[str, str]]] = None,
-    wrap_width: int = 40,
+    wrap_width: int = 60,
 ) -> pd.DataFrame:
     """
     Creates a table of all selected features of the model ranked
@@ -177,7 +177,6 @@ def generate_ranked_feature_table(
         data_type = "Continuous" if pd.api.types.is_numeric_dtype(dtype) else "Categorical"
         avg_shap_magnitude_raw = np.mean(np.abs(shap_values[:, idx]))
         feature_metadata.append({
-            "Feature Variable": feature,
             "Feature Name": feature_name,
             "Data Type": data_type,
             "Average SHAP Magnitude (Raw)": avg_shap_magnitude_raw,
