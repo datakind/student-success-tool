@@ -21,10 +21,10 @@ def test_register_bias_sections_with_data(mock_download, mock_card, tmp_path):
     bias_csv = tmp_path / "high_bias_flags.csv"
     df = pd.DataFrame(
         {
-            "group": ["gender"],
-            "subgroups": ["female vs male"],
-            "fnpr_percentage_difference": [0.12],
-            "type": ["p < 0.05"],
+            "group": ["Gender"],
+            "subgroups": ["F vs M"],
+            "fnpr_percentage_difference": [0.17],
+            "type": ["non-overlapping confidence intervals with a p-value of 0.001"],
             "split_name": ["test"],
         }
     )
@@ -44,9 +44,9 @@ def test_register_bias_sections_with_data(mock_download, mock_card, tmp_path):
     rendered = registry.render_all()
 
     assert "Disparities by Student Group" in rendered["bias_summary_section"]
-    assert "female" in rendered["bias_summary_section"]
+    assert "F" in rendered["bias_summary_section"]
     assert "12% difference" in rendered["bias_summary_section"]
-    assert "p < 0.05" in rendered["bias_summary_section"]
+    assert "non-overlapping" in rendered["bias_summary_section"]
     assert "plot.png" in rendered["bias_summary_section"]
 
 
