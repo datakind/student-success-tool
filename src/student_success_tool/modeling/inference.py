@@ -139,11 +139,6 @@ def select_top_features_for_display(
     return pd.DataFrame(top_features_info)
 
 
-import pandas as pd
-import numpy as np
-import typing as t
-import numpy.typing as npt
-
 def generate_ranked_feature_table(
     features: pd.DataFrame,
     shap_values: npt.NDArray[np.float64],
@@ -180,22 +175,27 @@ def generate_ranked_feature_table(
         )
         dtype = features[feature].dtype
         data_type = "Continuous" if pd.api.types.is_numeric_dtype(dtype) else "Categorical"
-        avg_shap_magnitude = np.mean(np.abs(shap_values[:, idx]))
-        formatted_magnitude = (
-            "<0.0000" if round(avg_shap_magnitude, 4) == 0 else round(avg_shap_magnitude, 4)
-        )
+        avg_shap_magnitude_raw = np.mean(np.abs(shap_values[:, idx]))
         feature_metadata.append({
             "Feature Variable": feature,
             "Feature Name": feature_name,
             "Data Type": data_type,
-            "Average SHAP Magnitude": formatted_magnitude,
+            "Average SHAP Magnitude (Raw)": avg_shap_magnitude_raw,
         })
 
     df = pd.DataFrame(feature_metadata).sort_values(
-        by="Average SHAP Magnitude", ascending=False
+        by="Average SHAP Magnitude (Raw)", ascending=False
     ).reset_index(drop=True)
 
-    # Wrap feature names for better display
+    # Format magnitudes after sorting to avoid type issues
+    df["Average SHAP Magnitude"] = df["Average SHAP Magnitude (Raw)"].apply(
+        lambda x: "<0.0000" if round(x, 4) == 0 else round(x, 4)
+    )
+
+    # Drop the raw magnitude column
+    df = df.drop(columns=["Average SHAP Magnitude (Raw)"])
+
+    # Wrap feature names for better display in model cards
     df["Feature Name"] = df["Feature Name"].astype(str).str.wrap(width=wrap_width)
 
     return df
