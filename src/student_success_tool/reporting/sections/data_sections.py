@@ -1,4 +1,5 @@
 import logging
+import pandas as pd
 
 from ..utils import utils
 
@@ -64,5 +65,5 @@ def register_data_sections(card, registry):
 
         except Exception as e:
             LOGGER.warning(f"Could not load feature importance table: {str(e)}")
-            return f"{card.format.bold('Feature Importance Table')}\n\nCould not load data."
+            return f"{card.format.bold('Selected Features Ranked by Importance')}\n\nCould not load data."
         
