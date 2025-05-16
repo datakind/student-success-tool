@@ -10,6 +10,7 @@ from student_success_tool.modeling.inference import (
     calculate_shap_values,
     calculate_shap_values_spark_udf,
     select_top_features_for_display,
+    generate_ranked_feature_table,
 )
 
 
