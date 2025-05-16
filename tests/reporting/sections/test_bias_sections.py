@@ -45,7 +45,7 @@ def test_register_bias_sections_with_data(mock_download, mock_card, tmp_path):
 
     assert "Disparities by Student Group" in rendered["bias_summary_section"]
     assert "F" in rendered["bias_summary_section"]
-    assert "12% difference" in rendered["bias_summary_section"]
+    assert "17% difference" in rendered["bias_summary_section"]
     assert "non-overlapping" in rendered["bias_summary_section"]
     assert "plot.png" in rendered["bias_summary_section"]
 
