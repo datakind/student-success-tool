@@ -120,7 +120,7 @@ def evaluate_performance(
             pred_probs=split_data[pred_prob_col],
             pos_label=pos_label,
         )
-
+        
         # Apply renaming
         perf_metrics = {
             "Number of Samples": perf_metrics_raw["num_samples"],
@@ -138,7 +138,8 @@ def evaluate_performance(
             "Log Loss": round(perf_metrics_raw["log_loss"], 2),
         }
         perf_split_col = f"Dataset {split_col.capitalize()}"
-        perf_metrics[perf_split_col] = split_name
+        split_map = {"test": "Test", "train": "Training", "validate": "Validation"}
+        perf_metrics[perf_split_col] = split_map.get(split_col)
         metrics_records.append(perf_metrics)
 
     # Convert to DataFrame for display or saving
