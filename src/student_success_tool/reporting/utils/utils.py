@@ -15,7 +15,7 @@ def download_artifact(
     local_folder: str,
     artifact_path: str,
     description: t.Optional[str] = None,
-    fixed_width: str = "50mm",
+    fixed_width: str = "150mm",
 ) -> str:
     """
     Downloads artifact from MLflow run using mlflow.artifacts.download_artifacts(...) and
@@ -26,7 +26,7 @@ def download_artifact(
         local_folder: Local folder to download artifact to
         artifact_path: Path to artifact
         description: Description of the image
-        fixed_width: Desired fixed width (e.g., "50mm", "100px").
+        fixed_width: Desired fixed width (e.g., "150mm", "100px").
 
     Returns:
         Local path to artifact OR inline HTML string with path information if image
@@ -77,7 +77,7 @@ def download_static_asset(
     if dst_path.lower().endswith((".png", ".jpg", ".jpeg")):
         if description is None:
             description = os.path.basename(dst_path)
-        return embed_image(description, dst_path, alignment="left")
+        return embed_image(description, dst_path, fixed_width="50mm", alignment="left")
     else:
         return dst_path
 
@@ -97,7 +97,7 @@ def log_card(local_path: str, run_id: str) -> None:
 def embed_image(
     description: str,
     local_path: t.Optional[str | pathlib.Path],
-    fixed_width: str = "50mm",
+    fixed_width: str = "150mm",
     alignment: str = "center",
 ) -> str:
     """
@@ -106,7 +106,7 @@ def embed_image(
     Args:
         description: Description of the image.
         local_path: Path to the image file.
-        fixed_width: Desired fixed width (e.g., "50mm", "100px").
+        fixed_width: Desired fixed width (e.g., "150mm", "100px").
         alignment: Horizontal alignment ("left", "right", "center").
 
     Returns:
