@@ -139,6 +139,52 @@ def select_top_features_for_display(
     return pd.DataFrame(top_features_info)
 
 
+def generate_ranked_feature_table(
+    features: pd.DataFrame,
+    shap_values: npt.NDArray[np.float64],
+    features_table: t.Optional[dict[str, dict[str, str]]] = None,
+) -> pd.DataFrame:
+    """
+    Creates a table of all selected features of the model ranked
+    by average SHAP magnitude (aka feature importance). We utilize average
+    SHAP magnitude & an absolute value because it removes directionality 
+    from the SHAP values and focuses specifically on importance. This table
+    is used in the model cards to provide a comprehensive summary of the model's
+    features.
+    Args:
+        features: feature data used in modeling where columns are the feature
+        column names
+        shap_values: array of arrays of SHAP values, of shape len(unique_ids)
+        features_table: Optional mapping of column to human-friendly feature name/desc,
+            loaded via :func:`utils.load_features_table()
+    """
+    feature_metadata = []
+
+    for idx, feature in enumerate(features.columns):
+        feature_name = (
+            _get_mapped_feature_name(feature, features_table)
+            if features_table is not None
+            else feature
+        )
+        
+        dtype = features[feature].dtype
+        if pd.api.types.is_numeric_dtype(dtype):
+            data_type = "Continuous"
+        else:
+            data_type = "Categorical"
+
+        avg_shap_magnitude = np.mean(np.abs(shap_values[:, idx]))
+
+        feature_metadata.append({
+            "Feature Variable": feature,
+            "Feature Name": feature_name,
+            "Data Type": data_type,
+            "Average SHAP Magnitude": round(avg_shap_magnitude, 2),
+        })
+
+    return pd.DataFrame(feature_metadata).sort_values(by="Average SHAP Magnitude", ascending=False)
+    
+
 def _get_mapped_feature_name(
     feature_col: str, features_table: dict[str, dict[str, str]]
 ) -> str:
