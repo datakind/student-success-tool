@@ -23,7 +23,7 @@ def test_register_evaluation_sections_success(mock_download, mock_list_paths, mo
     # Setup two mock CSV files for bias and performance
     bias_csv_path = tmp_path / "bias_test_file.csv"
     perf_csv_path = tmp_path / "perf_test_file.csv"
-    df_bias = pd.DataFrame({"Metric": ["BiasScore"], "Value": [0.12]})
+    df_bias = pd.DataFrame({"Metric": ["FNR"], "Value": [0.12]})
     df_perf = pd.DataFrame({"Metric": ["Accuracy"], "Value": [0.95]})
     df_bias.to_csv(bias_csv_path, index=False)
     df_perf.to_csv(perf_csv_path, index=False)
