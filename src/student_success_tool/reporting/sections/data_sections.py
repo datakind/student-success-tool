@@ -48,6 +48,7 @@ def register_data_sections(card, registry):
         magnitude.
         """
         feature_artifact_path = "selected_features/ranked_selected_features.csv"
+
         try:
             local_path = utils.download_artifact(
                 run_id=card.run_id,
@@ -61,7 +62,12 @@ def register_data_sections(card, registry):
             separator = "| " + " | ".join(["---"] * len(df.columns)) + " |"
             rows = ["| " + " | ".join(str(val).replace("\n", "<br>") for val in row) + " |" for row in df.values]
 
-            return f"{card.format.header_level(4)}Selected Features Ranked by Importance\n\n" + "\n".join([headers, separator] + rows)
+            title = f"{card.format.header_level(4)}Selected Features\n"
+            subtitle = f"{card.format.header_level(5)}Full List of Selected Features Ranked by Importance\n\n"
+            
+            table_markdown = "\n".join([headers, separator] + rows)
+            
+            return f"{title}\n{subtitle}{table_markdown}"
 
         except Exception as e:
             LOGGER.warning(f"Could not load feature importance table: {str(e)}")
