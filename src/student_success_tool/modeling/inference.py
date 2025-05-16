@@ -143,7 +143,6 @@ def generate_ranked_feature_table(
     features: pd.DataFrame,
     shap_values: npt.NDArray[np.float64],
     features_table: t.Optional[dict[str, dict[str, str]]] = None,
-    wrap_width: int = 60,
 ) -> pd.DataFrame:
     """
     Creates a table of all selected features of the model ranked
@@ -159,8 +158,6 @@ def generate_ranked_feature_table(
         shap_values: array of arrays of SHAP values, of shape len(unique_ids)
         features_table: Optional mapping of column to human-friendly feature name/desc,
             loaded via :func:`utils.load_features_table()`
-        wrap_width: Optional integer to wrap long feature names at this character width.
-            Defaults to 30.
 
     Returns:
         A ranked pandas DataFrame by average shap magnitude
@@ -193,9 +190,6 @@ def generate_ranked_feature_table(
 
     # Drop the raw magnitude column
     df = df.drop(columns=["Average SHAP Magnitude (Raw)"])
-
-    # Wrap feature names for better display in model cards
-    df["Feature Name"] = df["Feature Name"].astype(str).str.wrap(width=wrap_width)
 
     return df
 
