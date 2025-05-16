@@ -31,7 +31,7 @@ def test_register_evaluation_sections_success(
     df = pd.DataFrame({"Metric": ["Accuracy", "Recall"], "Value": [0.9, 0.85]})
     df.to_csv(csv_path, index=False)
 
-    mock_list_paths.return_value = ["group_metrics/test_gender_metrics.csv"]
+    mock_list_paths.return_value = ["group_metrics/bias_test_gender_metrics.csv", "group_metrics/perf_test_gender_metrics.csv"]
     mock_download.return_value = str(csv_path)
 
     registry = SectionRegistry()
@@ -41,7 +41,7 @@ def test_register_evaluation_sections_success(
     assert (
         "Evaluation Metrics by Student Group" in rendered["evaluation_by_group_section"]
     )
-    assert "Gender Metrics" in rendered["evaluation_by_group_section"]
+    assert "Gender Bias Metrics" in rendered["evaluation_by_group_section"]
     assert "| Accuracy | 0.9 |" in rendered["evaluation_by_group_section"]
 
 
@@ -54,12 +54,12 @@ def test_register_evaluation_sections_success(
 def test_register_evaluation_sections_failure(
     mock_download, mock_list_paths, mock_card
 ):
-    mock_list_paths.return_value = ["group_metrics/test_race_metrics.csv"]
+    mock_list_paths.return_value = ["group_metrics/bias_test_race_metrics.csv", "group_metrics/perf_test_race_metrics.csv"]
     mock_download.side_effect = Exception("Download error")
 
     registry = SectionRegistry()
     register_evaluation_sections(mock_card, registry)
     rendered = registry.render_all()
 
-    assert "Race Metrics" in rendered["evaluation_by_group_section"]
+    assert "Race Performance Metrics" in rendered["evaluation_by_group_section"]
     assert "Could not load data." in rendered["evaluation_by_group_section"]
