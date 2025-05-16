@@ -71,6 +71,7 @@ def register_evaluation_sections(card, registry):
 
     # Render both tables under the same group title without labeling them separately
     for group_name, parts in group_parts.items():
+        section_text = []
         if 'bias' in parts:
             group_title = f"{card.format.friendly_case(group_name)} Bias Metrics"
             bias_table_func = make_metric_table(parts['bias'], group_title)
