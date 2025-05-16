@@ -97,4 +97,6 @@
 
 ### Appendix
 
+{performance_by_splits_section}
+
 {evaluation_by_group_section}
