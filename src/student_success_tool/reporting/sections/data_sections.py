@@ -46,7 +46,7 @@ def register_data_sections(card, registry):
         Produces a markdown table of the selected features ranked by average SHAP
         magnitude.
         """
-        feature_artifact_path = "features/feature_ranking.csv"
+        feature_artifact_path = "selected_features/ranked_selected_features.csv"
         try:
             local_path = utils.download_artifact(
                 run_id=card.run_id,
