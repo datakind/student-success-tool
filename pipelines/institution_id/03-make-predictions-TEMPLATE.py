@@ -24,6 +24,9 @@
 # WARNING: AutoML/mlflow expect particular packages within certain version constraints
 # overriding existing installs can result in errors and inability to load trained models
 # %pip install "student-success-tool==0.1.1" --no-deps
+# for pell status to show up as color coded- need these dependencies
+# %pip install "pandas==1.5.3"
+# %pip install "scikit-learn==1.3.0"
 # %pip install "git+https://github.com/datakind/student-success-tool.git@develop" --no-deps
 
 # COMMAND ----------
@@ -260,7 +263,7 @@ explainer
 # COMMAND ----------
 
 # mapping pell status to 0/1 for shap 
-df_test["student_is_pell_recipient"] = df_test["student_is_pell_recipient"].map({True: 1, False: 0})
+# df_test["student_is_pell_recipient"] = df_test["student_is_pell_recipient"].map({True: 1, False: 0})
 
 # COMMAND ----------
 
