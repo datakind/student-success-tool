@@ -19,7 +19,7 @@ def add_features(
     peak_covid_terms: set[tuple[str, str]] = constants.DEFAULT_PEAK_COVID_TERMS,
     year_col: str = "academic_year",
     term_col: str = "academic_term",
-    enrollment_intensity_col: str = "student_term_enrollment_intensity",
+    enrollment_intensity_col: str = "enrollment_intensity_first_term",
 ) -> pd.DataFrame:
     """
     Compute term-level features from pdp course dataset,
