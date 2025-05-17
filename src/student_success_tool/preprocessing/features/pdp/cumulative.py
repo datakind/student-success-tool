@@ -34,7 +34,6 @@ def add_features(
                 ("term_in_peak_covid", "sum"),
                 ("term_is_core", "sum"),
                 ("term_is_noncore", "sum"),
-                ("term_is_full_time", "sum"),
                 ("term_is_while_student_enrolled_at_other_inst", "sum"),
                 ("term_is_pre_cohort", "sum"),
                 ("course_level_mean", ["mean", "min", "std"]),
@@ -52,15 +51,13 @@ def add_features(
                 "term_id_cumcount": "Int8",
                 "term_is_core_cumsum": "Int8",
                 "term_is_noncore_cumsum": "Int8",
-                "term_is_full_time_cumsum": "Int8"
             }
         )
         .rename(
             columns={
                 "term_id_cumcount": "cumnum_terms_enrolled",
                 "term_is_core_cumsum": "cumnum_core_terms_enrolled",
-                "term_is_noncore_cumsum": "cumnum_noncore_terms_enrolled",
-                "term_is_full_time_cumsum": "cumnum_full_time_terms_enrolled", 
+                "term_is_noncore_cumsum": "cumnum_noncore_terms_enrolled", 
             }
         )
     )
@@ -194,7 +191,6 @@ def add_cumfrac_terms_enrolled_features(
         min_student_term_rank=("term_rank", "min"),
         min_student_term_rank_core=("term_rank_core", "min"),
         min_student_term_rank_noncore=("term_rank_noncore", "min"),
-        min_student_term_rank_full_time=("term_rank_full_time", "min"),
     )
     return pd.merge(df, df_min_term_ranks, on=student_id_cols, how="inner").assign(
         cumfrac_terms_enrolled=ft.partial(
@@ -214,12 +210,6 @@ def add_cumfrac_terms_enrolled_features(
             term_rank_col="term_rank_noncore",
             min_student_term_rank_col="min_student_term_rank_noncore",
             cumnum_terms_enrolled_col="cumnum_noncore_terms_enrolled",
-        ),
-        cumfrac_full_time_terms_enrolled=ft.partial(
-            _compute_cumfrac_terms_enrolled,
-            term_rank_col="term_rank_full_time",
-            min_student_term_rank_col="min_student_term_rank_full_time",
-            cumnum_terms_enrolled_col="cumnum_full_time_terms_enrolled",
         ),
     )
 
