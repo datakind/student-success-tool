@@ -216,7 +216,7 @@ resources:
         - name: course_file_name
           default: 1741198683046_kentucky_state_uni_COURSE_LEVEL_AR_DEID_20240725104603.csv
         - name: databricks_institution_name
-          default: kentucky_state_uni
+          default: ksu
         - name: db_run_id
           default: "{{job.run_id}}"
         - name: DB_workspace
