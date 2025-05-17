@@ -5,6 +5,7 @@ import pandas as pd
 
 from .... import utils
 from ... import checkpoints
+from . import shared
 
 
 def compute_target(
@@ -14,6 +15,7 @@ def compute_target(
     checkpoint: pd.DataFrame | t.Callable[[pd.DataFrame], pd.DataFrame],
     intensity_time_limits: utils.types.IntensityTimeLimitsType,
     num_terms_in_year: int = 4,
+    max_term_rank: int | t.Literal["infer"] = "infer",
     student_id_cols: str | list[str] = "student_id",
     enrollment_intensity_col: str = "student_term_enrollment_intensity",
     num_credits_col: str = "num_credits_earned_cumsum",
@@ -40,10 +42,16 @@ def compute_target(
         num_terms_in_year: Number of academic terms in one academic year,
             used to convert from year-based time limits to term-based time limits;
             default value assumes FALL, WINTER, SPRING, and SUMMER terms.
+        max_term_rank: Maximum term rank value in the full dataset ``df`` , either inferred
+            from ``df[term_rank_col]`` itself or as a manually specified value which
+            may be different from the actual max value in ``df`` , depending on use case.
         student_id_cols: Columns that uniquely identify students, used for grouping rows.
-        enrollment_intensity_col
+        enrollment_intensity_col: Column whose values give students' "enrollment intensity"
+            (usually either "FULL-TIME" or "PART-TIME"), for which the most common
+            value per student is used when comparing against intensity-specific time limits.
         num_credits_col
-        term_rank_col
+        term_rank_col: Column whose values give the absolute integer ranking of a given
+            term within the full dataset ``df`` .
     """
     student_id_cols = utils.types.to_list(student_id_cols)
     # we want a target for every student in input df; this will ensure it
@@ -101,13 +109,33 @@ def compute_target(
         .assign(target=True)
         .astype({"target": "boolean"})
     )
-    return (
-        # all students not assigned True, now assigned False
-        pd.merge(df_distinct_students, df_target_true, on=student_id_cols, how="left")
-        # fill nulls (i.e. non-True) with False and ensure we have "vanilla" bool values
-        .fillna({"target": False})
-        .astype({"target": "bool"})
-        # return as a series with target as values and student ids as index
-        .set_index(student_id_cols)
-        .loc[:, "target"]
+    # get all students for which a target label can accurately be computed
+    # i.e. the data in df covers their last "on-time" graduation term
+    df_labelable_students = shared.get_students_with_max_target_term_in_dataset(
+        df,
+        checkpoint=df_ckpt,
+        intensity_time_limits=intensity_time_limits,
+        max_term_rank=max_term_rank,
+        num_terms_in_year=num_terms_in_year,
+        student_id_cols=student_id_cols,
+        enrollment_intensity_col=enrollment_intensity_col,
+        term_rank_col=term_rank_col,
     )
+    df_labeled = (
+        # match positive labels to label-able students
+        pd.merge(df_labelable_students, df_target_true, on=student_id_cols, how="left")
+        # assign False to all label-able students not already assigned True
+        .fillna({"target": False})
+        # structure so student-ids as index, target as only column
+        .set_index(student_id_cols)
+    )
+    df_all_student_targets = (
+        # assign null target to all students
+        df_distinct_students.assign(target=pd.Series(pd.NA, dtype="boolean"))
+        # structure so student-ids as index, target as only column
+        .set_index(student_id_cols)
+    )
+    # update null targets in-place with bool targets on matching student-id indexes
+    df_all_student_targets.update(df_labeled)
+    # return as a series with target as values and student ids as index
+    return df_all_student_targets.loc[:, "target"]
