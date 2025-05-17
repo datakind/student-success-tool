@@ -80,7 +80,9 @@ from student_success_tool.preprocessing.features.pdp import term
                     "term_rank": [1, 1, 2, 3, 0, 4],
                     "term_rank_core": [1, 1, pd.NA, 2, 0, pd.NA],
                     "term_rank_noncore": [pd.NA, pd.NA, 0, pd.NA, pd.NA, 1],
+                    "term_rank_full_time": [1, 1, pd.NA, 2, 0, pd.NA],
                     "term_in_peak_covid": [False, False, False, True, False, False],
+                    "term_is_full_time": [1, 1, pd.NA, 2, 0, pd.NA],
                     "term_is_core": [True, True, False, True, True, False],
                     "term_is_noncore": [False, False, True, False, False, True],
                 }
@@ -88,6 +90,7 @@ from student_success_tool.preprocessing.features.pdp import term
                 {
                     "term_rank_core": "Int8",
                     "term_rank_noncore": "Int8",
+                    "term_rank_full_time": "Int8",
                     "academic_term": pd.CategoricalDtype(
                         ["FALL", "WINTER", "SPRING", "SUMMER"], ordered=True
                     ),

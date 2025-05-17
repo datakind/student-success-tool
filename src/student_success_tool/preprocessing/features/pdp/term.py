@@ -68,7 +68,6 @@ def add_features(
                 term_rank,
                 year_col=year_col,
                 term_col=term_col,
-                #terms_subset=full_time_terms,
                 terms_subset={"FULL-TIME"},
             ),
             term_in_peak_covid=ft.partial(
