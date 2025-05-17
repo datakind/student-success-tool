@@ -21,7 +21,6 @@ The 'SST Pipeline Workflow Asset Bundle' is used to deploy the demo inference pi
    export DB_workspace=<Databricks Workspace name>
    export service_account_executer=<Service account to trigger the pipeline>
    export service_principal_run_as=<Service principal for the workflow to run as>
-   export fellows_group_to_manage_workflow=<Temp group to manage the workflow>
    export datakind_group_to_manage_workflow=<Datakind group to manahe the workflow>
    export pipeline_sa_email=<Service accoount to ingest the data>
    export datakind_notification_email=<Datakind email address to receive notifications>
@@ -38,7 +37,6 @@ The 'SST Pipeline Workflow Asset Bundle' is used to deploy the demo inference pi
    --var="DB_workspace=$DB_workspace" \
    --var="service_account_executer=$service_account_executer" \
    --var="service_principal_run_as=$service_principal_run_as" \
-   --var="fellows_group_to_manage_workflow=$fellows_group_to_manage_workflow" \
    --var="datakind_group_to_manage_workflow=$datakind_group_to_manage_workflow" \
    --var="pipeline_sa_email=$pipeline_sa_email" \
    --var="end_user_notification_email=$end_user_notification_email" \
@@ -61,7 +59,6 @@ The 'SST Pipeline Workflow Asset Bundle' is used to deploy the demo inference pi
    --var="DB_workspace=$DB_workspace" \
    --var="service_account_executer=$service_account_executer" \
    --var="service_principal_run_as=$service_principal_run_as" \
-   --var="fellows_group_to_manage_workflow=$fellows_group_to_manage_workflow" \
    --var="datakind_group_to_manage_workflow=$datakind_group_to_manage_workflow" \
    --var="pipeline_sa_email=$pipeline_sa_email" \
    --var="end_user_notification_email=$end_user_notification_email" \
@@ -80,7 +77,6 @@ The 'SST Pipeline Workflow Asset Bundle' is used to deploy the demo inference pi
    --var="DB_workspace=$DB_workspace" \
    --var="service_account_executer=$service_account_executer" \
    --var="service_principal_run_as=$service_principal_run_as" \
-   --var="fellows_group_to_manage_workflow=$fellows_group_to_manage_workflow" \
    --var="datakind_group_to_manage_workflow=$datakind_group_to_manage_workflow" \
    --var="pipeline_sa_email=$pipeline_sa_email" \
    --var="end_user_notification_email=$end_user_notification_email" \
