@@ -223,7 +223,7 @@ class DataIngestionTask:
         raw_files_path = f"{self.args.job_root_dir}/raw_files/"
         # os.makedirs(raw_files_path, exist_ok=True)
         print("raw_files_path:", raw_files_path)
-        dbutils.fs.mkdirs(raw_files_path)
+        # dbutils.fs.mkdirs(raw_files_path)
 
         # fpath_course, fpath_cohort = self.download_data_from_gcs(raw_files_path)
         #Hack to get around gcp permissions right now
