@@ -181,3 +181,26 @@ def test_term_in_subset(df, terms_subset, term_col, exp):
     obs = term.term_in_subset(df, terms_subset=terms_subset, term_col=term_col)
     assert isinstance(obs, pd.Series)
     assert pd.testing.assert_series_equal(obs, exp, check_names=False) is None
+
+
+@pytest.mark.parametrize(
+    ["df", "terms_subset", "term_col", "exp"],
+    [
+        (
+            pd.DataFrame({"term": ["FULL-TIME", "PART-TIME", "FULL-TIME", "PART-TIME"]}),
+            {"FULL-TIME"},
+            "term",
+            pd.Series([True, False, True, False], dtype="boolean"),
+        ),
+        (
+            pd.DataFrame({"term": ["FULL-TIME", "FULL-TIME", "FULL-TIME", "PART-TIME"]}),
+            {"FULL-TIME"},
+            "term",
+            pd.Series([True, True, True, False], dtype="boolean"),
+        ),
+    ],
+)
+def test_term_in_subset_enrollment_intensity(df, terms_subset, term_col, exp):
+    obs = term.term_in_subset_enrollment_intensity(df, terms_subset=terms_subset, term_col=term_col)
+    assert isinstance(obs, pd.Series)
+    assert pd.testing.assert_series_equal(obs, exp, check_names=False) is None
