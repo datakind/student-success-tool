@@ -221,7 +221,9 @@ class DataIngestionTask:
         Executes the data ingestion task.
         """
         raw_files_path = f"{self.args.job_root_dir}/raw_files/"
-        os.makedirs(raw_files_path, exist_ok=True)
+        # os.makedirs(raw_files_path, exist_ok=True)
+        print("raw_files_path:", raw_files_path)
+        dbutils.fs.mkdirs(raw_files_path)
 
         fpath_course, fpath_cohort = self.download_data_from_gcs(raw_files_path)
         df_course, df_cohort = self.read_and_validate_data(fpath_course, fpath_cohort)
@@ -287,6 +289,7 @@ if __name__ == "__main__":
     args = parse_arguments()
     sys.path.append(args.custom_schemas_path)
     try:
+        print("sys.path:", sys.path)
         schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
         logging.info("Running task with custom schema")
     except Exception:
