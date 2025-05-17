@@ -294,7 +294,7 @@ if __name__ == "__main__":
     args = parse_arguments()
     sys.path.append(args.custom_schemas_path)
     try:
-        print("Listdir1", os.listdir("/Workspace/Users"))
+        print("Listdir1", os.listdir("/Workspace/Users/86ddbb23-46a8-4d70-ab27-af3a7963f2cd"))
         converter_func = importlib.import_module(f"{args.databricks_institution_name}.dataio")
         course_converter_func = converter_func.converter_func_course
         cohort_converter_func = converter_func.converter_func_cohort
