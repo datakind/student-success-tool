@@ -42,6 +42,6 @@ targets:
   prod:
     mode: production
     workspace:
-      root_path: /Workspace/Users/pedro.melendez@datakind.org/.bundle/${bundle.name}/${bundle.target}
+      root_path: /Workspace/Users/kayla@datakind.org/.bundle/${bundle.name}/${bundle.target}
 
 
