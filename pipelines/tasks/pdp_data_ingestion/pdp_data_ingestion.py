@@ -295,10 +295,14 @@ if __name__ == "__main__":
     sys.path.append(args.custom_schemas_path)
     try:
         print("sys.path:", sys.path)
+        path = "/Workspace/Users/kayla@datakind.org/sst-private/kentucky_state_uni/schemas.py"
+        print("Exists:", os.path.exists(path))
+        print("Listdir:", os.listdir("/Workspace/Users/kayla@datakind.org/sst-private/kentucky_state_uni"))
         schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
         logging.info("Running task with custom schema")
     except Exception:
         print("Running task with default schema")
+        print('Exception', Exception)
         from student_success_tool.dataio.schemas import pdp as schemas
         logging.info("Running task with default schema")
     try:
