@@ -21,8 +21,8 @@ resources:
               - "{{job.parameters.DB_workspace}}"
               - --gcp_bucket_name
               - "{{job.parameters.gcp_bucket_name}}"
-              - --job_root_dir  
-              - "/Volumes/{{job.parameters.DB_workspace}}.{{job.parameters.databricks_institution_name}}_gold/gold_volume/inference_jobs/{{job.parameters.db_run_id}}"
+              - --job_root_dir 
+              - "/Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/inference_jobs/{{job.parameters.db_run_id}}"
               - --custom_schemas_path
               - "{{job.parameters.custom_schemas_path}}"
           job_cluster_key: pdp-inference-pipeline-cluster
