@@ -229,7 +229,7 @@ class DataIngestionTask:
         #Hack to get around gcp permissions right now
         # fpath_course = "/Volumes/staging_sst_01/midway_uni_bronze/bronze_volume/inference_jobs/244602143794463/raw_files/1741199002541_MIDWAY_UNI_COURSE_LEVEL_AR_DEID_20241218_121826.csv"
         # fpath_cohort = "/Volumes/staging_sst_01/midway_uni_bronze/bronze_volume/inference_jobs/244602143794463/raw_files/1741199002542_MIDWAY_UNI_DEIDENTIFIED_20241218_121800.csv"
-        fpath_course = "/Volumes/staging_sst_01/kentucky_state_uni_bronze/bronze_volume/inference_jobs/592361609780911/raw_files/1741198683046_kentucky_state_uni_COURSE_LEVEL_AR_DEID_20240725104603.csv"
+        fpath_course = "/Volumes/staging_sst_01/kentucky_state_uni_bronze/bronze_volume/inference_jobs/592361609780911/raw_files/1741198683046_kentucky_state_uni_COURSE_LEVEL_AR_DEID_20240725104603_dedup.csv"
         fpath_cohort = "/Volumes/staging_sst_01/kentucky_state_uni_bronze/bronze_volume/inference_jobs/592361609780911/raw_files/1741198683049_kentucky_state_uni_STUDENT_SEMESTER_AR_DEIDENTIFIED_20240725104600.csv"
         df_course, df_cohort = self.read_and_validate_data(fpath_course, fpath_cohort)
 
