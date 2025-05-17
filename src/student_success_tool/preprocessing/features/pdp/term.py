@@ -38,7 +38,7 @@ def add_features(
     """
     LOGGER.info("adding term features ...")
     noncore_terms: set[types.TermType] = set(df[term_col].unique()) - set(core_terms)
-    #full_time_terms: set[types.TermType] = constants.DEFAULT_FULL_TIME_TERMS
+    # full_time_terms: set[types.TermType] = constants.DEFAULT_FULL_TIME_TERMS
     df_term = (
         _get_unique_sorted_terms_df(df, year_col=year_col, term_col=term_col)
         # only need to compute features on unique terms, rather than at course-level
@@ -84,7 +84,7 @@ def add_features(
                 term_in_subset, terms_subset=noncore_terms, term_col=term_col
             ),
             term_is_full_time=ft.partial(
-                term_in_subset,
+                term_in_subset_enrollment_intensity,
                 terms_subset={"FULL-TIME"},
                 term_col=enrollment_intensity_col,
             ),
@@ -136,6 +136,14 @@ def term_in_peak_covid(
 
 def term_in_subset(
     df: pd.DataFrame, terms_subset: set[types.TermType], term_col: str = "academic_term"
+) -> pd.Series:
+    return df[term_col].isin(terms_subset).astype("boolean")
+
+
+def term_in_subset_enrollment_intensity(
+    df: pd.DataFrame,
+    terms_subset: set[types.EnrollmentIntensityType],
+    term_col: str = "student_term_enrollment_intensity",
 ) -> pd.Series:
     return df[term_col].isin(terms_subset).astype("boolean")
 
