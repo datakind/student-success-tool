@@ -295,7 +295,9 @@ if __name__ == "__main__":
     sys.path.append(args.custom_schemas_path)
     try:
         print("Listdir1", os.listdir("/Workspace/Users/86ddbb23-46a8-4d70-ab27-af3a7963f2cd"))
-        converter_func = importlib.import_module(f"{args.databricks_institution_name}.dataio")
+        sys.path.append("/Volumes/staging_sst_01/kentucky_state_uni_bronze/bronze_volume/inference_inputs")
+        # converter_func = importlib.import_module(f"{args.databricks_institution_name}.dataio")
+        converter_func =  importlib.import_module("dataio")
         course_converter_func = converter_func.converter_func_course
         cohort_converter_func = converter_func.converter_func_cohort
         logging.info("Running task with custom converter func")
