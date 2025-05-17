@@ -212,11 +212,11 @@ resources:
         enabled: true
       parameters:
         - name: cohort_file_name
-          default: 1742330251694_MIDWAY_UNI_DEIDENTIFIED_20241218_121800.csv
+          default: 1741198683049_kentucky_state_uni_STUDENT_SEMESTER_AR_DEIDENTIFIED_20240725104600.csv
         - name: course_file_name
-          default: 1742330251693_MIDWAY_UNI_COURSE_LEVEL_AR_DEID_20241218_121826_ndupl.csv
+          default: 1741198683046_kentucky_state_uni_COURSE_LEVEL_AR_DEID_20240725104603.csv
         - name: databricks_institution_name
-          default: midway_uni
+          default: kentucky_state_uni
         - name: db_run_id
           default: "{{job.run_id}}"
         - name: DB_workspace
@@ -224,7 +224,7 @@ resources:
         - name: gcp_bucket_name
           default: dev_6782b2f451f84c17ae6e14e918432b65
         - name: model_name
-          default: midway_uni_graduation_2_terms_01
+          default: kentucky_state_uni_retention_end_of_first_year
         - name: model_type
           default: sklearn
         - name: notification_email
