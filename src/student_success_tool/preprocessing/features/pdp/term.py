@@ -38,7 +38,6 @@ def add_features(
     """
     LOGGER.info("adding term features ...")
     noncore_terms: set[types.TermType] = set(df[term_col].unique()) - set(core_terms)
-    #full_time_terms: set[types.TermType] = constants.DEFAULT_FULL_TIME_TERMS
     df_term = (
         _get_unique_sorted_terms_df(df, year_col=year_col, term_col=term_col)
         # only need to compute features on unique terms, rather than at course-level
@@ -64,13 +63,6 @@ def add_features(
                 term_col=term_col,
                 terms_subset=noncore_terms,
             ),
-            term_rank_full_time=ft.partial(
-                term_rank,
-                year_col=year_col,
-                term_col=term_col,
-                #terms_subset=full_time_terms,
-                terms_subset={"FULL-TIME"},
-            ),
             term_in_peak_covid=ft.partial(
                 term_in_peak_covid,
                 year_col=year_col,
@@ -83,11 +75,6 @@ def add_features(
             ),
             term_is_noncore=ft.partial(
                 term_in_subset, terms_subset=noncore_terms, term_col=term_col
-            ),
-            term_is_full_time=ft.partial(
-                term_in_subset,
-                terms_subset={"FULL-TIME"},
-                term_col=enrollment_intensity_col,
             ),
         )
     )
