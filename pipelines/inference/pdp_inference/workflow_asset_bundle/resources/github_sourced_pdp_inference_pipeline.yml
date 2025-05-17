@@ -22,7 +22,7 @@ resources:
               - --gcp_bucket_name
               - "{{job.parameters.gcp_bucket_name}}"
               - --job_root_dir  
-              - "/Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/inference_jobs/{{job.parameters.db_run_id}}"
+              - "/Volumes/{{job.parameters.DB_workspace}}.{{job.parameters.databricks_institution_name}}_gold/gold_volume/inference_jobs/{{job.parameters.db_run_id}}"
               - --custom_schemas_path
               - "{{job.parameters.custom_schemas_path}}"
           job_cluster_key: pdp-inference-pipeline-cluster
@@ -205,18 +205,18 @@ resources:
       git_source:
         git_url: https://github.com/datakind/student-success-tool
         git_provider: gitHub
-        git_branch: develop
+        git_branch: add-custom-converter-function
       tags:
         dev: kayla_wilding
       queue:
         enabled: true
       parameters:
         - name: cohort_file_name
-          default: 1740098728373_synthetic_STUDENT_SEMESTER_AR_DEIDENTIFIED.csv
+          default: 1742330251694_MIDWAY_UNI_DEIDENTIFIED_20241218_121800.csv
         - name: course_file_name
-          default: 1740098728372_synthetic_COURSE_LEVEL_AR_DEID.csv
+          default: 1742330251693_MIDWAY_UNI_COURSE_LEVEL_AR_DEID_20241218_121826_ndupl.csv
         - name: databricks_institution_name
-          default: uni_of_crystal_testing
+          default: midway_uni
         - name: db_run_id
           default: "{{job.run_id}}"
         - name: DB_workspace
@@ -224,7 +224,7 @@ resources:
         - name: gcp_bucket_name
           default: dev_6782b2f451f84c17ae6e14e918432b65
         - name: model_name
-          default: latest_enrollment_model
+          default: midway_uni_graduation_2_terms_01
         - name: model_type
           default: sklearn
         - name: notification_email
