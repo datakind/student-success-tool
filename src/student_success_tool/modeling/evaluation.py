@@ -120,7 +120,7 @@ def evaluate_performance(
             pred_probs=split_data[pred_prob_col],
             pos_label=pos_label,
         )
-        
+
         perf_metrics = format_perf_metrics(perf_metrics_raw)
         perf_split_col = f"Dataset {split_col.capitalize()}"
         split_map = {"test": "Test", "train": "Training", "validate": "Validation"}
@@ -148,8 +148,12 @@ def format_perf_metrics(perf_metrics_raw: dict) -> dict:
     return {
         "Number of Samples": int(perf_metrics_raw["num_samples"]),
         "Number of Positive Samples": int(perf_metrics_raw["num_positives"]),
-        "Actual Target Prevalence": round(float(perf_metrics_raw["true_positive_prevalence"]), 2),
-        "Predicted Target Prevalence": round(float(perf_metrics_raw["pred_positive_prevalence"]), 2),
+        "Actual Target Prevalence": round(
+            float(perf_metrics_raw["true_positive_prevalence"]), 2
+        ),
+        "Predicted Target Prevalence": round(
+            float(perf_metrics_raw["pred_positive_prevalence"]), 2
+        ),
         "Accuracy": round(float(perf_metrics_raw["accuracy"]), 2),
         "Precision": round(float(perf_metrics_raw["precision"]), 2),
         "Recall": round(float(perf_metrics_raw["recall"]), 2),

@@ -22,7 +22,7 @@ def register_evaluation_sections(card, registry):
 
     def make_metric_table(path: str, title: str) -> t.Callable[[], str]:
         """
-        This method is used for dynamic section registration. 
+        This method is used for dynamic section registration.
         Later, the registry will render all of these functions to create
         tables.
 
@@ -46,12 +46,16 @@ def register_evaluation_sections(card, registry):
                 # Build markdown table
                 headers = "| " + " | ".join(df.columns) + " |"
                 separator = "| " + " | ".join(["---"] * len(df.columns)) + " |"
-                rows = ["| " + " | ".join(str(val) for val in row) + " |" for row in df.values]
+                rows = [
+                    "| " + " | ".join(str(val) for val in row) + " |" for row in df.values
+                ]
 
                 return f"{card.format.header_level(5)}{title}\n\n" + "\n".join([headers, separator] + rows)
 
             except Exception as e:
-                LOGGER.warning(f"Could not load evaluation metrics for {title}: {str(e)}")
+                LOGGER.warning(
+                    f"Could not load evaluation metrics for {title}: {str(e)}"
+                )
                 return f"{card.format.bold(f'{title} Metrics')}\n\nCould not load data."
 
         return metric_table

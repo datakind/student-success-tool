@@ -170,9 +170,7 @@ logging.info(
 
 # COMMAND ----------
 
-df_train = modeling.evaluation.extract_training_data_from_model(
-    cfg.model.experiment_id
-)
+df_train = modeling.evaluation.extract_training_data_from_model(cfg.model.experiment_id)
 if cfg.split_col:
     df_train = df_train.loc[df_train[cfg.split_col].eq("train"), :]
 df_train.shape
@@ -316,7 +314,9 @@ selected_features_df = inference.generate_ranked_feature_table(
 )
 with mlflow.start_run(run_id=cfg.model.run_id) as run:
     selected_features_df.to_csv("/tmp/ranked_selected_features.csv", index=False)
-    mlflow.log_artifact("/tmp/ranked_selected_features.csv", artifact_path="selected_features")
+    mlflow.log_artifact(
+        "/tmp/ranked_selected_features.csv", artifact_path="selected_features"
+    )
 
 selected_features_df
 

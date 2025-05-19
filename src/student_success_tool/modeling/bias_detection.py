@@ -88,16 +88,8 @@ def evaluate_bias(
                 sample_weight_col,
             )
 
-            log_group_metrics_to_mlflow(
-                bias_metrics,
-                f"bias_{split_name}",
-                group_col
-            )
-            log_group_metrics_to_mlflow(
-                perf_metrics,
-                f"perf_{split_name}",
-                group_col
-            )
+            log_group_metrics_to_mlflow(bias_metrics, f"bias_{split_name}", group_col)
+            log_group_metrics_to_mlflow(perf_metrics, f"perf_{split_name}", group_col)
 
             # Detect bias flags
             all_flags = flag_bias(fnr_data)
@@ -189,21 +181,15 @@ def compute_group_bias_metrics(
         )
         # HACK: avoid duplicative metrics
         eval_metrics.pop("num_positives", None)
-        bias_subgroup_metrics, perf_subgroup_metrics = (
-            format_subgroup_metrics(
+        bias_subgroup_metrics, perf_subgroup_metrics = format_subgroup_metrics(
                 eval_metrics, fnr_subgroup_data
-            )
         )
 
         log_subgroup_metrics_to_mlflow(
-            bias_subgroup_metrics,
-            f"{split_name}_bias",
-            group_col
+            bias_subgroup_metrics, f"{split_name}_bias", group_col
         )
         log_subgroup_metrics_to_mlflow(
-            perf_subgroup_metrics,
-            f"{split_name}_performance",
-            group_col
+            perf_subgroup_metrics, f"{split_name}_performance", group_col
         )
 
         bias_group_metrics.append(bias_subgroup_metrics)
@@ -214,8 +200,7 @@ def compute_group_bias_metrics(
 
 
 def format_subgroup_metrics(
-    eval_metrics: dict,
-    fnr_subgroup_data: dict
+    eval_metrics: dict, fnr_subgroup_data: dict
 ) -> tuple[dict, dict]:
     """
     Formats the evaluation metrics and bias metrics together for logging into MLflow.
@@ -249,6 +234,7 @@ def format_subgroup_metrics(
         "Log Loss": round(eval_metrics["log_loss"], 2),
     }
     return bias_metrics, performance_metrics
+
 
 def flag_bias(
     fnr_data: list,
@@ -290,7 +276,7 @@ def flag_bias(
             if current["fnr"] > 0 and other["fnr"] > 0:
                 # Determine ordering based on FNR values
                 sg1, sg2 = (
-                    (current, other) 
+                    (current, other)
                     if current["fnr"] >= other["fnr"]
                     else (other, current)
                 )
