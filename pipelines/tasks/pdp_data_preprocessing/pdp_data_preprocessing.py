@@ -24,7 +24,8 @@ from databricks.sdk.runtime import dbutils
 
 import student_success_tool.dataio as dataio
 # import student_success_tool.preprocessing.targets.pdp as targets
-import student_success_tool.preprocessing as preprocessing
+from student_success_tool import preprocessing
+from student_success_tool.preprocessing import selection
 from student_success_tool.configs.pdp import PDPProjectConfig
 
 # Disable mlflow autologging (due to Databricks issues during feature selection)
@@ -150,7 +151,7 @@ class DataProcessingTask:
             key_course_subject_areas=key_course_subject_areas,
             key_course_ids=key_course_ids,
         )
-        eligible_students = preprocessing.selection.select_students_by_attributes(
+        eligible_students = selection.pdp.select_students_by_attributes(
             df_student_terms, student_id_cols=student_id_col, **student_criteria
         )
         max_term_rank = df_student_terms["term_rank"].max()
