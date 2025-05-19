@@ -22,11 +22,9 @@
 
 # COMMAND ----------
 
-# install dependencies, most/all of which should come through our 1st-party SST package
-# NOTE: it's okay to use 'develop' or a feature branch while developing this nb
-# but when it's finished, it's best to pin to a specific version of the package
-# %pip install "student-success-tool == 0.1.1"
-# %pip install "git+https://github.com/datakind/student-success-tool.git@develop"
+# install dependencies, of which most/all should come through our 1st-party SST package
+
+# %pip install "student-success-tool == 0.2.0"
 
 # COMMAND ----------
 
@@ -376,5 +374,3 @@ dataio.write.to_delta_table(df_modeling, preprocessed_table_path, spark_session=
 # MAGIC %md
 # MAGIC - [ ] Update project config with paremters for the preprocessed dataset (`datasets[dataset_name].preprocessed`), feature and target definitions (`preprocessing.features`, `preprocessing.target.params`), as well as any splits / sample weight parameters (`preprocessing.splits`, `preprocessing.sample_class_weight`)
 # MAGIC - [ ] Submit a PR including this notebook and any changes in project config
-
-# COMMAND ----------
