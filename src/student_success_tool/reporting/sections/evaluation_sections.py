@@ -80,11 +80,13 @@ def register_evaluation_sections(card, registry):
             group_name = csv_path.replace("group_metrics/bias_test_", "").replace(
                 "_metrics.csv", ""
             )
-            group_parts[group_name]['bias'] = csv_path
+            group_parts[group_name]["bias"] = csv_path
 
         if csv_path.startswith("group_metrics/perf_test_") and csv_path.endswith(".csv"):
-            group_name = csv_path.replace("group_metrics/perf_test_", "").replace("_metrics.csv", "")
-            group_parts[group_name]['perf'] = csv_path
+            group_name = csv_path.replace("group_metrics/perf_test_", "").replace(
+                "_metrics.csv", ""
+            )
+            group_parts[group_name]["perf"] = csv_path
 
     # Render both tables under the same group title without labeling them separately
     for group_name, parts in group_parts.items():
@@ -123,7 +125,7 @@ def register_evaluation_sections(card, registry):
         if not evaluation_sections:
             return f"{card.format.bold('No group evaluation metrics available')}."
         return "\n\n".join(evaluation_sections)
-    
+
     @registry.register("performance_by_splits_section")
     def performance_by_splits_section():
         """

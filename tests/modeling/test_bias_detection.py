@@ -260,7 +260,7 @@ def test_flag_bias(fnr_data, expected_sg1, expected_sg2, expected_flag):
         high_bias_thresh=0.15,
         moderate_bias_thresh=0.1,
         low_bias_thresh=0.05,
-        min_sample_ratio=0.1
+        min_sample_ratio=0.1,
     )
 
     assert len(result) == 1
