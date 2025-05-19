@@ -136,7 +136,7 @@ class DataProcessingTask:
         key_course_ids = self.cfg.preprocessing.features.key_course_ids
 
         # Read preprocessing target parameters from config
-        student_criteria = self.cfg.preprocessing.selection["student_criteria"]
+        student_criteria = self.cfg.preprocessing.selection.student_criteria
         student_id_col = self.cfg.student_id_col
 
         # Create student-term dataset
