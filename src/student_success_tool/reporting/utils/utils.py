@@ -97,7 +97,7 @@ def log_card(local_path: str, run_id: str) -> None:
 def embed_image(
     description: str,
     local_path: t.Optional[str | pathlib.Path],
-    fixed_width: str = "150mm",
+    fixed_width: str = "125mm",
     alignment: str = "center",
 ) -> str:
     """
