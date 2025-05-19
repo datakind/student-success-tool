@@ -23,11 +23,9 @@
 
 # COMMAND ----------
 
-# install dependencies, most/all of which should come through our 1st-party SST package
-# NOTE: it's okay to use 'develop' or a feature branch while developing this nb
-# but when it's finished, it's best to pin to a specific version of the package
+# install dependencies, of which most/all should come through our 1st-party SST package
+
 # %pip install "student-success-tool == 0.2.0"
-# %pip install git+https://github.com/datakind/student-success-tool.git@develop
 
 # COMMAND ----------
 
@@ -97,8 +95,8 @@ cfg
 # TODO: if dataset info included in cfg, specify its name here
 dataset_name = "DATASET_NAME"
 
-# MAGIC %md
-# MAGIC ## course dataset
+%md
+## course dataset
 
 # COMMAND ----------
 
