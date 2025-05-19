@@ -15,7 +15,7 @@ def download_artifact(
     local_folder: str,
     artifact_path: str,
     description: t.Optional[str] = None,
-    fixed_width: str = "150mm",
+    fixed_width: str = "125mm",
 ) -> str:
     """
     Downloads artifact from MLflow run using mlflow.artifacts.download_artifacts(...) and
@@ -77,7 +77,7 @@ def download_static_asset(
     if dst_path.lower().endswith((".png", ".jpg", ".jpeg")):
         if description is None:
             description = os.path.basename(dst_path)
-        return embed_image(description, dst_path, fixed_width="50mm", alignment="left")
+        return embed_image(description, dst_path, fixed_width="40mm", alignment="left")
     else:
         return dst_path
 
