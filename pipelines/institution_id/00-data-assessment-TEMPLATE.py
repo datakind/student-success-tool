@@ -95,8 +95,8 @@ cfg
 # TODO: if dataset info included in cfg, specify its name here
 dataset_name = "DATASET_NAME"
 
-%md
-## course dataset
+# MAGIC %md
+# MAGIC ## course dataset
 
 # COMMAND ----------
 
