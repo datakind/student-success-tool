@@ -25,7 +25,7 @@
 
 # WARNING: AutoML/mlflow expect particular packages with version constraints
 # that directly conflicts with dependencies in our SST repo. As a temporary fix,
-# we need to manually install a certain version of pandas and scikit-learn in order 
+# we need to manually install a certain version of pandas and scikit-learn in order
 # for our models to load and run properly.
 
 # %pip install "student-success-tool==0.2.0"
