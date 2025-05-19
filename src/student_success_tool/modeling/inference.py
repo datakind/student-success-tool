@@ -147,7 +147,7 @@ def generate_ranked_feature_table(
     """
     Creates a table of all selected features of the model ranked
     by average SHAP magnitude (aka feature importance). We utilize average
-    SHAP magnitude & an absolute value because it removes directionality 
+    SHAP magnitude & an absolute value because it removes directionality
     from the SHAP values and focuses specifically on importance. This table
     is used in the model cards to provide a comprehensive summary of the model's
     features.
@@ -172,20 +172,26 @@ def generate_ranked_feature_table(
         )
         dtype = features[feature].dtype
         data_type = (
-            "Boolean" if pd.api.types.is_bool_dtype(dtype)
-            else "Continuous" if pd.api.types.is_numeric_dtype(dtype)
+            "Boolean"
+            if pd.api.types.is_bool_dtype(dtype)
+            else "Continuous"
+            if pd.api.types.is_numeric_dtype(dtype)
             else "Categorical"
         )
         avg_shap_magnitude_raw = np.mean(np.abs(shap_values[:, idx]))
-        feature_metadata.append({
-            "Feature Name": feature_name,
-            "Data Type": data_type,
-            "Average SHAP Magnitude (Raw)": avg_shap_magnitude_raw,
-        })
+        feature_metadata.append(
+            {
+                "Feature Name": feature_name,
+                "Data Type": data_type,
+                "Average SHAP Magnitude (Raw)": avg_shap_magnitude_raw,
+            }
+        )
 
-    df = pd.DataFrame(feature_metadata).sort_values(
-        by="Average SHAP Magnitude (Raw)", ascending=False
-    ).reset_index(drop=True)
+    df = (
+        pd.DataFrame(feature_metadata)
+        .sort_values(by="Average SHAP Magnitude (Raw)", ascending=False)
+        .reset_index(drop=True)
+    )
 
     # Format magnitudes after sorting to avoid type issues
     df["Average SHAP Magnitude"] = df["Average SHAP Magnitude (Raw)"].apply(

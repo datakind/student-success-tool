@@ -88,7 +88,9 @@ def register_bias_sections(card, registry):
                 )
                 group_disparities.setdefault(group, []).append(desc)
         except Exception as e:
-            LOGGER.warning(f"Could not load {level} bias flags: [{type(e).__name__}] {str(e)}")
+            LOGGER.warning(
+                f"Could not load {level} bias flags: [{type(e).__name__}] {str(e)}"
+            )
 
     all_blocks = []
 

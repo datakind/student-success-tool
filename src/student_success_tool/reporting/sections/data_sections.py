@@ -40,7 +40,7 @@ def register_data_sections(card, registry):
                 "Unable to produce data split table. No splits found in config."
             )
             return f"{card.format.bold('Could not parse data split')}"
-    
+
     @registry.register("selected_features_ranked_by_shap")
     def selected_features_ranked_by_shap():
         """
@@ -60,16 +60,18 @@ def register_data_sections(card, registry):
             # Build markdown table
             headers = "| " + " | ".join(df.columns) + " |"
             separator = "| " + " | ".join(["---"] * len(df.columns)) + " |"
-            rows = ["| " + " | ".join(str(val).replace("\n", "<br>") for val in row) + " |" for row in df.values]
+            rows = [
+                "| " + " | ".join(str(val).replace("\n", "<br>") for val in row) + " |"
+                for row in df.values
+            ]
 
             title = f"{card.format.header_level(4)}Selected Features\n"
             subtitle = f"{card.format.header_level(5)}Full List of Selected Features Ranked by Importance\n\n"
-            
+
             table_markdown = "\n".join([headers, separator] + rows)
-            
+
             return f"{title}\n{subtitle}{table_markdown}"
 
         except Exception as e:
             LOGGER.warning(f"Could not load feature importance table: {str(e)}")
             return f"{card.format.bold('Selected Features Ranked by Importance')}\n\nCould not load data."
-        
