@@ -286,16 +286,20 @@ def test_calculate_shap_values_spark_udf_multiple_batches(
 
 @pytest.fixture
 def ranked_feature_table_data():
-    features = pd.DataFrame({
-        "pell_status": [False, True, False],
-        "english_math_gateway": ["E", "M", "M"],
-        "term_gpa": [4.0, 3.0, 2.0],
-    })
-    shap_values = np.array([
-        [0.1, -0.2, 0.05],
-        [0.3, 0.1, -0.05],
-        [0.2, -0.1, 0.15],
-    ])
+    features = pd.DataFrame(
+        {
+            "pell_status": [False, True, False],
+            "english_math_gateway": ["E", "M", "M"],
+            "term_gpa": [4.0, 3.0, 2.0],
+        }
+    )
+    shap_values = np.array(
+        [
+            [0.1, -0.2, 0.05],
+            [0.3, 0.1, -0.05],
+            [0.2, -0.1, 0.15],
+        ]
+    )
     features_table = {
         "pell_status": {"name": "Pell Status"},
         "english_math_gateway": {"name": "English or Math Gateway"},
@@ -310,11 +314,15 @@ def test_generate_ranked_feature_table(ranked_feature_table_data, use_features_t
 
     selected_features_table = features_table if use_features_table else None
 
-    result = generate_ranked_feature_table(features, shap_values, selected_features_table)
+    result = generate_ranked_feature_table(
+        features, shap_values, selected_features_table
+    )
 
     assert isinstance(result, pd.DataFrame) and not result.empty
     assert set(result.columns) == {
-        "Feature Name", "Data Type", "Average SHAP Magnitude"
+        "Feature Name",
+        "Data Type",
+        "Average SHAP Magnitude",
     }
 
     # Verify descending sort order by Average SHAP Magnitude

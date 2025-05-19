@@ -182,7 +182,7 @@ def compute_group_bias_metrics(
         # HACK: avoid duplicative metrics
         eval_metrics.pop("num_positives", None)
         bias_subgroup_metrics, perf_subgroup_metrics = format_subgroup_metrics(
-                eval_metrics, fnr_subgroup_data
+            eval_metrics, fnr_subgroup_data
         )
 
         log_subgroup_metrics_to_mlflow(
@@ -222,7 +222,7 @@ def format_subgroup_metrics(
         # Bias Metrics
         "FNR": round(fnr_subgroup_data["fnr"], 2),
         "FNR CI Lower": round(fnr_subgroup_data["ci"][0], 2),
-        "FNR CI Upper": round(fnr_subgroup_data["ci"][1], 2)
+        "FNR CI Upper": round(fnr_subgroup_data["ci"][1], 2),
     }
     performance_metrics = {
         "Subgroup": fnr_subgroup_data["subgroup"],

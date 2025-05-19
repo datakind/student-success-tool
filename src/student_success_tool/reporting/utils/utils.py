@@ -125,9 +125,7 @@ def embed_image(
 
     style = f"{css_alignment} width: {fixed_width}; height: auto; max-width: 100%;"
 
-    return (
-        f'<img src="{rel_path}" alt="{description}" style="{style}">'
-    )
+    return f'<img src="{rel_path}" alt="{description}" style="{style}">'
 
 
 def list_paths_in_directory(run_id: str, directory: str) -> t.List[str]:

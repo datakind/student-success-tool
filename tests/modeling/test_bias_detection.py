@@ -197,6 +197,7 @@ def test_generate_bias_flag(
         == expected
     )
 
+
 @pytest.mark.parametrize(
     "fnr_data, expected_sg1, expected_sg2, expected_flag",
     [
@@ -235,7 +236,9 @@ def test_flag_bias(fnr_data, expected_sg1, expected_sg2, expected_flag):
     def mock_check_ci_overlap(ci1, ci2):
         return False  # Non-overlapping
 
-    def mock_generate_bias_flag(group, sg1, sg2, fnr_diff, reason, split_name, flag, p_value):
+    def mock_generate_bias_flag(
+        group, sg1, sg2, fnr_diff, reason, split_name, flag, p_value
+    ):
         return {
             "group": group,
             "sg1": sg1,
@@ -246,11 +249,19 @@ def test_flag_bias(fnr_data, expected_sg1, expected_sg2, expected_flag):
         }
 
     monkeypatch = pytest.MonkeyPatch()
-    monkeypatch.setattr(bias_detection, "z_test_fnr_difference", mock_z_test_fnr_difference)
+    monkeypatch.setattr(
+        bias_detection, "z_test_fnr_difference", mock_z_test_fnr_difference
+    )
     monkeypatch.setattr(bias_detection, "check_ci_overlap", mock_check_ci_overlap)
     monkeypatch.setattr(bias_detection, "generate_bias_flag", mock_generate_bias_flag)
 
-    result = bias_detection.flag_bias(fnr_data, high_bias_thresh=0.15, moderate_bias_thresh=0.1, low_bias_thresh=0.05, min_sample_ratio=0.1)
+    result = bias_detection.flag_bias(
+        fnr_data,
+        high_bias_thresh=0.15,
+        moderate_bias_thresh=0.1,
+        low_bias_thresh=0.05,
+        min_sample_ratio=0.1
+    )
 
     assert len(result) == 1
     flag = result[0]
