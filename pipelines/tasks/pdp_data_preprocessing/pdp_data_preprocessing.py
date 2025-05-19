@@ -23,9 +23,9 @@ from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 
 import student_success_tool.dataio as dataio
-import student_success_tool.targets.pdp as targets
-import student_success_tool.preprocessing.pdp as preprocessing
-from student_success_tool.schemas.pdp import PDPProjectConfig
+# import student_success_tool.preprocessing.targets.pdp as targets
+import student_success_tool.preprocessing as preprocessing
+from student_success_tool.configs.pdp import PDPProjectConfig
 
 # Disable mlflow autologging (due to Databricks issues during feature selection)
 mlflow.autolog(disable=True)
@@ -87,14 +87,14 @@ class DataProcessingTask:
         """
         if self.spark_session:
             try:
-                df_course = schemas.RawPDPCourseDataSchema(
+                df_course = schemas.raw_course.RawPDPCourseDataSchema(
                     dataio.from_delta_table(
                         self.args.course_dataset_validated_path,
                         spark_session=self.spark_session,
                     )
                 )
 
-                df_cohort = schemas.RawPDPCohortDataSchema(
+                df_cohort = schemas.raw_cohort.RawPDPCohortDataSchema(
                     dataio.from_delta_table(
                         self.args.cohort_dataset_validated_path,
                         spark_session=self.spark_session,
@@ -129,27 +129,28 @@ class DataProcessingTask:
             self.cfg.preprocessing.features.min_num_credits_full_time
         )
         course_level_pattern = self.cfg.preprocessing.features.course_level_pattern
+        core_terms = self.cfg.preprocessing.features.core_terms
         key_course_subject_areas = (
             self.cfg.preprocessing.features.key_course_subject_areas
         )
         key_course_ids = self.cfg.preprocessing.features.key_course_ids
 
         # Read preprocessing target parameters from config
-        student_criteria = self.cfg.preprocessing.target.params["student_criteria"]
+        student_criteria = self.cfg.preprocessing.selection["student_criteria"]
         student_id_col = self.cfg.student_id_col
 
         # Create student-term dataset
-        df_student_terms = preprocessing.dataops.make_student_term_dataset(
+        df_student_terms = preprocessing.pdp.make_student_term_dataset(
             df_cohort,
             df_course,
             min_passing_grade=min_passing_grade,
             min_num_credits_full_time=min_num_credits_full_time,
             course_level_pattern=course_level_pattern,
+            core_terms=core_terms,
             key_course_subject_areas=key_course_subject_areas,
             key_course_ids=key_course_ids,
         )
-
-        eligible_students = targets.shared.select_students_by_criteria(
+        eligible_students = preprocessing.selection.select_students_by_attributes(
             df_student_terms, student_id_cols=student_id_col, **student_criteria
         )
         max_term_rank = df_student_terms["term_rank"].max()
@@ -161,7 +162,7 @@ class DataProcessingTask:
             how="inner",
         )
 
-        df_processed = preprocessing.dataops.clean_up_labeled_dataset_cols_and_vals(
+        df_processed = preprocessing.pdp.clean_up_labeled_dataset_cols_and_vals(
             df_processed
         )
         logging.info("Processed dataset: %s", df_processed.shape)
@@ -260,7 +261,7 @@ if __name__ == "__main__":
         schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
         logging.info("Running task with custom schema")
     except Exception:
-        from student_success_tool.schemas import pdp as schemas
+        from student_success_tool.dataio.schemas import pdp as schemas
 
         logging.info("Running task with default schema")
     task = DataProcessingTask(args)
