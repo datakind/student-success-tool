@@ -29,8 +29,11 @@ TermField = ft.partial(
 GPAField = ft.partial(pda.Field, nullable=True, ge=0.0, le=4.0)
 NumCreditsGt0Field = ft.partial(pda.Field, nullable=True, ge=0.0)
 GradeField = ft.partial(pda.Field, nullable=True)
-CompletedDevOrGatewayField = ft.partial(
+CompletedGatewayField = ft.partial(
     pda.Field, nullable=True, dtype_kwargs={"categories": ["C", "D", "NA"]}
+)
+CompletedDevField = ft.partial(
+    pda.Field, nullable=True, dtype_kwargs={"categories": ["Y", "N", "NA"]}
 )
 YearsToOfField = ft.partial(pda.Field, ge=0, le=8)
 
@@ -96,10 +99,10 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
         nullable=True
     )
     completed_gateway_math_year_1: pt.Series[pd.CategoricalDtype] = (
-        CompletedDevOrGatewayField()
+        CompletedGatewayField()
     )
     completed_gateway_english_year_1: pt.Series[pd.CategoricalDtype] = (
-        CompletedDevOrGatewayField()
+        CompletedGatewayField()
     )
     gateway_math_grade_y_1: pt.Series["string"] = GradeField()
     gateway_english_grade_y_1: pt.Series["string"] = GradeField()
@@ -107,12 +110,8 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
     attempted_dev_math_y_1: pt.Series[pd.CategoricalDtype] = pda.Field(nullable=True)
     # NOTE: categories set in a parser, which forces "UK" values to null
     attempted_dev_english_y_1: pt.Series[pd.CategoricalDtype] = pda.Field(nullable=True)
-    completed_dev_math_y_1: pt.Series[pd.CategoricalDtype] = (
-        CompletedDevOrGatewayField()
-    )
-    completed_dev_english_y_1: pt.Series[pd.CategoricalDtype] = (
-        CompletedDevOrGatewayField()
-    )
+    completed_dev_math_y_1: pt.Series[pd.CategoricalDtype] = CompletedDevField()
+    completed_dev_english_y_1: pt.Series[pd.CategoricalDtype] = CompletedDevField()
     retention: pt.Series["boolean"]
     persistence: pt.Series["boolean"]
     years_to_bachelors_at_cohort_inst: pt.Series["Int8"] = YearsToOfField(nullable=True)
