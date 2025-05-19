@@ -33,7 +33,7 @@ def test_register_evaluation_sections_success(
 
     mock_list_paths.return_value = [
         "group_metrics/bias_test_gender_metrics.csv",
-        "group_metrics/perf_test_gender_metrics.csv"
+        "group_metrics/perf_test_gender_metrics.csv",
     ]
     mock_download.return_value = str(csv_path)
 
@@ -59,7 +59,7 @@ def test_register_evaluation_sections_failure(
 ):
     mock_list_paths.return_value = [
         "group_metrics/bias_test_race_metrics.csv",
-        "group_metrics/perf_test_race_metrics.csv"
+        "group_metrics/perf_test_race_metrics.csv",
     ]
     mock_download.side_effect = Exception("Download error")
 
