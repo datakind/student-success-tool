@@ -82,7 +82,9 @@ def register_evaluation_sections(card, registry):
             )
             group_parts[group_name]["bias"] = csv_path
 
-        if csv_path.startswith("group_metrics/perf_test_") and csv_path.endswith(".csv"):
+        if csv_path.startswith("group_metrics/perf_test_") and csv_path.endswith(
+            ".csv"
+        ):
             group_name = csv_path.replace("group_metrics/perf_test_", "").replace(
                 "_metrics.csv", ""
             )
