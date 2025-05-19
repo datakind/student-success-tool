@@ -225,12 +225,12 @@ class DataIngestionTask:
         print("raw_files_path:", raw_files_path)
         dbutils.fs.mkdirs(raw_files_path)
 
-        # fpath_course, fpath_cohort = self.download_data_from_gcs(raw_files_path)
+        fpath_course, fpath_cohort = self.download_data_from_gcs(raw_files_path)
         #Hack to get around gcp permissions right now
         # fpath_course = "/Volumes/staging_sst_01/midway_uni_bronze/bronze_volume/inference_jobs/244602143794463/raw_files/1741199002541_MIDWAY_UNI_COURSE_LEVEL_AR_DEID_20241218_121826.csv"
         # fpath_cohort = "/Volumes/staging_sst_01/midway_uni_bronze/bronze_volume/inference_jobs/244602143794463/raw_files/1741199002542_MIDWAY_UNI_DEIDENTIFIED_20241218_121800.csv"
-        fpath_course = "/Volumes/staging_sst_01/kentucky_state_uni_bronze/bronze_volume/kentucky_state_uni_pdp_course_ar_deid_20241029000414_dedup.csv"
-        fpath_cohort = "/Volumes/staging_sst_01/kentucky_state_uni_bronze/bronze_volume/kentucky_state_uni_pdp_ar_deid_20241029000400.csv"
+        # fpath_course = "/Volumes/staging_sst_01/kentucky_state_uni_bronze/bronze_volume/kentucky_state_uni_pdp_course_ar_deid_20241029000414_dedup.csv"
+        # fpath_cohort = "/Volumes/staging_sst_01/kentucky_state_uni_bronze/bronze_volume/kentucky_state_uni_pdp_ar_deid_20241029000400.csv"
         df_course, df_cohort = self.read_and_validate_data(fpath_course, fpath_cohort)
 
         course_dataset_validated_path, cohort_dataset_validated_path = (
