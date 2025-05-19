@@ -228,7 +228,7 @@ class ModelCard(t.Generic[C]):
             ),
             "test_histogram": (
                 "Test Histogram",
-                "preds/test_hist.png"
+                "preds/test_hist.png",
                 "125mm",
             ),
             "feature_importances_by_shap_plot": (
