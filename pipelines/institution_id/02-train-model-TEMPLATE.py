@@ -23,11 +23,14 @@
 
 # COMMAND ----------
 
-# WARNING: AutoML/mlflow expect particular packages within certain version constraints
-# overriding existing installs can result in errors and inability to load trained models
-# install (minimal!) extra dependencies not provided by databricks runtime
-# %pip install "student-success-tool==0.1.1" --no-deps
-# %pip install git+https://github.com/datakind/student-success-tool.git@develop --no-deps
+# WARNING: AutoML/mlflow expect particular packages with version constraints
+# that directly conflicts with dependencies in our SST repo. As a temporary fix,
+# we need to manually install a certain version of pandas and scikit-learn in order
+# for our models to load and run properly.
+
+# %pip install "student-success-tool==0.2.0"
+# %pip install "pandas==1.5.3"
+# %pip install "scikit-learn==1.3.0"
 
 # COMMAND ----------
 
