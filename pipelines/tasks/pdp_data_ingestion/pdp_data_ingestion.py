@@ -34,8 +34,12 @@ class DataIngestionTask:
     Encapsulates the data ingestion logic for the SST pipeline.
     """
 
-    def __init__(self, args: argparse.Namespace, course_converter_func=None,
-    cohort_converter_func=None):
+    def __init__(
+        self,
+        args: argparse.Namespace,
+        course_converter_func=None,
+        cohort_converter_func=None,
+    ):
         """
         Initializes the DataIngestionTask with parsed arguments.
         Args:
@@ -115,14 +119,14 @@ class DataIngestionTask:
                 file_path=fpath_course,
                 schema=schemas.RawPDPCourseDataSchema,
                 dttm_format="ISO8601",
-                converter_func=self.course_converter_func
+                converter_func=self.course_converter_func,
             )
         except ValueError:
             df_course = dataio.pdp.raw_data.read_raw_course_data(
                 file_path=fpath_course,
                 schema=schemas.RawPDPCourseDataSchema,
                 dttm_format="%Y%m%d.0",
-                converter_func=self.course_converter_func
+                converter_func=self.course_converter_func,
             )
         except Exception as e:
             logging.error("Error reading the files: %s", e)
@@ -130,7 +134,9 @@ class DataIngestionTask:
 
         logging.info("Course data read and schema validated.")
         df_cohort = dataio.pdp.raw_data.read_raw_cohort_data(
-            file_path=fpath_cohort, schema=schemas.RawPDPCohortDataSchema, converter_func=self.cohort_converter_func
+            file_path=fpath_cohort,
+            schema=schemas.RawPDPCohortDataSchema,
+            converter_func=self.cohort_converter_func,
         )
         logging.info("Cohort data read and schema validated.")
         return df_course, df_cohort
@@ -226,7 +232,7 @@ class DataIngestionTask:
         dbutils.fs.mkdirs(raw_files_path)
 
         # fpath_course, fpath_cohort = self.download_data_from_gcs(raw_files_path)
-        #Hack to get around gcp permissions right now
+        # Hack to get around gcp permissions right now
         fpath_course = f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs/{self.args.course_file_name}"
         fpath_cohort = f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs/{self.args.cohort_file_name}"
         # fpath_course = "/Volumes/staging_sst_01/midway_uni_bronze/bronze_volume/inference_jobs/244602143794463/raw_files/1741199002541_MIDWAY_UNI_COURSE_LEVEL_AR_DEID_20241218_121826.csv"
@@ -291,15 +297,16 @@ def parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-
 if __name__ == "__main__":
     args = parse_arguments()
     sys.path.append(args.custom_schemas_path)
-    sys.path.append(f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs")
+    sys.path.append(
+        f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs"
+    )
     try:
         print("Listdir1", os.listdir("/Workspace/Users"))
         # converter_func = importlib.import_module(f"{args.databricks_institution_name}.dataio")
-        converter_func =  importlib.import_module("dataio")
+        converter_func = importlib.import_module("dataio")
         course_converter_func = converter_func.converter_func_course
         cohort_converter_func = converter_func.converter_func_cohort
         logging.info("Running task with custom converter func")
@@ -315,8 +322,9 @@ if __name__ == "__main__":
         logging.info("Running task with custom schema")
     except Exception:
         print("Running task with default schema")
-        print('Exception', Exception)
+        print("Exception", Exception)
         from student_success_tool.dataio.schemas import pdp as schemas
+
         logging.info("Running task with default schema")
 
     task = DataIngestionTask(args)
