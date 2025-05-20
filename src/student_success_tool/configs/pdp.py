@@ -87,17 +87,21 @@ class BronzeDatasetConfig(pyd.BaseModel):
     raw_course: "DatasetIOConfig"
     raw_cohort: "DatasetIOConfig"
 
+
 class SilverDatasetConfig(pyd.BaseModel):
     preprocessed: "DatasetIOConfig"
     modeling: "DatasetIOConfig"
 
+
 class GoldDatasetConfig(pyd.BaseModel):
     advisor_output: "DatasetIOConfig"
+
 
 class AllDatasetStagesConfig(pyd.BaseModel):
     bronze: BronzeDatasetConfig
     silver: SilverDatasetConfig
     gold: GoldDatasetConfig
+
 
 class DatasetIOConfig(pyd.BaseModel):
     table_path: t.Optional[str] = pyd.Field(
