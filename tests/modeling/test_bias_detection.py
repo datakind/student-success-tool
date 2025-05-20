@@ -59,7 +59,7 @@ def test_compute_group_bias_metrics(mock_helpers):
         }
     )
 
-    metrics, fnr_data = bias_detection.compute_group_bias_metrics(
+    bias_metrics, perf_metrics, fnr_data = bias_detection.compute_group_bias_metrics(
         split_data=df,
         split_name="test",
         group_col="group_col",
@@ -70,9 +70,10 @@ def test_compute_group_bias_metrics(mock_helpers):
         sample_weight_col="sample_weight_col",
     )
 
-    assert isinstance(metrics, list)
+    assert isinstance(bias_metrics, list)
+    assert isinstance(perf_metrics, list)
     assert isinstance(fnr_data, list)
-    assert all("FNR" in m for m in metrics)
+    assert all("FNR" in m for m in bias_metrics)
     assert all("subgroup" in f for f in fnr_data)
     assert all(f["split_name"] == "test" for f in fnr_data)
     assert all(f["fnr"] > 0 and f["ci"][0] < f["fnr"] < f["ci"][1] for f in fnr_data)
@@ -156,7 +157,7 @@ def test_z_test_fnr_difference(fnr1, fnr2, denom1, denom2, expected_p):
             "Male",
             "Female",
             0.12,
-            "Non-overlapping CIs",
+            "non-overlapping confidence intervals",
             "train",
             "🔴 HIGH BIAS",
             0.005,
@@ -164,7 +165,7 @@ def test_z_test_fnr_difference(fnr1, fnr2, denom1, denom2, expected_p):
                 "group": "Gender",
                 "subgroups": "Male vs Female",
                 "fnr_percentage_difference": 0.12,
-                "type": "Non-overlapping CIs, p-value: 0.005",
+                "type": "non-overlapping confidence intervals with a p-value of 0.005",
                 "split_name": "train",
                 "flag": "🔴 HIGH BIAS",
             },
@@ -195,3 +196,77 @@ def test_generate_bias_flag(
         )
         == expected
     )
+
+
+@pytest.mark.parametrize(
+    "fnr_data, expected_sg1, expected_sg2, expected_flag",
+    [
+        # Case where the ordering should be respected (greater FNR first)
+        (
+            [
+                {
+                    "group": "Race",
+                    "subgroup": "GroupA",
+                    "fnr": 0.30,
+                    "size": 100,
+                    "ci": (0.25, 0.35),
+                    "number_of_positive_samples": 20,
+                    "split_name": "validation",
+                },
+                {
+                    "group": "Race",
+                    "subgroup": "GroupB",
+                    "fnr": 0.10,
+                    "size": 100,
+                    "ci": (0.05, 0.15),
+                    "number_of_positive_samples": 20,
+                    "split_name": "validation",
+                },
+            ],
+            "GroupA",
+            "GroupB",
+            "🔴 HIGH BIAS",
+        ),
+    ],
+)
+def test_flag_bias(fnr_data, expected_sg1, expected_sg2, expected_flag):
+    def mock_z_test_fnr_difference(fnr1, fnr2, n1, n2):
+        return 0.005  # Significant p-value to trigger flagging
+
+    def mock_check_ci_overlap(ci1, ci2):
+        return False  # Non-overlapping
+
+    def mock_generate_bias_flag(
+        group, sg1, sg2, fnr_diff, reason, split_name, flag, p_value
+    ):
+        return {
+            "group": group,
+            "sg1": sg1,
+            "sg2": sg2,
+            "flag": flag,
+            "fnr_diff": fnr_diff,
+            "p_value": p_value,
+        }
+
+    monkeypatch = pytest.MonkeyPatch()
+    monkeypatch.setattr(
+        bias_detection, "z_test_fnr_difference", mock_z_test_fnr_difference
+    )
+    monkeypatch.setattr(bias_detection, "check_ci_overlap", mock_check_ci_overlap)
+    monkeypatch.setattr(bias_detection, "generate_bias_flag", mock_generate_bias_flag)
+
+    result = bias_detection.flag_bias(
+        fnr_data,
+        high_bias_thresh=0.15,
+        moderate_bias_thresh=0.1,
+        low_bias_thresh=0.05,
+        min_sample_ratio=0.1,
+    )
+
+    assert len(result) == 1
+    flag = result[0]
+    assert flag["sg1"] == expected_sg1
+    assert flag["sg2"] == expected_sg2
+    assert flag["flag"] == expected_flag
+
+    monkeypatch.undo()

@@ -47,7 +47,7 @@ def register_bias_sections(card, registry):
             f"{int(round(float(diff) * 100))}% difference"
         )
 
-        return f"- {sg1} students have a {percent_higher} in False Negative Rate (FNR) than {sg2} students. Statistical analysis indicates: {stat_summary}."
+        return f"- {sg1} students have a {percent_higher} in False Negative Rate (FNR) than {sg2} students. Statistical analysis indicates {stat_summary}."
 
     # Load bias flag CSVs and filter for test split
     for level in bias_levels:
@@ -83,13 +83,14 @@ def register_bias_sections(card, registry):
                 desc = generate_description(
                     group,
                     row["subgroups"],
-                    row["fnpr_percentage_difference"],
+                    row["fnr_percentage_difference"],
                     row["type"],
                 )
                 group_disparities.setdefault(group, []).append(desc)
-
         except Exception as e:
-            LOGGER.warning(f"Could not load {level} bias flags: {str(e)}")
+            LOGGER.warning(
+                f"Could not load {level} bias flags: [{type(e).__name__}] {str(e)}"
+            )
 
     all_blocks = []
 

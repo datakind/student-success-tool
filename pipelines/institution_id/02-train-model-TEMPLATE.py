@@ -206,7 +206,7 @@ dbutils.jobs.taskValues.set(key="run_id", value=run_id)
 # COMMAND ----------
 
 # HACK: Evaluate an experiment you've already trained
-# experiment_id = cfg.models["graduation"].experiment_id
+# experiment_id = cfg.model.experiment_id
 
 # NOTE: AutoML generates a split column if not manually specified
 split_col = training_params.get("split_col", "_automl_split_col_0000")
