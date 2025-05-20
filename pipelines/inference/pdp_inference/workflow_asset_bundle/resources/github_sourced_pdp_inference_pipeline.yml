@@ -212,9 +212,9 @@ resources:
         enabled: true
       parameters:
         - name: cohort_file_name
-          default: 1741198683049_kentucky_state_uni_STUDENT_SEMESTER_AR_DEIDENTIFIED_20240725104600.csv
+          default: kentucky_state_uni_pdp_course_ar_deid_20241029000414_dedup.csv
         - name: course_file_name
-          default: 1741198683046_kentucky_state_uni_COURSE_LEVEL_AR_DEID_20240725104603.csv
+          default: kentucky_state_uni_pdp_course_ar_deid_20241029000414.csv
         - name: databricks_institution_name
           default: kentucky_state_uni
         - name: db_run_id
