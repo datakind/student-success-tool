@@ -73,6 +73,7 @@ def evaluate_performance(
     pos_label: PosLabelType,
     split_col: str = "split",
     target_col: str = "target",
+    pred_col: str = "pred",
     pred_prob_col: str = "pred_prob",
 ) -> None:
     """
@@ -88,6 +89,8 @@ def evaluate_performance(
     """
     calibration_dir = "calibration"
     preds_dir = "preds"
+    metrics_dir = "metrics"
+    metrics_records = []
 
     for split_name, split_data in df_pred.groupby(split_col):
         LOGGER.info("Evaluating model performance for '%s' split", split_name)
@@ -96,8 +99,6 @@ def evaluate_performance(
             local_path=f"/tmp/{split_name}_preds.csv",
             artifact_path=preds_dir,
         )
-        plt.close()
-
         hist_fig, cal_fig = create_evaluation_plots(
             split_data,
             pred_prob_col,
@@ -111,6 +112,54 @@ def evaluate_performance(
         )
         # Closes all matplotlib figures in console to free memory
         plt.close("all")
+
+        # Compute performance metrics by split (returns a dict)
+        perf_metrics_raw = compute_classification_perf_metrics(
+            targets=split_data[target_col],
+            preds=split_data[pred_col],
+            pred_probs=split_data[pred_prob_col],
+            pos_label=pos_label,
+        )
+
+        perf_metrics = format_perf_metrics(perf_metrics_raw)
+        perf_split_col = f"Dataset {split_col.capitalize()}"
+        split_map = {"test": "Test", "train": "Training", "validate": "Validation"}
+        perf_metrics[perf_split_col] = split_map.get(split_name)
+        metrics_records.append(perf_metrics)
+
+    # Convert to DataFrame for display or saving
+    metrics_df = pd.DataFrame(metrics_records).set_index(perf_split_col)
+    metrics_df.to_csv("/tmp/performance_across_splits.csv")
+    mlflow.log_artifact("/tmp/performance_across_splits.csv", artifact_path="metrics")
+    LOGGER.info("Creating summary of performance metrics across splits")
+
+
+def format_perf_metrics(perf_metrics_raw: dict) -> dict:
+    """
+    Formats performance metrics from raw metrics. This is for a model cards
+    table that presents performance by splits.
+
+    Args:
+        perf_metrics_raw: Dictionary containing raw performance metrics.
+
+    Returns:
+        Dictionary summarizing the formatted performance metrics.
+    """
+    return {
+        "Number of Samples": int(perf_metrics_raw["num_samples"]),
+        "Number of Positive Samples": int(perf_metrics_raw["num_positives"]),
+        "Actual Target Prevalence": round(
+            float(perf_metrics_raw["true_positive_prevalence"]), 2
+        ),
+        "Predicted Target Prevalence": round(
+            float(perf_metrics_raw["pred_positive_prevalence"]), 2
+        ),
+        "Accuracy": round(float(perf_metrics_raw["accuracy"]), 2),
+        "Precision": round(float(perf_metrics_raw["precision"]), 2),
+        "Recall": round(float(perf_metrics_raw["recall"]), 2),
+        "F1 Score": round(float(perf_metrics_raw["f1_score"]), 2),
+        "Log Loss": round(float(perf_metrics_raw["log_loss"]), 2),
+    }
 
 
 def get_top_run_ids(
