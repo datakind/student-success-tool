@@ -26,7 +26,7 @@ def template_cfg_str():
     pos_label = true
     random_state = 12345
 
-    [datasets]
+    [datasets.labeled]
     raw_course = { file_path = "/Volumes/CATALOG/INST_ID_bronze/INST_ID_bronze_file_volume/FILE_NAME_COURSE.csv" }
     raw_cohort = { file_path = "/Volumes/CATALOG/INST_ID_bronze/INST_ID_bronze_file_volume/FILE_NAME_COHORT.csv" }
     preprocessed = { table_path = "CATALOG.INST_ID_silver.DATASET_NAME_preprocessed" }

@@ -87,8 +87,8 @@ class PDPProjectConfig(pyd.BaseModel):
 
 
 class DatasetConfig(pyd.BaseModel):
-    raw_course: t.Optional["DatasetIOConfig"] = None
-    raw_cohort: t.Optional["DatasetIOConfig"] = None
+    raw_course: "DatasetIOConfig"
+    raw_cohort: "DatasetIOConfig"
     preprocessed: t.Optional["DatasetIOConfig"] = None
     modeling: t.Optional["DatasetIOConfig"] = None
     advisor_output: t.Optional["DatasetIOConfig"] = None
