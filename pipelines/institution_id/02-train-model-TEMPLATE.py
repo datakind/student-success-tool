@@ -23,11 +23,14 @@
 
 # COMMAND ----------
 
-# WARNING: AutoML/mlflow expect particular packages within certain version constraints
-# overriding existing installs can result in errors and inability to load trained models
-# install (minimal!) extra dependencies not provided by databricks runtime
-# %pip install "student-success-tool==0.1.1" --no-deps
-# %pip install git+https://github.com/datakind/student-success-tool.git@develop --no-deps
+# WARNING: AutoML/mlflow expect particular packages with version constraints
+# that directly conflicts with dependencies in our SST repo. As a temporary fix,
+# we need to manually install a certain version of pandas and scikit-learn in order
+# for our models to load and run properly.
+
+# %pip install "student-success-tool==0.2.0"
+# %pip install "pandas==1.5.3"
+# %pip install "scikit-learn==1.3.0"
 
 # COMMAND ----------
 
@@ -36,13 +39,14 @@
 # COMMAND ----------
 
 import logging
+
+import matplotlib.pyplot as plt
 import mlflow
 import sklearn.metrics
-import matplotlib.pyplot as plt
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 
-from student_success_tool import dataio, modeling, schemas, utils
+from student_success_tool import configs, dataio, modeling, utils
 
 # COMMAND ----------
 
@@ -84,7 +88,7 @@ assert run_type == "train"
 # it'll start out with just basic info: institution_id, institution_name
 # but as each step of the pipeline gets built, more parameters will be moved
 # from hard-coded notebook variables to shareable, persistent config fields
-cfg = dataio.read_config("./config-TEMPLATE.toml", schema=schemas.pdp.PDPProjectConfig)
+cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig)
 cfg
 
 # COMMAND ----------
@@ -202,7 +206,7 @@ dbutils.jobs.taskValues.set(key="run_id", value=run_id)
 # COMMAND ----------
 
 # HACK: Evaluate an experiment you've already trained
-# experiment_id = cfg.models["graduation"].experiment_id
+# experiment_id = cfg.model.experiment_id
 
 # NOTE: AutoML generates a split column if not manually specified
 split_col = training_params.get("split_col", "_automl_split_col_0000")

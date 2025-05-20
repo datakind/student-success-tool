@@ -73,11 +73,12 @@ def evaluate_performance(
     pos_label: PosLabelType,
     split_col: str = "split",
     target_col: str = "target",
+    pred_col: str = "pred",
     pred_prob_col: str = "pred_prob",
 ) -> None:
     """
     Evaluates and logs model performance for each data split. Generates
-    histogram, calibration, and sensitivity plots.
+    histogram and calibration plots.
 
     Args:
         df_pred: DataFrame containing prediction results with a column for splits.
@@ -88,7 +89,8 @@ def evaluate_performance(
     """
     calibration_dir = "calibration"
     preds_dir = "preds"
-    sensitivity_dir = "sensitivity"
+    metrics_dir = "metrics"
+    metrics_records = []
 
     for split_name, split_data in df_pred.groupby(split_col):
         LOGGER.info("Evaluating model performance for '%s' split", split_name)
@@ -97,9 +99,7 @@ def evaluate_performance(
             local_path=f"/tmp/{split_name}_preds.csv",
             artifact_path=preds_dir,
         )
-        plt.close()
-
-        hist_fig, cal_fig, sla_fig = create_evaluation_plots(
+        hist_fig, cal_fig = create_evaluation_plots(
             split_data,
             pred_prob_col,
             target_col,
@@ -110,11 +110,56 @@ def evaluate_performance(
         mlflow.log_figure(
             cal_fig, os.path.join(calibration_dir, f"{split_name}_calibration.png")
         )
-        mlflow.log_figure(
-            sla_fig, os.path.join(sensitivity_dir, f"{split_name}_sla.png")
-        )
         # Closes all matplotlib figures in console to free memory
         plt.close("all")
+
+        # Compute performance metrics by split (returns a dict)
+        perf_metrics_raw = compute_classification_perf_metrics(
+            targets=split_data[target_col],
+            preds=split_data[pred_col],
+            pred_probs=split_data[pred_prob_col],
+            pos_label=pos_label,
+        )
+
+        perf_metrics = format_perf_metrics(perf_metrics_raw)
+        perf_split_col = f"Dataset {split_col.capitalize()}"
+        split_map = {"test": "Test", "train": "Training", "validate": "Validation"}
+        perf_metrics[perf_split_col] = split_map.get(split_name)
+        metrics_records.append(perf_metrics)
+
+    # Convert to DataFrame for display or saving
+    metrics_df = pd.DataFrame(metrics_records).set_index(perf_split_col)
+    metrics_df.to_csv("/tmp/performance_across_splits.csv")
+    mlflow.log_artifact("/tmp/performance_across_splits.csv", artifact_path="metrics")
+    LOGGER.info("Creating summary of performance metrics across splits")
+
+
+def format_perf_metrics(perf_metrics_raw: dict) -> dict:
+    """
+    Formats performance metrics from raw metrics. This is for a model cards
+    table that presents performance by splits.
+
+    Args:
+        perf_metrics_raw: Dictionary containing raw performance metrics.
+
+    Returns:
+        Dictionary summarizing the formatted performance metrics.
+    """
+    return {
+        "Number of Samples": int(perf_metrics_raw["num_samples"]),
+        "Number of Positive Samples": int(perf_metrics_raw["num_positives"]),
+        "Actual Target Prevalence": round(
+            float(perf_metrics_raw["true_positive_prevalence"]), 2
+        ),
+        "Predicted Target Prevalence": round(
+            float(perf_metrics_raw["pred_positive_prevalence"]), 2
+        ),
+        "Accuracy": round(float(perf_metrics_raw["accuracy"]), 2),
+        "Precision": round(float(perf_metrics_raw["precision"]), 2),
+        "Recall": round(float(perf_metrics_raw["recall"]), 2),
+        "F1 Score": round(float(perf_metrics_raw["f1_score"]), 2),
+        "Log Loss": round(float(perf_metrics_raw["log_loss"]), 2),
+    }
 
 
 def get_top_run_ids(
@@ -335,8 +380,8 @@ def create_evaluation_plots(
     split_type: str,
 ) -> tuple[matplotlib.figure.Figure, ...]:
     """
-    Create plots to evaluate a model overall - risk score histogram,
-    calibration curve, and sensitivity at low alert rates
+    Create plots to evaluate a model overall - risk score histogram
+    and calibration curve at low alert rates
 
     Args:
         data: containing predicted and actual outcome data
@@ -346,17 +391,14 @@ def create_evaluation_plots(
         split_type: type of data being plotted for labeling plots - train, test, or validation
 
     Returns:
-        risk score histogram, calibration curve, and sensitivity at low alert rates figures
+        risk score histogram and calibration curve at low alert rates figures
     """
     title_suffix = f"{split_type} data - Overall"
     hist_fig = plot_support_score_histogram(data[risk_score_col], title_suffix)
     cal_fig = plot_calibration_curve(
         data[y_true_col], data[risk_score_col], "Overall", title_suffix, pos_label
     )
-    sla_fig = plot_sla_curve(
-        data[y_true_col], data[risk_score_col], "Overall", title_suffix, pos_label
-    )
-    return hist_fig, cal_fig, sla_fig
+    return hist_fig, cal_fig
 
 
 def create_evaluation_plots_by_subgroup(
@@ -366,10 +408,9 @@ def create_evaluation_plots_by_subgroup(
     pos_label: PosLabelType,
     group_col: str,
     split_type: str,
-) -> tuple[matplotlib.figure.Figure, ...]:
+) -> matplotlib.figure.Figure:
     """
-    Create plots to evaluate a model by group - calibration curve
-    and sensitivity at low alert rates
+    Create calibration curve plots to evaluate a model by group
 
     Args:
         data: containing predicted and actual outcome data, as well as group label
@@ -380,7 +421,7 @@ def create_evaluation_plots_by_subgroup(
         split_type: type of data being plotted for labeling plots - train, test, or validation
 
     Returns:
-        calibration curve sensitivity at low alert rates figures by group
+        calibration curve figures by group
     """
     title_suffix = f"{split_type} data - {group_col}"
 
@@ -400,12 +441,11 @@ def create_evaluation_plots_by_subgroup(
     else:
         lowess_frac = 0.6
 
-    sla_subgroup_plot = plot_sla_curve(ys, scores, names, title_suffix, pos_label)
     cal_subgroup_plot = plot_calibration_curve(
         ys, scores, names, title_suffix, pos_label, lowess_frac=lowess_frac
     )
 
-    return cal_subgroup_plot, sla_subgroup_plot
+    return cal_subgroup_plot
 
 
 def plot_trained_models_comparison(
@@ -555,70 +595,6 @@ def plot_calibration_curve(
     ax.set_xlim(left=-0.05, right=1.05)
     ax.set_ylim(bottom=-0.05, top=1.05)
     ax.legend(loc="lower right")
-    return fig
-
-
-def plot_sla_curve(
-    y_true: pd.Series,
-    risk_score: pd.Series,
-    keys: str | list[str],
-    title_suffix: str,
-    pos_label: PosLabelType,
-    alert_rates: list[float] = [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06],
-    label_alert_rate: float = 0.01,
-) -> matplotlib.figure.Figure:
-    """
-    Create Sensitivity at Low Alert Rates plot
-
-    Args:
-        y_true (array-like of shape (n_samples,) or (n_groups,)): overall or group-level true outcome class
-        risk_score (array-like of shape (n_samples,) or (n_groups,)): overall or group level predicted risk scores
-        keys: overall or subgroup level labels for labeling lines
-        title_suffix: suffix for plot title
-        pos_label: label identifying the positive class in y_true
-        alert_rates: alert rates to plot. Defaults to [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06].
-        label_alert_rate: alert rate of interest to report sensitivity at. Defaults to 0.01.
-
-    Returns:
-        line plot of sensitivity at small alert rates
-    """
-    if not _check_array_of_arrays(y_true):
-        y_true = [y_true]
-        risk_score = [risk_score]
-        keys = [keys]  # type: ignore
-
-    fig, ax = plt.subplots()
-
-    for j in range(len(risk_score)):
-        ss = []
-        for i in alert_rates:  # calculate sensitivity at different alert rates
-            s = get_sensitivity_of_top_q_pctl_thresh(
-                y_true[j], risk_score[j], 1 - i, pos_label
-            )
-            ss.append(s)
-        s_lab = round(
-            get_sensitivity_of_top_q_pctl_thresh(
-                y_true[j], risk_score[j], 1 - label_alert_rate, pos_label
-            ),
-            2,
-        )
-        ax.plot(
-            alert_rates,
-            ss,
-            color=PALETTE[j + 1],
-            label="{} (Sensitivity at {}% alert rate={})".format(
-                keys[j], label_alert_rate * 100, s_lab
-            ),
-        )
-
-    ax.set(
-        xlabel="Alert rate",
-        ylabel="sensitivity (true positive rate)",
-        title=f"Sensitivity vs. Low Alert Rate - {title_suffix}",
-    )
-    ax.set_ylim(bottom=-0.02, top=1.02)
-    ax.legend(loc="lower right")
-
     return fig
 
 
