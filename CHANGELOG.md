@@ -4,7 +4,7 @@
 - Update inference pipeline with custom converter functionality.
 - Standardized feature set across all schools by adding custom features & learnings across schools.
 - Restructured subpackage in order to better modularize our SST process.
-- Added long description to feature table for SST web app.
+- Added longer description to feature table for SST web app.
 - Updated schema validation for gateway/dev fields based on NSC update.
 - Added model card module under `reporting`.
   - Model cards can now be created for PDP schools.
