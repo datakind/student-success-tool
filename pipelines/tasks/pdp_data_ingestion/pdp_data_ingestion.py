@@ -225,8 +225,10 @@ class DataIngestionTask:
         print("raw_files_path:", raw_files_path)
         dbutils.fs.mkdirs(raw_files_path)
 
-        fpath_course, fpath_cohort = self.download_data_from_gcs(raw_files_path)
+        # fpath_course, fpath_cohort = self.download_data_from_gcs(raw_files_path)
         #Hack to get around gcp permissions right now
+        fpath_course = f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs/{self.args.course_file_name}"
+        fpath_cohort = f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs/{self.args.cohort_file_name}"
         # fpath_course = "/Volumes/staging_sst_01/midway_uni_bronze/bronze_volume/inference_jobs/244602143794463/raw_files/1741199002541_MIDWAY_UNI_COURSE_LEVEL_AR_DEID_20241218_121826.csv"
         # fpath_cohort = "/Volumes/staging_sst_01/midway_uni_bronze/bronze_volume/inference_jobs/244602143794463/raw_files/1741199002542_MIDWAY_UNI_DEIDENTIFIED_20241218_121800.csv"
         # fpath_course = "/Volumes/staging_sst_01/kentucky_state_uni_bronze/bronze_volume/kentucky_state_uni_pdp_course_ar_deid_20241029000414_dedup.csv"
@@ -293,9 +295,9 @@ def parse_arguments() -> argparse.Namespace:
 if __name__ == "__main__":
     args = parse_arguments()
     sys.path.append(args.custom_schemas_path)
+    sys.path.append(f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs")
     try:
-        print("Listdir1", os.listdir("/Workspace/Users/86ddbb23-46a8-4d70-ab27-af3a7963f2cd"))
-        sys.path.append("/Volumes/staging_sst_01/kentucky_state_uni_bronze/bronze_volume/inference_inputs")
+        print("Listdir1", os.listdir("/Workspace/Users"))
         # converter_func = importlib.import_module(f"{args.databricks_institution_name}.dataio")
         converter_func =  importlib.import_module("dataio")
         course_converter_func = converter_func.converter_func_course
@@ -308,7 +310,8 @@ if __name__ == "__main__":
         logging.info("Running task without custom converter func")
     try:
         print("sys.path:", sys.path)
-        schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
+        # schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
+        schemas = importlib.import_module("schemas")
         logging.info("Running task with custom schema")
     except Exception:
         print("Running task with default schema")
