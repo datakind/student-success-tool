@@ -108,11 +108,15 @@ class ModelInferenceTask:
             ]
         except AttributeError:
             model_feature_names = model.metadata.get_input_schema().input_names()
-        #HACH needs to be removed - just need to add these in until re-training
+        # HACH needs to be removed - just need to add these in until re-training
         #'FULL-TIME' for first half, 'PART-TIME' for second half
         midpoint = len(df) // 2
-        df['enrollment_intensity_first_term'] = ['FULL-TIME'] * midpoint + ['PART-TIME'] * (len(df) - midpoint)
-        df['pell_status_first_year']= ['YES'] * midpoint + ['NO'] * (len(df) - midpoint)
+        df["enrollment_intensity_first_term"] = ["FULL-TIME"] * midpoint + [
+            "PART-TIME"
+        ] * (len(df) - midpoint)
+        df["pell_status_first_year"] = ["YES"] * midpoint + ["NO"] * (
+            len(df) - midpoint
+        )
         df_serving = df[model_feature_names]
         df_predicted = df_serving.copy()
         df_predicted["predicted_label"] = model.predict(df_serving)
