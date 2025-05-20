@@ -26,7 +26,7 @@
 # we need to manually install a certain version of pandas and scikit-learn in order
 # for our models to load and run properly.
 
-# %pip install "student-success-tool==0.3.0"
+# %pip install "student-success-tool==0.3.1"
 # %pip install "pandas==1.5.3"
 # %pip install "scikit-learn==1.3.0"
 
@@ -72,43 +72,12 @@ mlflow.autolog(disable=True)
 
 # COMMAND ----------
 
-# check if we're running this notebook as a "job" in a "workflow"
-# if not, assume this is a prediction workflow
-try:
-    run_type = dbutils.widgets.get("run_type")
-    dataset_name = dbutils.widgets.get("dataset_name")
-    model_name = dbutils.widgets.get("model_name")
-except Py4JJavaError:
-    run_type = "predict"
-    # TODO: specify dataset and model name, as (to be) included in project config
-    dataset_name = "DATASET_NAME"
-    model_name = "MODEL_NAME"
-
-logging.info(
-    "'%s' run of notebook using '%s' dataset w/ '%s' model",
-    run_type,
-    dataset_name,
-    model_name,
-)
-# TODO: do we need this?
-# if run_type != "train":
-#     logging.warning(
-#         "this notebook is meant for model training; "
-#         "should you be running it in '%s' mode?",
-#         run_type,
-#     )
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ## import school-specific code
 
 # COMMAND ----------
 
 # project configuration should be stored in a config file in TOML format
-# it'll start out with just basic info: institution_id, institution_name
-# but as each step of the pipeline gets built, more parameters will be moved
-# from hard-coded notebook variables to shareable, persistent config fields
 cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig)
 cfg
 
@@ -126,36 +95,11 @@ features_table = dataio.read_features_table("assets/pdp/features_table.toml")
 
 df = dataio.schemas.pdp.PDPLabeledDataSchema(
     dataio.read.from_delta_table(
-        cfg.datasets[dataset_name].preprocessed.table_path,
+        cfg.datasets.gold.modeling.table_path,
         spark_session=spark,
     )
 )
 df.head()
-
-# COMMAND ----------
-
-
-# TODO: get this functionality into public repo's modeling.inference?
-def predict_proba(
-    X,
-    model,
-    *,
-    feature_names: t.Optional[list[str]] = None,
-    pos_label: t.Optional[bool | str] = None,
-) -> np.ndarray:
-    """ """
-    if feature_names is None:
-        feature_names = model.named_steps["column_selector"].get_params()["cols"]
-    if not isinstance(X, pd.DataFrame):
-        X = pd.DataFrame(data=X, columns=feature_names)
-    else:
-        assert X.shape[1] == len(feature_names)
-    pred_probs = model.predict_proba(X)
-    if pos_label is not None:
-        return pred_probs[:, model.classes_.tolist().index(pos_label)]
-    else:
-        return pred_probs
-
 
 # COMMAND ----------
 
@@ -213,7 +157,7 @@ unique_ids = df_test[cfg.student_id_col]
 
 # COMMAND ----------
 
-pred_probs = predict_proba(
+pred_probs = modeling.inference.predict_probs(
     features,
     model=model,
     feature_names=model_feature_names,
@@ -340,8 +284,9 @@ result
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC # TODO:
-# MAGIC
-# MAGIC - how / where to save final results?
-# MAGIC - do we want to save predictions separately / additionally from the "display" format?
+# save preprocessed dataset
+dataio.write.to_delta_table(
+    df_preprocessed,
+    cfg.datasets.gold.advisor_output.table_path,
+    spark_session=spark
+)

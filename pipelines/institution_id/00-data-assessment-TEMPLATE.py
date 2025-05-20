@@ -25,7 +25,7 @@
 
 # install dependencies, of which most/all should come through our 1st-party SST package
 
-# %pip install "student-success-tool == 0.3.0"
+# %pip install "student-success-tool == 0.3.1"
 
 # COMMAND ----------
 
@@ -79,9 +79,6 @@ from pipelines import *  # noqa: F403
 # COMMAND ----------
 
 # project configuration should be stored in a config file in TOML format
-# it'll start out with just basic info: institution_id, institution_name
-# but as each step of the pipeline gets built, more parameters will be moved
-# from hard-coded notebook variables to shareable, persistent config fields
 cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig)
 cfg
 
@@ -201,10 +198,8 @@ df_course
 
 # COMMAND ----------
 
-# TODO: fill in the actual path to school's raw cohort file
-# okay to add it to project config now or later, whatever you prefer
-raw_cohort_file_path = cfg.datasets[dataset_name].raw_cohort.file_path
-# raw_cohort_file_path = "/Volumes/CATALOG/INST_ID_bronze/INST_ID_bronze_file_volume/SCHOOL_COHORT_AR_DEID_DTTM.csv"
+# add actual path to school's raw cohort file into the project config
+raw_cohort_file_path = cfg.datasets.bronze.raw_cohort.file_path
 
 # COMMAND ----------
 
@@ -245,57 +240,13 @@ df_cohort
 # MAGIC Before continuing on to EDA, now's a great time to do a couple things:
 # MAGIC
 # MAGIC - Copy any school-specific raw dataset schemas into a `schemas.py` file in the current working directory
-# MAGIC - Copy any school-specific preprocessing functions needed to coerce the raw data into a standardized form into a `dataio.py` file in the current working directory
-# MAGIC - **Optional:** If you want easy access to outputs from every (sub-)step of the data transformation pipeline, save the validated datasets into this school's "silver" schema in Unity Catalog.
-
-# COMMAND ----------
-
-dataio.write.to_delta_table(
-    df_course,
-    "CATALOG.INST_NAME_silver.course_dataset_validated",
-    spark_session=spark,
-)
-
-# COMMAND ----------
-
-dataio.write.to_delta_table(
-    df_cohort,
-    "CATALOG.INST_NAME_silver.cohort_dataset_validated",
-    spark_session=spark,
-)
+# MAGIC - Copy any school-specific converter functions needed to coerce the raw data into a standardized form into a `dataio.py` file in the current working directory
+# MAGIC - You can then reload the raw files using the necessary custom converter functions & schemas and then proceed with EDA below.
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC # exploratory data analysis
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## read validated data
-# MAGIC
-# MAGIC (optional, so you don't have to execute the validation process more than once)
-
-# COMMAND ----------
-
-# use base or school-specific schema, as needed
-df_course = schemas.pdp.RawPDPCourseDataSchema(
-    dataio.read.from_delta_table(
-        "CATALOG.INST_NAME_silver.course_dataset_validated",
-        spark_session=spark,
-    )
-)
-df_course.shape
-
-# COMMAND ----------
-
-df_cohort = schemas.pdp.RawPDPCohortDataSchema(
-    dataio.read.from_delta_table(
-        "CATALOG.INST_NAME_silver.cohort_dataset_validated",
-        spark_session=spark,
-    )
-)
-df_cohort.shape
 
 # COMMAND ----------
 
