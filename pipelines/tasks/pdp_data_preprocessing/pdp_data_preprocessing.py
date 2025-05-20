@@ -260,7 +260,11 @@ if __name__ == "__main__":
     args = parse_arguments()
     try:
         sys.path.append(args.custom_schemas_path)
-        schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
+        sys.path.append(
+            f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs"
+        )
+        schemas = importlib.import_module("schemas")
+        # schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
         logging.info("Running task with custom schema")
     except Exception:
         from student_success_tool.dataio.schemas import pdp as schemas
