@@ -44,12 +44,9 @@ class PDPProjectConfig(pyd.BaseModel):
     random_state: t.Optional[int] = None
 
     # key artifacts produced by project pipeline
-    datasets: dict[str, "DatasetConfig"] = pyd.Field(
-        default={},
+    datasets: "AllDatasetStagesConfig" = pyd.Field(
         description=(
-            "Mapping of dataset name, e.g. 'labeled', to file/table paths for each "
-            "derived form produced by steps in the data transformation pipeline, "
-            "used to load the artifacts from storage"
+            "Key datasets produced by the pipeline represented here in this config"
         ),
     )
     model: t.Optional["ModelConfig"] = pyd.Field(
@@ -86,12 +83,24 @@ class PDPProjectConfig(pyd.BaseModel):
     model_config = pyd.ConfigDict(extra="forbid", strict=True)
 
 
-class DatasetConfig(pyd.BaseModel):
+class BronzeDatasetConfig(pyd.BaseModel):
     raw_course: "DatasetIOConfig"
     raw_cohort: "DatasetIOConfig"
-    preprocessed: t.Optional["DatasetIOConfig"] = None
-    modeling: t.Optional["DatasetIOConfig"] = None
-    advisor_output: t.Optional["DatasetIOConfig"] = None
+
+
+class SilverDatasetConfig(pyd.BaseModel):
+    preprocessed: "DatasetIOConfig"
+    modeling: "DatasetIOConfig"
+
+
+class GoldDatasetConfig(pyd.BaseModel):
+    advisor_output: "DatasetIOConfig"
+
+
+class AllDatasetStagesConfig(pyd.BaseModel):
+    bronze: BronzeDatasetConfig
+    silver: SilverDatasetConfig
+    gold: GoldDatasetConfig
 
 
 class DatasetIOConfig(pyd.BaseModel):
