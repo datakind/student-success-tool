@@ -15,7 +15,7 @@ def download_artifact(
     local_folder: str,
     artifact_path: str,
     description: t.Optional[str] = None,
-    max_width_pct: t.Optional[int] = None,
+    fixed_width: str = "125mm",
 ) -> str:
     """
     Downloads artifact from MLflow run using mlflow.artifacts.download_artifacts(...) and
@@ -26,8 +26,7 @@ def download_artifact(
         local_folder: Local folder to download artifact to
         artifact_path: Path to artifact
         description: Description of the image
-        max_width_pct: Maximum width rendered in CSS. The percentage represents how much
-        width the image has compared to the page width.
+        fixed_width: Desired fixed width (e.g., "150mm", "100px").
 
     Returns:
         Local path to artifact OR inline HTML string with path information if image
@@ -78,7 +77,7 @@ def download_static_asset(
     if dst_path.lower().endswith((".png", ".jpg", ".jpeg")):
         if description is None:
             description = os.path.basename(dst_path)
-        return embed_image(description, dst_path, 25, "left")
+        return embed_image(description, dst_path, fixed_width="40mm", alignment="left")
     else:
         return dst_path
 
@@ -98,7 +97,7 @@ def log_card(local_path: str, run_id: str) -> None:
 def embed_image(
     description: str,
     local_path: t.Optional[str | pathlib.Path],
-    max_width_pct: int = 75,
+    fixed_width: str = "125mm",
     alignment: str = "center",
 ) -> str:
     """
@@ -107,8 +106,8 @@ def embed_image(
     Args:
         description: Description of the image.
         local_path: Path to the image file.
-        max_width_pct: Maximum width of the image as a percentage of page/container width.
-        alignment: Horizontal alignment of the image ("left", "right", or "center").
+        fixed_width: Desired fixed width (e.g., "150mm", "100px").
+        alignment: Horizontal alignment ("left", "right", "center").
 
     Returns:
         Inline HTML string to be embedded in markdown.
@@ -124,10 +123,9 @@ def embed_image(
     else:
         css_alignment = "display: block; margin: auto;"
 
-    return (
-        f'<img src="{rel_path}" alt="{description}" '
-        f'style="{css_alignment} max-width: {max_width_pct}%; height: auto;">'
-    )
+    style = f"{css_alignment} width: {fixed_width}; height: auto; max-width: 100%;"
+
+    return f'<img src="{rel_path}" alt="{description}" style="{style}">'
 
 
 def list_paths_in_directory(run_id: str, directory: str) -> t.List[str]:
