@@ -1,6 +1,7 @@
 import logging
 import typing as t
 import pandas as pd
+import collections
 
 from ..utils import utils
 
@@ -13,6 +14,11 @@ def register_evaluation_sections(card, registry):
     We assume all necessary formatting in terms of rows and columns of the table is done in the
     mlflow artifact.
     """
+    performance_section = [f"{card.format.header_level(4)}Model Performance\n"]
+    split_artifacts = utils.list_paths_in_directory(
+        run_id=card.run_id, directory="metrics"
+    )
+
     evaluation_sections = [
         f"{card.format.header_level(4)}Evaluation Metrics by Student Group\n"
     ]
@@ -20,11 +26,11 @@ def register_evaluation_sections(card, registry):
         run_id=card.run_id, directory="group_metrics"
     )
 
-    def make_group_metric_table(path: str, title: str) -> t.Callable[[], str]:
+    def make_metric_table(path: str, title: str) -> t.Callable[[], str]:
         """
-        This method is used for dynamic section registration based on the number
-        of student groups. Later, the registry will render all of these functions to create
-        tables for all of our student groups.
+        This method is used for dynamic section registration.
+        Later, the registry will render all of these functions to create
+        tables.
 
         Args:
             path: Artifact path to the csv file containing the evaluation metrics.
@@ -34,7 +40,7 @@ def register_evaluation_sections(card, registry):
             A function that returns a markdown table of the evaluation metrics for a group.
         """
 
-        def group_metric_table():
+        def metric_table():
             try:
                 local_path = utils.download_artifact(
                     run_id=card.run_id,
@@ -51,7 +57,7 @@ def register_evaluation_sections(card, registry):
                     for row in df.values
                 ]
 
-                return f"{card.format.header_level(5)} {title} Metrics\n\n" + "\n".join(
+                return f"{card.format.header_level(5)}{title}\n\n" + "\n".join(
                     [headers, separator] + rows
                 )
 
@@ -61,21 +67,57 @@ def register_evaluation_sections(card, registry):
                 )
                 return f"{card.format.bold(f'{title} Metrics')}\n\nCould not load data."
 
-        return group_metric_table
+        return metric_table
 
+    # Evaluation by Group
+    group_parts = collections.defaultdict(dict)
+
+    # Group bias and performance parts for each group
     for csv_path in group_eval_artifacts:
-        if csv_path.startswith("group_metrics/test_") and csv_path.endswith(
-            "_metrics.csv"
+        if csv_path.startswith("group_metrics/bias_test_") and csv_path.endswith(
+            ".csv"
         ):
-            group_name = csv_path.replace("group_metrics/test_", "").replace(
+            group_name = csv_path.replace("group_metrics/bias_test_", "").replace(
                 "_metrics.csv", ""
             )
+            group_parts[group_name]["bias"] = csv_path
 
-            group_title = card.format.friendly_case(group_name)
+        if csv_path.startswith("group_metrics/perf_test_") and csv_path.endswith(
+            ".csv"
+        ):
+            group_name = csv_path.replace("group_metrics/perf_test_", "").replace(
+                "_metrics.csv", ""
+            )
+            group_parts[group_name]["perf"] = csv_path
 
-            group_table_func = make_group_metric_table(csv_path, group_title)
-            registry.register(f"group_metric_table_{group_name}")(group_table_func)
-            evaluation_sections.append(group_table_func())
+    # Render both tables under the same group title without labeling them separately
+    for group_name, parts in group_parts.items():
+        if "bias" not in parts or "perf" not in parts:
+            continue
+
+        section_text = []
+
+        # Bias Evaluation Table
+        bias_title = f"{card.format.friendly_case(group_name)} Bias Metrics"
+        bias_table_func = make_metric_table(parts["bias"], bias_title)
+        registry.register(f"metric_table_{group_name}_bias")(bias_table_func)
+        section_text.append(bias_table_func())
+
+        # Performance Evaluation Table
+        perf_title = f"{card.format.friendly_case(group_name)} Performance Metrics"
+        perf_table_func = make_metric_table(parts["perf"], perf_title)
+        registry.register(f"metric_table_{group_name}_perf")(perf_table_func)
+        section_text.append(perf_table_func())
+
+        evaluation_sections.append("\n\n".join(section_text))
+
+    # Performance Across Splits
+    for csv_path in split_artifacts:
+        if csv_path.startswith("metrics/") and csv_path.endswith("_splits.csv"):
+            title = "Performance across Splits"
+            table_func = make_metric_table(csv_path, title)
+            registry.register("performance_by_splits_metric_table")(table_func)
+            performance_section.append(table_func())
 
     @registry.register("evaluation_by_group_section")
     def evaluation_section():
@@ -85,3 +127,12 @@ def register_evaluation_sections(card, registry):
         if not evaluation_sections:
             return f"{card.format.bold('No group evaluation metrics available')}."
         return "\n\n".join(evaluation_sections)
+
+    @registry.register("performance_by_splits_section")
+    def performance_by_splits_section():
+        """
+        Returns the performance metrics section by splits for the model card.
+        """
+        if not performance_section:
+            return f"{card.format.bold('No performance metrics available')}."
+        return "\n\n".join(performance_section)

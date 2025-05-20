@@ -63,6 +63,11 @@ tr {
     break-after: auto;
 }
 
+/* Repeat table header on every printed page */
+thead {
+    display: table-header-group;
+}
+
 /* ================================
    List Styling
 ================================ */
