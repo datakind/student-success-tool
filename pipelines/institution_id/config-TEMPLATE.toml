@@ -17,9 +17,10 @@ raw_cohort = { file_path = "/Volumes/CATALOG/INST_ID_bronze/INST_ID_bronze_file_
 
 [datasets.silver]
 preprocessed = { table_path = "CATALOG.INST_ID_silver.DATASET_NAME_preprocessed" }
+modeling = { table_path = "CATALOG.INST_ID_silver.DATASET_NAME_modeling" }
 
 [datasets.gold]
-advisor_output = { table_path = "CATALOG.INST_ID_gold.INST_ID_advisor_output_ETC_YYYYMMDD" }
+advisor_output = { table_path = "CATALOG.INST_ID_gold.INST_ID_advisor_output" }
 
 [model]
 experiment_id = "EXPERIMENT_ID"
