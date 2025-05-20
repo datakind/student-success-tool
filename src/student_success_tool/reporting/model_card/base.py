@@ -206,20 +206,35 @@ class ModelCard(t.Generic[C]):
             of the artifacts.
         """
         plots = {
-            "model_comparison_plot": ("Model Comparison", "model_comparison.png"),
+            "model_comparison_plot": (
+                "Model Comparison",
+                "model_comparison.png",
+                "125mm",
+            ),
             "test_calibration_curve": (
                 "Test Calibration Curve",
                 "calibration/test_calibration.png",
+                "125mm",
             ),
-            "test_roc_curve": ("Test ROC Curve", "test_roc_curve_plot.png"),
+            "test_roc_curve": (
+                "Test ROC Curve",
+                "test_roc_curve_plot.png",
+                "125mm",
+            ),
             "test_confusion_matrix": (
                 "Test Confusion Matrix",
                 "test_confusion_matrix.png",
+                "125mm",
             ),
-            "test_histogram": ("Test Histogram", "preds/test_hist.png"),
+            "test_histogram": (
+                "Test Histogram",
+                "preds/test_hist.png",
+                "125mm",
+            ),
             "feature_importances_by_shap_plot": (
                 "Feature Importances",
                 "shap_summary_labeled_dataset_100_ref_rows.png",
+                "150mm",
             ),
         }
         return {
@@ -228,8 +243,9 @@ class ModelCard(t.Generic[C]):
                 description=description,
                 artifact_path=path,
                 local_folder=self.assets_folder,
+                fixed_width=width,
             )
-            for key, (description, path) in plots.items()
+            for key, (description, path, width) in plots.items()
         }
 
     def render(self):
