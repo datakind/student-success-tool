@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 0.3.1 (2025-05)
+- Added bronze, silver, and gold dataset types in config to align with catalog from our pipelines.
+
 ## 0.3.0 (2025-05)
 - Update inference pipeline with custom converter functionality.
 - Standardized feature set across all schools by adding custom features & learnings across schools.
