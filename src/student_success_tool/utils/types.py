@@ -1,8 +1,6 @@
 import typing as t
 from collections.abc import Collection, Iterable
 
-import pandas as pd
-
 TermType = t.Literal["FALL", "WINTER", "SPRING", "SUMMER"]
 IntensityTimeLimitsType = dict[str, tuple[float, t.Literal["year", "term"]]]
 CheckpointTypeType = t.Literal[
