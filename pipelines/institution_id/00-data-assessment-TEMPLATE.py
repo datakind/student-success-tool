@@ -25,7 +25,7 @@
 
 # install dependencies, of which most/all should come through our 1st-party SST package
 
-# %pip install "student-success-tool == 0.2.0"
+# %pip install "student-success-tool == 0.3.0"
 
 # COMMAND ----------
 
@@ -92,18 +92,13 @@ cfg
 
 # COMMAND ----------
 
-# TODO: if dataset info included in cfg, specify its name here
-dataset_name = "DATASET_NAME"
-
 # MAGIC %md
 # MAGIC ## course dataset
 
 # COMMAND ----------
 
-# TODO: fill in the actual path to school's raw course file
-# okay to add it to project config now or later, whatever you prefer
-raw_course_file_path = cfg.datasets[dataset_name].raw_course.file_path
-# raw_course_file_path = "/Volumes/CATALOG/INST_ID_bronze/INST_ID_bronze_file_volume/SCHOOL_COURSE_AR_DEID_DTTM.csv"
+# add actual path to school's raw course file into the project config
+raw_course_file_path = cfg.datasets.bronze.raw_course.file_path
 
 # COMMAND ----------
 
