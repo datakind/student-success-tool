@@ -27,9 +27,11 @@ def template_cfg_str():
     random_state = 12345
 
     [datasets.labeled]
-    raw_course = { file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/FILE_NAME_COURSE.csv" }
-    raw_cohort = { file_path = "/Volumes/CATALOG/INST_NAME_bronze/INST_NAME_bronze_file_volume/FILE_NAME_COHORT.csv" }
-    preprocessed = { table_path = "CATALOG.SCHEMA.TABLE_NAME" }
+    raw_course = { file_path = "/Volumes/CATALOG/INST_ID_bronze/INST_ID_bronze_file_volume/FILE_NAME_COURSE.csv" }
+    raw_cohort = { file_path = "/Volumes/CATALOG/INST_ID_bronze/INST_ID_bronze_file_volume/FILE_NAME_COHORT.csv" }
+    preprocessed = { table_path = "CATALOG.INST_ID_silver.DATASET_NAME_preprocessed" }
+    modeling = { table_path = "CATALOG.INST_ID_silver.DATASET_NAME_modeling" }
+    advisor_output = { table_path = "CATALOG.INST_ID_gold.INST_ID_advisor_output" }
 
     [model]
     experiment_id = "EXPERIMENT_ID"

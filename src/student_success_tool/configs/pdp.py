@@ -90,8 +90,8 @@ class DatasetConfig(pyd.BaseModel):
     raw_course: "DatasetIOConfig"
     raw_cohort: "DatasetIOConfig"
     preprocessed: t.Optional["DatasetIOConfig"] = None
-    predictions: t.Optional["DatasetIOConfig"] = None
-    finalized: t.Optional["DatasetIOConfig"] = None
+    modeling: t.Optional["DatasetIOConfig"] = None
+    advisor_output: t.Optional["DatasetIOConfig"] = None
 
 
 class DatasetIOConfig(pyd.BaseModel):
