@@ -10,6 +10,7 @@ from student_success_tool.modeling.inference import (
     calculate_shap_values,
     calculate_shap_values_spark_udf,
     select_top_features_for_display,
+    generate_ranked_feature_table,
 )
 
 
@@ -281,6 +282,56 @@ def test_calculate_shap_values_spark_udf_multiple_batches(
     # Check second batch
     shap_df2 = result[1]
     assert shap_df2.shape == expected_shape2
+
+
+@pytest.fixture
+def ranked_feature_table_data():
+    features = pd.DataFrame(
+        {
+            "pell_status": [False, True, False],
+            "english_math_gateway": ["E", "M", "M"],
+            "term_gpa": [4.0, 3.0, 2.0],
+        }
+    )
+    shap_values = np.array(
+        [
+            [0.1, -0.2, 0.05],
+            [0.3, 0.1, -0.05],
+            [0.2, -0.1, 0.15],
+        ]
+    )
+    features_table = {
+        "pell_status": {"name": "Pell Status"},
+        "english_math_gateway": {"name": "English or Math Gateway"},
+        "term_gpa": {"name": "Term GPA"},
+    }
+    return features, shap_values, features_table
+
+
+@pytest.mark.parametrize("use_features_table", [True, False])
+def test_generate_ranked_feature_table(ranked_feature_table_data, use_features_table):
+    features, shap_values, features_table = ranked_feature_table_data
+
+    selected_features_table = features_table if use_features_table else None
+
+    result = generate_ranked_feature_table(
+        features, shap_values, selected_features_table
+    )
+
+    assert isinstance(result, pd.DataFrame) and not result.empty
+    assert set(result.columns) == {
+        "Feature Name",
+        "Data Type",
+        "Average SHAP Magnitude",
+    }
+
+    # Verify descending sort order by Average SHAP Magnitude
+    assert result["Average SHAP Magnitude"].is_monotonic_decreasing
+
+    if use_features_table:
+        assert "English or Math Gateway" in result["Feature Name"].values
+    else:
+        assert "term_gpa" in result["Feature Name"].values
 
 
 @pytest.mark.parametrize(
