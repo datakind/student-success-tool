@@ -413,11 +413,9 @@ def test_top_shap_features_behavior(sample_data):
     top_features = result["feature_name"].unique()
     assert len(top_features) == 10
 
-    # Check correct SHAP ranking
     grouped = result.groupby("feature_name")["shap_value"].apply(lambda x: np.mean(np.abs(x)))
     sorted_features = grouped.sort_values(ascending=False).index.tolist()
-    # Ensure it's sorted descending
-    assert grouped.equals(grouped.sort_values(ascending=False))
+    assert grouped.sort_values(ascending=False).values.tolist() == grouped.values.tolist()
     assert set(grouped.index).issubset(set(features.columns))
     assert len(grouped) == 10
 
