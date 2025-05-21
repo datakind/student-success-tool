@@ -11,7 +11,8 @@ from student_success_tool.modeling.inference import (
     calculate_shap_values_spark_udf,
     select_top_features_for_display,
     generate_ranked_feature_table,
-    top_shap_features
+    top_shap_features,
+    support_score_distribution_table
 )
 
 
@@ -445,3 +446,49 @@ def test_empty_input():
 
     with pytest.raises(ValueError):
         top_shap_features(features, unique_ids, shap_values)
+
+def test_support_score_distribution_table(
+    features,
+    unique_ids,
+    predicted_probabilities,
+    shap_values,
+    n_features,
+    needs_support_threshold_prob,
+    features_table,
+    exp,
+):
+    inference_params = {
+        "num_top_features": n_features,
+        "min_prob_pos_label": needs_support_threshold_prob or 0.0  # handle None
+    }
+
+    # Use the function under test
+    result = support_score_distribution_table(
+        df_serving=features,
+        unique_ids=unique_ids,
+        preds_probs=predicted_probabilities,
+        shap_values=pd.DataFrame(shap_values),
+        inference_params=inference_params,
+        features_table=features_table,
+        model_feature_names=features.columns.tolist(),
+    )
+
+    # Basic structure checks
+    assert isinstance(result, pd.DataFrame)
+    assert set(result.columns) == {
+        "bin_lower", "bin_upper", "support_score", "count_of_students", "pct"
+    }
+    assert result["count_of_students"].sum() == len(unique_ids)
+    assert abs(result["pct"].sum() - 100.0) < 0.01
+
+    # --- Binning logic checks ---
+    for idx, row in result.iterrows():
+        # Midpoint should be correct
+        expected_midpoint = round((row["bin_lower"] + row["bin_upper"]) / 2, 2)
+        assert row["support_score"] == expected_midpoint
+
+        # Bin width should be 0.1
+        assert round(row["bin_upper"] - row["bin_lower"], 2) == 0.1
+
+        # Bin boundaries should be within [0.1, 1.0]
+        assert 0.1 <= row["bin_lower"] < row["bin_upper"] <= 1.0
