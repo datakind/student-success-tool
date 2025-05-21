@@ -266,8 +266,8 @@ mlflow.end_run()
 # COMMAND ----------
 
 # Optional: Evaluate permutation importance for top model
-# This can be used just for model diagnostics and is NOT used
-# in model cards or in our reporting process
+# NOTE: This can be used for model diagnostics. It is NOT used
+# in our standard evaluation process and not pulled into model cards.
 model = mlflow.sklearn.load_model(f"runs:/{top_run_ids[0]}/model")
 ax = modeling.evaluation.plot_features_permutation_importance(
     model,
