@@ -532,7 +532,7 @@ def test_support_score_distribution_table(
         "bin_lower", "bin_upper", "support_score", "count_of_students", "pct"
     }
     assert result["count_of_students"].sum() == len(unique_ids)
-    assert abs(result["pct"].sum() - 100.0) < 0.01
+    assert np.isclose(result["pct"].sum(), 100.0, atol=0.01)
 
     # Binning logic checks
     for _, row in result.iterrows():
