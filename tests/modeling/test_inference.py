@@ -447,6 +447,85 @@ def test_empty_input():
     with pytest.raises(ValueError):
         top_shap_features(features, unique_ids, shap_values)
 
+@pytest.mark.parametrize(
+    [
+        "features",
+        "unique_ids",
+        "predicted_probabilities",
+        "shap_values",
+        "n_features",
+        "needs_support_threshold_prob",
+        "features_table",
+        "exp",
+    ],
+    [
+        (
+            pd.DataFrame(
+                {
+                    "x1": ["val1", "val2", "val3"],
+                    "x2": [True, False, True],
+                    "x3": [2.0, 1.0001, 0.5],
+                    "x4": [1, 2, 3],
+                }
+            ),
+            pd.Series([1, 2, 3]),
+            [0.9, 0.1, 0.5],
+            np.array(
+                [[1.0, 0.9, 0.8, 0.7], [0.0, -1.0, 0.9, -0.8], [0.25, 0.0, -0.5, 0.75]]
+            ),
+            3,
+            0.5,
+            {
+                "x1": {"name": "feature #1"},
+                "x2": {"name": "feature #2"},
+                "x3": {"name": "feature #3"},
+            },
+            pd.DataFrame(
+                {
+                    "Student ID": [1, 2, 3],
+                    "Support Score": [0.9, 0.1, 0.5],
+                    "Support Needed": [True, False, True],
+                    "Feature_1_Name": ["feature #1", "feature #2", "x4"],
+                    "Feature_1_Value": ["val1", "False", "3"],
+                    "Feature_1_Importance": [1.0, -1.0, 0.75],
+                    "Feature_2_Name": ["feature #2", "feature #3", "feature #3"],
+                    "Feature_2_Value": ["True", "1.0", "0.5"],
+                    "Feature_2_Importance": [0.9, 0.9, -0.5],
+                    "Feature_3_Name": ["feature #3", "x4", "feature #1"],
+                    "Feature_3_Value": ["2.0", "2", "val3"],
+                    "Feature_3_Importance": [0.8, -0.8, 0.25],
+                }
+            ),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "x1": ["val1", "val2", "val3"],
+                    "x2": [True, False, True],
+                    "x3": [2.0, 1.0, 0.5],
+                    "x4": [1, 2, 3],
+                }
+            ),
+            pd.Series([1, 2, 3]),
+            [0.9, 0.1, 0.5],
+            np.array(
+                [[1.0, 0.9, 0.8, 0.7], [0.0, -1.0, 0.9, -0.8], [0.25, 0.0, -0.5, 0.75]]
+            ),
+            1,
+            None,
+            None,
+            pd.DataFrame(
+                {
+                    "Student ID": [1, 2, 3],
+                    "Support Score": [0.9, 0.1, 0.5],
+                    "Feature_1_Name": ["x1", "x2", "x4"],
+                    "Feature_1_Value": ["val1", "False", "3"],
+                    "Feature_1_Importance": [1.0, -1.0, 0.75],
+                }
+            ),
+        ),
+    ],
+)
 def test_support_score_distribution_table(
     features,
     unique_ids,
@@ -461,7 +540,7 @@ def test_support_score_distribution_table(
         "num_top_features": n_features,
         "min_prob_pos_label": needs_support_threshold_prob or 0.0  # handle None
     }
-    
+
     result = support_score_distribution_table(
         df_serving=features,
         unique_ids=unique_ids,
