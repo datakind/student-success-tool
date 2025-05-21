@@ -520,7 +520,7 @@ def test_support_score_distribution_table(
     result = support_score_distribution_table(
         df_serving=features,
         unique_ids=unique_ids,
-        preds_probs=predicted_probabilities,
+        pred_probs=predicted_probabilities,
         shap_values=pd.DataFrame(shap_values),
         inference_params=inference_params,
         features_table=features_table,
