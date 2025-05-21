@@ -41,7 +41,7 @@ import pandas as pd  # noqa: F401
 import seaborn as sb
 from databricks.connect import DatabricksSession
 
-from student_success_tool import configs, dataio, eda, modeling, preprocessing, utils
+from student_success_tool import configs, dataio, eda, modeling, preprocessing
 from student_success_tool.preprocessing import checkpoints, selection, targets
 
 # COMMAND ----------

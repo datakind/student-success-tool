@@ -41,11 +41,9 @@ import logging
 
 import matplotlib.pyplot as plt
 import mlflow
-import numpy as np
 import pandas as pd
 import shap
 from databricks.connect import DatabricksSession
-from py4j.protocol import Py4JJavaError
 from pyspark.sql.types import FloatType, StringType, StructField, StructType
 
 from student_success_tool import configs, dataio, modeling
