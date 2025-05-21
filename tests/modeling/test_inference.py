@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from pandas.api.types import is_numeric_dtype
+from unittest.mock import patch
 
 from student_success_tool.modeling.inference import (
     _get_mapped_feature_name,
@@ -447,6 +448,7 @@ def test_empty_input():
     with pytest.raises(ValueError):
         top_shap_features(features, unique_ids, shap_values)
 
+@patch("student_success_tool.modeling.inference.select_top_features_for_display")
 @pytest.mark.parametrize(
     [
         "features",
@@ -498,6 +500,7 @@ def test_empty_input():
     ]
 )
 def test_support_score_distribution_table(
+    mock_select_top_features_for_display,
     features,
     unique_ids,
     predicted_probabilities,
@@ -509,8 +512,10 @@ def test_support_score_distribution_table(
 ):
     inference_params = {
         "num_top_features": n_features,
-        "min_prob_pos_label": needs_support_threshold_prob or 0.0  # handle None
+        "min_prob_pos_label": needs_support_threshold_prob or 0.0
     }
+
+    mock_select_top_features_for_display.return_value = exp
 
     result = support_score_distribution_table(
         df_serving=features,
@@ -529,8 +534,8 @@ def test_support_score_distribution_table(
     assert result["count_of_students"].sum() == len(unique_ids)
     assert abs(result["pct"].sum() - 100.0) < 0.01
 
-    # --- Binning logic checks ---
-    for idx, row in result.iterrows():
+    # Binning logic checks
+    for _, row in result.iterrows():
         expected_midpoint = round((row["bin_lower"] + row["bin_upper"]) / 2, 2)
         assert row["support_score"] == expected_midpoint
         assert round(row["bin_upper"] - row["bin_lower"], 2) == 0.1
