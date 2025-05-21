@@ -227,14 +227,11 @@ class DataIngestionTask:
         Executes the data ingestion task.
         """
         raw_files_path = f"{self.args.job_root_dir}/raw_files/"
-        # os.makedirs(raw_files_path, exist_ok=True)
+
         print("raw_files_path:", raw_files_path)
         dbutils.fs.mkdirs(raw_files_path)
 
         fpath_course, fpath_cohort = self.download_data_from_gcs(raw_files_path)
-        # Hack to get around gcp permissions right now
-        # fpath_course = f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs/{self.args.course_file_name}"
-        # fpath_cohort = f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs/{self.args.cohort_file_name}"
         df_course, df_cohort = self.read_and_validate_data(fpath_course, fpath_cohort)
 
         course_dataset_validated_path, cohort_dataset_validated_path = (
