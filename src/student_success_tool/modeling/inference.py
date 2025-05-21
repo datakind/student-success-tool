@@ -370,7 +370,7 @@ def support_score_distribution_table(df_serving, unique_ids, pred_probs, shap_va
 
         return bin_counts[["bin_lower", "bin_upper", "support_score", "count_of_students", "pct"]]
 
-    except Exception as e:
+    except Exception:
         import traceback
         traceback.print_exc()
         raise  # <-- temporarily raise instead of returning None
