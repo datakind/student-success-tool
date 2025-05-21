@@ -55,11 +55,11 @@ resources:
         enabled: true
       parameters:
         - name: db_workspace
-          default: dev_sst_02
+          default: ${var.DB_workspace}
         - name: email_recipient
           default: ${var.end_user_notification_email}
         - name: external_bucket_name
-          default: dev_6782b2f451f84c17ae6e14e918432b65
+          default: databricks-2052166062819251-unitycatalog
         - name: institution_name
           default: uni_of_crystal_testing
         - name: sst_job_id

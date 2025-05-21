@@ -222,7 +222,7 @@ resources:
         - name: DB_workspace
           default: ${var.DB_workspace}
         - name: gcp_bucket_name
-          default: dev_6782b2f451f84c17ae6e14e918432b65
+          default: databricks-2052166062819251-unitycatalog
         - name: model_name
           default: kentucky_state_uni_retention_end_of_first_year
         - name: model_type
