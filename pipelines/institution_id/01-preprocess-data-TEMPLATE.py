@@ -333,7 +333,7 @@ print(
 
 # save preprocessed dataset
 dataio.write.to_delta_table(
-    df_preprocessed, cfg.datasets.silver.preprocessed.table_path,spark_session=spark
+    df_preprocessed, cfg.datasets.silver.preprocessed.table_path, spark_session=spark
 )
 
 # COMMAND ----------
