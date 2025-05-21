@@ -172,7 +172,7 @@ df_student_terms.columns.tolist()
 # MAGIC df_labeled = pd.merge(df_ckpt, pd.Series(selected_students.index), how="inner", on=cfg.student_id_col)
 # MAGIC
 # MAGIC # computing target and adding it to df_labeled
-# MAGIC target = preprocessing.targets.pdp.retention.compute_target(
+# MAGIC target = targets.pdp.retention.compute_target(
 # MAGIC     df_labeled,
 # MAGIC     max_academic_year=cfg.preprocessing.target.max_academic_year,
 # MAGIC )
@@ -208,7 +208,7 @@ df_labeled
 
 # TODO: choose target function suitable for school's use case
 # parameters should be specified in the config
-target = preprocessing.targets.pdp.TODO.compute_target(
+target = targets.pdp.TODO.compute_target(
     df_labeled,
     **cfg.preprocessing.target
 )
