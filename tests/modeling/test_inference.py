@@ -417,7 +417,7 @@ def test_top_shap_features_behavior(sample_data):
     grouped = result.groupby("feature_name")["shap_value"].apply(lambda x: np.mean(np.abs(x)))
     sorted_features = grouped.sort_values(ascending=False).index.tolist()
     # Ensure it's sorted descending
-    assert grouped.is_monotonic_decreasing
+    assert grouped.equals(grouped.sort_values(ascending=False))
     assert set(grouped.index).issubset(set(features.columns))
     assert len(grouped) == 10
 
