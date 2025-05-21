@@ -11,6 +11,7 @@ from student_success_tool.modeling.inference import (
     calculate_shap_values_spark_udf,
     select_top_features_for_display,
     generate_ranked_feature_table,
+    top_shap_features
 )
 
 
@@ -376,3 +377,65 @@ def test_get_mapped_feature_name(feature_col, features_table, exp):
     obs = _get_mapped_feature_name(feature_col, features_table)
     assert isinstance(obs, str)
     assert obs == exp
+
+@pytest.fixture
+def sample_data():
+    features = pd.DataFrame({
+        "feature1": [1, 2, 3],
+        "feature2": [4, 5, 6],
+        "feature3": [7, 8, 9],
+        "feature4": [0, 1, 0],
+        "feature5": [2, 2, 2],
+        "feature6": [1, 1, 1],
+        "feature7": [0, 0, 1],
+        "feature8": [3, 3, 3],
+        "feature9": [4, 4, 4],
+        "feature10": [5, 5, 5],
+        "feature11": [6, 6, 6]
+    })
+    unique_ids = pd.Series([101, 102, 103])
+    shap_values = np.array([
+        [0.1, 0.3, 0.2, 0.0, 0.4, 0.1, 0.0, 0.3, 0.2, 0.5, 0.6],
+        [0.2, 0.2, 0.1, 0.0, 0.3, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5],
+        [0.3, 0.1, 0.3, 0.0, 0.2, 0.0, 0.0, 0.1, 0.4, 0.3, 0.4],
+    ])
+    return features, unique_ids, shap_values
+
+def test_top_shap_features_behavior(sample_data):
+    features, unique_ids, shap_values = sample_data
+    result = top_shap_features(features, unique_ids, shap_values)
+
+    # Check output shape and columns
+    assert isinstance(result, pd.DataFrame)
+    assert set(result.columns) == {"student_id", "feature_name", "shap_value", "feature_value"}
+
+    # Check top 10 feature selection
+    top_features = result["feature_name"].unique()
+    assert len(top_features) == 10
+
+    # Check correct SHAP ranking
+    grouped = result.groupby("feature_name")["shap_value"].apply(lambda x: np.mean(np.abs(x)))
+    sorted_features = grouped.sort_values(ascending=False).index.tolist()
+    assert sorted_features == list(grouped.index)
+
+def test_handles_fewer_than_10_features():
+    features = pd.DataFrame({
+        "feature1": [1, 2],
+        "feature2": [3, 4],
+    })
+    unique_ids = pd.Series([1, 2])
+    shap_values = np.array([
+        [0.5, 0.1],
+        [0.3, 0.4]
+    ])
+
+    result = top_shap_features(features, unique_ids, shap_values)
+    assert set(result["feature_name"].unique()) == {"feature1", "feature2"}
+
+def test_empty_input():
+    features = pd.DataFrame()
+    unique_ids = pd.Series(dtype=int)
+    shap_values = np.empty((0, 0))
+
+    with pytest.raises(ValueError):
+        top_shap_features(features, unique_ids, shap_values)
