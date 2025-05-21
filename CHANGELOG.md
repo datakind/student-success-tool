@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 0.3.1 (2025-05)
+- Added bronze, silver, and gold dataset types in config to align with catalog from our pipelines.
+
+## 0.3.0 (2025-05)
+- Update inference pipeline with custom converter functionality.
+- Standardized feature set across all schools by adding custom features & learnings across schools.
+- Restructured subpackage in order to better modularize our SST process.
+- Added longer description to feature table for SST web app.
+- Updated schema validation for gateway/dev fields based on NSC update.
+- Added model card module under `reporting`.
+  - Model cards can now be created for PDP schools.
+  - Updated PDP config for model card compatibility.
+
 ## 0.2.0 (2025-04)
 
 - Extended and modularized functionality into several new subpackages, with `pdp` as a secondary level, to make imports more intuitive and allow for extending code to support other 3rd-party data formats

@@ -28,12 +28,12 @@ import shap
 from databricks.connect import DatabricksSession
 from databricks.sdk import WorkspaceClient
 from email.headerregistry import Address
-
+import numpy.typing as npt
 
 # Import project-specific modules
 import student_success_tool.dataio as dataio
 from student_success_tool.modeling import inference
-from student_success_tool.schemas.pdp import PDPProjectConfig
+from student_success_tool.configs.pdp import PDPProjectConfig
 from student_success_tool.modeling.evaluation import plot_shap_beeswarm
 from student_success_tool.utils import emails
 
@@ -82,7 +82,7 @@ class ModelInferenceTask:
 
     def load_mlflow_model(self):
         """Loads the MLflow model."""
-        model_uri = f"runs:/{self.cfg.models['graduation'].run_id}/model"
+        model_uri = f"runs:/{self.cfg.model.run_id}/model"
 
         try:
             load_model_func = {
@@ -108,7 +108,15 @@ class ModelInferenceTask:
             ]
         except AttributeError:
             model_feature_names = model.metadata.get_input_schema().input_names()
-
+        # HACH needs to be removed - just need to add these in until re-training
+        #'FULL-TIME' for first half, 'PART-TIME' for second half
+        midpoint = len(df) // 2
+        df["enrollment_intensity_first_term"] = ["FULL-TIME"] * midpoint + [
+            "PART-TIME"
+        ] * (len(df) - midpoint)
+        df["pell_status_first_year"] = ["YES"] * midpoint + ["NO"] * (
+            len(df) - midpoint
+        )
         df_serving = df[model_feature_names]
         df_predicted = df_serving.copy()
         df_predicted["predicted_label"] = model.predict(df_serving)
@@ -250,6 +258,83 @@ class ModelInferenceTask:
         except Exception as e:
             logging.error("Error during SHAP value calculation: %s", e)
             raise
+    
+    def top_10_features(
+            features: pd.DataFrame,
+            unique_ids: pd.Series,
+            shap_values: npt.NDArray[np.float64],
+        ) -> pd.DataFrame:
+        
+        try:
+            top_10_shap_features = inference.top_shap_features(
+                features,
+                unique_ids,
+                shap_values
+            )
+            return top_10_shap_features
+
+        except Exception as e:
+            logging.error("Error computing top 10 shap features table: %s", e)
+            return None
+    
+    def support_score_distribution(
+        self, df_serving, unique_ids, df_predicted, shap_values, model_feature_names
+    ):
+        """
+        Selects top features to display and store
+        """
+        if not self.spark_session:
+            logging.error(
+                "Spark session not initialized. Cannot post process shap values."
+            )
+            return None
+
+        # --- Load features table ---
+        features_table = dataio.read_features_table("assets/pdp/features_table.toml")
+
+        # --- Inference Parameters ---
+        inference_params = {
+            "num_top_features": 5,
+            "min_prob_pos_label": 0.5,
+        }
+
+        pred_probs = df_predicted["predicted_prob"]
+        # --- Feature Selection for Display ---
+
+        try:
+            result = inference.support_score_distribution_table(
+                df_serving,
+                unique_ids,
+                pred_probs,
+                shap_values.values,
+                n_features=inference_params["num_top_features"],
+                features_table=features_table,
+                needs_support_threshold_prob=inference_params["min_prob_pos_label"],
+            )
+
+            return result
+
+        except Exception as e:
+            logging.error("Error computing support score distribution table: %s", e)
+            return None
+
+    def inference_shap_feature_importance(self, shap_values, features):
+        """
+        Selects top important features to display and store
+        """
+        if not self.spark_session:
+            logging.error(
+                "Spark session not initialized. Cannot post process shap values."
+            )
+            return None
+        features_table = dataio.read_features_table("assets/pdp/features_table.toml")
+        shap_feature_importance = inference.generate_ranked_feature_table(
+                df_serving,
+                shap_values.values,
+                features_table
+            )
+        
+        return shap_feature_importance
 
     def get_top_features_for_display(
         self, df_serving, unique_ids, df_predicted, shap_values, model_feature_names
@@ -327,9 +412,36 @@ class ModelInferenceTask:
             # --- SHAP Summary Plot ---
             shap_fig = plot_shap_beeswarm(shap_values)
 
+            # Inference_features_with_most_impact TABLE
+            inference_features_with_most_impact = self.top_10_features(
+                df_processed[model_feature_names],
+                unique_ids, 
+                shap_values.values
+            )
+            # shap_feature_importance TABLE
+            shap_feature_importance = self.inference_shap_feature_importance(df_processed, shap_values)
+            # support_overview TABLE
+            support_overview_table = self.support_score_distribution_table(
+                df_processed, unique_ids, df_predicted, shap_values, model_feature_names
+            )
+            if (
+                inference_features_with_most_impact is None or
+                shap_feature_importance is None or
+                support_overview_table is None
+            ):
+                msg = "One or more inference outputs are empty: cannot write inference summary tables."
+                logging.error(msg)
+                raise Exception(msg)
+
+            self.write_data_to_delta(inference_features_with_most_impact, f"inference_{self.cfg.model.run_id}_features_with_most_impact")
+            self.write_data_to_delta(shap_feature_importance, "inference_{self.cfg.model.run_id}_shap_feature_importance")
+            self.write_data_to_delta(support_overview_table, "inference_{self.cfg.model.run_id}_support_overview")
+            
+            # Shap Result Table
             shap_results = self.get_top_features_for_display(
                 df_processed, unique_ids, df_predicted, shap_values, model_feature_names
             )
+
             # --- Save Results to ext/ folder in Gold volume. ---
             if shap_results is not None:
                 # Specify the folder for the output files to be stored.

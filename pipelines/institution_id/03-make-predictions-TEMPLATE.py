@@ -21,10 +21,14 @@
 
 # COMMAND ----------
 
-# WARNING: AutoML/mlflow expect particular packages within certain version constraints
-# overriding existing installs can result in errors and inability to load trained models
-# %pip install "student-success-tool==0.1.1" --no-deps
-# %pip install "git+https://github.com/datakind/student-success-tool.git@develop" --no-deps
+# WARNING: AutoML/mlflow expect particular packages with version constraints
+# that directly conflicts with dependencies in our SST repo. As a temporary fix,
+# we need to manually install a certain version of pandas and scikit-learn in order
+# for our models to load and run properly.
+
+# %pip install "student-success-tool==0.2.0"
+# %pip install "pandas==1.5.3"
+# %pip install "scikit-learn==1.3.0"
 
 # COMMAND ----------
 
@@ -105,10 +109,13 @@ logging.info(
 # it'll start out with just basic info: institution_id, institution_name
 # but as each step of the pipeline gets built, more parameters will be moved
 # from hard-coded notebook variables to shareable, persistent config fields
-cfg = dataio.read_config(
-    "./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfigV2
-)
+cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig)
 cfg
+
+# COMMAND ----------
+
+# Load human-friendly PDP feature names
+features_table = dataio.read_features_table("assets/pdp/features_table.toml")
 
 # COMMAND ----------
 
@@ -152,9 +159,9 @@ def predict_proba(
 
 # COMMAND ----------
 
-model = modeling.utils.load_mlflow_model(
-    cfg.models[model_name].mlflow_model_uri,
-    cfg.models[model_name].framework,
+model = dataio.models.load_mlflow_model(
+    cfg.model.mlflow_model_uri,
+    cfg.model.framework,
 )
 model
 
@@ -167,13 +174,7 @@ logging.info(
 
 # COMMAND ----------
 
-features_table = dataio.read_features_table("assets/pdp/features_table.toml")
-
-# COMMAND ----------
-
-df_train = modeling.evaluation.extract_training_data_from_model(
-    cfg.models[model_name].experiment_id
-)
+df_train = modeling.evaluation.extract_training_data_from_model(cfg.model.experiment_id)
 if cfg.split_col:
     df_train = df_train.loc[df_train[cfg.split_col].eq("train"), :]
 df_train.shape
@@ -297,7 +298,7 @@ shap.summary_plot(
 )
 shap_fig = plt.gcf()
 # save shap summary plot via mlflow into experiment artifacts folder
-with mlflow.start_run(run_id=cfg.models[model_name].run_id) as run:
+with mlflow.start_run(run_id=cfg.model.run_id) as run:
     mlflow.log_figure(
         shap_fig, f"shap_summary_{dataset_name}_dataset_{df_ref.shape[0]}_ref_rows.png"
     )
@@ -309,7 +310,23 @@ with mlflow.start_run(run_id=cfg.models[model_name].run_id) as run:
 
 # COMMAND ----------
 
-features_table = dataio.read_features_table("assets/pdp/features_table.toml")
+# Generate table of all selected features and log as an artifact
+selected_features_df = inference.generate_ranked_feature_table(
+    features,
+    df_shap_values[model_feature_names].to_numpy(),
+    features_table=features_table,
+)
+with mlflow.start_run(run_id=cfg.model.run_id) as run:
+    selected_features_df.to_csv("/tmp/ranked_selected_features.csv", index=False)
+    mlflow.log_artifact(
+        "/tmp/ranked_selected_features.csv", artifact_path="selected_features"
+    )
+
+selected_features_df
+
+# COMMAND ----------
+
+# Provide output using top features, SHAP values, and support scores
 result = inference.select_top_features_for_display(
     features,
     unique_ids,
@@ -328,5 +345,3 @@ result
 # MAGIC
 # MAGIC - how / where to save final results?
 # MAGIC - do we want to save predictions separately / additionally from the "display" format?
-
-# COMMAND ----------

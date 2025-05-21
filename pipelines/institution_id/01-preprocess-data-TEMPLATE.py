@@ -22,11 +22,9 @@
 
 # COMMAND ----------
 
-# install dependencies, most/all of which should come through our 1st-party SST package
-# NOTE: it's okay to use 'develop' or a feature branch while developing this nb
-# but when it's finished, it's best to pin to a specific version of the package
-# %pip install "student-success-tool == 0.1.1"
-# %pip install "git+https://github.com/datakind/student-success-tool.git@develop"
+# install dependencies, of which most/all should come through our 1st-party SST package
+
+# %pip install "student-success-tool == 0.2.0"
 
 # COMMAND ----------
 
@@ -43,10 +41,9 @@ import pandas as pd  # noqa: F401
 import seaborn as sb
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
-from py4j.protocol import Py4JJavaError
 
-from student_success_tool import configs, dataio, eda, modeling, preprocessing
-from student_success_tool.preprocessing import features, targets
+from student_success_tool import configs, dataio, eda, modeling, preprocessing, utils
+from student_success_tool.preprocessing import targets
 
 # COMMAND ----------
 
@@ -61,14 +58,9 @@ except Exception:
 
 # COMMAND ----------
 
-# check if we're running this notebook as a "job" in a "workflow"
-# if not, assume this is a training workflow using labeled data
-try:
-    run_type = dbutils.widgets.get("run_type")
-    dataset_name = dbutils.widgets.get("dataset_name")
-except Py4JJavaError:
-    run_type = "train"
-    dataset_name = "labeled"
+# get run type + dataset from job params or manually specify
+run_type = utils.databricks.get_db_widget_param("run_type") or "TODO"
+dataset_name = utils.databricks.get_db_widget_param("dataset_name") or "TODO"
 
 logging.info("'%s' run of notebook using '%s' dataset", run_type, dataset_name)
 
@@ -118,7 +110,6 @@ df_course = dataio.pdp.read_raw_course_data(
     schema=dataio.schemas.pdp.RawPDPCourseDataSchema,
     dttm_format="%Y%m%d.0",
 )
-print(f"rows x cols = {df_course.shape}")
 df_course.head()
 
 # COMMAND ----------
@@ -127,7 +118,6 @@ raw_cohort_file_path = cfg.datasets[dataset_name].raw_cohort.file_path
 df_cohort = dataio.pdp.read_raw_cohort_data(
     file_path=raw_cohort_file_path, schema=dataio.schemas.pdp.RawPDPCohortDataSchema
 )
-print(f"rows x cols = {df_cohort.shape}")
 df_cohort.head()
 
 # COMMAND ----------
@@ -139,23 +129,21 @@ df_cohort.head()
 
 # TODO: load featurization params from the project config
 # okay to hard-code it first then add it to the config later
-try:
-    feature_params = cfg.preprocessing.features.model_dump()
-except AttributeError:
-    feature_params = {
-        "min_passing_grade": features.pdp.constants.DEFAULT_MIN_PASSING_GRADE,
-        "min_num_credits_full_time": features.pdp.constants.DEFAULT_MIN_NUM_CREDITS_FULL_TIME,
-        # NOTE: this pattern in particular may be something you need to change
-        # schools have many different conventions for course numbering!
-        "course_level_pattern": features.pdp.constants.DEFAULT_COURSE_LEVEL_PATTERN,
-        "peak_covid_terms": features.pdp.constants.DEFAULT_PEAK_COVID_TERMS,
-        "key_course_subject_areas": None,
-        "key_course_ids": None,
-    }
+feature_params = cfg.preprocessing.features.model_dump()
+# feature_params = {
+#     "min_passing_grade": features.pdp.constants.DEFAULT_MIN_PASSING_GRADE,
+#     "min_num_credits_full_time": features.pdp.constants.DEFAULT_MIN_NUM_CREDITS_FULL_TIME,
+#     # NOTE: this pattern in particular may be something you need to change
+#     # schools have many different conventions for course numbering!
+#     "course_level_pattern": features.pdp.constants.DEFAULT_COURSE_LEVEL_PATTERN,
+#     "peak_covid_terms": features.pdp.constants.DEFAULT_PEAK_COVID_TERMS,
+#     "key_course_subject_areas": None,
+#     "key_course_ids": None,
+# }
 
 # COMMAND ----------
 
-df_student_terms = preprocessing.pdp.dataops.make_student_term_dataset(
+df_student_terms = preprocessing.pdp.make_student_term_dataset(
     df_cohort, df_course, **feature_params
 )
 df_student_terms
@@ -168,7 +156,7 @@ df_student_terms.columns.tolist()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # filter students and compute target
+# MAGIC # select students and compute targets
 
 # COMMAND ----------
 
@@ -386,5 +374,3 @@ dataio.write.to_delta_table(df_modeling, preprocessed_table_path, spark_session=
 # MAGIC %md
 # MAGIC - [ ] Update project config with paremters for the preprocessed dataset (`datasets[dataset_name].preprocessed`), feature and target definitions (`preprocessing.features`, `preprocessing.target.params`), as well as any splits / sample weight parameters (`preprocessing.splits`, `preprocessing.sample_class_weight`)
 # MAGIC - [ ] Submit a PR including this notebook and any changes in project config
-
-# COMMAND ----------
