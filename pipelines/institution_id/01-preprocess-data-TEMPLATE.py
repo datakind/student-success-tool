@@ -166,7 +166,7 @@ df_student_terms.columns.tolist()
 # MAGIC selected_students = selection.pdp.select_students_by_attributes(
 # MAGIC     df_student_terms,
 # MAGIC     student_id_cols=cfg.student_id_col,
-# MAGIC     **cfg.preprocessing.selection.student_criteria
+# MAGIC     **cfg.preprocessing.selection.student_criteria,
 # MAGIC )
 # MAGIC # finding students who meet student criteria in checkpoints
 # MAGIC df_labeled = pd.merge(df_ckpt, pd.Series(selected_students.index), how="inner", on=cfg.student_id_col)
@@ -197,21 +197,20 @@ df_ckpt
 selected_students = selection.pdp.select_students_by_attributes(
     df_student_terms,
     student_id_cols=cfg.student_id_col,
-    **cfg.preprocessing.selection.student_criteria
+    **cfg.preprocessing.selection.student_criteria,
 )
 
 # merge checkpoint terms with selected students
-df_labeled = pd.merge(df_ckpt, pd.Series(selected_students.index), how="inner", on=cfg.student_id_col)
+df_labeled = pd.merge(
+    df_ckpt, pd.Series(selected_students.index), how="inner", on=cfg.student_id_col
+)
 df_labeled
 
 # COMMAND ----------
 
 # TODO: choose target function suitable for school's use case
 # parameters should be specified in the config
-target = targets.pdp.TODO.compute_target(
-    df_labeled,
-    **cfg.preprocessing.target
-)
+target = targets.pdp.TODO.compute_target(df_labeled, **cfg.preprocessing.target)
 df_labeled = pd.merge(df_features, target, how="inner", on=cfg.student_id_col)
 
 print(df_labeled[cfg.target_col].value_counts())
@@ -242,9 +241,7 @@ plt.show()
 # COMMAND ----------
 
 # drop unwanted columns and mask values by time
-df_preprocessed = preprocessing.pdp.clean_up_labeled_dataset_cols_and_vals(
-    df_labeled
-)
+df_preprocessed = preprocessing.pdp.clean_up_labeled_dataset_cols_and_vals(df_labeled)
 df_preprocessed.shape
 
 # COMMAND ----------
@@ -307,9 +304,9 @@ non_feature_cols = (
 
 # COMMAND ----------
 
-target_corrs = df_preprocessed.drop(columns=non_feature_cols + [cfg.target_col]).corrwith(
-    df_preprocessed[cfg.target_col], method="spearman", numeric_only=True
-)
+target_corrs = df_preprocessed.drop(
+    columns=non_feature_cols + [cfg.target_col]
+).corrwith(df_preprocessed[cfg.target_col], method="spearman", numeric_only=True)
 print(target_corrs.sort_values(ascending=False).head(10))
 print("...")
 print(target_corrs.sort_values(ascending=False, na_position="first").tail(10))
@@ -336,9 +333,7 @@ print(
 
 # save preprocessed dataset
 dataio.write.to_delta_table(
-    df_preprocessed,
-    cfg.datasets.silver.preprocessed.table_path,
-    spark_session=spark
+    df_preprocessed, cfg.datasets.silver.preprocessed.table_path,spark_session=spark
 )
 
 # COMMAND ----------
