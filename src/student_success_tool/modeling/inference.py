@@ -327,7 +327,7 @@ def top_shap_features(
 
     return top_10_features
 
-def support_score_distribution_table(df_serving, unique_ids, preds_probs, shap_values, inference_params, features_table, model_feature_names
+def support_score_distribution_table(df_serving, unique_ids, pred_probs, shap_values, inference_params, features_table, model_feature_names
 ):
     """
     Selects top features to display and store
