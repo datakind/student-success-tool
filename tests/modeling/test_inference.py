@@ -416,7 +416,6 @@ def test_top_shap_features_behavior(sample_data):
     assert len(top_features) == 10
 
     grouped = result.groupby("feature_name")["shap_value"].apply(lambda x: np.mean(np.abs(x)))
-    sorted_features = grouped.sort_values(ascending=False).index.tolist()
     shap_values = grouped.sort_values(ascending=False).values
     assert all(shap_values[i] >= shap_values[i + 1] for i in range(len(shap_values) - 1))
 

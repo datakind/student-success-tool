@@ -318,7 +318,7 @@ class ModelInferenceTask:
             logging.error("Error computing support score distribution table: %s", e)
             return None
 
-    def inference_shap_feature_importance(self, shap_values, features):
+    def inference_shap_feature_importance(self, df_serving, shap_values):
         """
         Selects top important features to display and store
         """
