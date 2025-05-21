@@ -434,7 +434,7 @@ def test_handles_fewer_than_10_features():
 
     result = top_shap_features(features, unique_ids, shap_values)
     assert set(result["feature_name"].unique()) == {"feature1", "feature2"}
-    asser result.empty
+    assert result.empty
 
 def test_empty_input():
     features = pd.DataFrame()
