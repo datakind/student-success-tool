@@ -258,25 +258,22 @@ class ModelInferenceTask:
         except Exception as e:
             logging.error("Error during SHAP value calculation: %s", e)
             raise
-    
+
     def top_10_features(
-            features: pd.DataFrame,
-            unique_ids: pd.Series,
-            shap_values: npt.NDArray[np.float64],
-        ) -> pd.DataFrame:
-        
+        features: pd.DataFrame,
+        unique_ids: pd.Series,
+        shap_values: npt.NDArray[np.float64],
+    ) -> pd.DataFrame:
         try:
             top_10_shap_features = inference.top_shap_features(
-                features,
-                unique_ids,
-                shap_values
+                features, unique_ids, shap_values
             )
             return top_10_shap_features
 
         except Exception as e:
             logging.error("Error computing top 10 shap features table: %s", e)
             return None
-    
+
     def support_score_distribution(
         self, df_serving, unique_ids, df_predicted, shap_values, model_feature_names
     ):
@@ -329,11 +326,9 @@ class ModelInferenceTask:
             return None
         features_table = dataio.read_features_table("assets/pdp/features_table.toml")
         shap_feature_importance = inference.generate_ranked_feature_table(
-                df_serving,
-                shap_values.values,
-                features_table
-            )
-        
+            df_serving, shap_values.values, features_table
+        )
+
         return shap_feature_importance
 
     def get_top_features_for_display(
@@ -414,29 +409,38 @@ class ModelInferenceTask:
 
             # Inference_features_with_most_impact TABLE
             inference_features_with_most_impact = self.top_10_features(
-                df_processed[model_feature_names],
-                unique_ids, 
-                shap_values.values
+                df_processed[model_feature_names], unique_ids, shap_values.values
             )
             # shap_feature_importance TABLE
-            shap_feature_importance = self.inference_shap_feature_importance(df_processed, shap_values)
+            shap_feature_importance = self.inference_shap_feature_importance(
+                df_processed, shap_values
+            )
             # support_overview TABLE
             support_overview_table = self.support_score_distribution_table(
                 df_processed, unique_ids, df_predicted, shap_values, model_feature_names
             )
             if (
-                inference_features_with_most_impact is None or
-                shap_feature_importance is None or
-                support_overview_table is None
+                inference_features_with_most_impact is None
+                or shap_feature_importance is None
+                or support_overview_table is None
             ):
                 msg = "One or more inference outputs are empty: cannot write inference summary tables."
                 logging.error(msg)
                 raise Exception(msg)
 
-            self.write_data_to_delta(inference_features_with_most_impact, f"inference_{self.cfg.model.run_id}_features_with_most_impact")
-            self.write_data_to_delta(shap_feature_importance, "inference_{self.cfg.model.run_id}_shap_feature_importance")
-            self.write_data_to_delta(support_overview_table, "inference_{self.cfg.model.run_id}_support_overview")
-            
+            self.write_data_to_delta(
+                inference_features_with_most_impact,
+                f"inference_{self.cfg.model.run_id}_features_with_most_impact",
+            )
+            self.write_data_to_delta(
+                shap_feature_importance,
+                "inference_{self.cfg.model.run_id}_shap_feature_importance",
+            )
+            self.write_data_to_delta(
+                support_overview_table,
+                "inference_{self.cfg.model.run_id}_support_overview",
+            )
+
             # Shap Result Table
             shap_results = self.get_top_features_for_display(
                 df_processed, unique_ids, df_predicted, shap_values, model_feature_names

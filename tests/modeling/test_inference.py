@@ -13,7 +13,7 @@ from student_success_tool.modeling.inference import (
     select_top_features_for_display,
     generate_ranked_feature_table,
     top_shap_features,
-    support_score_distribution_table
+    support_score_distribution_table,
 )
 
 
@@ -380,28 +380,34 @@ def test_get_mapped_feature_name(feature_col, features_table, exp):
     assert isinstance(obs, str)
     assert obs == exp
 
+
 @pytest.fixture
 def sample_data():
-    features = pd.DataFrame({
-        "feature1": [1, 2, 3],
-        "feature2": [4, 5, 6],
-        "feature3": [7, 8, 9],
-        "feature4": [0, 1, 0],
-        "feature5": [2, 2, 2],
-        "feature6": [1, 1, 1],
-        "feature7": [0, 0, 1],
-        "feature8": [3, 3, 3],
-        "feature9": [4, 4, 4],
-        "feature10": [5, 5, 5],
-        "feature11": [6, 6, 6]
-    })
+    features = pd.DataFrame(
+        {
+            "feature1": [1, 2, 3],
+            "feature2": [4, 5, 6],
+            "feature3": [7, 8, 9],
+            "feature4": [0, 1, 0],
+            "feature5": [2, 2, 2],
+            "feature6": [1, 1, 1],
+            "feature7": [0, 0, 1],
+            "feature8": [3, 3, 3],
+            "feature9": [4, 4, 4],
+            "feature10": [5, 5, 5],
+            "feature11": [6, 6, 6],
+        }
+    )
     unique_ids = pd.Series([101, 102, 103])
-    shap_values = np.array([
-        [0.1, 0.3, 0.2, 0.0, 0.4, 0.1, 0.0, 0.3, 0.2, 0.5, 0.6],
-        [0.2, 0.2, 0.1, 0.0, 0.3, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5],
-        [0.3, 0.1, 0.3, 0.0, 0.2, 0.0, 0.0, 0.1, 0.4, 0.3, 0.4],
-    ])
+    shap_values = np.array(
+        [
+            [0.1, 0.3, 0.2, 0.0, 0.4, 0.1, 0.0, 0.3, 0.2, 0.5, 0.6],
+            [0.2, 0.2, 0.1, 0.0, 0.3, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5],
+            [0.3, 0.1, 0.3, 0.0, 0.2, 0.0, 0.0, 0.1, 0.4, 0.3, 0.4],
+        ]
+    )
     return features, unique_ids, shap_values
+
 
 def test_top_shap_features_behavior(sample_data):
     features, unique_ids, shap_values = sample_data
@@ -409,30 +415,38 @@ def test_top_shap_features_behavior(sample_data):
 
     # Check output shape and columns
     assert isinstance(result, pd.DataFrame)
-    assert set(result.columns) == {"student_id", "feature_name", "shap_value", "feature_value"}
+    assert set(result.columns) == {
+        "student_id",
+        "feature_name",
+        "shap_value",
+        "feature_value",
+    }
 
     # Check top 10 feature selection
     top_features = result["feature_name"].unique()
     assert len(top_features) == 10
 
-    grouped = result.groupby("feature_name")["shap_value"].apply(lambda x: np.mean(np.abs(x)))
+    grouped = result.groupby("feature_name")["shap_value"].apply(
+        lambda x: np.mean(np.abs(x))
+    )
     shap_values = grouped.sort_values(ascending=False).values
-    assert all(shap_values[i] >= shap_values[i + 1] for i in range(len(shap_values) - 1))
+    assert all(
+        shap_values[i] >= shap_values[i + 1] for i in range(len(shap_values) - 1)
+    )
 
     assert set(grouped.index).issubset(set(features.columns))
     assert len(grouped) == 10
 
 
 def test_handles_fewer_than_10_features():
-    features = pd.DataFrame({
-        "feature1": [1, 2],
-        "feature2": [3, 4],
-    })
+    features = pd.DataFrame(
+        {
+            "feature1": [1, 2],
+            "feature2": [3, 4],
+        }
+    )
     unique_ids = pd.Series([1, 2])
-    shap_values = np.array([
-        [0.5, 0.1],
-        [0.3, 0.4]
-    ])
+    shap_values = np.array([[0.5, 0.1], [0.3, 0.4]])
 
     result = top_shap_features(features, unique_ids, shap_values)
     assert set(result["feature_name"].unique()) == {"feature1", "feature2"}
@@ -446,6 +460,7 @@ def test_empty_input():
 
     with pytest.raises(ValueError):
         top_shap_features(features, unique_ids, shap_values)
+
 
 @patch("student_success_tool.modeling.inference.select_top_features_for_display")
 @pytest.mark.parametrize(
@@ -461,19 +476,23 @@ def test_empty_input():
     ],
     [
         (
-            pd.DataFrame({
-                "x1": ["val1", "val2", "val3"],
-                "x2": [True, False, True],
-                "x3": [2.0, 1.0001, 0.5],
-                "x4": [1, 2, 3],
-            }),
+            pd.DataFrame(
+                {
+                    "x1": ["val1", "val2", "val3"],
+                    "x2": [True, False, True],
+                    "x3": [2.0, 1.0001, 0.5],
+                    "x4": [1, 2, 3],
+                }
+            ),
             pd.Series([1, 2, 3]),
             [0.9, 0.1, 0.5],
-            np.array([
-                [1.0, 0.9, 0.8, 0.7],
-                [0.0, -1.0, 0.9, -0.8],
-                [0.25, 0.0, -0.5, 0.75],
-            ]),
+            np.array(
+                [
+                    [1.0, 0.9, 0.8, 0.7],
+                    [0.0, -1.0, 0.9, -0.8],
+                    [0.25, 0.0, -0.5, 0.75],
+                ]
+            ),
             3,
             0.5,
             {
@@ -481,22 +500,24 @@ def test_empty_input():
                 "x2": {"name": "feature #2"},
                 "x3": {"name": "feature #3"},
             },
-            pd.DataFrame({
-                "Student ID": [1, 2, 3],
-                "Support Score": [0.9, 0.1, 0.5],
-                "Support Needed": [True, False, True],
-                "Feature_1_Name": ["feature #1", "feature #2", "x4"],
-                "Feature_1_Value": ["val1", "False", "3"],
-                "Feature_1_Importance": [1.0, -1.0, 0.75],
-                "Feature_2_Name": ["feature #2", "feature #3", "feature #3"],
-                "Feature_2_Value": ["True", "1.0", "0.5"],
-                "Feature_2_Importance": [0.9, 0.9, -0.5],
-                "Feature_3_Name": ["feature #3", "x4", "feature #1"],
-                "Feature_3_Value": ["2.0", "2", "val3"],
-                "Feature_3_Importance": [0.8, -0.8, 0.25],
-            }),
+            pd.DataFrame(
+                {
+                    "Student ID": [1, 2, 3],
+                    "Support Score": [0.9, 0.1, 0.5],
+                    "Support Needed": [True, False, True],
+                    "Feature_1_Name": ["feature #1", "feature #2", "x4"],
+                    "Feature_1_Value": ["val1", "False", "3"],
+                    "Feature_1_Importance": [1.0, -1.0, 0.75],
+                    "Feature_2_Name": ["feature #2", "feature #3", "feature #3"],
+                    "Feature_2_Value": ["True", "1.0", "0.5"],
+                    "Feature_2_Importance": [0.9, 0.9, -0.5],
+                    "Feature_3_Name": ["feature #3", "x4", "feature #1"],
+                    "Feature_3_Value": ["2.0", "2", "val3"],
+                    "Feature_3_Importance": [0.8, -0.8, 0.25],
+                }
+            ),
         )
-    ]
+    ],
 )
 def test_support_score_distribution_table(
     mock_select_top_features_for_display,
@@ -511,7 +532,7 @@ def test_support_score_distribution_table(
 ):
     inference_params = {
         "num_top_features": n_features,
-        "min_prob_pos_label": needs_support_threshold_prob or 0.0
+        "min_prob_pos_label": needs_support_threshold_prob or 0.0,
     }
 
     mock_select_top_features_for_display.return_value = exp
@@ -528,7 +549,11 @@ def test_support_score_distribution_table(
 
     assert isinstance(result, pd.DataFrame)
     assert set(result.columns) == {
-        "bin_lower", "bin_upper", "support_score", "count_of_students", "pct"
+        "bin_lower",
+        "bin_upper",
+        "support_score",
+        "count_of_students",
+        "pct",
     }
     assert result["count_of_students"].sum() == len(unique_ids)
     assert np.isclose(result["pct"].sum(), 100.0, atol=0.01)

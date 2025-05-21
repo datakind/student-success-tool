@@ -294,11 +294,12 @@ def calculate_shap_values(
         .assign(**{student_id_col: student_ids})
     )
 
+
 def top_shap_features(
     features: pd.DataFrame,
     unique_ids: pd.Series,
-    shap_values: npt.NDArray[np.float64],) -> pd.DataFrame:
-
+    shap_values: npt.NDArray[np.float64],
+) -> pd.DataFrame:
     if features.empty or shap_values.size == 0 or unique_ids.empty:
         raise ValueError("Input data cannot be empty.")
 
@@ -308,9 +309,8 @@ def top_shap_features(
         .melt(id_vars="student_id", var_name="feature_name", value_name="shap_value")
     )
 
-    feature_long = (
-        features.assign(student_id=unique_ids.values)
-        .melt(id_vars="student_id", var_name="feature_name", value_name="feature_value")
+    feature_long = features.assign(student_id=unique_ids.values).melt(
+        id_vars="student_id", var_name="feature_name", value_name="feature_value"
     )
 
     summary_df = shap_long.merge(feature_long, on=["student_id", "feature_name"])
@@ -327,12 +327,20 @@ def top_shap_features(
 
     return top_10_features
 
-def support_score_distribution_table(df_serving, unique_ids, pred_probs, shap_values, inference_params, features_table, model_feature_names
+
+def support_score_distribution_table(
+    df_serving,
+    unique_ids,
+    pred_probs,
+    shap_values,
+    inference_params,
+    features_table,
+    model_feature_names,
 ):
     """
     Selects top features to display and store
     """
-    
+
     try:
         result = select_top_features_for_display(
             df_serving,
@@ -347,10 +355,7 @@ def support_score_distribution_table(df_serving, unique_ids, pred_probs, shap_va
         # --- Bin support scores for histogram (e.g., 0.0 to 1.0 in 0.1 steps) ---
         bins = np.arange(0.1, 1.1, 0.1)
         result["score_bin"] = pd.cut(
-            result["Support Score"],
-            bins=bins,
-            include_lowest=True,
-            right=False
+            result["Support Score"], bins=bins, include_lowest=True, right=False
         )
 
         # Group and count
@@ -361,16 +366,27 @@ def support_score_distribution_table(df_serving, unique_ids, pred_probs, shap_va
         )
 
         # Extract bin boundaries
-        bin_counts["bin_lower"] = bin_counts["score_bin"].apply(lambda x: round(x.left, 2))
-        bin_counts["bin_upper"] = bin_counts["score_bin"].apply(lambda x: round(x.right, 2))
-        bin_counts["support_score"] = bin_counts["score_bin"].apply(lambda x: round((x.left + x.right) / 2, 2))
+        bin_counts["bin_lower"] = bin_counts["score_bin"].apply(
+            lambda x: round(x.left, 2)
+        )
+        bin_counts["bin_upper"] = bin_counts["score_bin"].apply(
+            lambda x: round(x.right, 2)
+        )
+        bin_counts["support_score"] = bin_counts["score_bin"].apply(
+            lambda x: round((x.left + x.right) / 2, 2)
+        )
 
         total_students = len(result)
-        bin_counts["pct"] = (bin_counts["count_of_students"] / total_students * 100).round(2)
+        bin_counts["pct"] = (
+            bin_counts["count_of_students"] / total_students * 100
+        ).round(2)
 
-        return bin_counts[["bin_lower", "bin_upper", "support_score", "count_of_students", "pct"]]
+        return bin_counts[
+            ["bin_lower", "bin_upper", "support_score", "count_of_students", "pct"]
+        ]
 
     except Exception:
         import traceback
+
         traceback.print_exc()
         raise  # <-- temporarily raise instead of returning None
