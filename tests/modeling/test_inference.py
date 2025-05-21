@@ -416,9 +416,10 @@ def test_top_shap_features_behavior(sample_data):
     # Check correct SHAP ranking
     grouped = result.groupby("feature_name")["shap_value"].apply(lambda x: np.mean(np.abs(x)))
     sorted_features = grouped.sort_values(ascending=False).index.tolist()
-    assert len(grouped) == 10
+    # Ensure it's sorted descending
+    assert grouped.is_monotonic_decreasing
     assert set(grouped.index).issubset(set(features.columns))
-    assert grouped.equals(grouped.sort_values(ascending=False))  # Ensure it's sorted
+    assert len(grouped) == 10
 
 
 def test_handles_fewer_than_10_features():
@@ -434,7 +435,8 @@ def test_handles_fewer_than_10_features():
 
     result = top_shap_features(features, unique_ids, shap_values)
     assert set(result["feature_name"].unique()) == {"feature1", "feature2"}
-    assert result.empty
+    assert len(result) == 4  # 2 students × 2 features
+
 
 def test_empty_input():
     features = pd.DataFrame()
