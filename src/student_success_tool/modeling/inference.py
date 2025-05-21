@@ -298,6 +298,10 @@ def top_shap_features(
     features: pd.DataFrame,
     unique_ids: pd.Series,
     shap_values: npt.NDArray[np.float64],) -> pd.DataFrame:
+
+    if features.empty or shap_values.size == 0 or unique_ids.empty:
+        raise ValueError("Input data cannot be empty.")
+
     shap_long = (
         pd.DataFrame(shap_values, columns=features.columns)
         .assign(student_id=unique_ids.values)

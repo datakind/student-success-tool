@@ -416,7 +416,10 @@ def test_top_shap_features_behavior(sample_data):
     # Check correct SHAP ranking
     grouped = result.groupby("feature_name")["shap_value"].apply(lambda x: np.mean(np.abs(x)))
     sorted_features = grouped.sort_values(ascending=False).index.tolist()
-    assert sorted_features == list(grouped.index)
+    assert len(grouped) == 10
+    assert set(grouped.index).issubset(set(features.columns))
+    assert grouped.equals(grouped.sort_values(ascending=False))  # Ensure it's sorted
+
 
 def test_handles_fewer_than_10_features():
     features = pd.DataFrame({
@@ -431,6 +434,7 @@ def test_handles_fewer_than_10_features():
 
     result = top_shap_features(features, unique_ids, shap_values)
     assert set(result["feature_name"].unique()) == {"feature1", "feature2"}
+    asser result.empty
 
 def test_empty_input():
     features = pd.DataFrame()
