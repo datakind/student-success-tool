@@ -38,7 +38,6 @@
 
 import functools as ft
 import logging
-import typing as t
 
 import matplotlib.pyplot as plt
 import mlflow
@@ -46,7 +45,6 @@ import numpy as np
 import pandas as pd
 import shap
 from databricks.connect import DatabricksSession
-from databricks.sdk.runtime import dbutils
 from py4j.protocol import Py4JJavaError
 from pyspark.sql.types import FloatType, StringType, StructField, StructType
 
@@ -236,7 +234,7 @@ shap_fig = plt.gcf()
 # in order to be picked up by model card module (so don't change it)
 with mlflow.start_run(run_id=cfg.model.run_id) as run:
     mlflow.log_figure(
-        shap_fig, f"shap_summary_labeled_dataset_100_ref_rows.png"
+        shap_fig, "shap_summary_labeled_dataset_100_ref_rows.png"
     )
 
 # COMMAND ----------
