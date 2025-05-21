@@ -50,8 +50,11 @@ except Exception:
     logging.warning("unable to create spark session; are you in a Databricks runtime?")
     pass
 
-# HACK: hardcode uc base path and mflow client
+# HACK: hardcode uc base path and mlflow client
+# NOTE: registry uri needs to be set before mlflow client
+# to avoid errors when registering the model
 catalog = "sst_dev"
+mlflow.set_registry_uri("databricks-uc")
 client = mlflow.tracking.MlflowClient()
 
 # HACK: We need to disable the mlflow widget template loading for MC output
@@ -89,7 +92,6 @@ model_name
 
 # COMMAND ----------
 
-mlflow.set_registry_uri("databricks-uc")
 modeling.registration.register_mlflow_model(
     model_name,
     cfg.institution_id,

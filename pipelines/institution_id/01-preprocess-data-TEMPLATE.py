@@ -43,7 +43,7 @@ from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 
 from student_success_tool import configs, dataio, eda, modeling, preprocessing, utils
-from student_success_tool.preprocessing import targets
+from student_success_tool.preprocessing import checkpoints, selection, targets
 
 # COMMAND ----------
 
@@ -103,7 +103,7 @@ df_course.head()
 
 # COMMAND ----------
 
-raw_cohort_file_path = cfg.datasets[dataset_name].raw_cohort.file_path
+raw_cohort_file_path = cfg.datasets.bronze.raw_cohort.file_path
 df_cohort = dataio.pdp.read_raw_cohort_data(
     file_path=raw_cohort_file_path, schema=dataio.schemas.pdp.RawPDPCohortDataSchema
 )
@@ -139,74 +139,77 @@ df_student_terms.columns.tolist()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC A single function call can be used to make a labeled dataset for modeling, which includes selecting eligible students, subsetting to just the terms from which predictions are made, and computing target variables. _Which_ function depends primarily on the target to be computed: a failure to earn enough credits within a timeframe since initial enrollment, or a particular mid-way checkpoint (other targets pending). Input parameters will vary depending on the school and the target.
+# MAGIC A checkpoint, selection, and target function can be used together to make a labeled dataset for modeling. This involves selecting eligible students, subsetting to just the terms from which predictions are made, and computing target variables. _Which_ function depends primarily on the target to be computed: a failure to earn enough credits within a timeframe since initial enrollment, or a particular mid-way checkpoint (other targets pending). Input parameters will vary depending on the school and the target.
 # MAGIC
-# MAGIC For example, here's how one could make a labeled dataset with the following setup: Filters for first-time students, enrolled either full- or part-time, seeking an Associate's degree; that earn at least 60 credits within 3 years of enrollment if full-time or 6 years of enrollment if part-time; making predictions from the first term for which they've earned 30 credits.
-# MAGIC
+# MAGIC Here's a concrete example below based on a retention model:
 # MAGIC ```python
-# MAGIC # school-specific parameters that configure target variable code
-# MAGIC min_num_credits_checkin = 30.0
-# MAGIC min_num_credits_target = 60.0
-# MAGIC student_criteria = {
-# MAGIC     "enrollment_type": "FIRST-TIME",
-# MAGIC     "enrollment_intensity_first_term": ["FULL-TIME", "PART-TIME"],
-# MAGIC     "credential_type_sought_year_1": "Associate's Degree",
-# MAGIC }
-# MAGIC intensity_time_limits = [
-# MAGIC     ("FULL-TIME", 3.0, "year"),
-# MAGIC     ("PART-TIME", 6.0, "year"),
-# MAGIC ]
+# MAGIC # school-specific parameters specified in config.toml
+# MAGIC [preprocessing.selection]
+# MAGIC student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year_1 = ["BACHELOR'S DEGREE", "ASSOCIATE'S Degree"], enrollment_intensity_first_term = ["FULL-TIME", "PART-TIME"] }
+# MAGIC intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
 # MAGIC
-# MAGIC df_labeled = pdp.targets.failure_to_earn_enough_credits_in_time_from_enrollment.make_labeled_dataset(
+# MAGIC [preprocessing.checkpoint]
+# MAGIC name = "end_of_first_term"
+# MAGIC type_ = "first"
+# MAGIC
+# MAGIC [preprocessing.target]
+# MAGIC name = "retention"
+# MAGIC type_ = "retention"
+# MAGIC max_academic_year = "2024"
+# MAGIC
+# MAGIC # creating checkpoint dataframe
+# MAGIC df_ckpt = checkpoints.pdp.first_student_terms_within_cohort(
 # MAGIC     df_student_terms,
-# MAGIC     min_num_credits_checkin=min_num_credits_checkin,
-# MAGIC     min_num_credits_target=min_num_credits_target,
-# MAGIC     student_criteria=student_criteria,
-# MAGIC     intensity_time_limits=intensity_time_limits,
+# MAGIC     sort_cols=cfg.preprocessing.checkpoint.sort_cols,
+# MAGIC     include_cols=cfg.preprocessing.checkpoint.include_cols,
 # MAGIC )
+# MAGIC # selecting students from student criteria
+# MAGIC selected_students = selection.pdp.select_students_by_attributes(
+# MAGIC     df_student_terms,
+# MAGIC     student_id_cols=cfg.student_id_col,
+# MAGIC     **cfg.preprocessing.selection.student_criteria
+# MAGIC )
+# MAGIC # finding students who meet student criteria in checkpoints
+# MAGIC df_labeled = pd.merge(df_ckpt, pd.Series(selected_students.index), how="inner", on=cfg.student_id_col)
+# MAGIC
+# MAGIC # computing target and adding it to df_labeled
+# MAGIC target = preprocessing.targets.pdp.retention.compute_target(
+# MAGIC     df_labeled,
+# MAGIC     max_academic_year=cfg.preprocessing.target.max_academic_year,
+# MAGIC )
+# MAGIC df_labeled = pd.merge(df_labeled, target, how="inner", on=cfg.student_id_col)
 # MAGIC ```
-# MAGIC
-# MAGIC Check out the `pdp.targets` module for options and more info.
-# MAGIC
-# MAGIC **TODO(Burton?):**
-# MAGIC - Update these instructions to use new targets/selection/checkpoint functionality
+# MAGIC Check out the `checkpoint`, `selection`, & `targets` modules for options and more info.
 
 # COMMAND ----------
 
-df_ckpt = checkpoints.pdp.first_student_terms_within_cohort(
+# TODO: choose checkpoint function suitable for school's use case
+# parameters should be specified in the config
+df_ckpt = checkpoints.pdp.TODO(
     df_student_terms,
-    **cfg.preprocessing.checkpoint
+    sort_cols=cfg.preprocessing.checkpoint.sort_cols,
+    include_cols=cfg.preprocessing.checkpoint.include_cols,
 )
-df_ckpt.shape
+df_ckpt
 
 # COMMAND ----------
 
-# TODO: load target params from the project config
-# okay to hard-code it first then add it to the config later
-try:
-    target_params = cfg.preprocessing.target.params
-    logging.info("target params: %s", target_params)
-except AttributeError:
-    target_params = {}
-
-# COMMAND ----------
-
+# select students based on student criteria
 selected_students = selection.pdp.select_students_by_attributes(
     df_student_terms,
     student_id_cols=cfg.student_id_col,
-    **cfg.preprocessing.selection
+    **cfg.preprocessing.selection.student_criteria
 )
-selected_students.shape
 
-# COMMAND ----------
-
-df_labeled = pd.merge(df_ckpt, pd.Series(selected_students), how="inner", on=cfg.student_id_col)
-df_labeled.shape
+# merge checkpoint terms with selected students
+df_labeled = pd.merge(df_ckpt, pd.Series(selected_students.index), how="inner", on=cfg.student_id_col)
+df_labeled
 
 # COMMAND ----------
 
 # TODO: choose target function suitable for school's use case
-target = targets.pdp.TODO.make_labeled_dataset(
+# parameters should be specified in the config
+target = preprocessing.targets.pdp.TODO.compute_target(
     df_labeled,
     **cfg.preprocessing.target
 )
@@ -240,7 +243,7 @@ plt.show()
 # COMMAND ----------
 
 # drop unwanted columns and mask values by time
-df_preprocessed = preprocessing.pdp.dataops.clean_up_labeled_dataset_cols_and_vals(
+df_preprocessed = preprocessing.pdp.clean_up_labeled_dataset_cols_and_vals(
     df_labeled
 )
 df_preprocessed.shape

@@ -177,7 +177,7 @@ df_course
 # MAGIC ```python
 # MAGIC import functools as ft
 # MAGIC
-# MAGIC df_course = pdp.dataio.read_raw_pdp_course_data_from_file(
+# MAGIC df_course = dataio.pdp.read_raw_course_data(
 # MAGIC     fpath_course,
 # MAGIC     schema=RawSCHOOLCourseDataSchema,
 # MAGIC     dttm_format="%Y%m%d.0",

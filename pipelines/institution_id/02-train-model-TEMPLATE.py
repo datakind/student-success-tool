@@ -59,6 +59,9 @@ except Exception:
     logging.warning("unable to create spark session; are you in a Databricks runtime?")
     pass
 
+# Get job run id for automl run
+job_run_id = utils.databricks.get_db_widget_param("job_run_id", default="interactive")
+
 # COMMAND ----------
 
 # MAGIC %md

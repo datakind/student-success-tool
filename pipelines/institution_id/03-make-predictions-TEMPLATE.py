@@ -95,7 +95,7 @@ features_table = dataio.read_features_table("assets/pdp/features_table.toml")
 
 df = dataio.schemas.pdp.PDPLabeledDataSchema(
     dataio.read.from_delta_table(
-        cfg.datasets.gold.modeling.table_path,
+        cfg.datasets.gold.silver.table_path,
         spark_session=spark,
     )
 )
@@ -127,16 +127,6 @@ df_train.shape
 
 # MAGIC %md
 # MAGIC # make predictions
-
-# COMMAND ----------
-
-# TODO: load inference params from the project config
-# okay to hard-code it first then add it to the config later
-# inference_params = cfg.inference.model_dump()
-inference_params = {
-    "num_top_features": 5,
-    "min_prob_pos_label": 0.5,
-}
 
 # COMMAND ----------
 
@@ -244,7 +234,7 @@ shap_fig = plt.gcf()
 # save shap summary plot via mlflow into experiment artifacts folder
 with mlflow.start_run(run_id=cfg.model.run_id) as run:
     mlflow.log_figure(
-        shap_fig, f"shap_summary_{dataset_name}_dataset_{df_ref.shape[0]}_ref_rows.png"
+        shap_fig, f"shap_summary_sample_dataset.png"
     )
 
 # COMMAND ----------
@@ -276,17 +266,17 @@ result = inference.select_top_features_for_display(
     unique_ids,
     pred_probs,
     df_shap_values[model_feature_names].to_numpy(),
-    n_features=inference_params["num_top_features"],
+    n_features=cfg.inference.num_top_features,
     features_table=features_table,
-    needs_support_threshold_prob=inference_params["min_prob_pos_label"],
+    needs_support_threshold_prob=cfg.inference.min_prob_pos_label,
 )
 result
 
 # COMMAND ----------
 
-# save preprocessed dataset
+# save sample advisor output dataset
 dataio.write.to_delta_table(
-    df_preprocessed,
+    result,
     cfg.datasets.gold.advisor_output.table_path,
     spark_session=spark
 )
