@@ -234,7 +234,7 @@ shap_fig = plt.gcf()
 # save shap summary plot via mlflow into experiment artifacts folder
 with mlflow.start_run(run_id=cfg.model.run_id) as run:
     mlflow.log_figure(
-        shap_fig, f"shap_summary_sample_dataset.png"
+        shap_fig, f"shap_summary_labeled_dataset_100_ref_rows.png"
     )
 
 # COMMAND ----------
