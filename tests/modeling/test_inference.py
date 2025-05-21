@@ -461,8 +461,7 @@ def test_support_score_distribution_table(
         "num_top_features": n_features,
         "min_prob_pos_label": needs_support_threshold_prob or 0.0  # handle None
     }
-
-    # Use the function under test
+    
     result = support_score_distribution_table(
         df_serving=features,
         unique_ids=unique_ids,
@@ -473,7 +472,6 @@ def test_support_score_distribution_table(
         model_feature_names=features.columns.tolist(),
     )
 
-    # Basic structure checks
     assert isinstance(result, pd.DataFrame)
     assert set(result.columns) == {
         "bin_lower", "bin_upper", "support_score", "count_of_students", "pct"
@@ -483,12 +481,7 @@ def test_support_score_distribution_table(
 
     # --- Binning logic checks ---
     for idx, row in result.iterrows():
-        # Midpoint should be correct
         expected_midpoint = round((row["bin_lower"] + row["bin_upper"]) / 2, 2)
         assert row["support_score"] == expected_midpoint
-
-        # Bin width should be 0.1
         assert round(row["bin_upper"] - row["bin_lower"], 2) == 0.1
-
-        # Bin boundaries should be within [0.1, 1.0]
         assert 0.1 <= row["bin_lower"] < row["bin_upper"] <= 1.0
