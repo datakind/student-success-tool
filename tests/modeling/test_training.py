@@ -66,3 +66,4 @@ def test_get_experiment_name(params, exp_prefix):
     obs = training.get_experiment_name(**params)
     assert isinstance(obs, str)
     assert obs.startswith(exp_prefix)
+

@@ -21,7 +21,7 @@
 # we need to manually install a certain version of pandas and scikit-learn in order
 # for our models to load and run properly.
 
-# %pip install "student-success-tool==0.2.0"
+# %pip install "student-success-tool==0.3.1"
 # %pip install "pandas==1.5.3"
 # %pip install "scikit-learn==1.3.0"
 
@@ -50,8 +50,11 @@ except Exception:
     logging.warning("unable to create spark session; are you in a Databricks runtime?")
     pass
 
-# HACK: hardcode uc base path and mflow client
+# HACK: hardcode uc base path and mlflow client
+# NOTE: registry uri needs to be set before creating the client
+# to avoid mlflow REST exception when registering the model
 catalog = "sst_dev"
+mlflow.set_registry_uri("databricks-uc")
 client = mlflow.tracking.MlflowClient()
 
 # HACK: We need to disable the mlflow widget template loading for MC output
@@ -89,7 +92,6 @@ model_name
 
 # COMMAND ----------
 
-mlflow.set_registry_uri("databricks-uc")
 modeling.registration.register_mlflow_model(
     model_name,
     cfg.institution_id,
