@@ -92,7 +92,7 @@ def shap_summary_plot(
 
     shap_fig = plt.gcf()
 
-    mlflow.log_figure(shap_fig, "feature_importances_by_shap_plot")
+    mlflow.log_figure(shap_fig, "feature_importances_by_shap_plot.png")
 
 
 def select_top_features_for_display(
