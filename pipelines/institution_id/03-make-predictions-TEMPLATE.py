@@ -220,11 +220,11 @@ df_shap_values
 
 with mlflow.start_run(run_id=cfg.model.run_id) as run:
     inference.shap_summary_plot(
-        df_shap_values.loc[:, model_feature_names].to_numpy(),
-        df_test.loc[:, model_feature_names],
-        class_names=model.classes_,
+        df_shap_values,
+        df_test,
+        model_feature_names,
+        model.classes_,
         max_display=20,
-        show=False,
     )
 
 # COMMAND ----------
