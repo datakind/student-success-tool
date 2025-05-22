@@ -10,8 +10,12 @@ import uuid
 import pandas as pd
 import numpy as np
 from typing import List
+from pyspark.sql import SparkSession
 
 LOGGER = logging.getLogger(__name__)
+
+
+spark = SparkSession.builder.getOrCreate()
 
 
 def register_mlflow_model(
@@ -103,7 +107,7 @@ def log_confusion_matrix(
 
     except mlflow.exceptions.MlflowException as e:
         raise RuntimeError(f"MLflow error while retrieving run {run_id}: {e}")
-    except Exception as e:
+    except Exception:
         LOGGER.exception("Failed to compute or store confusion matrix.")
         raise
 
