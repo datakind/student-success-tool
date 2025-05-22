@@ -39,7 +39,6 @@
 import functools as ft
 import logging
 
-import matplotlib.pyplot as plt
 import mlflow
 import pandas as pd
 import shap

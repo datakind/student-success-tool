@@ -40,7 +40,6 @@
 
 import logging
 
-import matplotlib.pyplot as plt
 import mlflow
 import sklearn.metrics
 from databricks.connect import DatabricksSession
