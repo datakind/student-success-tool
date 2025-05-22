@@ -70,7 +70,7 @@ def shap_summary_plot(
     model_feature_names: list[str],
     model_classes: npt.NDArray,
     max_display: int = 20,
-):
+) -> None:
     """
     Generates and logs a SHAP summary plot using metadata config.
 
