@@ -218,29 +218,28 @@ df_shap_values
 
 # COMMAND ----------
 
-with mlflow.start_run(run_id=cfg.model.run_id) as run:
+with mlflow.start_run(run_id=cfg.model.run_id):
+    # Create & log SHAP summary plot
     inference.shap_summary_plot(
-        df_shap_values,
-        df_test,
-        model_feature_names,
-        model.classes_,
-        max_display=20,
+        df_shap_values=df_shap_values,
+        df_test=df_test,
+        model_feature_names=model_feature_names,
+        model_classes=model.classes_,
     )
 
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC # finalize results
-
-# COMMAND ----------
-
-with mlflow.start_run(run_id=cfg.model.run_id) as run:
+    # Create & log ranked features by SHAP magnitude
     selected_features_df = inference.generate_ranked_feature_table(
         features,
         df_shap_values[model_feature_names].to_numpy(),
         features_table=features_table,
     )
+
 selected_features_df
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC # finalize results
 
 # COMMAND ----------
 
