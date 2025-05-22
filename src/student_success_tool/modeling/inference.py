@@ -299,7 +299,26 @@ def top_shap_features(
     features: pd.DataFrame,
     unique_ids: pd.Series,
     shap_values: npt.NDArray[np.float64],
+    top_n: int = 10
 ) -> pd.DataFrame:
+    
+    """
+    Extracts the top N most important SHAP features across all samples.
+
+    Args:
+        features (pd.DataFrame): Input feature values.
+        unique_ids (pd.Series): Unique identifiers for each sample.
+        shap_values (np.ndarray): SHAP values for the input features.
+        top_n (int): Number of top features to select (default is 10).
+
+    Returns:
+        pd.DataFrame: Long-form DataFrame with columns:
+            - student_id
+            - feature_name
+            - shap_value
+            - feature_value
+    """
+    
     if features.empty or shap_values.size == 0 or unique_ids.empty:
         raise ValueError("Input data cannot be empty.")
 
@@ -315,17 +334,17 @@ def top_shap_features(
 
     summary_df = shap_long.merge(feature_long, on=["student_id", "feature_name"])
 
-    top_10 = (
+    top_n_features = (
         summary_df.groupby("feature_name")["shap_value"]
         .apply(lambda x: np.mean(np.abs(x)))
         .sort_values(ascending=False)
-        .head(10)
+        .head(top_n)
         .index.tolist()
     )
 
-    top_10_features = summary_df[summary_df["feature_name"].isin(top_10)].copy()
+    top_features = summary_df[summary_df["feature_name"].isin(top_n_features)].copy()
 
-    return top_10_features
+    return top_features
 
 
 def support_score_distribution_table(
@@ -338,7 +357,27 @@ def support_score_distribution_table(
     model_feature_names,
 ):
     """
-    Selects top features to display and store
+    Selects top SHAP features for each student, and bins the support scores.
+
+    Args:
+        df_serving (pd.DataFrame): Input features used for prediction.
+        unique_ids (pd.Series): Unique ids (student_id) for each student.
+        pred_probs (list or np.ndarray): Predicted probabilities from the model.
+        shap_values (np.ndarray or pd.DataFrame): SHAP values for the input features.
+        inference_params (dict): Dictionary containing configuration for:
+            - "num_top_features" (int): Number of top features to display.
+            - "min_prob_pos_label" (float): Threshold to determine if support is needed.
+        features_table (dict): Optional dictionary mapping feature names to understandable format.
+        model_feature_names (list): List of feature names used by the model.
+
+    Returns:
+        pd.DataFrame: A DataFrame with the following columns:
+            - bin_lower: Lower bound of the support score bin.
+            - bin_upper: Upper bound of the support score bin.
+            - support_score: Midpoint of the bin (used for plotting).
+            - count_of_students: Number of students in the bin.
+            - pct: Percentage of total students in the bin.
+
     """
 
     try:
