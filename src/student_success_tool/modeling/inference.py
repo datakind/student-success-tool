@@ -6,6 +6,7 @@ import mlflow
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+import matplotlib.pyplot as plt
 import sklearn.base
 import shap
 from shap import KernelExplainer
@@ -64,10 +65,11 @@ def predict_probs(
 
 
 def shap_summary_plot(
-    df_shap_values,
-    df_test,
-    model_feature_names,
-    model_classes,
+    df_shap_values: pd.DataFrame,
+    df_test: pd.DataFrame,
+    model_feature_names: list[str],
+    model_classes: npt.NDArray,
+    max_display: int = 20,
 ):
     """
     Generates and logs a SHAP summary plot using metadata config.
@@ -77,8 +79,7 @@ def shap_summary_plot(
         df_test: DataFrame of test features
         model_feature_names: List of feature names used in the model
         model_classes: List or array of class names for multiclass
-        run_id: Optional MLflow run ID
-        plot_key: Key to reference the metadata TOML
+        max_display: Maximum number of features to display
     """
 
     shap.summary_plot(
@@ -91,8 +92,7 @@ def shap_summary_plot(
 
     shap_fig = plt.gcf()
 
-    with mlflow.start_run(run_id=run_id):
-        mlflow.log_figure(shap_fig, "feature_importances_by_shap_plot")
+    mlflow.log_figure(shap_fig, "feature_importances_by_shap_plot")
 
 
 def select_top_features_for_display(
