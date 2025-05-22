@@ -78,7 +78,7 @@ def shap_summary_plot(
         df_shap_values: DataFrame of SHAP values
         df_test: DataFrame of test features
         model_feature_names: List of feature names used in the model
-        model_classes: List or array of class names for multiclass
+        model_classes: Numpy array of model classes (e.g. True, False)
         max_display: Maximum number of features to display
     """
 
