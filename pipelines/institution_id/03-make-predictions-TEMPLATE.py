@@ -26,7 +26,7 @@
 # we need to manually install a certain version of pandas and scikit-learn in order
 # for our models to load and run properly.
 
-# %pip install "student-success-tool==0.2.0"
+# %pip install "student-success-tool==0.3.1"
 # %pip install "pandas==1.5.3"
 # %pip install "scikit-learn==1.3.0"
 
@@ -38,16 +38,12 @@
 
 import functools as ft
 import logging
-import typing as t
 
 import matplotlib.pyplot as plt
 import mlflow
-import numpy as np
 import pandas as pd
 import shap
 from databricks.connect import DatabricksSession
-from databricks.sdk.runtime import dbutils
-from py4j.protocol import Py4JJavaError
 from pyspark.sql.types import FloatType, StringType, StructField, StructType
 
 from student_success_tool import configs, dataio, modeling
@@ -72,43 +68,12 @@ mlflow.autolog(disable=True)
 
 # COMMAND ----------
 
-# check if we're running this notebook as a "job" in a "workflow"
-# if not, assume this is a prediction workflow
-try:
-    run_type = dbutils.widgets.get("run_type")
-    dataset_name = dbutils.widgets.get("dataset_name")
-    model_name = dbutils.widgets.get("model_name")
-except Py4JJavaError:
-    run_type = "predict"
-    # TODO: specify dataset and model name, as (to be) included in project config
-    dataset_name = "DATASET_NAME"
-    model_name = "MODEL_NAME"
-
-logging.info(
-    "'%s' run of notebook using '%s' dataset w/ '%s' model",
-    run_type,
-    dataset_name,
-    model_name,
-)
-# TODO: do we need this?
-# if run_type != "train":
-#     logging.warning(
-#         "this notebook is meant for model training; "
-#         "should you be running it in '%s' mode?",
-#         run_type,
-#     )
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ## import school-specific code
 
 # COMMAND ----------
 
 # project configuration should be stored in a config file in TOML format
-# it'll start out with just basic info: institution_id, institution_name
-# but as each step of the pipeline gets built, more parameters will be moved
-# from hard-coded notebook variables to shareable, persistent config fields
 cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig)
 cfg
 
@@ -126,36 +91,11 @@ features_table = dataio.read_features_table("assets/pdp/features_table.toml")
 
 df = dataio.schemas.pdp.PDPLabeledDataSchema(
     dataio.read.from_delta_table(
-        cfg.datasets[dataset_name].preprocessed.table_path,
+        cfg.datasets.gold.silver.table_path,
         spark_session=spark,
     )
 )
 df.head()
-
-# COMMAND ----------
-
-
-# TODO: get this functionality into public repo's modeling.inference?
-def predict_proba(
-    X,
-    model,
-    *,
-    feature_names: t.Optional[list[str]] = None,
-    pos_label: t.Optional[bool | str] = None,
-) -> np.ndarray:
-    """ """
-    if feature_names is None:
-        feature_names = model.named_steps["column_selector"].get_params()["cols"]
-    if not isinstance(X, pd.DataFrame):
-        X = pd.DataFrame(data=X, columns=feature_names)
-    else:
-        assert X.shape[1] == len(feature_names)
-    pred_probs = model.predict_proba(X)
-    if pos_label is not None:
-        return pred_probs[:, model.classes_.tolist().index(pos_label)]
-    else:
-        return pred_probs
-
 
 # COMMAND ----------
 
@@ -186,16 +126,6 @@ df_train.shape
 
 # COMMAND ----------
 
-# TODO: load inference params from the project config
-# okay to hard-code it first then add it to the config later
-# inference_params = cfg.inference.model_dump()
-inference_params = {
-    "num_top_features": 5,
-    "min_prob_pos_label": 0.5,
-}
-
-# COMMAND ----------
-
 if cfg.split_col and cfg.split_col in df.columns:
     df_test = df.loc[df[cfg.split_col].eq("test"), :]
 else:
@@ -213,7 +143,7 @@ unique_ids = df_test[cfg.student_id_col]
 
 # COMMAND ----------
 
-pred_probs = predict_proba(
+pred_probs = modeling.inference.predict_probs(
     features,
     model=model,
     feature_names=model_feature_names,
@@ -298,10 +228,15 @@ shap.summary_plot(
 )
 shap_fig = plt.gcf()
 # save shap summary plot via mlflow into experiment artifacts folder
+# HACK: plot name for shap summary needs to be hardcoded as below
+# in order to be picked up by model card module (so don't change it)
 with mlflow.start_run(run_id=cfg.model.run_id) as run:
-    mlflow.log_figure(
-        shap_fig, f"shap_summary_{dataset_name}_dataset_{df_ref.shape[0]}_ref_rows.png"
-    )
+    mlflow.log_figure(shap_fig, "shap_summary_labeled_dataset_100_ref_rows.png")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC TODO (for Vish): Add summary plot (and ranked selected features below) under the hood in SST package so we can set the paths. This will ensure alignment with model card module and no chance for user error.
 
 # COMMAND ----------
 
@@ -332,16 +267,15 @@ result = inference.select_top_features_for_display(
     unique_ids,
     pred_probs,
     df_shap_values[model_feature_names].to_numpy(),
-    n_features=inference_params["num_top_features"],
+    n_features=cfg.inference.num_top_features,
     features_table=features_table,
-    needs_support_threshold_prob=inference_params["min_prob_pos_label"],
+    needs_support_threshold_prob=cfg.inference.min_prob_pos_label,
 )
 result
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC # TODO:
-# MAGIC
-# MAGIC - how / where to save final results?
-# MAGIC - do we want to save predictions separately / additionally from the "display" format?
+# save sample advisor output dataset
+dataio.write.to_delta_table(
+    result, cfg.datasets.gold.advisor_output.table_path, spark_session=spark
+)
