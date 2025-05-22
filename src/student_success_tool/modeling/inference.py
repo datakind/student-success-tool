@@ -299,9 +299,8 @@ def top_shap_features(
     features: pd.DataFrame,
     unique_ids: pd.Series,
     shap_values: npt.NDArray[np.float64],
-    top_n: int = 10
+    top_n: int = 10,
 ) -> pd.DataFrame:
-    
     """
     Extracts the top N most important SHAP features across all samples.
 
@@ -318,7 +317,7 @@ def top_shap_features(
             - shap_value
             - feature_value
     """
-    
+
     if features.empty or shap_values.size == 0 or unique_ids.empty:
         raise ValueError("Input data cannot be empty.")
 
