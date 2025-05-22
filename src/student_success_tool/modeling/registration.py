@@ -137,6 +137,8 @@ def log_roc_table(
 
         # Find the run that logged the data
         runs_df = mlflow.search_runs(experiment_ids=[experiment_id], output_format="pandas")
+        assert isinstance(runs_df, pd.DataFrame)
+
         data_run_id = runs_df[runs_df["tags.mlflow.runName"] == data_run_tag]["run_id"].item()
 
         # Load test data
