@@ -10,12 +10,22 @@ import uuid
 import pandas as pd
 import numpy as np
 from typing import List
-from pyspark.sql import SparkSession
 
 LOGGER = logging.getLogger(__name__)
 
 
-spark = SparkSession.builder.getOrCreate()
+try:
+    # Try to connect using Databricks Connect
+    from databricks.connect import DatabricksSession
+
+    spark = DatabricksSession.builder.getOrCreate()
+    print("Using remote Spark session (Databricks Connect).")
+except Exception as e:
+    # Fallback to local Spark session
+    from pyspark.sql import SparkSession
+
+    spark = SparkSession.builder.master("local[*]").appName("LocalTest").getOrCreate()
+    print("Falling back to local Spark session:", str(e))
 
 
 def register_mlflow_model(
