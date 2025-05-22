@@ -408,7 +408,7 @@ class ModelInferenceTask:
             shap_fig = plot_shap_beeswarm(shap_values)
 
             # Inference_features_with_most_impact TABLE
-            inference_features_with_most_impact = self.top_10_features(
+            inference_features_with_most_impact = self.top_n_features(
                 df_processed[model_feature_names], unique_ids, shap_values.values
             )
             # shap_feature_importance TABLE
