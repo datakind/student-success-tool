@@ -14,26 +14,6 @@ from typing import List
 LOGGER = logging.getLogger(__name__)
 
 
-try:
-    from databricks.connect import DatabricksSession
-
-    spark = DatabricksSession.builder.getOrCreate()
-    print("✅ Using Databricks Connect Spark session.")
-except Exception as e:
-    if "CONNECT_URL_NOT_SET" in str(e):
-        print("⚠️ SPARK_REMOTE not set. Falling back to local Spark session.")
-    else:
-        print(
-            f"⚠️ Failed to use Databricks Connect: {e}. Falling back to local Spark session."
-        )
-
-    from pyspark.sql import SparkSession
-
-    spark = (
-        SparkSession.builder.master("local[*]").appName("LocalFallback").getOrCreate()
-    )
-
-
 def register_mlflow_model(
     model_name: str,
     institution_id: str,
@@ -94,6 +74,19 @@ def log_confusion_matrix(
         run_id
         catalog
     """
+
+    try:
+        from databricks.connect import DatabricksSession
+
+        spark = DatabricksSession.builder.getOrCreate()
+    except Exception as e:
+        print("⚠️ Databricks Connect failed. Falling back to local Spark.")
+        from pyspark.sql import SparkSession
+
+        spark = (
+            SparkSession.builder.master("local[*]").appName("Fallback").getOrCreate()
+        )
+
     confusion_matrix_table_path = (
         f"{catalog}.{institution_id}_gold.inference_{run_id}_confusion_matrix"
     )
@@ -169,6 +162,19 @@ def log_roc_table(
         run_id (str): MLflow run ID of the trained model.
         catalog (str): Destination catalog/schema for the ROC curve table.
     """
+
+    try:
+        from databricks.connect import DatabricksSession
+
+        spark = DatabricksSession.builder.getOrCreate()
+    except Exception as e:
+        print("⚠️ Databricks Connect failed. Falling back to local Spark.")
+        from pyspark.sql import SparkSession
+
+        spark = (
+            SparkSession.builder.master("local[*]").appName("Fallback").getOrCreate()
+        )
+
     data_run_tag = "Training Data Storage and Analysis"
     table_path = f"{catalog}.{institution_id}_gold.sample_training_{run_id}_roc_curve"
     tmp_dir = f"/tmp/{uuid.uuid4()}"  # unique tmp path
