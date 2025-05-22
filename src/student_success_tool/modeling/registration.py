@@ -79,7 +79,7 @@ def log_confusion_matrix(
         from databricks.connect import DatabricksSession
 
         spark = DatabricksSession.builder.getOrCreate()
-    except Exception as e:
+    except Exception:
         print("⚠️ Databricks Connect failed. Falling back to local Spark.")
         from pyspark.sql import SparkSession
 
@@ -167,7 +167,7 @@ def log_roc_table(
         from databricks.connect import DatabricksSession
 
         spark = DatabricksSession.builder.getOrCreate()
-    except Exception as e:
+    except Exception:
         print("⚠️ Databricks Connect failed. Falling back to local Spark.")
         from pyspark.sql import SparkSession
 
