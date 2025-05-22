@@ -259,16 +259,16 @@ class ModelInferenceTask:
             logging.error("Error during SHAP value calculation: %s", e)
             raise
 
-    def top_10_features(
+    def top_n_features(
         features: pd.DataFrame,
         unique_ids: pd.Series,
         shap_values: npt.NDArray[np.float64],
     ) -> pd.DataFrame:
         try:
-            top_10_shap_features = inference.top_shap_features(
+            top_n_shap_features = inference.top_shap_features(
                 features, unique_ids, shap_values
             )
-            return top_10_shap_features
+            return top_n_shap_features
 
         except Exception as e:
             logging.error("Error computing top 10 shap features table: %s", e)
