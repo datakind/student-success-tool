@@ -521,6 +521,9 @@ def plot_trained_models_comparison(
     ax.xaxis.grid(True, color="lightgrey", linestyle="--", linewidth=0.5)
     fig.tight_layout()
 
+    mlflow.log_figure(fig, "model_comparison.png")
+    plt.close()
+
     return fig
 
 
