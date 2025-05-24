@@ -39,8 +39,8 @@ def mock_pandera():
     import sys
     import types
 
-    m1 = types.ModuleType("pandera")
-    m2 = types.ModuleType("pandera.typing")
+    m1 = types.ModuleType("pandera.pandas")
+    m2 = types.ModuleType("pandera.typing.pandas")
 
     GenericDtype = t.TypeVar("GenericDtype")
 
