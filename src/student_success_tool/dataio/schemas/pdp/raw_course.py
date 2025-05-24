@@ -7,8 +7,8 @@ import typing as t
 import pandas as pd
 
 try:
-    import pandera as pda
-    import pandera.typing as pt
+    import pandera.pandas as pda
+    import pandera.typing.pandas as pt
 except ModuleNotFoundError:
     from ... import utils
 

@@ -9,13 +9,13 @@ from ... import utils
 from .. import read
 
 try:
-    import pandera as pda
+    import pandera.pandas as pda
 except ModuleNotFoundError:
     from ... import utils
 
     utils.databricks.mock_pandera()
 
-    import pandera as pda
+    import pandera.pandas as pda
 
 LOGGER = logging.getLogger(__name__)
 
