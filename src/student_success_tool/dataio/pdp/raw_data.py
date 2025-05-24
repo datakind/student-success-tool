@@ -181,6 +181,9 @@ def _parse_dttm_values(df: pd.DataFrame, *, col: str, fmt: str) -> pd.Series:
     return pd.to_datetime(df[col], format=fmt)
 
 
+# TODO: remove these functions once corresponding tests have been migrated
+
+
 def _uppercase_string_values(df: pd.DataFrame, *, col: str) -> pd.Series:
     return df[col].str.upper()
 
