@@ -1906,19 +1906,18 @@ wheels = [
 
 [[package]]
 name = "pandera"
-version = "0.23.0"
+version = "0.24.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
     { name = "packaging" },
-    { name = "pandas" },
     { name = "pydantic" },
     { name = "typeguard" },
+    { name = "typing-extensions" },
     { name = "typing-inspect" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/80/96/1c71019020eb62ae47eeef164dd88f64a1834a2568747e23185d3b589d28/pandera-0.23.0.tar.gz", hash = "sha256:2afa00945ebe00558b5240c988effff48ec806e3ede6bd19a574f2a5f1abe214", size = 512403, upload-time = "2025-03-01T21:29:52.422Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/47/4e/9eaf279c32058839361085faf203d728967d0fe1d6229dd989139bdb34e0/pandera-0.24.0.tar.gz", hash = "sha256:154231780643bc73b121bd976b0ada9dcebb3e065c622954fd099dc299cf44bd", size = 513238, upload-time = "2025-05-15T14:08:47.596Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2e/95/59eba303106149257131e01f706a76ff4e204db905d4f5b3e8f5ad555c2d/pandera-0.23.0-py3-none-any.whl", hash = "sha256:f535077d74fb190a3814fbdc12398b96e826d5fd8f41b4b4b09e0e034dd4d841", size = 264087, upload-time = "2025-03-01T21:29:50.341Z" },
+    { url = "https://files.pythonhosted.org/packages/e9/4d/ec550fbb5fe09a7c0a93a3f9b2d87446f728c1ef052f786b195eb4620def/pandera-0.24.0-py3-none-any.whl", hash = "sha256:3b7de575b43a4aa03a1561802be4ee0c7471e49153684fe327f7bbea0724b02b", size = 267092, upload-time = "2025-05-15T14:08:45.77Z" },
 ]
 
 [[package]]
@@ -2870,7 +2869,7 @@ wheels = [
 
 [[package]]
 name = "student-success-tool"
-version = "0.3.0.dev0"
+version = "0.3.1"
 source = { editable = "." }
 dependencies = [
     { name = "databricks-connect" },
@@ -2920,7 +2919,7 @@ requires-dist = [
     { name = "mlflow", specifier = "~=2.13" },
     { name = "numpy", specifier = "~=1.26" },
     { name = "pandas", specifier = "~=2.0" },
-    { name = "pandera", specifier = "~=0.23.0" },
+    { name = "pandera", specifier = "~=0.24.0" },
     { name = "pyarrow", specifier = "~=16.0" },
     { name = "pydantic", specifier = "~=2.10" },
     { name = "pydyf", specifier = "~=0.8.0" },
