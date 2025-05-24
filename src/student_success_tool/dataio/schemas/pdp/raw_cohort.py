@@ -300,6 +300,16 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
             }
         )
 
+    @pda.dataframe_parser
+    def cast_to_bool_via_int(cls, df):
+        """Help pandas to coerce string "1"/"0" values into True/False."""
+        return df.assign(
+            **{
+                col: ft.partial(_cast_to_bool_via_int, col=col)
+                for col in ("retention", "persistence")
+            }
+        )
+
     @pda.parser("enrollment_type")
     def set_enrollment_type_categories(cls, series):
         return series.cat.set_categories(["FIRST-TIME", "RE-ADMIT", "TRANSFER-IN"])
@@ -392,3 +402,21 @@ def _replace_values_with_null(
     df: pd.DataFrame, *, col: str, to_replace: str | list[str]
 ) -> pd.Series:
     return df[col].replace(to_replace=to_replace, value=None)
+
+
+def _cast_to_bool_via_int(df: pd.DataFrame, *, col: str) -> pd.Series:
+    return (
+        df[col]
+        .astype("string")
+        .map(
+            {
+                "1": True,
+                "0": False,
+                "True": True,
+                "False": False,
+                "true": True,
+                "false": False,
+            }
+        )
+        .astype("boolean")
+    )

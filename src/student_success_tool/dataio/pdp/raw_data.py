@@ -144,19 +144,10 @@ def read_raw_cohort_data(
         else read.from_delta_table(table_path, spark_session)  # type: ignore
     )
     # apply to the data what pandera calls "parsers" before validation
-    # ideally, all these operations would be dataframe parsers on the schema itself
-    # but pandera applies core before custom parsers under the hood :/
+    # the schema itself applies many parsers, but these are general "pre-requisites"
     df = (
         # standardize column names
         df.rename(columns=utils.misc.convert_to_snake_case)
-        # standardize column values
-        .assign(
-            # help pandas to coerce string "1"/"0" values into True/False
-            **{
-                col: ft.partial(_cast_to_bool_via_int, col=col)
-                for col in ("retention", "persistence")
-            }
-        )
     )
     return _maybe_convert_maybe_validate_data(df, converter_func, schema)
 
