@@ -290,6 +290,16 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
             }
         )
 
+    @pda.dataframe_parser
+    def replace_bad_gpa_values_with_null(cls, df):
+        """Replace "UK" with null in GPA cols, so we can coerce to float dtype."""
+        return df.assign(
+            **{
+                col: ft.partial(_replace_values_with_null, col=col, to_replace="UK")
+                for col in ("gpa_group_term_1", "gpa_group_year_1")
+            }
+        )
+
     @pda.parser("enrollment_type")
     def set_enrollment_type_categories(cls, series):
         return series.cat.set_categories(["FIRST-TIME", "RE-ADMIT", "TRANSFER-IN"])
@@ -376,3 +386,9 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
 
 def _strip_upper_string_values(df: pd.DataFrame, *, col: str) -> pd.Series:
     return df[col].str.strip().str.upper()
+
+
+def _replace_values_with_null(
+    df: pd.DataFrame, *, col: str, to_replace: str | list[str]
+) -> pd.Series:
+    return df[col].replace(to_replace=to_replace, value=None)

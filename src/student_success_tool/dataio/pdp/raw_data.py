@@ -151,13 +151,8 @@ def read_raw_cohort_data(
         df.rename(columns=utils.misc.convert_to_snake_case)
         # standardize column values
         .assign(
-            # replace "UK" with null in GPA cols, so we can coerce to float via schema
-            **{
-                col: ft.partial(_replace_values_with_null, col=col, to_replace="UK")
-                for col in ("gpa_group_term_1", "gpa_group_year_1")
-            }
             # help pandas to coerce string "1"/"0" values into True/False
-            | {
+            **{
                 col: ft.partial(_cast_to_bool_via_int, col=col)
                 for col in ("retention", "persistence")
             }
