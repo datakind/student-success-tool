@@ -151,14 +151,8 @@ def read_raw_cohort_data(
         df.rename(columns=utils.misc.convert_to_snake_case)
         # standardize column values
         .assign(
-            # uppercase string values for some cols to avoid case inconsistency later on
-            # for practical reasons, this is the only place where it's easy to do so
-            **{
-                col: ft.partial(_uppercase_string_values, col=col)
-                for col in ("cohort_term",)
-            }
             # replace "UK" with null in GPA cols, so we can coerce to float via schema
-            | {
+            **{
                 col: ft.partial(_replace_values_with_null, col=col, to_replace="UK")
                 for col in ("gpa_group_term_1", "gpa_group_year_1")
             }
