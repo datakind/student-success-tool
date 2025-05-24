@@ -115,24 +115,39 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
             )
         return df
 
-    @pda.parser(
-        "student_age",
-        "race",
-        "ethnicity",
-        "gender",
-        "enrollment_record_at_other_institution_s_state_s",
-        "enrollment_record_at_other_institution_s_locale_s",
-    )
-    def strip_and_uppercase_strings(cls, series):
-        return series.str.strip().str.upper()
+    @pda.dataframe_parser
+    def strip_upper_string_values(cls, df):
+        return df.assign(
+            **{
+                col: ft.partial(_strip_upper_string_values, col=col)
+                for col in (
+                    "student_age",
+                    "race",
+                    "ethnicity",
+                    "gender",
+                    "academic_term",
+                    "course_type",
+                    "math_or_english_gateway",
+                    "co_requisite_course",
+                    "grade",
+                    "delivery_method",
+                    "core_course",
+                    "core_competency_completed",
+                    "enrolled_at_other_institution_s",
+                    "course_instructor_employment_status",
+                    "enrollment_record_at_other_institution_s_state_s",
+                    "enrollment_record_at_other_institution_s_locale_s",
+                )
+            }
+        )
 
     @pda.parser("math_or_english_gateway")
     def set_math_or_english_gateway_categories(cls, series):
-        return _strip_upper_strings_to_cats(series).cat.set_categories(["E", "M", "NA"])
+        return series.cat.set_categories(["E", "M", "NA"])
 
     @pda.parser("core_competency_completed")
     def set_core_competency_completed_categories(cls, series):
-        return _strip_upper_strings_to_cats(series).cat.set_categories(["Y", "N"])
+        return series.cat.set_categories(["Y", "N"])
 
     @pda.parser("course_instructor_rank")
     def set_course_instructor_rank_categories(cls, series):
@@ -165,5 +180,5 @@ class RawPDPCourseDataSchema(pda.DataFrameModel):
         ]
 
 
-def _strip_upper_strings_to_cats(series: pd.Series) -> pd.Series:
-    return series.str.strip().str.upper().astype("category")
+def _strip_upper_string_values(df: pd.DataFrame, *, col: str) -> pd.Series:
+    return df[col].str.strip().str.upper()

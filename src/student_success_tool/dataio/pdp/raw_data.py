@@ -75,20 +75,14 @@ def read_raw_course_data(
         else read.from_delta_table(table_path, spark_session)  # type: ignore
     )
     # apply to the data what pandera calls "parsers" before validation
-    # ideally, all these operations would be dataframe parsers on the schema itself
-    # but pandera applies core before custom parsers under the hood :/
+    # the schema itself applies many parsers, but these are general "pre-requisites"
     df = (
         # standardize column names
         df.rename(columns=utils.misc.convert_to_snake_case)
         # standardize certain column values
         .assign(
-            # uppercase string values for some cols to avoid case inconsistency later on
-            **{
-                col: ft.partial(_uppercase_string_values, col=col)
-                for col in ("academic_term",)
-            }
             # help pandas to parse non-standard datetimes... read_csv() struggles
-            | {
+            **{
                 col: ft.partial(_parse_dttm_values, col=col, fmt=dttm_format)
                 for col in ("course_begin_date", "course_end_date")
             }
