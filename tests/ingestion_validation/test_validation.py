@@ -223,8 +223,9 @@ def test_validate_dataset_schema_errors(monkeypatch, base_schema_file, test_logg
 def test_validate_dataset_soft_pass(monkeypatch, base_schema_file, ext_schema_file, test_logger):
     df = pd.DataFrame({"student_id": ["ABC123"], "disability_status": ["N"]})
 
+    # Patch load_json to return correct file contents based on input path
     def mocked_load_json(path):
-        if os.path.basename(path) == os.path.basename(ext_schema_file):
+        if "ext_schema" in path or "extension" in path or "ext" in os.path.basename(path):
             return json.load(open(ext_schema_file))
         return json.load(open(base_schema_file))
 
@@ -239,6 +240,7 @@ def test_validate_dataset_soft_pass(monkeypatch, base_schema_file, ext_schema_fi
         institution_id="institution",
         logger=test_logger,
     )
+
     assert result["validation_status"] == "passed_with_soft_errors"
     assert set(result["missing_optional"]) == {"age", "enrollment_type"}
 
