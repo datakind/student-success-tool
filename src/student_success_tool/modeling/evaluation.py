@@ -4,7 +4,7 @@ import shutil
 import typing as t
 import uuid
 from collections.abc import Sequence
-
+from typing import Optional
 import matplotlib.colors as mcolors
 import matplotlib.figure
 import matplotlib.pyplot as plt
