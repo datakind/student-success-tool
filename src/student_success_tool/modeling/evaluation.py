@@ -502,7 +502,7 @@ def log_roc_table(
 
     try:
         # Find the run that logged the data
-        runs_df = mlflow.search_runs(
+        runs_df: pd.DataFrame = mlflow.search_runs(
             experiment_ids=[experiment_id], output_format="pandas"
         )
         data_run_id = runs_df[runs_df["tags.mlflow.runName"] == data_run_tag][
