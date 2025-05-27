@@ -22,8 +22,8 @@ from pandera.errors import SchemaErrors
 class HardValidationError(Exception):
     def __init__(
         self,
-        missing_required: List[str] = None,
-        extra_columns: List[str] = None,
+        missing_required: Any = None,
+        extra_columns: Any = None,
         schema_errors: Any = None,
         failure_cases: Any = None,
     ):
@@ -45,7 +45,7 @@ def normalize_col(name: str) -> str:
     return name.strip().lower().replace(" ", "_").replace("-", "_")
 
 
-def load_json(path: str) -> dict:
+def load_json(path: str) -> Any:
     try:
         with open(path, "r") as f:
             return json.load(f)
@@ -54,7 +54,11 @@ def load_json(path: str) -> dict:
 
 
 def merge_model_columns(
-    base_schema: dict, extension_schema: dict, institution: str, model: str, logger=None
+    base_schema: dict,
+    extension_schema: Any,
+    institution: str,
+    model: str,
+    logger: Any = None,
 ) -> Dict[str, dict]:
     base_models = base_schema.get("base", {}).get("data_models", {})
     if model not in base_models:
@@ -99,7 +103,7 @@ def validate_dataset(
     df: Union[pd.DataFrame, str],
     models: Union[str, List[str]],
     institution_id: str,
-    logger=None,
+    logger: Any = None,
 ) -> Dict[str, Any]:
     if isinstance(df, str):
         df = pd.read_csv(df)
