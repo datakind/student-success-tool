@@ -21,8 +21,6 @@ import pandera as pa
 from pandera import Column, Check, DataFrameSchema
 from pandera.errors import SchemaErrors
 
-from logger import setup_logger
-
 class HardValidationError(Exception):
     def __init__(
         self,
