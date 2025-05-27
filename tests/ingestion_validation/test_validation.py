@@ -2,6 +2,7 @@ import json
 import pandas as pd
 import pytest
 import uuid
+import os
 
 from student_success_tool.ingestion_validation.validation import (
     normalize_col,
@@ -223,7 +224,7 @@ def test_validate_dataset_soft_pass(monkeypatch, base_schema_file, ext_schema_fi
     df = pd.DataFrame({"student_id": ["ABC123"], "disability_status": ["N"]})
 
     def mocked_load_json(path):
-        if "extension" in path:
+        if os.path.basename(path) == os.path.basename(ext_schema_file):
             return json.load(open(ext_schema_file))
         return json.load(open(base_schema_file))
 
