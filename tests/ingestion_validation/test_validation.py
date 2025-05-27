@@ -13,7 +13,6 @@ from student_success_tool.ingestion_validation.validation import (
 )
 from student_success_tool.ingestion_validation.logger import SimpleLogger
 
-
 # ─── Fixtures ────────────────────────────────────────────────────────────────
 
 @pytest.fixture
@@ -99,8 +98,9 @@ def ext_schema_file(tmp_path):
 @pytest.fixture
 def test_logger(tmp_path) -> SimpleLogger:
     log_file = tmp_path / f"{uuid.uuid4().hex}_validation.log"
-    return SimpleLogger(log_path=str(log_file), institution_id="test")
-
+    logger = SimpleLogger(log_path=str(log_file), institution_id="test")
+    yield logger
+    logger.close()
 
 # ─── Tests ────────────────────────────────────────────────────────────────────
 
@@ -156,7 +156,7 @@ def test_build_schema_and_validate(base_schema_file):
     validated = schema.validate(df)
     pd.testing.assert_frame_equal(validated, df, check_dtype=False)
 
-def test_validate_dataset_extra_columns(base_schema_file, test_logger):
+def test_validate_dataset_extra_columns(monkeypatch, tmp_path, base_schema_file, test_logger):
     df = pd.DataFrame(
         {
             "student_id": ["ABC123"],
@@ -165,34 +165,38 @@ def test_validate_dataset_extra_columns(base_schema_file, test_logger):
             "unexpected": [1],
         }
     )
+    monkeypatch.setattr(
+        "student_success_tool.ingestion_validation.validation.load_json",
+        lambda path: json.load(open(base_schema_file))
+    )
     with pytest.raises(HardValidationError) as exc:
         validate_dataset(
             df,
             models="student",
             institution_id="pdp",
-            base_schema_path=base_schema_file,
-            extension_schema_path=None,
             logger=test_logger,
         )
     err = exc.value
     assert err.extra_columns == ["unexpected"]
     assert err.missing_required == []
 
-def test_validate_dataset_missing_required(base_schema_file, test_logger):
+def test_validate_dataset_missing_required(monkeypatch, base_schema_file, test_logger):
     df = pd.DataFrame({"age": ["21+"], "disability_status": ["Y"]})
+    monkeypatch.setattr(
+        "student_success_tool.ingestion_validation.validation.load_json",
+        lambda path: json.load(open(base_schema_file))
+    )
     with pytest.raises(HardValidationError) as exc:
         validate_dataset(
             df,
             models="student",
             institution_id="institution",
-            base_schema_path=base_schema_file,
-            extension_schema_path=None,
             logger=test_logger,
         )
     err = exc.value
     assert err.missing_required == ["student_id"]
 
-def test_validate_dataset_schema_errors(base_schema_file, test_logger):
+def test_validate_dataset_schema_errors(monkeypatch, base_schema_file, test_logger):
     df = pd.DataFrame(
         {
             "student_id": ["AB"],
@@ -200,42 +204,55 @@ def test_validate_dataset_schema_errors(base_schema_file, test_logger):
             "disability_status": ["Y"],
         }
     )
+    monkeypatch.setattr(
+        "student_success_tool.ingestion_validation.validation.load_json",
+        lambda path: json.load(open(base_schema_file))
+    )
     with pytest.raises(HardValidationError) as exc:
         validate_dataset(
             df,
             models="student",
             institution_id="institution",
-            base_schema_path=base_schema_file,
-            extension_schema_path=None,
             logger=test_logger,
         )
     err = exc.value
     assert err.schema_errors is not None
     assert isinstance(err.schema_errors, list)
 
-def test_validate_dataset_soft_pass(base_schema_file, ext_schema_file, test_logger):
+def test_validate_dataset_soft_pass(monkeypatch, base_schema_file, ext_schema_file, test_logger):
     df = pd.DataFrame({"student_id": ["ABC123"], "disability_status": ["N"]})
+
+    def mocked_load_json(path):
+        if "base" in path:
+            return json.load(open(base_schema_file))
+        return json.load(open(ext_schema_file))
+
+    monkeypatch.setattr(
+        "student_success_tool.ingestion_validation.validation.load_json",
+        mocked_load_json
+    )
     result = validate_dataset(
         df,
         models="student",
         institution_id="institution",
-        base_schema_path=base_schema_file,
-        extension_schema_path=ext_schema_file,
         logger=test_logger,
     )
     assert result["validation_status"] == "passed_with_soft_errors"
     assert set(result["missing_optional"]) == {"age", "enrollment_type"}
 
-def test_validate_dataset_csv_input(tmp_path, base_schema_file, test_logger):
+def test_validate_dataset_csv_input(tmp_path, monkeypatch, base_schema_file, test_logger):
     df = pd.DataFrame({"student_id": ["ABC123"], "age": ["21+"], "disability_status": ["N"]})
     csv = tmp_path / "in.csv"
     df.to_csv(csv, index=False)
+
+    monkeypatch.setattr(
+        "student_success_tool.ingestion_validation.validation.load_json",
+        lambda path: json.load(open(base_schema_file))
+    )
     result = validate_dataset(
         str(csv),
         models="student",
         institution_id="institution",
-        base_schema_path=base_schema_file,
-        extension_schema_path=None,
         logger=test_logger,
     )
     assert result["validation_status"] in ("passed", "passed_with_soft_errors")
