@@ -72,7 +72,7 @@ def df_test():
             pd.DataFrame(
                 data={
                     "student_id": ["01", "02", "03", "04", "05"],
-                    "term_rank": [3, 5, 2, 4, 8],
+                    "term_rank": [4, 5, 2, 4, 8],
                     "cohort_id": [
                         "2020-21 SPRING",
                         "2021-22 FALL",
@@ -96,9 +96,9 @@ def df_test():
                         pd.NA,
                     ],
                     "num_credits_earned": [25.0, 25.0, 20.0, 45.0, 10.0],
-                    "term_is_pre_cohort": [True, False, False, False, False],
+                    "term_is_pre_cohort": [False, False, False, False, False],
                 },
-                index=pd.Index([0, 3, 5, 6, 7], dtype="int64"),
+                index=pd.Index([1, 3, 5, 6, 7], dtype="int64"),
             ).astype(
                 {
                     "student_id": "string",
@@ -114,7 +114,7 @@ def df_test():
             pd.DataFrame(
                 data={
                     "student_id": ["01", "02", "03", "04", "05"],
-                    "term_rank": [3, 5, 2, 4, 8],
+                    "term_rank": [4, 5, 2, 4, 8],
                     "term_id": [
                         "2020-21 FALL",
                         "2021-22 FALL",
@@ -123,7 +123,7 @@ def df_test():
                         "2022-23 FALL",
                     ],
                 },
-                index=pd.Index([0, 3, 5, 6, 7], dtype="int64"),
+                index=pd.Index([1, 3, 5, 6, 7], dtype="int64"),
             ).astype({"student_id": "string", "term_id": "string"}),
         ),
         (
@@ -132,15 +132,15 @@ def df_test():
             pd.DataFrame(
                 data={
                     "student_id": ["01", "02"],
-                    "term_rank": [4, 6],
+                    "term_rank": [5, 6],
                     "cohort_id": ["2020-21 SPRING", "2021-22 FALL"],
                     "term_id": ["2020-21 SPRING", "2023-24 FALL"],
-                    "enrollment_year": [1, 3],
+                    "enrollment_year": [2, 3],
                     "enrollment_intensity": ["FULL-TIME", "PART-TIME"],
                     "num_credits_earned": [30.0, 35.0],
                     "term_is_pre_cohort": [False, False],
                 },
-                index=pd.Index([1, 4], dtype="int64"),
+                index=pd.Index([2, 4], dtype="int64"),
             ).astype(
                 {
                     "student_id": "string",
@@ -159,6 +159,8 @@ def test_nth_student_terms(df_test, n, include_cols, exp):
         student_id_cols="student_id",
         sort_cols="term_rank",
         include_cols=include_cols,
+        term_is_pre_cohort_col="term_is_pre_cohort",
+        exclude_pre_cohort_terms=True,
     )
     assert isinstance(obs, pd.DataFrame)
     assert pd.testing.assert_frame_equal(obs, exp) is None
