@@ -223,9 +223,10 @@ def test_validate_dataset_soft_pass(monkeypatch, base_schema_file, ext_schema_fi
     df = pd.DataFrame({"student_id": ["ABC123"], "disability_status": ["N"]})
 
     def mocked_load_json(path):
-        if "base" in path:
-            return json.load(open(base_schema_file))
-        return json.load(open(ext_schema_file))
+        if "ext_schema" in path or "extension" in path:
+            return json.load(open(ext_schema_file))
+        return json.load(open(base_schema_file))
+
 
     monkeypatch.setattr(
         "student_success_tool.ingestion_validation.validation.load_json",
