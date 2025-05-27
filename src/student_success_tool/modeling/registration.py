@@ -4,12 +4,6 @@ import typing as t
 import mlflow
 import mlflow.exceptions
 import mlflow.tracking
-import os
-import shutil
-import uuid
-import pandas as pd
-import numpy as np
-from typing import List
 
 LOGGER = logging.getLogger(__name__)
 

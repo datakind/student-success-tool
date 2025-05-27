@@ -4,7 +4,7 @@ import shutil
 import typing as t
 import uuid
 from collections.abc import Sequence
-from typing import Optional
+from typing import Optional, List
 import matplotlib.colors as mcolors
 import matplotlib.figure
 import matplotlib.pyplot as plt
@@ -130,7 +130,7 @@ def evaluate_performance(
     # Convert to DataFrame for display or saving
     metrics_df = pd.DataFrame(metrics_records).set_index(perf_split_col)
     metrics_df.to_csv("/tmp/performance_across_splits.csv")
-    mlflow.log_artifact("/tmp/performance_across_splits.csv", artifact_path="metrics")
+    mlflow.log_artifact("/tmp/performance_across_splits.csv", artifact_path=metrics_dir)
     LOGGER.info("Creating summary of performance metrics across splits")
 
 
@@ -428,7 +428,7 @@ def log_confusion_matrix(
 
     except mlflow.exceptions.MlflowException as e:
         raise RuntimeError(f"MLflow error while retrieving run {automl_experiment_id}: {e}")
-    except Exception as e:
+    except Exception:
         LOGGER.exception("Failed to compute or store confusion matrix.")
         raise
 
