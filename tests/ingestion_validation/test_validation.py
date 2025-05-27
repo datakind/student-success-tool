@@ -223,15 +223,21 @@ def test_validate_dataset_schema_errors(monkeypatch, base_schema_file, test_logg
 def test_validate_dataset_soft_pass(monkeypatch, base_schema_file, ext_schema_file, test_logger):
     df = pd.DataFrame({"student_id": ["ABC123"], "disability_status": ["N"]})
 
-    # Patch load_json to return correct file contents based on input path
+    # Always return base or ext schema by inspecting the path basename
     def mocked_load_json(path):
-        if "ext_schema" in path or "extension" in path or "ext" in os.path.basename(path):
+        if path == f"/Volumes/staging_sst_01/institution_bronze/bronze_volume/schema/institution_schema_extension.json":
             return json.load(open(ext_schema_file))
         return json.load(open(base_schema_file))
 
+    # Patch both `load_json` and `os.path.exists` to simulate presence of extension schema
     monkeypatch.setattr(
         "student_success_tool.ingestion_validation.validation.load_json",
         mocked_load_json
+    )
+
+    monkeypatch.setattr(
+        "student_success_tool.ingestion_validation.validation.os.path.exists",
+        lambda path: True if "schema_extension.json" in path else os.path.exists(path)
     )
 
     result = validate_dataset(
