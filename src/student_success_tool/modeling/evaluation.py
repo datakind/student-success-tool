@@ -380,6 +380,18 @@ def log_confusion_matrix(
         automl_experiment_id
         catalog
     """
+    try:
+        from databricks.connect import DatabricksSession
+
+        spark = DatabricksSession.builder.getOrCreate()
+    except Exception:
+        print("Databricks Connect failed. Falling back to local Spark.")
+        from pyspark.sql import SparkSession
+
+        spark = (
+            SparkSession.builder.master("local[*]").appName("Fallback").getOrCreate()
+        )
+
     confusion_matrix_table_path = f"{catalog}.{institution_id}_gold.inference_{automl_experiment_id}_confusion_matrix"
     def safe_div(numerator, denominator):
         return numerator / denominator if denominator else 0.0
@@ -439,6 +451,18 @@ def log_roc_table(
         experiment_id
         catalog (str): Destination catalog/schema for the ROC curve table.
     """
+    try:
+        from databricks.connect import DatabricksSession
+
+        spark = DatabricksSession.builder.getOrCreate()
+    except Exception:
+        print("⚠️ Databricks Connect failed. Falling back to local Spark.")
+        from pyspark.sql import SparkSession
+
+        spark = (
+            SparkSession.builder.master("local[*]").appName("Fallback").getOrCreate()
+        )
+
     split_col = split_col or "_automl_split_col_0000"
 
     data_run_tag = "Training Data Storage and Analysis"
