@@ -14,17 +14,18 @@ from student_success_tool.preprocessing.targets.pdp import credits_earned
         "checkpoint",
         "intensity_time_limits",
         "num_terms_in_year",
-        "student_id_cols",
+        "max_term_rank",
         "exp",
     ],
     [
+        # base case
         (
             pd.DataFrame(
                 {
                     "student_id": ["01", "01", "01", "01"],
                     "enrollment_intensity": ["FT", "FT", "FT", "FT"],
                     "num_credits": [12, 24, 36, 48],
-                    "term_rank": [1, 2, 3, 4],
+                    "term_rank": [1, 2, 3, 5],
                 },
             ).astype({"student_id": "string", "enrollment_intensity": "string"}),
             45.0,
@@ -39,13 +40,15 @@ from student_success_tool.preprocessing.targets.pdp import credits_earned
             ).astype({"student_id": "string", "enrollment_intensity": "string"}),
             {"FT": [4, "term"]},
             2,
-            "student_id",
+            "infer",
             pd.Series(
                 data=[False],
                 index=pd.Index(["01"], dtype="string", name="student_id"),
                 name="target",
+                dtype="boolean",
             ),
         ),
+        # multiple students, one full-time the other part-time
         (
             pd.DataFrame(
                 {
@@ -67,13 +70,15 @@ from student_success_tool.preprocessing.targets.pdp import credits_earned
             ).astype({"student_id": "string", "enrollment_intensity": "string"}),
             {"FT": [4, "term"], "PT": [8, "term"]},
             2,
-            "student_id",
+            "infer",
             pd.Series(
                 data=[True, True],
                 index=pd.Index(["01", "02"], dtype="string", name="student_id"),
                 name="target",
+                dtype="boolean",
             ),
         ),
+        # checkpoint given as callable
         (
             pd.DataFrame(
                 {
@@ -93,13 +98,15 @@ from student_success_tool.preprocessing.targets.pdp import credits_earned
             ),
             {"FT": [4, "term"], "PT": [8, "term"]},
             2,
-            "student_id",
+            "infer",
             pd.Series(
                 data=[True, True],
                 index=pd.Index(["01", "02"], dtype="string", name="student_id"),
                 name="target",
+                dtype="boolean",
             ),
         ),
+        # not enough terms in dataset to compute target
         (
             pd.DataFrame(
                 {
@@ -121,13 +128,15 @@ from student_success_tool.preprocessing.targets.pdp import credits_earned
             ).astype({"student_id": "string", "enrollment_intensity": "string"}),
             {"FT": [4, "term"], "PT": [8, "term"]},
             4,
-            "student_id",
+            "infer",
             pd.Series(
-                data=[False],
+                data=[pd.NA],
                 index=pd.Index(["01"], dtype="string", name="student_id"),
                 name="target",
+                dtype="boolean",
             ),
         ),
+        # one time limit for all enrollment intensities
         (
             pd.DataFrame(
                 {
@@ -149,11 +158,12 @@ from student_success_tool.preprocessing.targets.pdp import credits_earned
             ).astype({"student_id": "string", "enrollment_intensity": "string"}),
             {"*": [8, "term"]},
             2,
-            "student_id",
+            10,
             pd.Series(
                 data=[True, False],
                 index=pd.Index(["01", "02"], dtype="string", name="student_id"),
                 name="target",
+                dtype="boolean",
             ),
         ),
     ],
@@ -164,7 +174,7 @@ def test_compute_target(
     checkpoint,
     intensity_time_limits,
     num_terms_in_year,
-    student_id_cols,
+    max_term_rank,
     exp,
 ):
     obs = credits_earned.compute_target(
@@ -173,7 +183,8 @@ def test_compute_target(
         checkpoint=checkpoint,
         intensity_time_limits=intensity_time_limits,
         num_terms_in_year=num_terms_in_year,
-        student_id_cols=student_id_cols,
+        max_term_rank=max_term_rank,
+        student_id_cols="student_id",
         enrollment_intensity_col="enrollment_intensity",
         num_credits_col="num_credits",
         term_rank_col="term_rank",

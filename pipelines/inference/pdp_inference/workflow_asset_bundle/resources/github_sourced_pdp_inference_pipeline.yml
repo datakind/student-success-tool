@@ -21,7 +21,7 @@ resources:
               - "{{job.parameters.DB_workspace}}"
               - --gcp_bucket_name
               - "{{job.parameters.gcp_bucket_name}}"
-              - --job_root_dir  
+              - --job_root_dir 
               - "/Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/inference_jobs/{{job.parameters.db_run_id}}"
               - --custom_schemas_path
               - "{{job.parameters.custom_schemas_path}}"
@@ -191,7 +191,7 @@ resources:
               spark.databricks.cluster.profile: singleNode
             gcp_attributes:
               use_preemptible_executors: false
-              google_service_account: ${var.pipeline_sa_email}
+              # google_service_account: ${var.pipeline_sa_email}
               availability: ON_DEMAND_GCP
               zone_id: HA
             node_type_id: n2-standard-16
@@ -207,16 +207,16 @@ resources:
         git_provider: gitHub
         git_branch: develop
       tags:
-        dev: pedro_melendez
+        dev: kayla_wilding
       queue:
         enabled: true
       parameters:
         - name: cohort_file_name
-          default: 1740098728373_synthetic_STUDENT_SEMESTER_AR_DEIDENTIFIED.csv
+          default: kentucky_state_uni_pdp_ar_deid_20241029000400.csv 
         - name: course_file_name
-          default: 1740098728372_synthetic_COURSE_LEVEL_AR_DEID.csv
+          default: kentucky_state_uni_pdp_course_ar_deid_20241029000414_dedup.csv
         - name: databricks_institution_name
-          default: uni_of_crystal_testing
+          default: kentucky_state_uni
         - name: db_run_id
           default: "{{job.run_id}}"
         - name: DB_workspace
@@ -224,7 +224,7 @@ resources:
         - name: gcp_bucket_name
           default: dev_6782b2f451f84c17ae6e14e918432b65
         - name: model_name
-          default: latest_enrollment_model
+          default: kentucky_state_uni_retention_end_of_first_year
         - name: model_type
           default: sklearn
         - name: notification_email
@@ -238,8 +238,6 @@ resources:
         - name: custom_schemas_path
           default: ${var.custom_schemas_path}
       permissions:
-        - group_name: ${var.fellows_group_to_manage_workflow} 
-          level: CAN_MANAGE
         - user_name: ${var.service_account_executer}
           level: CAN_MANAGE_RUN
         - group_name: ${var.datakind_group_to_manage_workflow} 

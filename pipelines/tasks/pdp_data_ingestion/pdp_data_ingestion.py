@@ -34,7 +34,12 @@ class DataIngestionTask:
     Encapsulates the data ingestion logic for the SST pipeline.
     """
 
-    def __init__(self, args: argparse.Namespace):
+    def __init__(
+        self,
+        args: argparse.Namespace,
+        course_converter_func=None,
+        cohort_converter_func=None,
+    ):
         """
         Initializes the DataIngestionTask with parsed arguments.
         Args:
@@ -44,6 +49,8 @@ class DataIngestionTask:
         self.args = args
         self.storage_client = storage.Client()
         self.bucket = self.storage_client.bucket(self.args.gcp_bucket_name)
+        self.course_converter_func = course_converter_func
+        self.cohort_converter_func = cohort_converter_func
 
     def get_spark_session(self) -> DatabricksSession:
         """
@@ -108,24 +115,28 @@ class DataIngestionTask:
 
         # Read data from CSV files into Pandas DataFrames and validate schema
         try:
-            df_course = dataio.pdp.read_raw_course_data(
+            df_course = dataio.pdp.raw_data.read_raw_course_data(
                 file_path=fpath_course,
                 schema=schemas.RawPDPCourseDataSchema,
                 dttm_format="ISO8601",
+                converter_func=self.course_converter_func,
             )
         except ValueError:
-            df_course = dataio.pdp.read_raw_course_data(
+            df_course = dataio.pdp.raw_data.read_raw_course_data(
                 file_path=fpath_course,
                 schema=schemas.RawPDPCourseDataSchema,
                 dttm_format="%Y%m%d.0",
+                converter_func=self.course_converter_func,
             )
         except Exception as e:
             logging.error("Error reading the files: %s", e)
             raise
 
         logging.info("Course data read and schema validated.")
-        df_cohort = dataio.pdp.read_raw_cohort_data(
-            file_path=fpath_cohort, schema=schemas.RawPDPCohortDataSchema
+        df_cohort = dataio.pdp.raw_data.read_raw_cohort_data(
+            file_path=fpath_cohort,
+            schema=schemas.RawPDPCohortDataSchema,
+            converter_func=self.cohort_converter_func,
         )
         logging.info("Cohort data read and schema validated.")
         return df_course, df_cohort
@@ -152,7 +163,7 @@ class DataIngestionTask:
             f"{catalog}.{write_schema}.{self.args.db_run_id}_cohort_dataset_validated"
         )
         try:
-            dataio.to_delta_table(
+            dataio.write.to_delta_table(
                 df_course,
                 course_dataset_validated_path,
                 spark_session=self.spark_session,
@@ -164,7 +175,7 @@ class DataIngestionTask:
                 self.args.db_run_id,
             )
 
-            dataio.to_delta_table(
+            dataio.write.to_delta_table(
                 df_cohort,
                 cohort_dataset_validated_path,
                 spark_session=self.spark_session,
@@ -216,9 +227,14 @@ class DataIngestionTask:
         Executes the data ingestion task.
         """
         raw_files_path = f"{self.args.job_root_dir}/raw_files/"
-        os.makedirs(raw_files_path, exist_ok=True)
+        # os.makedirs(raw_files_path, exist_ok=True)
+        print("raw_files_path:", raw_files_path)
+        dbutils.fs.mkdirs(raw_files_path)
 
-        fpath_course, fpath_cohort = self.download_data_from_gcs(raw_files_path)
+        # fpath_course, fpath_cohort = self.download_data_from_gcs(raw_files_path)
+        # Hack to get around gcp permissions right now
+        fpath_course = f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs/{self.args.course_file_name}"
+        fpath_cohort = f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs/{self.args.cohort_file_name}"
         df_course, df_cohort = self.read_and_validate_data(fpath_course, fpath_cohort)
 
         course_dataset_validated_path, cohort_dataset_validated_path = (
@@ -279,14 +295,33 @@ def parse_arguments() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_arguments()
+    sys.path.append(args.custom_schemas_path)
+    sys.path.append(
+        f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs"
+    )
     try:
-        sys.path.append(args.custom_schemas_path)
-        schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
+        print("Listdir1", os.listdir("/Workspace/Users"))
+        # converter_func = importlib.import_module(f"{args.databricks_institution_name}.dataio")
+        converter_func = importlib.import_module("dataio")
+        course_converter_func = converter_func.converter_func_course
+        cohort_converter_func = converter_func.converter_func_cohort
+        logging.info("Running task with custom converter func")
+    except ModuleNotFoundError:
+        print("Running task without custom converter func")
+        course_converter_func = None
+        cohort_converter_func = None
+        logging.info("Running task without custom converter func")
+    try:
+        print("sys.path:", sys.path)
+        # schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
+        schemas = importlib.import_module("schemas")
         logging.info("Running task with custom schema")
     except Exception:
         print("Running task with default schema")
-        from student_success_tool.schemas import pdp as schemas
+        print("Exception", Exception)
+        from student_success_tool.dataio.schemas import pdp as schemas
 
         logging.info("Running task with default schema")
+
     task = DataIngestionTask(args)
     task.run()

@@ -47,11 +47,11 @@ validate_dataset(ingestion_data, [student | semester | course], 'institution_id'
 
 ```bash
 from validation import validate_dataset
-ingestion_data = pd.read_csv('nscc_student.csv')
+ingestion_data = pd.read_csv('institution_student.csv')
 validate_dataset(
       df=ingestion_data, 
       models=[student], 
-      institution='nscc')
+      institution='institution')
 ```
 
 The script returns a JSON-like dict:
@@ -89,8 +89,8 @@ generate_extension_schema(
 ```bash
 from generate_extensions import generate_extension_schema
 generate_extension_schema(
-    df='nscc.csv'
-    institution='nscc',
+    df='institution.csv'
+    institution='institution',
     models=[student]
 )
 ```

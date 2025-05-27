@@ -23,11 +23,14 @@
 
 # COMMAND ----------
 
-# WARNING: AutoML/mlflow expect particular packages within certain version constraints
-# overriding existing installs can result in errors and inability to load trained models
-# install (minimal!) extra dependencies not provided by databricks runtime
-# %pip install "student-success-tool==0.1.1" --no-deps
-# %pip install git+https://github.com/datakind/student-success-tool.git@develop --no-deps
+# WARNING: AutoML/mlflow expect particular packages with version constraints
+# that directly conflicts with dependencies in our SST repo. As a temporary fix,
+# we need to manually install a certain version of pandas and scikit-learn in order
+# for our models to load and run properly.
+
+# %pip install "student-success-tool==0.3.1"
+# %pip install "pandas==1.5.3"
+# %pip install "scikit-learn==1.3.0"
 
 # COMMAND ----------
 
@@ -41,7 +44,6 @@ import matplotlib.pyplot as plt
 import mlflow
 import sklearn.metrics
 from databricks.connect import DatabricksSession
-from databricks.sdk.runtime import dbutils
 
 from student_success_tool import configs, dataio, modeling, utils
 
@@ -56,6 +58,9 @@ except Exception:
     logging.warning("unable to create spark session; are you in a Databricks runtime?")
     pass
 
+# Get job run id for automl run
+job_run_id = utils.databricks.get_db_widget_param("job_run_id", default="interactive")
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -63,40 +68,19 @@ except Exception:
 
 # COMMAND ----------
 
-run_type = utils.databricks.get_db_widget_param("run_type", default="train")
-dataset_name = utils.databricks.get_db_widget_param("dataset_name", default="labeled")
-# should this be "job_id" and "run_id", separately
-job_run_id = utils.databricks.get_db_widget_param("job_run_id", default="interactive")
-
-logging.info(
-    "'%s' run (id=%s) of notebook using dataset_name=%s",
-    run_type,
-    job_run_id,
-    dataset_name,
-)
-
-# COMMAND ----------
-
-assert run_type == "train"
-
-# COMMAND ----------
-
 # project configuration should be stored in a config file in TOML format
-# it'll start out with just basic info: institution_id, institution_name
-# but as each step of the pipeline gets built, more parameters will be moved
-# from hard-coded notebook variables to shareable, persistent config fields
 cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig)
 cfg
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # read modeling dataset
+# MAGIC # read preprocessed dataset
 
 # COMMAND ----------
 
 df = dataio.read.from_delta_table(
-    cfg.datasets[dataset_name].preprocessed.table_path,
+    cfg.datasets.silver.preprocessed.table_path,
     spark_session=spark,
 )
 df.head()
@@ -153,6 +137,13 @@ df = df.loc[:, df_selected.columns]
 
 # COMMAND ----------
 
+# save modeling dataset with all splits
+dataio.write.to_delta_table(
+    df, cfg.datasets.silver.modeling.table_path, spark_session=spark
+)
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC # train model
 
@@ -203,7 +194,7 @@ dbutils.jobs.taskValues.set(key="run_id", value=run_id)
 # COMMAND ----------
 
 # HACK: Evaluate an experiment you've already trained
-# experiment_id = cfg.models["graduation"].experiment_id
+# experiment_id = cfg.model.experiment_id
 
 # NOTE: AutoML generates a split column if not manually specified
 split_col = training_params.get("split_col", "_automl_split_col_0000")
@@ -271,12 +262,9 @@ mlflow.end_run()
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC # evaluate model
-
-# COMMAND ----------
-
-# Evaluation permutation importance for top model
+# Optional: Evaluate permutation importance for top model
+# NOTE: This can be used for model diagnostics. It is NOT used
+# in our standard evaluation process and not pulled into model cards.
 model = mlflow.sklearn.load_model(f"runs:/{top_run_ids[0]}/model")
 ax = modeling.evaluation.plot_features_permutation_importance(
     model,

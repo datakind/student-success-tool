@@ -6,6 +6,10 @@ from datetime import datetime
 import mlflow
 from mlflow.tracking import MlflowClient
 
+# export .md to .pdf
+import markdown
+from weasyprint import HTML
+
 # resolving files in templates module within package
 from importlib.abc import Traversable
 from importlib.resources import files
@@ -159,7 +163,6 @@ class ModelCard(t.Generic[C]):
             "logo": utils.download_static_asset(
                 description="Logo",
                 static_path=self.logo_path,
-                width=250,
                 local_folder=self.assets_folder,
             ),
             "institution_name": self.cfg.institution_name,
@@ -203,23 +206,35 @@ class ModelCard(t.Generic[C]):
             of the artifacts.
         """
         plots = {
-            "model_comparison_plot": ("Model Comparison", "model_comparison.png", 450),
+            "model_comparison_plot": (
+                "Model Comparison",
+                "model_comparison.png",
+                "125mm",
+            ),
             "test_calibration_curve": (
                 "Test Calibration Curve",
                 "calibration/test_calibration.png",
-                475,
+                "125mm",
             ),
-            "test_roc_curve": ("Test ROC Curve", "test_roc_curve_plot.png", 500),
+            "test_roc_curve": (
+                "Test ROC Curve",
+                "test_roc_curve_plot.png",
+                "125mm",
+            ),
             "test_confusion_matrix": (
                 "Test Confusion Matrix",
                 "test_confusion_matrix.png",
-                425,
+                "125mm",
             ),
-            "test_histogram": ("Test Histogram", "preds/test_hist.png", 475),
+            "test_histogram": (
+                "Test Histogram",
+                "preds/test_hist.png",
+                "125mm",
+            ),
             "feature_importances_by_shap_plot": (
                 "Feature Importances",
                 "shap_summary_labeled_dataset_100_ref_rows.png",
-                500,
+                "150mm",
             ),
         }
         return {
@@ -227,8 +242,8 @@ class ModelCard(t.Generic[C]):
                 run_id=self.run_id,
                 description=description,
                 artifact_path=path,
-                width=width,
                 local_folder=self.assets_folder,
+                fixed_width=width,
             )
             for key, (description, path, width) in plots.items()
         }
@@ -243,6 +258,60 @@ class ModelCard(t.Generic[C]):
         with open(self.output_path, "w") as file:
             file.write(filled)
         LOGGER.info(f"✅ Model card generated at {self.output_path}")
+
+    def reload_card(self):
+        """
+        Reloads Markdown model card post user editing after rendering.
+        This offers flexibility in case user wants to utilize this class
+        as a base and then makes edits in markdown before exporting as a PDF.
+        """
+        # Read the Markdown output
+        with open(self.output_path, "r") as f:
+            self.md_content = f.read()
+        LOGGER.info("Reloaded model card content")
+
+    def style_card(self):
+        """
+        Styles card using CSS.
+        """
+        # Convert Markdown to HTML
+        html_content = markdown.markdown(
+            self.md_content,
+            extensions=["extra", "tables", "sane_lists", "toc", "smarty"],
+        )
+
+        # Load CSS from external file
+        css_path = self._resolve(
+            "student_success_tool.reporting.template.styles", "model_card.css"
+        )
+        with open(css_path, "r") as f:
+            style = f"<style>\n{f.read()}\n</style>"
+
+        # Prepend CSS to HTML
+        self.html_content = style + html_content
+        LOGGER.info("Applied CSS styling")
+
+    def export_to_pdf(self):
+        """
+        Export CSS styled HTML to PDF utilizing weasyprint for conversion.
+        Also logs the card, so it can be accessed as a PDF in the run artifacts.
+        """
+        # Styles card using model_card.css
+        self.style_card()
+
+        # Define PDF path
+        base_path = os.path.dirname(self.output_path) or "."
+        self.pdf_path = self.output_path.replace(".md", ".pdf")
+
+        # Render PDF
+        try:
+            HTML(string=self.html_content, base_url=base_path).write_pdf(self.pdf_path)
+            LOGGER.info(f"✅ PDF model card saved to {self.pdf_path}")
+        except Exception as e:
+            raise RuntimeError(f"Failed to create PDF: {e}")
+
+        # Log card as an ML artifact
+        utils.log_card(local_path=self.pdf_path, run_id=self.run_id)
 
     def _build_output_path(self) -> str:
         """
