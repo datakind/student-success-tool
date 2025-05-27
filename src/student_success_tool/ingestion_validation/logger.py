@@ -5,11 +5,13 @@ import shutil
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+
 class SimpleLogger:
     """
     A JSONL logger that temporarily moves the institution log file to /tmp,
     appends the new entry, and moves it back to the source directory.
     """
+
     def __init__(self, log_path: str, institution_id: Optional[str] = None):
         self._institution_id = institution_id
         self._final_log_path = log_path
@@ -18,7 +20,9 @@ class SimpleLogger:
         os.makedirs(tmp_dir, exist_ok=True)
 
         # Use a temp file per institution to avoid collision
-        self._tmp_log_path = os.path.join(tmp_dir, f"{institution_id}_validation.tmp.log")
+        self._tmp_log_path = os.path.join(
+            tmp_dir, f"{institution_id}_validation.tmp.log"
+        )
 
         # If final log exists, move it into tmp before writing
         if os.path.exists(self._final_log_path):
@@ -45,7 +49,7 @@ class SimpleLogger:
         extra_columns: Optional[List[str]] = None,
         missing_required: Optional[List[str]] = None,
         schema_errors: Any = None,
-        failure_cases: Any = None
+        failure_cases: Any = None,
     ) -> None:
         entry: Dict[str, Any] = {"validation_status": "hard_error"}
         if message:
@@ -64,7 +68,7 @@ class SimpleLogger:
         status = "passed_with_soft_errors" if missing_optional else "passed"
         entry = {
             "validation_status": status,
-            "missing_optional": missing_optional or []
+            "missing_optional": missing_optional or [],
         }
         self._write(entry)
 
@@ -88,7 +92,9 @@ class SimpleLogger:
             sys.stderr.write(f"[LOGGER] Failed to move final log file: {e}\n")
 
 
-def setup_logger(institution_id: Optional[str] = None, log_file: str = "validation.log") -> SimpleLogger:
+def setup_logger(
+    institution_id: Optional[str] = None, log_file: str = "validation.log"
+) -> SimpleLogger:
     if not institution_id:
         raise ValueError("institution_id is required for institution-specific logging")
 

@@ -18,6 +18,7 @@ import pandas as pd
 from pandera import Column, Check, DataFrameSchema
 from pandera.errors import SchemaErrors
 
+
 class HardValidationError(Exception):
     def __init__(
         self,
@@ -41,65 +42,56 @@ class HardValidationError(Exception):
 
 
 def normalize_col(name: str) -> str:
-    return (
-        name.strip()
-            .lower()
-            .replace(" ", "_")
-            .replace("-", "_")
-    )
+    return name.strip().lower().replace(" ", "_").replace("-", "_")
 
 
 def load_json(path: str) -> dict:
     try:
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             return json.load(f)
     except Exception as e:
         raise FileNotFoundError(f"Failed to load JSON schema at {path}: {e}")
 
 
 def merge_model_columns(
-    base_schema: dict,
-    extension_schema: dict,
-    institution: str,
-    model: str,
-    logger=None
+    base_schema: dict, extension_schema: dict, institution: str, model: str, logger=None
 ) -> Dict[str, dict]:
-    base_models = base_schema.get('base', {}).get('data_models', {})
+    base_models = base_schema.get("base", {}).get("data_models", {})
     if model not in base_models:
         if logger:
             logger.error(
                 message=f"Model '{model}' not found in base schema",
-                schema_errors={"model": model}
+                schema_errors={"model": model},
             )
         raise KeyError(f"Model '{model}' not in base schema")
-    merged = dict(base_models[model].get('columns', {}))
+    merged = dict(base_models[model].get("columns", {}))
     if extension_schema:
-        inst_block = extension_schema.get('institutions', {}).get(institution, {})
-        ext_models = inst_block.get('data_models', {})
+        inst_block = extension_schema.get("institutions", {}).get(institution, {})
+        ext_models = inst_block.get("data_models", {})
         if model in ext_models:
-            merged.update(ext_models[model].get('columns', {}))
+            merged.update(ext_models[model].get("columns", {}))
     return merged
 
 
 def build_schema(specs: Dict[str, dict]) -> DataFrameSchema:
     columns = {}
     for canon, spec in specs.items():
-        names = [canon] + spec.get('aliases', [])
+        names = [canon] + spec.get("aliases", [])
         pattern = r"^(?:" + "|".join(map(re.escape, names)) + r")$"
         checks = []
-        for chk in spec.get('checks', []):
-            factory = getattr(Check, chk['type'])
-            checks.append(factory(*chk.get('args', []), **chk.get('kwargs', {})))
+        for chk in spec.get("checks", []):
+            factory = getattr(Check, chk["type"])
+            checks.append(factory(*chk.get("args", []), **chk.get("kwargs", {})))
 
         columns[pattern] = Column(
-             name=pattern,
-             regex=True,
-             dtype=spec['dtype'],
-             nullable=spec['nullable'],
-             required=spec.get('required', False),
-             checks=checks or None,
-             coerce=spec.get('coerce', False),
-         )
+            name=pattern,
+            regex=True,
+            dtype=spec["dtype"],
+            nullable=spec["nullable"],
+            required=spec.get("required", False),
+            checks=checks or None,
+            coerce=spec.get("coerce", False),
+        )
     return DataFrameSchema(columns, strict=False)
 
 
@@ -109,14 +101,13 @@ def validate_dataset(
     institution_id: str,
     logger=None,
 ) -> Dict[str, Any]:
-    
     if isinstance(df, str):
         df = pd.read_csv(df)
     df = df.rename(columns={c: normalize_col(c) for c in df.columns})
     incoming = set(df.columns)
-    
+
     # 1) load schemas
-    base_schema_path = '/Volumes/staging_sst_01/default/schema/base_schema.json'
+    base_schema_path = "/Volumes/staging_sst_01/default/schema/base_schema.json"
     base_schema = load_json(base_schema_path)
     ext_schema = None
     extension_schema_path = f"/Volumes/staging_sst_01/{institution_id}_bronze/bronze_volume/schema/{institution_id}_schema_extension.json"
@@ -136,15 +127,14 @@ def validate_dataset(
 
     # 3) build canon → set(normalized names)
     canon_to_norms: Dict[str, set] = {
-        canon: {
-            normalize_col(alias)
-            for alias in [canon] + spec.get('aliases', [])
-        }
+        canon: {normalize_col(alias) for alias in [canon] + spec.get("aliases", [])}
         for canon, spec in merged_specs.items()
     }
 
     pattern_to_canon = {
-        r"^(?:" + "|".join(map(re.escape, [canon] + spec.get('aliases', []))) + r")$": canon
+        r"^(?:"
+        + "|".join(map(re.escape, [canon] + spec.get("aliases", [])))
+        + r")$": canon
         for canon, spec in merged_specs.items()
     }
 
@@ -155,15 +145,13 @@ def validate_dataset(
     missing_required = [
         canon
         for canon, norms in canon_to_norms.items()
-        if merged_specs[canon].get('required', False)
-           and norms.isdisjoint(incoming)
+        if merged_specs[canon].get("required", False) and norms.isdisjoint(incoming)
     ]
 
     missing_optional = [
         canon
         for canon, norms in canon_to_norms.items()
-        if not merged_specs[canon].get('required', False)
-           and norms.isdisjoint(incoming)
+        if not merged_specs[canon].get("required", False) and norms.isdisjoint(incoming)
     ]
 
     # Hard-fail on missing required or any extra columns
@@ -172,11 +160,10 @@ def validate_dataset(
             logger.error(
                 message="Missing required or extra columns detected",
                 missing_required=missing_required,
-                extra_columns=extra_columns
+                extra_columns=extra_columns,
             )
         raise HardValidationError(
-            missing_required=missing_required,
-            extra_columns=extra_columns
+            missing_required=missing_required, extra_columns=extra_columns
         )
 
     # 5) build Pandera schema & validate (hard-fail on any error)
@@ -186,27 +173,24 @@ def validate_dataset(
     except SchemaErrors as err:
         # TODO: Log validation failure for DS to review
         failed_normals = set(err.failure_cases["column"])
-        failed_canons = {
-            pattern_to_canon.get(p, p)
-            for p in failed_normals
-        }
-       
+        failed_canons = {pattern_to_canon.get(p, p) for p in failed_normals}
+
         # split into required vs optional failures
         req_failures = [
-            c for c in failed_canons
-            if merged_specs.get(c, {}).get("required", False)
+            c for c in failed_canons if merged_specs.get(c, {}).get("required", False)
         ]
         opt_failures = [
-            c for c in failed_canons
+            c
+            for c in failed_canons
             if not merged_specs.get(c, {}).get("required", False)
         ]
-        
+
         if req_failures:
             if logger:
                 logger.error(
                     message="Schema validation failed on required columns",
                     schema_errors=err.schema_errors,
-                    failure_cases=err.failure_cases.to_dict(orient="records")
+                    failure_cases=err.failure_cases.to_dict(orient="records"),
                 )
             raise HardValidationError(
                 schema_errors=err.schema_errors,
@@ -227,9 +211,7 @@ def validate_dataset(
     # 6) success (with possible soft misses)
     return {
         "validation_status": (
-            "passed_with_soft_errors"
-            if missing_optional
-            else "passed"
+            "passed_with_soft_errors" if missing_optional else "passed"
         ),
         "missing_optional": missing_optional,
     }
