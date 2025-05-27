@@ -366,6 +366,7 @@ def compute_feature_permutation_importance(
     assert isinstance(result, sklearn.utils.Bunch)  # type guard
     return result
 
+
 def log_confusion_matrix(
     institution_id: str,
     *,
@@ -393,9 +394,10 @@ def log_confusion_matrix(
         )
 
     confusion_matrix_table_path = f"{catalog}.{institution_id}_gold.inference_{automl_experiment_id}_confusion_matrix"
+
     def safe_div(numerator, denominator):
         return numerator / denominator if denominator else 0.0
-    
+
     if mlflow.active_run() is None:
         raise RuntimeError(
             "No active MLflow run. Please call this within an MLflow run context."
@@ -403,34 +405,58 @@ def log_confusion_matrix(
 
     try:
         run = mlflow.get_run(automl_experiment_id)
-        required_metrics = ["test_true_positives", "test_true_negatives", "test_false_positives", "test_false_negatives"]
+        required_metrics = [
+            "test_true_positives",
+            "test_true_negatives",
+            "test_false_positives",
+            "test_false_negatives",
+        ]
         metrics = {m: run.data.metrics.get(m) for m in required_metrics}
 
         if any(v is None for v in metrics.values()):
-            raise ValueError(f"Missing one or more required metrics in run {automl_experiment_id}: {metrics}")
+            raise ValueError(
+                f"Missing one or more required metrics in run {automl_experiment_id}: {metrics}"
+            )
 
-        tp, tn, fp, fn = metrics["test_true_positives"], metrics["test_true_negatives"], metrics["test_false_positives"], metrics["test_false_negatives"]
+        tp, tn, fp, fn = (
+            metrics["test_true_positives"],
+            metrics["test_true_negatives"],
+            metrics["test_false_positives"],
+            metrics["test_false_negatives"],
+        )
 
         tn_percentage = safe_div(tn, tn + fp)
         tp_percentage = safe_div(tp, tp + fn)
         fp_percentage = safe_div(fp, fp + tn)
         fn_percentage = safe_div(fn, fn + tp)
 
-
-        confusion_matrix_table = pd.DataFrame({'true_positive': [tp_percentage],
-                    'false_positive': [fp_percentage],
-                    'true_negative': [tn_percentage],
-                    'false_negative': [fn_percentage]})
+        confusion_matrix_table = pd.DataFrame(
+            {
+                "true_positive": [tp_percentage],
+                "false_positive": [fp_percentage],
+                "true_negative": [tn_percentage],
+                "false_negative": [fn_percentage],
+            }
+        )
 
         confusion_matrix_table_spark = spark.createDataFrame(confusion_matrix_table)
-        confusion_matrix_table_spark.write.mode("overwrite").saveAsTable(confusion_matrix_table_path)
-        LOGGER.info("Confusion matrix written to table '%s' for run_id=%s", confusion_matrix_table_path, automl_experiment_id)
+        confusion_matrix_table_spark.write.mode("overwrite").saveAsTable(
+            confusion_matrix_table_path
+        )
+        LOGGER.info(
+            "Confusion matrix written to table '%s' for run_id=%s",
+            confusion_matrix_table_path,
+            automl_experiment_id,
+        )
 
     except mlflow.exceptions.MlflowException as e:
-        raise RuntimeError(f"MLflow error while retrieving run {automl_experiment_id}: {e}")
+        raise RuntimeError(
+            f"MLflow error while retrieving run {automl_experiment_id}: {e}"
+        )
     except Exception:
         LOGGER.exception("Failed to compute or store confusion matrix.")
         raise
+
 
 def log_roc_table(
     institution_id: str,
@@ -476,21 +502,26 @@ def log_roc_table(
 
     try:
         # Find the run that logged the data
-        runs_df = mlflow.search_runs(experiment_ids=[experiment_id], output_format="pandas")
-        data_run_id = runs_df[runs_df["tags.mlflow.runName"] == data_run_tag]["automl_experiment_id"].item()
+        runs_df = mlflow.search_runs(
+            experiment_ids=[experiment_id], output_format="pandas"
+        )
+        data_run_id = runs_df[runs_df["tags.mlflow.runName"] == data_run_tag][
+            "automl_experiment_id"
+        ].item()
 
         # Load test data
         artifact_path = mlflow.artifacts.download_artifacts(
             run_id=data_run_id, artifact_path="data", dst_path=tmp_dir
         )
 
-        
         df = pd.read_parquet(os.path.join(artifact_path, "training_data"))
         test_df = df[df[split_col] == "test"].copy()
 
         # Load model + features
         model = mlflow.sklearn.load_model(f"runs:/{automl_experiment_id}/model")
-        feature_names: List[str] = model.named_steps["column_selector"].get_params()["cols"]
+        feature_names: List[str] = model.named_steps["column_selector"].get_params()[
+            "cols"
+        ]
 
         # Prepare inputs for ROC
         y_true = test_df[target_col].values
@@ -511,25 +542,30 @@ def log_roc_table(
             FN = np.sum((y_pred == 0) & (y_true == 1))
             TPR = TP / P if P else 0
             FPR = FP / N if N else 0
-            rows.append({
-                "threshold": round(thresh, 4),
-                "true_positive_rate": round(TPR, 4),
-                "false_positive_rate": round(FPR, 4),
-                "true_positive": int(TP),
-                "false_positives": int(FP),
-                "true_negatives": int(TN),
-                "false_negatives": int(FN)
-            })
+            rows.append(
+                {
+                    "threshold": round(thresh, 4),
+                    "true_positive_rate": round(TPR, 4),
+                    "false_positive_rate": round(FPR, 4),
+                    "true_positive": int(TP),
+                    "false_positives": int(FP),
+                    "true_negatives": int(TN),
+                    "false_negatives": int(FN),
+                }
+            )
 
         roc_df = pd.DataFrame(rows)
         spark_df = spark.createDataFrame(roc_df)
         spark_df.write.mode("overwrite").saveAsTable(table_path)
 
     except Exception as e:
-        raise RuntimeError(f"Failed to log ROC table for run {automl_experiment_id}: {e}") from e
+        raise RuntimeError(
+            f"Failed to log ROC table for run {automl_experiment_id}: {e}"
+        ) from e
     finally:
         if os.path.exists(tmp_dir):
             shutil.rmtree(tmp_dir, ignore_errors=True)
+
 
 ############
 ## PLOTS! ##

@@ -53,6 +53,7 @@ def register_mlflow_model(
         )
     LOGGER.info("model version successfully registered at '%s'", model_path)
 
+
 def get_model_name(
     *,
     institution_id: str,
