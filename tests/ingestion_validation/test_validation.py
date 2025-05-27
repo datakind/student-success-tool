@@ -221,7 +221,7 @@ def test_validate_dataset_soft_pass(monkeypatch, base_schema_file, ext_schema_fi
 
     # Always return base or ext schema by inspecting the path basename
     def mocked_load_json(path):
-        if path == f"/Volumes/staging_sst_01/institution_bronze/bronze_volume/schema/institution_schema_extension.json":
+        if path == "/Volumes/staging_sst_01/institution_bronze/bronze_volume/schema/institution_schema_extension.json":
             return json.load(open(ext_schema_file))
         return json.load(open(base_schema_file))
 

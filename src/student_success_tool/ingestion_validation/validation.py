@@ -9,15 +9,12 @@ Reports:
   - failure_cases: row/check-level failure details (if any—treated as hard)
 """
 
-import sys
 import json
 import os
 import re
-import argparse
 from typing import Union, List, Dict, Any
 
 import pandas as pd
-import pandera as pa
 from pandera import Column, Check, DataFrameSchema
 from pandera.errors import SchemaErrors
 
