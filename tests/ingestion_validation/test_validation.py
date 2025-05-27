@@ -14,8 +14,6 @@ from student_success_tool.ingestion_validation.validation import (
 )
 from student_success_tool.ingestion_validation.logger import SimpleLogger
 
-# ─── Fixtures ────────────────────────────────────────────────────────────────
-
 @pytest.fixture
 def base_schema_file(tmp_path):
     schema = {
@@ -102,8 +100,6 @@ def test_logger(tmp_path) -> SimpleLogger:
     logger = SimpleLogger(log_path=str(log_file), institution_id="test")
     yield logger
     logger.close()
-
-# ─── Tests ────────────────────────────────────────────────────────────────────
 
 def test_normalize_col():
     assert normalize_col("  student id ") == "student_id"
