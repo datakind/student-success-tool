@@ -15,6 +15,8 @@ def nth_student_terms(
     student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
+    term_is_pre_cohort_col: str = "term_is_pre_cohort",
+    exclude_pre_cohort_terms: bool = True,
 ) -> pd.DataFrame:
     """
     For each student, get the nth row in ``df`` , in ascending order of ``sort_cols`` ,
@@ -27,12 +29,22 @@ def nth_student_terms(
         student_id_cols: Column(s) that uniquely identify students in ``df`` .
         sort_cols: Column(s) used to sort students' terms, typically chronologically.
         include_cols
+        term_is_pre_cohort_col
+        exclude_pre_cohort_terms
     """
     student_id_cols = utils.types.to_list(student_id_cols)
     sort_cols = utils.types.to_list(sort_cols)
     included_cols = _get_included_cols(df, student_id_cols, sort_cols, include_cols)
+    # exclude rows that are "pre-cohort", so "nth" meets our criteria here
+    df = (
+        df.loc[df[term_is_pre_cohort_col].eq(False), :]
+        if exclude_pre_cohort_terms is True
+        else df.loc[:, cols]
+    )
     df_nth = (
-        df.loc[:, included_cols]
+        df.loc[df[term_is_pre_cohort_col].eq(False), :]
+        if exclude_pre_cohort_terms is True
+        else df.loc[:, included_cols]
         .sort_values(
             by=(student_id_cols + sort_cols), ascending=True, ignore_index=False
         )
