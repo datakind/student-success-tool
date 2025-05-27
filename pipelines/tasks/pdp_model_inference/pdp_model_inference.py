@@ -263,15 +263,16 @@ class ModelInferenceTask:
         features: pd.DataFrame,
         unique_ids: pd.Series,
         shap_values: npt.NDArray[np.float64],
+        n: int = 10,
     ) -> pd.DataFrame:
         try:
             top_n_shap_features = inference.top_shap_features(
-                features, unique_ids, shap_values
+                features, unique_ids, shap_values, n
             )
             return top_n_shap_features
 
         except Exception as e:
-            logging.error("Error computing top 10 shap features table: %s", e)
+            logging.error("Error computing top %d shap features table: %s", n, e)
             return None
 
     def support_score_distribution(
