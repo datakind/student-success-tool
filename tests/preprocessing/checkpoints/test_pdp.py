@@ -72,7 +72,7 @@ def df_test():
             pd.DataFrame(
                 data={
                     "student_id": ["01", "02", "03", "04", "05"],
-                    "term_rank": [4, 5, 2, 4, 8],
+                    "term_rank": [3, 5, 2, 4, 8],
                     "cohort_id": [
                         "2020-21 SPRING",
                         "2021-22 FALL",
