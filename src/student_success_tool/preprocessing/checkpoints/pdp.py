@@ -59,6 +59,8 @@ def first_student_terms(
     student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
+    term_is_pre_cohort_col: str = "term_is_pre_cohort",
+    exclude_pre_cohort_terms: bool = False,
 ) -> pd.DataFrame:
     """
     For each student, get the first (0th) row in ``df`` in ascending order of ``sort_cols`` ,
@@ -79,6 +81,8 @@ def first_student_terms(
         student_id_cols=student_id_cols,
         sort_cols=sort_cols,
         include_cols=include_cols,
+        term_is_pre_cohort_col=term_is_pre_cohort_col,
+        exclude_pre_cohort_terms=exclude_pre_cohort_terms
     )
 
 
@@ -88,6 +92,8 @@ def last_student_terms(
     student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
+    term_is_pre_cohort_col: str = "term_is_pre_cohort",
+    exclude_pre_cohort_terms: bool = True,
 ) -> pd.DataFrame:
     """
     For each student, get the last (-1th) row in ``df`` in ascending order of ``sort_cols`` ,
@@ -108,6 +114,8 @@ def last_student_terms(
         student_id_cols=student_id_cols,
         sort_cols=sort_cols,
         include_cols=include_cols,
+        term_is_pre_cohort_col=term_is_pre_cohort_col,
+        exclude_pre_cohort_terms=exclude_pre_cohort_terms
     )
 
 
