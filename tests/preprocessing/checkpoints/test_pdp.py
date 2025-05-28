@@ -64,12 +64,11 @@ def df_test():
 
 
 # @pytest.mark.parametrize(
-#     ["n", "include_cols", "exclude_pre_cohort_terms", "exp"],
+#     ["n", "include_cols", "exp"],
 #     [
 #         (
 #             0,
 #             None,
-#             True,
 #             pd.DataFrame(
 #                 data={
 #                     "student_id": ["01", "02", "03", "04", "05"],
@@ -112,7 +111,6 @@ def df_test():
 #         (
 #             0,
 #             ["term_id"],
-#             True,
 #             pd.DataFrame(
 #                 data={
 #                     "student_id": ["01", "02", "03", "04", "05"],
@@ -131,7 +129,6 @@ def df_test():
 #         (
 #             1,
 #             None,
-#             False,
 #             pd.DataFrame(
 #                 data={
 #                     "student_id": ["01", "02"],
@@ -155,15 +152,13 @@ def df_test():
 #         ),
 #     ],
 # )
-# def test_nth_student_terms(df_test, n, include_cols, exclude_pre_cohort_terms, exp):
+# def test_nth_student_terms(df_test, n, include_cols, exp):
 #     obs = pdp.nth_student_terms(
 #         df_test,
 #         n=n,
 #         student_id_cols="student_id",
 #         sort_cols="term_rank",
 #         include_cols=include_cols,
-#         term_is_pre_cohort_col="term_is_pre_cohort",
-#         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
 #     )
 #     assert isinstance(obs, pd.DataFrame)
 #     assert pd.testing.assert_frame_equal(obs, exp) is None
