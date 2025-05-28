@@ -175,6 +175,7 @@ def test_nth_student_terms(df_test, n, include_cols, exclude_pre_cohort_terms, e
     [
         (
             ["term_id"],
+            False,
             pd.DataFrame(
                 data={
                     "student_id": ["01", "02", "03", "04", "05"],
@@ -192,15 +193,17 @@ def test_nth_student_terms(df_test, n, include_cols, exclude_pre_cohort_terms, e
         ),
     ],
 )
-def test_first_student_terms(df_test, include_cols, exp):
+def test_first_student_terms(df_test, include_cols, exclude_pre_cohort_terms, exp):
     obs = pdp.first_student_terms(
         df_test,
         student_id_cols="student_id",
         sort_cols="term_rank",
         include_cols=include_cols,
+        term_is_pre_cohort_col="term_is_pre_cohort",
+        exclude_pre_cohort_terms=exclude_pre_cohort_terms,
     )
     assert isinstance(obs, pd.DataFrame)
-    assert pd.testing.assert_frame_equal(obs, exp) is None
+    pd.testing.assert_frame_equal(obs.reset_index(drop=True), exp.reset_index(drop=True))
 
 
 @pytest.mark.parametrize(
@@ -208,6 +211,7 @@ def test_first_student_terms(df_test, include_cols, exp):
     [
         (
             ["term_id"],
+            False,
             pd.DataFrame(
                 data={
                     "student_id": ["01", "02", "03", "04", "05"],
@@ -225,15 +229,17 @@ def test_first_student_terms(df_test, include_cols, exp):
         ),
     ],
 )
-def test_last_student_terms(df_test, include_cols, exp):
+def test_last_student_terms(df_test, include_cols, exclude_pre_cohort_terms, exp):
     obs = pdp.last_student_terms(
         df_test,
         student_id_cols="student_id",
         sort_cols="term_rank",
         include_cols=include_cols,
+        term_is_pre_cohort_col="term_is_pre_cohort",
+        exclude_pre_cohort_terms=exclude_pre_cohort_terms,
     )
     assert isinstance(obs, pd.DataFrame)
-    assert pd.testing.assert_frame_equal(obs, exp) is None
+    pd.testing.assert_frame_equal(obs.reset_index(drop=True), exp.reset_index(drop=True))
 
 
 @pytest.mark.parametrize(
