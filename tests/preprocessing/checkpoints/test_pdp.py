@@ -9,7 +9,7 @@ def df_test():
     return pd.DataFrame(
         {
             "student_id": ["01", "01", "01", "02", "02", "03", "04", "05"],
-            "term_rank": [3, 4, 5, 5, 6, 2, 4, 8],
+            "term_rank": [4, 4, 5, 5, 6, 2, 4, 8],
             "cohort_id": [
                 "2020-21 SPRING",
                 "2020-21 SPRING",
@@ -21,7 +21,7 @@ def df_test():
                 "2022-23 FALL",
             ],
             "term_id": [
-                "2020-21 FALL",
+                "2020-21 SPRING",
                 "2020-21 SPRING",
                 "2021-22 FALL",
                 "2021-22 FALL",
@@ -43,7 +43,7 @@ def df_test():
             ],
             "num_credits_earned": [25.0, 30.0, 35.0, 25.0, 35.0, 20.0, 45.0, 10.0],
             "term_is_pre_cohort": [
-                True,
+                False,
                 False,
                 False,
                 False,
@@ -81,7 +81,7 @@ def df_test():
                         "2022-23 FALL",
                     ],
                     "term_id": [
-                        "2020-21 FALL",
+                        "2020-21 SPRING",
                         "2021-22 FALL",
                         "2019-20 SPRING",
                         "2020-21 SPRING",
