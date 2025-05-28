@@ -155,7 +155,7 @@ def df_test():
         ),
     ],
 )
-def test_nth_student_terms(df_test, n, include_cols, exclude_pre_cohort_term, exp):
+def test_nth_student_terms(df_test, n, include_cols, exclude_pre_cohort_terms, exp):
     obs = pdp.nth_student_terms(
         df_test,
         n=n,
