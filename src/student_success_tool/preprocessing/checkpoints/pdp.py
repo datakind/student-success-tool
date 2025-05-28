@@ -45,6 +45,7 @@ def nth_student_terms(
         )
         .groupby(by=student_id_cols)
         .nth(n)
+        .reset_index()
     )
     assert isinstance(df_nth, pd.DataFrame)  # type guard
     return df_nth
