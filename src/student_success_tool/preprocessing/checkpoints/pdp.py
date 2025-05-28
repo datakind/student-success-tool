@@ -10,49 +10,49 @@ LOGGER = logging.getLogger(__name__)
 
 def nth_student_terms(
     df: pd.DataFrame,
-        *,
-        n: int,
-        student_id_cols: str | list[str] = "student_id",
-        sort_cols: str | list[str] = "term_rank",
-        include_cols: t.Optional[list[str]] = None,
-        term_is_pre_cohort_col: str = "term_is_pre_cohort",
-        exclude_pre_cohort_terms: bool = True,
-    ) -> pd.DataFrame:
-        """
-        For each student, get the nth row in ``df`` (in ascending order of ``sort_cols`` ). If `exclude_pre_cohort_col` is true, then for each student, we want to get the nth row in ``df`` (in ascending order of ``sort_cols`` ) for which the term occurred *within* the student's cohort, i.e. not prior to their official start of enrollment, and a configurable subset of columns.
-        Ex. n = 0 gets the first term, and is equivalent to the functionality of get_first_student_terms(); n = 1 gets the second term, n = 2, gets the third term, so on and so forth.
+    *,
+    n: int,
+    student_id_cols: str | list[str] = "student_id",
+    sort_cols: str | list[str] = "term_rank",
+    include_cols: t.Optional[list[str]] = None,
+    term_is_pre_cohort_col: str = "term_is_pre_cohort",
+    exclude_pre_cohort_terms: bool = True,
+) -> pd.DataFrame:
+    """
+    For each student, get the nth row in ``df`` (in ascending order of ``sort_cols`` ). If `exclude_pre_cohort_col` is true, then for each student, we want to get the nth row in ``df`` (in ascending order of ``sort_cols`` ) for which the term occurred *within* the student's cohort, i.e. not prior to their official start of enrollment, and a configurable subset of columns.
+    Ex. n = 0 gets the first term, and is equivalent to the functionality of get_first_student_terms(); n = 1 gets the second term, n = 2, gets the third term, so on and so forth.
 
-        Args:
-            df
-            n
-            student_id_cols
-            sort_cols
-            include_cols
-            term_is_pre_cohort_col
-            exclude_pre_cohort_terms
-        """
-        student_id_cols = utils.types.to_list(student_id_cols)
-        sort_cols = utils.types.to_list(sort_cols)
-        cols = (
-            df.columns.tolist()
-            if include_cols is None
-            else list(
-                utils.misc.unique_elements_in_order(
-                    student_id_cols + sort_cols + include_cols
-                )
+    Args:
+        df
+        n
+        student_id_cols
+        sort_cols
+        include_cols
+        term_is_pre_cohort_col
+        exclude_pre_cohort_terms
+    """
+    student_id_cols = utils.types.to_list(student_id_cols)
+    sort_cols = utils.types.to_list(sort_cols)
+    cols = (
+        df.columns.tolist()
+        if include_cols is None
+        else list(
+            utils.misc.unique_elements_in_order(
+                student_id_cols + sort_cols + include_cols
             )
         )
-        # exclude rows that are "pre-cohort", so "nth" meets our criteria here
-        df = (
-            df.loc[df[term_is_pre_cohort_col].eq(False), :]
-            if exclude_pre_cohort_terms is True
-            else df.loc[:, cols]
-        )
-        return (
-            df.sort_values(by=sort_cols, ascending=True)
-            .groupby(by=student_id_cols, sort=False, as_index=False)
-            .nth(n)
-        )
+    )
+    # exclude rows that are "pre-cohort", so "nth" meets our criteria here
+    df = (
+        df.loc[df[term_is_pre_cohort_col].eq(False), :]
+        if exclude_pre_cohort_terms is True
+        else df.loc[:, cols]
+    )
+    return (
+        df.sort_values(by=sort_cols, ascending=True)
+        .groupby(by=student_id_cols, sort=False, as_index=False)
+        .nth(n)
+    )
 
 
 def first_student_terms(
