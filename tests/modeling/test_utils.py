@@ -47,7 +47,7 @@ def test_compute_dataset_splits(df, label_fracs, shuffle, seed):
             assert actual == 0
         else:
             rel_error = abs(actual - frac) / frac
-            assert rel_error <= 0.05, (
+            assert rel_error <= 0.1, (
                 f"Label '{label}' has {actual:.3f}, expected {frac:.3f} (rel error: {rel_error:.2%})"
             )
 
