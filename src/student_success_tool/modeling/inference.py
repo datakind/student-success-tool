@@ -333,3 +333,138 @@ def calculate_shap_values(
         # reattach student ids to their shap values
         .assign(**{student_id_col: student_ids})
     )
+
+
+def top_shap_features(
+    features: pd.DataFrame,
+    unique_ids: pd.Series,
+    shap_values: npt.NDArray[np.float64],
+    top_n: int = 10,
+) -> pd.DataFrame:
+    """
+    Extracts the top N most important SHAP features across all samples.
+
+    Args:
+        features (pd.DataFrame): Input feature values.
+        unique_ids (pd.Series): Unique identifiers for each sample.
+        shap_values (np.ndarray): SHAP values for the input features.
+        top_n (int): Number of top features to select (default is 10).
+
+    Returns:
+        pd.DataFrame: Long-form DataFrame with columns:
+            - student_id
+            - feature_name
+            - shap_value
+            - feature_value
+    """
+
+    if features.empty or shap_values.size == 0 or unique_ids.empty:
+        raise ValueError("Input data cannot be empty.")
+
+    shap_long = (
+        pd.DataFrame(shap_values, columns=features.columns)
+        .assign(student_id=unique_ids.values)
+        .melt(id_vars="student_id", var_name="feature_name", value_name="shap_value")
+    )
+
+    feature_long = features.assign(student_id=unique_ids.values).melt(
+        id_vars="student_id", var_name="feature_name", value_name="feature_value"
+    )
+
+    summary_df = shap_long.merge(feature_long, on=["student_id", "feature_name"])
+
+    top_n_features = (
+        summary_df.groupby("feature_name")["shap_value"]
+        .apply(lambda x: np.mean(np.abs(x)))
+        .sort_values(ascending=False)
+        .head(top_n)
+        .index.tolist()
+    )
+
+    top_features = summary_df[summary_df["feature_name"].isin(top_n_features)].copy()
+
+    return top_features
+
+
+def support_score_distribution_table(
+    df_serving,
+    unique_ids,
+    pred_probs,
+    shap_values,
+    inference_params,
+    features_table,
+    model_feature_names,
+):
+    """
+    Selects top SHAP features for each student, and bins the support scores.
+
+    Args:
+        df_serving (pd.DataFrame): Input features used for prediction.
+        unique_ids (pd.Series): Unique ids (student_id) for each student.
+        pred_probs (list or np.ndarray): Predicted probabilities from the model.
+        shap_values (np.ndarray or pd.DataFrame): SHAP values for the input features.
+        inference_params (dict): Dictionary containing configuration for:
+            - "num_top_features" (int): Number of top features to display.
+            - "min_prob_pos_label" (float): Threshold to determine if support is needed.
+        features_table (dict): Optional dictionary mapping feature names to understandable format.
+        model_feature_names (list): List of feature names used by the model.
+
+    Returns:
+        pd.DataFrame: A DataFrame with the following columns:
+            - bin_lower: Lower bound of the support score bin.
+            - bin_upper: Upper bound of the support score bin.
+            - support_score: Midpoint of the bin (used for plotting).
+            - count_of_students: Number of students in the bin.
+            - pct: Percentage of total students in the bin.
+
+    """
+
+    try:
+        result = select_top_features_for_display(
+            df_serving,
+            unique_ids,
+            pred_probs,
+            shap_values.values,
+            n_features=inference_params["num_top_features"],
+            features_table=features_table,
+            needs_support_threshold_prob=inference_params["min_prob_pos_label"],
+        )
+
+        # --- Bin support scores for histogram (e.g., 0.0 to 1.0 in 0.1 steps) ---
+        bins = np.arange(0.1, 1.1, 0.1)
+        result["score_bin"] = pd.cut(
+            result["Support Score"], bins=bins, include_lowest=True, right=False
+        )
+
+        # Group and count
+        bin_counts = (
+            result.groupby("score_bin", observed=True)
+            .size()
+            .reset_index(name="count_of_students")
+        )
+
+        # Extract bin boundaries
+        bin_counts["bin_lower"] = bin_counts["score_bin"].apply(
+            lambda x: round(x.left, 2)
+        )
+        bin_counts["bin_upper"] = bin_counts["score_bin"].apply(
+            lambda x: round(x.right, 2)
+        )
+        bin_counts["support_score"] = bin_counts["score_bin"].apply(
+            lambda x: round((x.left + x.right) / 2, 2)
+        )
+
+        total_students = len(result)
+        bin_counts["pct"] = (
+            bin_counts["count_of_students"] / total_students * 100
+        ).round(2)
+
+        return bin_counts[
+            ["bin_lower", "bin_upper", "support_score", "count_of_students", "pct"]
+        ]
+
+    except Exception:
+        import traceback
+
+        traceback.print_exc()
+        raise  # <-- temporarily raise instead of returning None
