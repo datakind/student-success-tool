@@ -31,28 +31,32 @@ def test_compute_dataset_splits(df, label_fracs, shuffle, seed):
     obs = utils.compute_dataset_splits(
         df, label_fracs=label_fracs, shuffle=shuffle, seed=seed
     )
+
     assert isinstance(obs, pd.Series)
     assert len(obs) == len(df)
-    labels = list(label_fracs.keys())
-    fracs = list(label_fracs.values())
-    obs_value_counts = obs.value_counts(normalize=True)
-    exp_value_counts = pd.Series(
-        data=fracs,
-        index=pd.Index(labels, dtype="string", name="split"),
-        name="proportion",
-        dtype="Float64",
-    )
-    assert (
-        pd.testing.assert_series_equal(
-            obs_value_counts, exp_value_counts, rtol=0.15, check_like=True
-        )
-        is None
-    )
+
+    expected_labels = set(label_fracs)
+    actual_labels = set(obs.unique())
+    assert actual_labels.issubset(expected_labels)
+
+    value_counts = obs.value_counts(normalize=True)
+
+    for label, frac in label_fracs.items():
+        actual = value_counts.get(label, 0)
+        if frac == 0:
+            assert actual == 0
+        else:
+            rel_error = abs(actual - frac) / frac
+            assert rel_error <= 0.05, (
+                f"Label '{label}' has {actual:.3f}, expected {frac:.3f} (rel error: {rel_error:.2%})"
+            )
+
     if seed is not None:
         obs2 = utils.compute_dataset_splits(
             df, label_fracs=label_fracs, shuffle=shuffle, seed=seed
         )
-        assert obs.equals(obs2)
+        assert obs.equals(obs2), "Non-deterministic output despite fixed seed"
+
 
 
 @pytest.mark.parametrize(
