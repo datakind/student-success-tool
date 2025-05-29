@@ -154,6 +154,7 @@ def df_test():
 )
 def test_nth_student_terms(df_test, n, include_cols, exclude_pre_cohort_terms, exp):
     from student_success_tool.preprocessing.checkpoints import pdp
+
     obs = pdp.nth_student_terms(
         df_test,
         n=n,
@@ -164,10 +165,13 @@ def test_nth_student_terms(df_test, n, include_cols, exclude_pre_cohort_terms, e
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
     )
     assert isinstance(obs, pd.DataFrame)
-    assert pd.testing.assert_frame_equal(
-    obs.sort_values("student_id").reset_index(drop=True),
-    exp.sort_values("student_id").reset_index(drop=True)
-    ) is None
+    assert (
+        pd.testing.assert_frame_equal(
+            obs.sort_values("student_id").reset_index(drop=True),
+            exp.sort_values("student_id").reset_index(drop=True),
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize(
@@ -203,7 +207,9 @@ def test_first_student_terms(df_test, include_cols, exclude_pre_cohort_terms, ex
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
     )
     assert isinstance(obs, pd.DataFrame)
-    pd.testing.assert_frame_equal(obs.reset_index(drop=True), exp.reset_index(drop=True))
+    pd.testing.assert_frame_equal(
+        obs.reset_index(drop=True), exp.reset_index(drop=True)
+    )
 
 
 @pytest.mark.parametrize(
@@ -239,7 +245,9 @@ def test_last_student_terms(df_test, include_cols, exclude_pre_cohort_terms, exp
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
     )
     assert isinstance(obs, pd.DataFrame)
-    pd.testing.assert_frame_equal(obs.reset_index(drop=True), exp.reset_index(drop=True))
+    pd.testing.assert_frame_equal(
+        obs.reset_index(drop=True), exp.reset_index(drop=True)
+    )
 
 
 @pytest.mark.parametrize(

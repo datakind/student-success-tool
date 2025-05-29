@@ -78,7 +78,7 @@ def first_student_terms(
         sort_cols=sort_cols,
         include_cols=include_cols,
         term_is_pre_cohort_col=term_is_pre_cohort_col,
-        exclude_pre_cohort_terms=exclude_pre_cohort_terms
+        exclude_pre_cohort_terms=exclude_pre_cohort_terms,
     )
 
 
@@ -111,7 +111,7 @@ def last_student_terms(
         sort_cols=sort_cols,
         include_cols=include_cols,
         term_is_pre_cohort_col=term_is_pre_cohort_col,
-        exclude_pre_cohort_terms=exclude_pre_cohort_terms
+        exclude_pre_cohort_terms=exclude_pre_cohort_terms,
     )
 
 
