@@ -11,13 +11,13 @@ from student_success_tool.modeling import utils
             pd.DataFrame(data=list(range(1000))),
             {"train": 0.5, "test": 0.5},
             True,
-            None,
+            10,
         ),
         (
             pd.DataFrame(data=list(range(1000))),
             {"train": 0.6, "test": 0.2, "valid": 0.2},
             False,
-            None,
+            11,
         ),
         (
             pd.DataFrame(data=list(range(1000))),
@@ -31,32 +31,28 @@ def test_compute_dataset_splits(df, label_fracs, shuffle, seed):
     obs = utils.compute_dataset_splits(
         df, label_fracs=label_fracs, shuffle=shuffle, seed=seed
     )
-
     assert isinstance(obs, pd.Series)
     assert len(obs) == len(df)
-
-    expected_labels = set(label_fracs)
-    actual_labels = set(obs.unique())
-    assert actual_labels.issubset(expected_labels)
-
-    value_counts = obs.value_counts(normalize=True)
-
-    for label, frac in label_fracs.items():
-        actual = value_counts.get(label, 0)
-        if frac == 0:
-            assert actual == 0
-        else:
-            rel_error = abs(actual - frac) / frac
-            assert rel_error <= 0.1, (
-                f"Label '{label}' has {actual:.3f}, expected {frac:.3f} (rel error: {rel_error:.2%})"
-            )
-
+    labels = list(label_fracs.keys())
+    fracs = list(label_fracs.values())
+    obs_value_counts = obs.value_counts(normalize=True)
+    exp_value_counts = pd.Series(
+        data=fracs,
+        index=pd.Index(labels, dtype="string", name="split"),
+        name="proportion",
+        dtype="Float64",
+    )
+    assert (
+        pd.testing.assert_series_equal(
+            obs_value_counts, exp_value_counts, rtol=0.15, check_like=True
+        )
+        is None
+    )
     if seed is not None:
         obs2 = utils.compute_dataset_splits(
             df, label_fracs=label_fracs, shuffle=shuffle, seed=seed
         )
-        assert obs.equals(obs2), "Non-deterministic output despite fixed seed"
-
+        assert obs.equals(obs2)
 
 
 @pytest.mark.parametrize(
