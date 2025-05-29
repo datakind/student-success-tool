@@ -211,7 +211,7 @@ df_labeled
 # TODO: choose target function suitable for school's use case
 # parameters should be specified in the config
 target = targets.pdp.TODO.compute_target(df_labeled, **cfg.preprocessing.target)
-df_labeled = pd.merge(df_features, target, how="inner", on=cfg.student_id_col)
+df_labeled = pd.merge(df_labeled, target, how="inner", on=cfg.student_id_col)
 
 print(df_labeled[cfg.target_col].value_counts())
 print(df_labeled[cfg.target_col].value_counts(normalize=True))
