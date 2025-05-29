@@ -33,22 +33,16 @@ def nth_student_terms(
     """
     student_id_cols = utils.types.to_list(student_id_cols)
     sort_cols = utils.types.to_list(sort_cols)
-    cols = (
-        df.columns.tolist()
-        if include_cols is None
-        else list(
-            utils.misc.unique_elements_in_order(
-                student_id_cols + sort_cols + include_cols
-            )
+    included_cols = _get_included_cols(df, student_id_cols, sort_cols, include_cols)
+    df_nth = (
+        # exclude rows that are "pre-cohort", so "nth" meets our criteria here
+        if exclude_pre_cohort_terms:
+            df = df[df[term_is_pre_cohort_col] == False]
+        df.loc[:, included_cols]
+        .sort_values(
+            by=(student_id_cols + sort_cols), ascending=True, ignore_index=False
         )
-    )
-    # exclude rows that are "pre-cohort", so "nth" meets our criteria here
-    if exclude_pre_cohort_terms:
-        df = df[df[term_is_pre_cohort_col] == False]
-    df = df.loc[:, cols]
-    return (
-        df.sort_values(by=sort_cols, ascending=True)
-        .groupby(by=student_id_cols, sort=False, as_index=False)
+        .groupby(by=student_id_cols)
         .nth(n)
     )
 
