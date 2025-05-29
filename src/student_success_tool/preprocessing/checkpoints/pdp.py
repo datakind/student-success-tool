@@ -45,6 +45,8 @@ def nth_student_terms(
         .groupby(by=student_id_cols)
         .nth(n)
     )
+    assert isinstance(df_nth, pd.DataFrame)
+    return df_nth
 
 
 def first_student_terms(
