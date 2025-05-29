@@ -91,7 +91,7 @@ features_table = dataio.read_features_table("assets/pdp/features_table.toml")
 
 df = dataio.schemas.pdp.PDPLabeledDataSchema(
     dataio.read.from_delta_table(
-        cfg.datasets.gold.silver.table_path,
+        cfg.datasets.silver.modeling.table_path,
         spark_session=spark,
     )
 )
