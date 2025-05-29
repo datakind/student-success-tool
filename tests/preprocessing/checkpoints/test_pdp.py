@@ -171,7 +171,7 @@ def test_nth_student_terms(df_test, n, include_cols, exclude_pre_cohort_terms, e
 
 
 @pytest.mark.parametrize(
-    ["include_cols", "exp"],
+    ["include_cols", "exclude_pre_cohort_terms", "exp"],
     [
         (
             ["term_id"],
@@ -207,7 +207,7 @@ def test_first_student_terms(df_test, include_cols, exclude_pre_cohort_terms, ex
 
 
 @pytest.mark.parametrize(
-    ["include_cols", "exp"],
+    ["include_cols", "exclude_pre_cohort_terms", "exp"],
     [
         (
             ["term_id"],
