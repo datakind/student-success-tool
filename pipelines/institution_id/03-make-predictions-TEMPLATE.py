@@ -178,7 +178,7 @@ df_ref.shape
 
 explainer = shap.explainers.KernelExplainer(
     ft.partial(
-        predict_proba,
+        modeling.inference.predict_probs,
         model=model,
         feature_names=model_feature_names,
         pos_label=cfg.pos_label,
