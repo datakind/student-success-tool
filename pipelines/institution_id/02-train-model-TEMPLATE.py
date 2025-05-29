@@ -277,8 +277,7 @@ result = modeling.evaluation.compute_feature_permutation_importance(
     random_state=cfg.random_state,
 )
 ax = modeling.evaluation.plot_features_permutation_importance(
-    result,
-    feature_cols=df_features.columns
+    result, feature_cols=df_features.columns
 )
 fig = ax.get_figure()
 fig.tight_layout()
