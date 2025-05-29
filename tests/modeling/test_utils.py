@@ -11,13 +11,13 @@ from student_success_tool.modeling import utils
             pd.DataFrame(data=list(range(1000))),
             {"train": 0.5, "test": 0.5},
             True,
-            10,
+            None,
         ),
         (
             pd.DataFrame(data=list(range(1000))),
             {"train": 0.6, "test": 0.2, "valid": 0.2},
             False,
-            11,
+            None,
         ),
         (
             pd.DataFrame(data=list(range(1000))),
