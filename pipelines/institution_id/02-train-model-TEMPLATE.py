@@ -268,7 +268,7 @@ mlflow.end_run()
 # NOTE: This can be used for model diagnostics. It is NOT used
 # in our standard evaluation process and not pulled into model cards.
 model = mlflow.sklearn.load_model(f"runs:/{top_run_ids[0]}/model")
-ax = modeling.evaluation.plot_features_permutation_importance(
+result = modeling.evaluation.compute_feature_permutation_importance(
     model,
     df_features,
     df[cfg.target_col],
@@ -277,6 +277,9 @@ ax = modeling.evaluation.plot_features_permutation_importance(
     ),
     sample_weight=df[cfg.sample_weight_col],
     random_state=cfg.random_state,
+)
+ax = modeling.evaluation.plot_features_permutation_importance(
+    result, feature_cols=df_features.columns
 )
 fig = ax.get_figure()
 fig.tight_layout()
