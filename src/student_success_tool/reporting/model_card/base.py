@@ -233,7 +233,7 @@ class ModelCard(t.Generic[C]):
             ),
             "feature_importances_by_shap_plot": (
                 "Feature Importances",
-                "shap_summary_labeled_dataset_100_ref_rows.png",
+                "feature_importances_by_shap_plot.png",
                 "150mm",
             ),
         }

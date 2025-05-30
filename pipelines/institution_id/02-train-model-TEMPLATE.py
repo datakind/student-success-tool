@@ -40,7 +40,6 @@
 
 import logging
 
-import matplotlib.pyplot as plt
 import mlflow
 import sklearn.metrics
 from databricks.connect import DatabricksSession
@@ -244,9 +243,6 @@ for run_id in top_run_ids:
         model_comp_fig = modeling.evaluation.plot_trained_models_comparison(
             experiment_id, cfg.modeling.training.primary_metric
         )
-        mlflow.log_figure(model_comp_fig, "model_comparison.png")
-        plt.close()
-
         modeling.evaluation.evaluate_performance(
             df_pred,
             target_col=cfg.target_col,

@@ -1,11 +1,14 @@
 import logging
 import re
 import typing as t
+import mlflow
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+import matplotlib.pyplot as plt
 import sklearn.base
+import shap
 from shap import KernelExplainer
 
 LOGGER = logging.getLogger(__name__)
@@ -59,6 +62,37 @@ def predict_probs(
         return pred_probs[:, model.classes_.tolist().index(pos_label)]
     else:
         return pred_probs
+
+
+def shap_summary_plot(
+    df_shap_values: pd.DataFrame,
+    df_test: pd.DataFrame,
+    model_feature_names: list[str],
+    model_classes: npt.NDArray,
+    max_display: int = 20,
+) -> None:
+    """
+    Generates and logs a SHAP summary plot using metadata config.
+
+    Args:
+        df_shap_values: DataFrame of SHAP values
+        df_test: DataFrame of test features
+        model_feature_names: List of feature names used in the model
+        model_classes: Numpy array of model classes (e.g. True, False)
+        max_display: Maximum number of features to display
+    """
+
+    shap.summary_plot(
+        df_shap_values.loc[:, model_feature_names].to_numpy(),
+        df_test.loc[:, model_feature_names],
+        class_names=model_classes,
+        max_display=20,
+        show=False,
+    )
+
+    shap_fig = plt.gcf()
+
+    mlflow.log_figure(shap_fig, "feature_importances_by_shap_plot.png")
 
 
 def select_top_features_for_display(
@@ -200,6 +234,12 @@ def generate_ranked_feature_table(
 
     # Drop the raw magnitude column
     df = df.drop(columns=["Average SHAP Magnitude (Raw)"])
+
+    # Log as an ML artifact
+    df.to_csv("/tmp/ranked_selected_features.csv", index=False)
+    mlflow.log_artifact(
+        "/tmp/ranked_selected_features.csv", artifact_path="selected_features"
+    )
 
     return df
 
