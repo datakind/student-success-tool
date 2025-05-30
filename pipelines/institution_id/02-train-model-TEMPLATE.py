@@ -116,9 +116,11 @@ mlflow.autolog(disable=True)
 
 # COMMAND ----------
 
-# TODO: load feature selection params from the project config
-# okay to hard-code it first then add it to the config later
+# load feature selection params from the project config
+# HACK: set non-feature cols in params since it's computed outside
+# of feature selection config
 selection_params = cfg.modeling.feature_selection.model_dump()
+selection_params["non_feature_cols"] = cfg.non_feature_cols
 logging.info("selection params = %s", selection_params)
 
 # COMMAND ----------
