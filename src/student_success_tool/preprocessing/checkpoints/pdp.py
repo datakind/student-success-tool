@@ -15,22 +15,28 @@ def nth_student_terms(
     student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
+    term_is_pre_cohort_col: str = "term_is_pre_cohort",
+    exclude_pre_cohort_terms: bool = True,
 ) -> pd.DataFrame:
     """
-    For each student, get the nth row in ``df`` , in ascending order of ``sort_cols`` ,
-    and a configurable subset of columns.
+    For each student, get the nth row in ``df`` (in ascending order of ``sort_cols`` ). If `exclude_pre_cohort_col` is true, then for each student, we want to get the nth row in ``df`` (in ascending order of ``sort_cols`` ) for which the term occurred *within* the student's cohort, i.e. not prior to their official start of enrollment, and a configurable subset of columns.
+    Ex. n = 0 gets the first term, and is equivalent to the functionality of get_first_student_terms(); n = 1 gets the second term, n = 2, gets the third term, so on and so forth.
 
     Args:
-        df: Student-term dataset.
-        n: Row number to be returned for each student, in ascending ``sort_cols`` order.
-            Note that ``n`` is zero-indexed, so 0 => first row, 1 => second row, etc.
-        student_id_cols: Column(s) that uniquely identify students in ``df`` .
-        sort_cols: Column(s) used to sort students' terms, typically chronologically.
+        df
+        n
+        student_id_cols
+        sort_cols
         include_cols
+        term_is_pre_cohort_col
+        exclude_pre_cohort_terms
     """
     student_id_cols = utils.types.to_list(student_id_cols)
     sort_cols = utils.types.to_list(sort_cols)
     included_cols = _get_included_cols(df, student_id_cols, sort_cols, include_cols)
+    # exclude rows that are "pre-cohort", so "nth" meets our criteria here
+    if exclude_pre_cohort_terms:
+        df = df[df[term_is_pre_cohort_col] == False]
     df_nth = (
         df.loc[:, included_cols]
         .sort_values(
@@ -39,7 +45,7 @@ def nth_student_terms(
         .groupby(by=student_id_cols)
         .nth(n)
     )
-    assert isinstance(df_nth, pd.DataFrame)  # type guard
+    assert isinstance(df_nth, pd.DataFrame)
     return df_nth
 
 
@@ -49,6 +55,8 @@ def first_student_terms(
     student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
+    term_is_pre_cohort_col: str = "term_is_pre_cohort",
+    exclude_pre_cohort_terms: bool = False,
 ) -> pd.DataFrame:
     """
     For each student, get the first (0th) row in ``df`` in ascending order of ``sort_cols`` ,
@@ -69,6 +77,8 @@ def first_student_terms(
         student_id_cols=student_id_cols,
         sort_cols=sort_cols,
         include_cols=include_cols,
+        term_is_pre_cohort_col=term_is_pre_cohort_col,
+        exclude_pre_cohort_terms=exclude_pre_cohort_terms,
     )
 
 
@@ -78,6 +88,8 @@ def last_student_terms(
     student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
+    term_is_pre_cohort_col: str = "term_is_pre_cohort",
+    exclude_pre_cohort_terms: bool = False,
 ) -> pd.DataFrame:
     """
     For each student, get the last (-1th) row in ``df`` in ascending order of ``sort_cols`` ,
@@ -98,6 +110,8 @@ def last_student_terms(
         student_id_cols=student_id_cols,
         sort_cols=sort_cols,
         include_cols=include_cols,
+        term_is_pre_cohort_col=term_is_pre_cohort_col,
+        exclude_pre_cohort_terms=exclude_pre_cohort_terms,
     )
 
 
