@@ -8,7 +8,19 @@ from student_success_tool.preprocessing.checkpoints import pdp
 def df_test():
     return pd.DataFrame(
         {
-            "student_id": ["01", "01", "01", "01", "02", "02", "02", "03", "03", "04", "05"],
+            "student_id": [
+                "01",
+                "01",
+                "01",
+                "01",
+                "02",
+                "02",
+                "02",
+                "03",
+                "03",
+                "04",
+                "05",
+            ],
             "term_rank": [3, 4, 5, 6, 5, 6, 7, 2, 3, 4, 8],
             "cohort_id": [
                 "2020-21 SPRING",
@@ -50,7 +62,19 @@ def df_test():
                 "FULL-TIME",
                 pd.NA,
             ],
-            "num_credits_earned": [25.0, 30.0, 35.0, 12.0, 25.0, 35.0, 18.0, 20.0, 5.0, 45.0, 10.0],
+            "num_credits_earned": [
+                25.0,
+                30.0,
+                35.0,
+                12.0,
+                25.0,
+                35.0,
+                18.0,
+                20.0,
+                5.0,
+                45.0,
+                10.0,
+            ],
             "term_is_pre_cohort": [
                 True,
                 False,
@@ -89,7 +113,15 @@ def df_test():
 
 
 @pytest.mark.parametrize(
-    ["n", "include_cols", "exclude_pre_cohort_terms", "count_core_terms", "exp"],
+    [
+        "n",
+        "include_cols",
+        "exclude_pre_cohort_terms",
+        "count_core_terms",
+        "enrollment_year_col",
+        "valid_enrollment_year",
+        "exp",
+    ],
     [
         (
             0,
@@ -182,7 +214,9 @@ def df_test():
         ),
     ],
 )
-def test_nth_student_terms(df_test, n, include_cols, exclude_pre_cohort_terms, count_core_terms, exp):
+def test_nth_student_terms(
+    df_test, n, include_cols, exclude_pre_cohort_terms, count_core_terms, exp
+):
     from student_success_tool.preprocessing.checkpoints import pdp
 
     obs = pdp.nth_student_terms(
@@ -230,7 +264,9 @@ def test_nth_student_terms(df_test, n, include_cols, exclude_pre_cohort_terms, c
         ),
     ],
 )
-def test_first_student_terms(df_test, include_cols, exclude_pre_cohort_terms, count_core_terms, exp):
+def test_first_student_terms(
+    df_test, include_cols, exclude_pre_cohort_terms, count_core_terms, exp
+):
     obs = pdp.first_student_terms(
         df_test,
         student_id_cols="student_id",
@@ -239,7 +275,7 @@ def test_first_student_terms(df_test, include_cols, exclude_pre_cohort_terms, co
         term_is_pre_cohort_col="term_is_pre_cohort",
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
         term_is_core_col="term_is_core",
-        count_core_terms=count_core_terms
+        count_core_terms=count_core_terms,
     )
     assert isinstance(obs, pd.DataFrame)
     pd.testing.assert_frame_equal(
@@ -271,7 +307,9 @@ def test_first_student_terms(df_test, include_cols, exclude_pre_cohort_terms, co
         ),
     ],
 )
-def test_last_student_terms(df_test, include_cols, exclude_pre_cohort_terms, count_core_terms, exp):
+def test_last_student_terms(
+    df_test, include_cols, exclude_pre_cohort_terms, count_core_terms, exp
+):
     obs = pdp.last_student_terms(
         df_test,
         student_id_cols="student_id",
@@ -280,7 +318,7 @@ def test_last_student_terms(df_test, include_cols, exclude_pre_cohort_terms, cou
         term_is_pre_cohort_col="term_is_pre_cohort",
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
         term_is_core_col="term_is_core",
-        count_core_terms=count_core_terms
+        count_core_terms=count_core_terms,
     )
     assert isinstance(obs, pd.DataFrame)
     pd.testing.assert_frame_equal(
