@@ -128,6 +128,8 @@ def df_test():
             None,
             False,
             False,
+            "enrollment_year",
+            1,
             pd.DataFrame(
                 {
                     "student_id": ["01", "02", "03", "04", "05"],
@@ -172,6 +174,8 @@ def df_test():
             ["term_id"],
             True,
             True,
+            None,
+            None,
             pd.DataFrame(
                 {
                     "student_id": ["01", "02", "03", "04", "05"],
@@ -191,6 +195,8 @@ def df_test():
             None,
             True,
             True,
+            "enrollment_year", 
+            3,
             pd.DataFrame(
                 {
                     "student_id": ["01", "02"],
@@ -215,7 +221,8 @@ def df_test():
     ],
 )
 def test_nth_student_terms(
-    df_test, n, include_cols, exclude_pre_cohort_terms, count_core_terms, exp
+    df_test, n, include_cols, exclude_pre_cohort_terms, count_core_terms, enrollment_year_col,
+    valid_enrollment_year, exp
 ):
     from student_success_tool.preprocessing.checkpoints import pdp
 
@@ -229,6 +236,8 @@ def test_nth_student_terms(
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
         term_is_core_col="term_is_core",
         count_core_terms=count_core_terms,
+        enrollment_year_col=enrollment_year_col,
+        valid_enrollment_year=valid_enrollment_year,
     )
     assert isinstance(obs, pd.DataFrame)
     assert (
