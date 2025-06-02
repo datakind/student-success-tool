@@ -58,7 +58,6 @@ def nth_student_terms(
     )
     if valid_enrollment_year is not None:
         df_nth = df_nth[df_nth[enrollment_year_col] == valid_enrollment_year]
-    df_nth = df_nth.drop(columns=[enrollment_year_col], errors="ignore")
     assert isinstance(df_nth, pd.DataFrame)
     return df_nth
 
