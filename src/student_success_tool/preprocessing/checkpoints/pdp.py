@@ -63,6 +63,8 @@ def first_student_terms(
     include_cols: t.Optional[list[str]] = None,
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
     exclude_pre_cohort_terms: bool = False,
+    term_is_core: str = "term_is_core",
+    count_core_terms: bool = True,
 ) -> pd.DataFrame:
     """
     For each student, get the first (0th) row in ``df`` in ascending order of ``sort_cols`` ,
@@ -73,6 +75,10 @@ def first_student_terms(
         student_id_cols: Column(s) that uniquely identify students in ``df`` .
         sort_cols: Column(s) used to sort students' terms, typically chronologically.
         include_cols
+        term_is_pre_cohort_col: Column identifying if a term is pre-cohort
+        exclude_pre_cohort_terms:
+        term_is_core: Column identifying if a term is a core term, where core terms are by default FALL and SPRING
+        count_core_terms:
 
     See Also:
         - :func:`nth_student_terms()`
@@ -85,6 +91,8 @@ def first_student_terms(
         include_cols=include_cols,
         term_is_pre_cohort_col=term_is_pre_cohort_col,
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
+        term_is_core=term_is_core,
+        count_core_terms=count_core_terms,
     )
 
 
@@ -96,6 +104,8 @@ def last_student_terms(
     include_cols: t.Optional[list[str]] = None,
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
     exclude_pre_cohort_terms: bool = False,
+    term_is_core: str = "term_is_core",
+    count_core_terms: bool = True,
 ) -> pd.DataFrame:
     """
     For each student, get the last (-1th) row in ``df`` in ascending order of ``sort_cols`` ,
@@ -106,6 +116,10 @@ def last_student_terms(
         student_id_cols: Column(s) that uniquely identify students in ``df`` .
         sort_cols: Column(s) used to sort students' terms, typically chronologically.
         include_cols
+        term_is_pre_cohort_col: Column identifying if a term is pre-cohort
+        exclude_pre_cohort_terms:
+        term_is_core: Column identifying if a term is a core term, where core terms are by default FALL and SPRING
+        count_core_terms:
 
     See Also:
         - :func:`nth_student_terms()`
@@ -118,6 +132,8 @@ def last_student_terms(
         include_cols=include_cols,
         term_is_pre_cohort_col=term_is_pre_cohort_col,
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
+        term_is_core=term_is_core,
+        count_core_terms=count_core_terms,
     )
 
 
