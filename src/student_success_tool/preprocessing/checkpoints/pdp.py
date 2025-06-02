@@ -19,8 +19,8 @@ def nth_student_terms(
     exclude_pre_cohort_terms: bool = True,
     term_is_core_col: str = "term_is_core",
     count_core_terms: bool = True,
-    enrollment_year_col: t.Optional[str] = "enrollment_year",
-    valid_enrollment_year: t.Optional[int] = 1,
+    enrollment_year_col: t.Optional[str] = None,
+    valid_enrollment_year: t.Optional[int] = None,
 ) -> pd.DataFrame:
     """
     For each student, get the nth row in ``df`` (in ascending order of ``sort_cols`` ). If `exclude_pre_cohort_col` is true, then for each student, we want to get the nth row in ``df`` (in ascending order of ``sort_cols`` ) for which the term occurred *within* the student's cohort, i.e. not prior to their official start of enrollment, and a configurable subset of columns. This parameter can be set to False to ignore the student's cohort start date in choosing the `nth` term.
@@ -57,6 +57,10 @@ def nth_student_terms(
         .nth(n)
     )
     if valid_enrollment_year is not None:
+        if enrollment_year_col is None:
+            raise ValueError("Must specify 'enrollment_year_col' if 'valid_enrollment_year' is given.")
+        if enrollment_year_col not in df.columns:
+            raise KeyError(f"'{enrollment_year_col}' is not in the DataFrame.")
         df_nth = df_nth[df_nth[enrollment_year_col] == valid_enrollment_year]
     assert isinstance(df_nth, pd.DataFrame)
     return df_nth
