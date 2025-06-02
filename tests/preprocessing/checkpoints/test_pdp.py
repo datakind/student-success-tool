@@ -41,12 +41,12 @@ def df_test():
                 "FULL-TIME",
                 "FULL-TIME",
                 "FULL-TIME",
-                "FULL-TIME"
+                "FULL-TIME",
                 "PART-TIME",
                 "PART-TIME",
-                "PART-TIME"
                 "PART-TIME",
-                "PART-TIME"
+                "PART-TIME",
+                "PART-TIME",
                 "FULL-TIME",
                 pd.NA,
             ],
