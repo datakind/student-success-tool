@@ -154,7 +154,7 @@ def df_test():
                     "enrollment_intensity": ["FULL-TIME", "PART-TIME"],
                     "num_credits_earned": [35.0, 35.0],
                     "term_is_pre_cohort": [False, False],
-                    "term_is_core": [True, False, False, True, True],
+                    "term_is_core": [True, False],
                 }
             ).astype(
                 {
