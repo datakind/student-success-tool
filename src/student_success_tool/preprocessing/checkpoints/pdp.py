@@ -64,7 +64,7 @@ def first_student_terms(
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
     exclude_pre_cohort_terms: bool = False,
     term_is_core_col: str = "term_is_core",
-    count_core_terms: bool = True,
+    count_core_terms: bool = False,
 ) -> pd.DataFrame:
     """
     For each student, get the first (0th) row in ``df`` in ascending order of ``sort_cols`` ,
@@ -105,7 +105,7 @@ def last_student_terms(
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
     exclude_pre_cohort_terms: bool = False,
     term_is_core_col: str = "term_is_core",
-    count_core_terms: bool = True,
+    count_core_terms: bool = False,
 ) -> pd.DataFrame:
     """
     For each student, get the last (-1th) row in ``df`` in ascending order of ``sort_cols`` ,
