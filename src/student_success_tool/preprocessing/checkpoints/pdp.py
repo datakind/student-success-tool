@@ -17,7 +17,7 @@ def nth_student_terms(
     include_cols: t.Optional[list[str]] = None,
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
     exclude_pre_cohort_terms: bool = True,
-    term_is_core: str = "term_is_core",
+    term_is_core_col: str = "term_is_core",
     count_core_terms: bool = True,
 ) -> pd.DataFrame:
     """
@@ -33,7 +33,7 @@ def nth_student_terms(
         include_cols
         term_is_pre_cohort_col
         exclude_pre_cohort_terms
-        term_is_core
+        term_is_core_col
         count_core_terms
     """
     student_id_cols = utils.types.to_list(student_id_cols)
@@ -42,7 +42,7 @@ def nth_student_terms(
     if exclude_pre_cohort_terms:
         df = df[df[term_is_pre_cohort_col] == False]
     if count_core_terms:
-        df = df[df[term_is_core] == True]
+        df = df[df[term_is_core_col] == True]
     df_nth = (
         df.loc[:, included_cols]
         .sort_values(
@@ -63,7 +63,7 @@ def first_student_terms(
     include_cols: t.Optional[list[str]] = None,
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
     exclude_pre_cohort_terms: bool = False,
-    term_is_core: str = "term_is_core",
+    term_is_core_col: str = "term_is_core",
     count_core_terms: bool = True,
 ) -> pd.DataFrame:
     """
@@ -77,7 +77,7 @@ def first_student_terms(
         include_cols
         term_is_pre_cohort_col: Column identifying if a term is pre-cohort
         exclude_pre_cohort_terms:
-        term_is_core: Column identifying if a term is a core term, where core terms are by default FALL and SPRING
+        term_is_core_col: Column identifying if a term is a core term, where core terms are by default FALL and SPRING
         count_core_terms:
 
     See Also:
@@ -91,7 +91,7 @@ def first_student_terms(
         include_cols=include_cols,
         term_is_pre_cohort_col=term_is_pre_cohort_col,
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
-        term_is_core=term_is_core,
+        term_is_core_col=term_is_core_col,
         count_core_terms=count_core_terms,
     )
 
@@ -104,7 +104,7 @@ def last_student_terms(
     include_cols: t.Optional[list[str]] = None,
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
     exclude_pre_cohort_terms: bool = False,
-    term_is_core: str = "term_is_core",
+    term_is_core_col: str = "term_is_core",
     count_core_terms: bool = True,
 ) -> pd.DataFrame:
     """
@@ -118,7 +118,7 @@ def last_student_terms(
         include_cols
         term_is_pre_cohort_col: Column identifying if a term is pre-cohort
         exclude_pre_cohort_terms:
-        term_is_core: Column identifying if a term is a core term, where core terms are by default FALL and SPRING
+        term_is_core_col: Column identifying if a term is a core term, where core terms are by default FALL and SPRING
         count_core_terms:
 
     See Also:
@@ -132,7 +132,7 @@ def last_student_terms(
         include_cols=include_cols,
         term_is_pre_cohort_col=term_is_pre_cohort_col,
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
-        term_is_core=term_is_core,
+        term_is_core_col=term_is_core_col,
         count_core_terms=count_core_terms,
     )
 

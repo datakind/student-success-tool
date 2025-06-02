@@ -193,7 +193,7 @@ def test_nth_student_terms(df_test, n, include_cols, exclude_pre_cohort_terms, c
         include_cols=include_cols,
         term_is_pre_cohort_col="term_is_pre_cohort",
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
-        term_is_core="term_is_core",
+        term_is_core_col="term_is_core",
         count_core_terms=count_core_terms,
     )
     assert isinstance(obs, pd.DataFrame)
@@ -238,7 +238,7 @@ def test_first_student_terms(df_test, include_cols, exclude_pre_cohort_terms, co
         include_cols=include_cols,
         term_is_pre_cohort_col="term_is_pre_cohort",
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
-        term_is_core="term_is_core",
+        term_is_core_col="term_is_core",
         count_core_terms=count_core_terms
     )
     assert isinstance(obs, pd.DataFrame)
@@ -279,7 +279,7 @@ def test_last_student_terms(df_test, include_cols, exclude_pre_cohort_terms, cou
         include_cols=include_cols,
         term_is_pre_cohort_col="term_is_pre_cohort",
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
-        term_is_core="term_is_core",
+        term_is_core_col="term_is_core",
         count_core_terms=count_core_terms
     )
     assert isinstance(obs, pd.DataFrame)
