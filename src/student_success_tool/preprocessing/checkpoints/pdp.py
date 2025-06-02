@@ -58,7 +58,9 @@ def nth_student_terms(
     )
     if valid_enrollment_year is not None:
         if enrollment_year_col is None:
-            raise ValueError("Must specify 'enrollment_year_col' if 'valid_enrollment_year' is given.")
+            raise ValueError(
+                "Must specify 'enrollment_year_col' if 'valid_enrollment_year' is given."
+            )
         if enrollment_year_col not in df.columns:
             raise KeyError(f"'{enrollment_year_col}' is not in the DataFrame.")
         df_nth = df_nth[df_nth[enrollment_year_col] == valid_enrollment_year]

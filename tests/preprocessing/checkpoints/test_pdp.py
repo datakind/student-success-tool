@@ -195,7 +195,7 @@ def df_test():
             None,
             True,
             True,
-            "enrollment_year", 
+            "enrollment_year",
             3,
             pd.DataFrame(
                 {
@@ -221,8 +221,14 @@ def df_test():
     ],
 )
 def test_nth_student_terms(
-    df_test, n, include_cols, exclude_pre_cohort_terms, count_core_terms, enrollment_year_col,
-    valid_enrollment_year, exp
+    df_test,
+    n,
+    include_cols,
+    exclude_pre_cohort_terms,
+    count_core_terms,
+    enrollment_year_col,
+    valid_enrollment_year,
+    exp,
 ):
     from student_success_tool.preprocessing.checkpoints import pdp
 
