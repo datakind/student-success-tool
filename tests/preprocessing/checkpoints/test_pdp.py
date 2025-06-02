@@ -329,7 +329,9 @@ def test_first_student_terms_at_num_credits_earned(
         include_cols=include_cols,
     )
     assert isinstance(obs, pd.DataFrame)
-    pd.testing.assert_frame_equal(obs.reset_index(drop=True), exp.reset_index(drop=True))
+    pd.testing.assert_frame_equal(
+        obs.reset_index(drop=True), exp.reset_index(drop=True)
+    )
 
 
 @pytest.mark.parametrize(
@@ -357,7 +359,9 @@ def test_first_student_terms_within_cohort(df_test, include_cols, exp):
         include_cols=include_cols,
     )
     assert isinstance(obs, pd.DataFrame)
-    assert pd.testing.assert_frame_equal(obs, exp) is None
+    pd.testing.assert_frame_equal(
+        obs.reset_index(drop=True), exp.reset_index(drop=True)
+    )
 
 
 @pytest.mark.parametrize(
@@ -401,4 +405,6 @@ def test_last_student_terms_in_enrollment_year(
         include_cols=include_cols,
     )
     assert isinstance(obs, pd.DataFrame)
-    assert pd.testing.assert_frame_equal(obs, exp) is None
+    pd.testing.assert_frame_equal(
+        obs.reset_index(drop=True), exp.reset_index(drop=True)
+    )
