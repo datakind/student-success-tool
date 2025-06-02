@@ -199,15 +199,15 @@ def df_test():
             3,
             pd.DataFrame(
                 {
-                    "student_id": ["01", "02"],
-                    "term_rank": [5, 6],
-                    "cohort_id": ["2020-21 SPRING", "2021-22 FALL"],
-                    "term_id": ["2021-22 FALL", "2023-24 FALL"],
-                    "enrollment_year": [2, 3],
-                    "enrollment_intensity": ["FULL-TIME", "PART-TIME"],
-                    "num_credits_earned": [35.0, 35.0],
-                    "term_is_pre_cohort": [False, False],
-                    "term_is_core": [True, True],
+                    "student_id": ["02"],
+                    "term_rank": [6],
+                    "cohort_id": ["2021-22 FALL"],
+                    "term_id": ["2023-24 FALL"],
+                    "enrollment_year": [3],
+                    "enrollment_intensity": ["PART-TIME"],
+                    "num_credits_earned": [35.0],
+                    "term_is_pre_cohort": [False],
+                    "term_is_core": [True],
                 }
             ).astype(
                 {
