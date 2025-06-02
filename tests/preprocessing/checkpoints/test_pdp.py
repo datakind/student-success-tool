@@ -74,7 +74,7 @@ def df_test():
 
 
 @pytest.mark.parametrize(
-    ["n", "include_cols", "exclude_pre_cohort_terms", "count_core_terms" "exp"],
+    ["n", "include_cols", "exclude_pre_cohort_terms", "count_core_terms", "exp"],
     [
         (
             0,
