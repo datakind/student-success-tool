@@ -60,6 +60,9 @@ class Formatting:
         Returns:
             Human-friendly string.
         """
+        if not isinstance(text, str):
+            text = str(text)
+        
         text = text.replace("_", " ")
 
         def smart_cap(word: str) -> str:
