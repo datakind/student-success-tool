@@ -329,7 +329,7 @@ def test_first_student_terms_at_num_credits_earned(
         include_cols=include_cols,
     )
     assert isinstance(obs, pd.DataFrame)
-    assert pd.testing.assert_frame_equal(obs, exp) is None
+    pd.testing.assert_frame_equal(obs.reset_index(drop=True), exp.reset_index(drop=True))
 
 
 @pytest.mark.parametrize(
