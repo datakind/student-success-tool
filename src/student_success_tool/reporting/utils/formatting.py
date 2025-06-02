@@ -62,7 +62,7 @@ class Formatting:
         """
         if isinstance(text, (int, float)):
             return str(text)
-        
+
         # If the string is numeric-like (int or float), return as-is
         try:
             float_val = float(text)
