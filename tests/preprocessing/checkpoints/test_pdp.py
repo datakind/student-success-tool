@@ -54,13 +54,13 @@ def df_test():
             ],
             "term_is_core": [
                 True,
-                False,
                 True,
                 True,
-                False,
                 True,
-                False,
-                False,
+                True,
+                True,
+                True,
+                True,
             ],
         },
     ).astype(
@@ -109,7 +109,7 @@ def df_test():
                     ],
                     "num_credits_earned": [25.0, 25.0, 20.0, 45.0, 10.0],
                     "term_is_pre_cohort": [True, False, False, False, False],
-                    "term_is_core": [True, False, True, True, False],
+                    "term_is_core": [True, True, True, True, True],
                 }
             ).astype(
                 {
@@ -154,7 +154,7 @@ def df_test():
                     "enrollment_intensity": ["FULL-TIME", "PART-TIME"],
                     "num_credits_earned": [35.0, 35.0],
                     "term_is_pre_cohort": [False, False],
-                    "term_is_core": [True, False],
+                    "term_is_core": [True, True],
                 }
             ).astype(
                 {
