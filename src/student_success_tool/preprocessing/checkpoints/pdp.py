@@ -19,7 +19,7 @@ def nth_student_terms(
     exclude_pre_cohort_terms: bool = True,
     term_is_core_col: str = "term_is_core",
     count_core_terms: bool = True,
-    enrollment_year_col: t.Optional[str] = "year_of_enrollment_at_cohort_inst",
+    enrollment_year_col: t.Optional[str] = "enrollment_year",
     valid_enrollment_year: t.Optional[int] = 1,
 ) -> pd.DataFrame:
     """
