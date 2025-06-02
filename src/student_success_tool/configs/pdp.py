@@ -342,7 +342,6 @@ class FeatureSelectionConfig(pyd.BaseModel):
         - :func:`modeling.feature_selection.select_features()`
     """
 
-    non_feature_cols: t.Optional[list[str]] = None
     force_include_cols: t.Optional[list[str]] = None
     incomplete_threshold: float = 0.5
     low_variance_threshold: float = 0.0
