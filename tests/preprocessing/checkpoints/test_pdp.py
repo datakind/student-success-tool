@@ -373,10 +373,10 @@ def test_first_student_terms_within_cohort(df_test, include_cols, exp):
             pd.DataFrame(
                 data={
                     "student_id": ["01", "02", "03", "04", "05"],
-                    "term_rank": [4, 5, 2, 4, 8],
+                    "term_rank": [4, 5, 3, 4, 8],
                     "enrollment_year": [1, 1, 1, 1, 1],
                 },
-                index=pd.Index([1, 3, 5, 6, 7], dtype="int64"),
+                index=pd.Index([1, 4, 8, 9, 10], dtype="int64"),
             ).astype({"student_id": "string"}),
         ),
         (
