@@ -73,7 +73,7 @@
 
 - **Analyzing Bias Across Student Groups**
 {bias_groups_section}
-    - From our analysis, we identified statistically significant differences across the following student groups _below_.
+    - We evaluated FNR across these student groups and tested for statistically significant disparities.
 
 {bias_summary_section}
 
