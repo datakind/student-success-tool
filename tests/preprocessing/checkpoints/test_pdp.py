@@ -257,11 +257,11 @@ def test_first_student_terms(df_test, include_cols, exclude_pre_cohort_terms, co
             pd.DataFrame(
                 data={
                     "student_id": ["01", "02", "03", "04", "05"],
-                    "term_rank": [5, 6, 2, 4, 8],
+                    "term_rank": [6, 7, 3, 4, 8],
                     "term_id": [
-                        "2021-22 FALL",
-                        "2023-24 FALL",
-                        "2019-20 SPRING",
+                        "2021-22 WINTER",
+                        "2024-25 SUMMER",
+                        "2019-20 WINTER",
                         "2020-21 SPRING",
                         "2022-23 FALL",
                     ],
