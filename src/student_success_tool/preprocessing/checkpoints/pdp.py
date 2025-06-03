@@ -18,14 +18,14 @@ def nth_student_terms(
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
     exclude_pre_cohort_terms: bool = True,
     term_is_core_col: str = "term_is_core",
-    count_core_terms: bool = True,
+    exclude_non_core_terms: bool = True,
     enrollment_year_col: t.Optional[str] = None,
     valid_enrollment_year: t.Optional[int] = None,
 ) -> pd.DataFrame:
     """
     For each student, get the nth row in ``df`` (in ascending order of ``sort_cols`` ). If `exclude_pre_cohort_col` is true, then for each student, we want to get the nth row in ``df`` (in ascending order of ``sort_cols`` ) for which the term occurred *within* the student's cohort, i.e. not prior to their official start of enrollment, and a configurable subset of columns. This parameter can be set to False to ignore the student's cohort start date in choosing the `nth` term.
     Ex. n = 0 gets the first term, and is equivalent to the functionality of get_first_student_terms(); n = 1 gets the second term, n = 2, gets the third term, so on and so forth.
-    The parameter "core_terms" ensures that we only count core terms in choosing thr `nth` core term. This parameter can be set to False to count all terms in choosing the `nth` term.
+    The parameter "exclude_non_core_terms" ensures that we only count core terms in choosing thr `nth` core term. This parameter can be set to False to count all terms in choosing the `nth` term.
     Valid_enrollment_year is a parameter that if set, we drop nth term if it falls outside this enrollment year.
 
     Args:
@@ -37,7 +37,7 @@ def nth_student_terms(
         term_is_pre_cohort_col
         exclude_pre_cohort_terms
         term_is_core_col
-        count_core_terms
+        exclude_non_core_terms
         enrollment_year_col
         valid_enrollment_year
     """
@@ -46,7 +46,7 @@ def nth_student_terms(
     included_cols = _get_included_cols(df, student_id_cols, sort_cols, include_cols)
     if exclude_pre_cohort_terms:
         df = df[df[term_is_pre_cohort_col] == False]
-    if count_core_terms:
+    if exclude_non_core_terms:
         df = df[df[term_is_core_col] == True]
     df_nth = (
         df.loc[:, included_cols]
@@ -77,7 +77,7 @@ def first_student_terms(
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
     exclude_pre_cohort_terms: bool = False,
     term_is_core_col: str = "term_is_core",
-    count_core_terms: bool = False,
+    exclude_non_core_terms: bool = False,
 ) -> pd.DataFrame:
     """
     For each student, get the first (0th) row in ``df`` in ascending order of ``sort_cols`` ,
@@ -91,7 +91,7 @@ def first_student_terms(
         term_is_pre_cohort_col: Column identifying if a term is pre-cohort
         exclude_pre_cohort_terms:
         term_is_core_col: Column identifying if a term is a core term, where core terms are by default FALL and SPRING
-        count_core_terms:
+        exclude_non_core_terms:
 
     See Also:
         - :func:`nth_student_terms()`
@@ -105,7 +105,7 @@ def first_student_terms(
         term_is_pre_cohort_col=term_is_pre_cohort_col,
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
         term_is_core_col=term_is_core_col,
-        count_core_terms=count_core_terms,
+        exclude_non_core_terms=exclude_non_core_terms,
     )
 
 
@@ -118,7 +118,7 @@ def last_student_terms(
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
     exclude_pre_cohort_terms: bool = False,
     term_is_core_col: str = "term_is_core",
-    count_core_terms: bool = False,
+    exclude_non_core_terms: bool = False,
 ) -> pd.DataFrame:
     """
     For each student, get the last (-1th) row in ``df`` in ascending order of ``sort_cols`` ,
@@ -132,7 +132,7 @@ def last_student_terms(
         term_is_pre_cohort_col: Column identifying if a term is pre-cohort
         exclude_pre_cohort_terms:
         term_is_core_col: Column identifying if a term is a core term, where core terms are by default FALL and SPRING
-        count_core_terms:
+        exclude_non_core_terms:
 
     See Also:
         - :func:`nth_student_terms()`
@@ -146,7 +146,7 @@ def last_student_terms(
         term_is_pre_cohort_col=term_is_pre_cohort_col,
         exclude_pre_cohort_terms=exclude_pre_cohort_terms,
         term_is_core_col=term_is_core_col,
-        count_core_terms=count_core_terms,
+        exclude_non_core_terms=exclude_non_core_terms,
     )
 
 
