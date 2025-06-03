@@ -229,6 +229,13 @@ def df_test():
                 {
                     "student_id": ["01", "02", "03", "04", "05"],
                     "term_rank": [6, 7, 3, 4, 8],
+                    "cohort_id": [
+                        "2020-21 SPRING",
+                        "2021-22 FALL",
+                        "2019-20 FALL",
+                        "2020-21 SPRING",
+                        "2022-23 FALL",
+                    ],
                     "term_id": [
                         "2021-22 WINTER",
                         "2024-25 SUMMER",
