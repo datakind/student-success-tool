@@ -236,6 +236,17 @@ def df_test():
                         "2020-21 SPRING",
                         "2022-23 FALL",
                     ],
+                    "enrollment_year": [2, 4, 1, 1, 1],
+                    "enrollment_intensity": [
+                        "FULL-TIME",
+                        "PART-TIME",
+                        "PART-TIME",
+                        "FULL-TIME",
+                        pd.NA,
+                    ],
+                    "num_credits_earned": [12.0, 18.0, 5.0, 45.0, 10.0],
+                    "term_is_pre_cohort": [False, False, False, False, False],
+                    "term_is_core": [False, False, False, True, True], 
                 }
             ).astype({"student_id": "string", "term_id": "string"}),
         ),
