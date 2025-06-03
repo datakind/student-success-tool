@@ -78,7 +78,7 @@ def test_target_population_section(mock_card):
     assert "- Full-Time" in rendered["target_population_section"]
 
 
-@@pytest.mark.parametrize(
+@pytest.mark.parametrize(
     "checkpoint_type,n,exclude_pre,exclude_non_core,valid_year,expected_output",
     [
         # Basic nth
