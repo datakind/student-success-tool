@@ -65,7 +65,7 @@ def test_target_population_section(mock_card):
     }
 
     # Patching checkpoint since we are testing target population
-    mock_card.cfg.preprocessing.checkpoint.type_ = "first"
+    mock_card.cfg.preprocessing.checkpoint.type_ = "nth"
 
     registry = SectionRegistry()
     pdp_attribute_sections.register_attribute_sections(mock_card, registry)
