@@ -179,11 +179,11 @@ def df_test():
             pd.DataFrame(
                 {
                     "student_id": ["01", "02", "03", "04", "05"],
-                    "term_rank": [6, 7, 3, 4, 8],
+                    "term_rank": [4, 5, 2, 4, 8],
                     "term_id": [
-                        "2021-22 WINTER",
-                        "2024-25 SUMMER",
-                        "2019-20 WINTER",
+                        "2020-21 SPRING",
+                        "2021-22 FALL",
+                        "2019-20 SPRING",
                         "2020-21 SPRING",
                         "2022-23 FALL",
                     ],
@@ -228,11 +228,11 @@ def df_test():
             pd.DataFrame(
                 {
                     "student_id": ["01", "02", "03", "04", "05"],
-                    "term_rank": [4, 5, 2, 4, 8],
+                    "term_rank": [6, 7, 3, 4, 8],
                     "term_id": [
-                        "2020-21 SPRING",
-                        "2021-22 FALL",
-                        "2019-20 SPRING",
+                        "2021-22 WINTER",
+                        "2024-25 SUMMER",
+                        "2019-20 WINTER",
                         "2020-21 SPRING",
                         "2022-23 FALL",
                     ],
