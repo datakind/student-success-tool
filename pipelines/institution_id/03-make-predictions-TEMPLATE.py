@@ -90,7 +90,7 @@ features_table = dataio.read_features_table("assets/pdp/features_table.toml")
 
 df = dataio.schemas.pdp.PDPLabeledDataSchema(
     dataio.read.from_delta_table(
-        cfg.datasets.gold.silver.table_path,
+        cfg.datasets.silver.modeling.table_path,
         spark_session=spark,
     )
 )
@@ -177,7 +177,7 @@ df_ref.shape
 
 explainer = shap.explainers.KernelExplainer(
     ft.partial(
-        predict_proba,
+        modeling.inference.predict_probs,
         model=model,
         feature_names=model_feature_names,
         pos_label=cfg.pos_label,
