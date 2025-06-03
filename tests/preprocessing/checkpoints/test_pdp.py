@@ -255,7 +255,14 @@ def df_test():
                     "term_is_pre_cohort": [False, False, False, False, False],
                     "term_is_core": [False, False, False, True, True], 
                 }
-            ).astype({"student_id": "string", "term_id": "string"}),
+            ).astype(
+                {
+                    "student_id": "string",
+                    "cohort_id": "string",
+                    "term_id": "string",
+                    "enrollment_intensity": "string",
+                }
+            ),
         ),
     ],
 )
