@@ -253,7 +253,7 @@ def df_test():
                     ],
                     "num_credits_earned": [12.0, 18.0, 5.0, 45.0, 10.0],
                     "term_is_pre_cohort": [False, False, False, False, False],
-                    "term_is_core": [False, False, False, True, True], 
+                    "term_is_core": [False, False, False, True, True],
                 }
             ).astype(
                 {
