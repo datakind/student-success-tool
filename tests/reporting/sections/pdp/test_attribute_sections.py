@@ -84,8 +84,8 @@ def test_target_population_section(mock_card):
     [
         # Basic nth
         (
-            "nth", 3, True, True, None,
-            "The model makes this prediction when the student has completed their 3rd term."
+            "nth", 1, True, True, None,
+            "The model makes this prediction when the student has completed their 1st term."
         ),
         # Include pre-cohort terms only
         (
@@ -104,13 +104,13 @@ def test_target_population_section(mock_card):
         ),
         # Include both + valid enrollment year
         (
-            "nth", 3, False, False, 2022,
-            "The model makes this prediction when the student has completed their 3rd term including pre-cohort terms and non-core terms, provided the term occurred in 2022."
+            "nth", -1, False, False, 1,
+            "The model makes this prediction when the student has completed their last term including pre-cohort terms and non-core terms, provided the term occurred in their 1st year of enrollment."
         ),
         # Only valid enrollment year
         (
-            "nth", 3, True, True, 2021,
-            "The model makes this prediction when the student has completed their 3rd term, provided the term occurred in 2021."
+            "nth", 6, True, True, 3,
+            "The model makes this prediction when the student has completed their 6th term, provided the term occurred in their 3rd year of enrollment."
         ),
         (
             "first_at_num_credits_earned", None, None, None, None,
