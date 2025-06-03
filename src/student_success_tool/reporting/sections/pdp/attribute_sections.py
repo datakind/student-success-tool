@@ -123,7 +123,7 @@ def register_attribute_sections(card, registry):
                 else:
                     message += f" including {', '.join(included[:-1])} and {included[-1]}"
             if valid_enrollment_year:
-                message += f", provided the term occurred in their {card.format.ordinal(enrl_year)} year of enrollment"
+                message += f", provided the term occurred in their {card.format.ordinal(valid_enrollment_year)} year of enrollment"
             message = message.rstrip('. ') + '.'
             return message
         elif checkpoint_type == "first_at_num_credits_earned":
