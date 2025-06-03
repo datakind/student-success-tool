@@ -78,49 +78,69 @@ def test_target_population_section(mock_card):
     assert "- Full-Time" in rendered["target_population_section"]
 
 
-@pytest.mark.parametrize(
-    "checkpoint_type,expected_output",
+@@pytest.mark.parametrize(
+    "checkpoint_type,n,exclude_pre,exclude_non_core,valid_year,expected_output",
     [
+        # Basic nth
         (
-            "nth",
-            "The model makes this prediction when the student has completed their 3rd term",
+            "nth", 3, True, True, None,
+            "The model makes this prediction when the student has completed their 3rd term."
+        ),
+        # Include pre-cohort terms only
+        (
+            "nth", 3, False, True, None,
+            "The model makes this prediction when the student has completed their 3rd term including pre-cohort terms."
+        ),
+        # Include non-core terms only
+        (
+            "nth", 3, True, False, None,
+            "The model makes this prediction when the student has completed their 3rd term including non-core terms."
+        ),
+        # Include both
+        (
+            "nth", 3, False, False, None,
+            "The model makes this prediction when the student has completed their 3rd term including pre-cohort terms and non-core terms."
+        ),
+        # Include both + valid enrollment year
+        (
+            "nth", 3, False, False, 2022,
+            "The model makes this prediction when the student has completed their 3rd term including pre-cohort terms and non-core terms, provided the term occurred in 2022."
+        ),
+        # Only valid enrollment year
+        (
+            "nth", 3, True, True, 2021,
+            "The model makes this prediction when the student has completed their 3rd term, provided the term occurred in 2021."
         ),
         (
-            "first",
-            "The model makes this prediction when the student has completed their first term",
+            "first_at_num_credits_earned", None, None, None, None,
+            "The model makes this prediction when the student has earned 30 credits."
         ),
         (
-            "last",
-            "The model makes this prediction when the student has completed their last term",
-        ),
-        (
-            "first_at_num_credits_earned",
-            "The model makes this prediction when the student has earned 30 credits",
-        ),
-        (
-            "first_within_cohort",
-            "The model makes this prediction when the student has completed their first term within their cohort",
-        ),
-        (
-            "last_in_enrollment_year",
-            "The model makes this prediction when the student has completed their 2nd year of enrollment",
+            "last_in_enrollment_year", None, None, None, None,
+            "The model makes this prediction when the student has completed their 2nd year of enrollment."
         ),
     ],
 )
-def test_checkpoint_variants(mock_card, checkpoint_type, expected_output):
+def test_checkpoint_variants(
+    mock_card, checkpoint_type, n, exclude_pre, exclude_non_core, valid_year, expected_output
+):
     mock_card.cfg.preprocessing.checkpoint.type_ = checkpoint_type
+
     if checkpoint_type == "nth":
-        mock_card.cfg.preprocessing.checkpoint.n = 3
-    if checkpoint_type == "first_at_num_credits_earned":
+        mock_card.cfg.preprocessing.checkpoint.n = n
+        mock_card.cfg.preprocessing.checkpoint.exclude_pre_cohort_terms = exclude_pre
+        mock_card.cfg.preprocessing.checkpoint.exclude_non_core_terms = exclude_non_core
+        mock_card.cfg.preprocessing.checkpoint.valid_enrollment_year = valid_year
+    elif checkpoint_type == "first_at_num_credits_earned":
         mock_card.cfg.preprocessing.checkpoint.min_num_credits = 30
-    if checkpoint_type == "last_in_enrollment_year":
+    elif checkpoint_type == "last_in_enrollment_year":
         mock_card.cfg.preprocessing.checkpoint.enrollment_year = 2
 
     registry = SectionRegistry()
     pdp_attribute_sections.register_attribute_sections(mock_card, registry)
     rendered = registry.render_all()
 
-    assert expected_output in rendered["checkpoint_section"]
+    assert rendered["checkpoint_section"].strip().endswith(expected_output)
 
 
 def test_checkpoint_unknown_type_raises_error(mock_card):
