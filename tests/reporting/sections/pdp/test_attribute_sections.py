@@ -46,6 +46,10 @@ def test_outcome_variants(
     # Patching checkpoint since we are testing outcome
     mock_card.cfg.preprocessing.checkpoint.type_ = "nth"
     mock_card.cfg.preprocessing.checkpoint.n = 1
+    mock_card.cfg.preprocessing.checkpoint.exclude_pre_cohort_terms = False
+    mock_card.cfg.preprocessing.checkpoint.exclude_non_core_terms = False
+    mock_card.cfg.preprocessing.checkpoint.valid_enrollment_year = None
+    
     if outcome_type == "credits_earned" and "min_num_credits" in extra_config:
         mock_card.cfg.preprocessing.target.min_num_credits = extra_config[
             "min_num_credits"
@@ -67,6 +71,9 @@ def test_target_population_section(mock_card):
     # Patching checkpoint since we are testing target population
     mock_card.cfg.preprocessing.checkpoint.type_ = "nth"
     mock_card.cfg.preprocessing.checkpoint.n = 1
+    mock_card.cfg.preprocessing.checkpoint.exclude_pre_cohort_terms = False
+    mock_card.cfg.preprocessing.checkpoint.exclude_non_core_terms = False
+    mock_card.cfg.preprocessing.checkpoint.valid_enrollment_year = None
 
     registry = SectionRegistry()
     pdp_attribute_sections.register_attribute_sections(mock_card, registry)
