@@ -138,6 +138,8 @@ def compute_target(
     # update null targets in-place with bool targets on matching student-id indexes
     df_all_student_targets.update(df_labeled)
     # #drop if target is uncalculable (null)
-    df_all_student_targets['target'] = df_all_student_targets['target'].astype("boolean").dropna()
+    df_all_student_targets["target"] = (
+        df_all_student_targets["target"].astype("boolean").dropna()
+    )
     # return as a series with target as values and student ids as index
     return df_all_student_targets.loc[:, "target"]

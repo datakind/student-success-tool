@@ -54,8 +54,8 @@ from student_success_tool.preprocessing.targets.pdp import graduation
             12,
             "student_id",
             pd.Series(
-                data=[True, pd.NA],
-                index=pd.Index(["01", "02"], dtype="string", name="student_id"),
+                data=[True],
+                index=pd.Index(["01"], dtype="string", name="student_id"),
                 dtype="boolean",
                 name="target",
             ),

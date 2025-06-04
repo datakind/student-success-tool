@@ -65,8 +65,10 @@ def compute_target(
     )
     # update null targets in-place with bool targets on matching student-id indexes
     df_all_student_targets.update(df_labeled_students)
-    #drop if target is uncalculable (null)
-    df_all_student_targets['target'] = df_all_student_targets['target'].astype("boolean").dropna()
+    # drop if target is uncalculable (null)
+    df_all_student_targets["target"] = (
+        df_all_student_targets["target"].astype("boolean").dropna()
+    )
     return df_all_student_targets.loc[:, "target"].dropna()
 
     # TODO: if we're confident that PDP computes null retention values to mean
