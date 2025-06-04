@@ -4,7 +4,7 @@ import shutil
 import typing as t
 import uuid
 from collections.abc import Sequence
-
+from typing import Optional, List
 import matplotlib.colors as mcolors
 import matplotlib.figure
 import matplotlib.pyplot as plt
@@ -130,7 +130,7 @@ def evaluate_performance(
     # Convert to DataFrame for display or saving
     metrics_df = pd.DataFrame(metrics_records).set_index(perf_split_col)
     metrics_df.to_csv("/tmp/performance_across_splits.csv")
-    mlflow.log_artifact("/tmp/performance_across_splits.csv", artifact_path="metrics")
+    mlflow.log_artifact("/tmp/performance_across_splits.csv", artifact_path=metrics_dir)
     LOGGER.info("Creating summary of performance metrics across splits")
 
 
@@ -367,6 +367,206 @@ def compute_feature_permutation_importance(
     return result
 
 
+def log_confusion_matrix(
+    institution_id: str,
+    *,
+    automl_experiment_id: str,
+    catalog: str,
+) -> None:
+    """
+    Register an mlflow model according to one of their various recommended approaches.
+
+    Args:
+        institution_id
+        automl_experiment_id
+        catalog
+    """
+    try:
+        from databricks.connect import DatabricksSession
+
+        spark = DatabricksSession.builder.getOrCreate()
+    except Exception:
+        print("Databricks Connect failed. Falling back to local Spark.")
+        from pyspark.sql import SparkSession
+
+        spark = (
+            SparkSession.builder.master("local[*]").appName("Fallback").getOrCreate()
+        )
+
+    confusion_matrix_table_path = f"{catalog}.{institution_id}_gold.inference_{automl_experiment_id}_confusion_matrix"
+
+    def safe_div(numerator, denominator):
+        return numerator / denominator if denominator else 0.0
+
+    if mlflow.active_run() is None:
+        raise RuntimeError(
+            "No active MLflow run. Please call this within an MLflow run context."
+        )
+
+    try:
+        run = mlflow.get_run(automl_experiment_id)
+        required_metrics = [
+            "test_true_positives",
+            "test_true_negatives",
+            "test_false_positives",
+            "test_false_negatives",
+        ]
+        metrics = {m: run.data.metrics.get(m) for m in required_metrics}
+
+        if any(v is None for v in metrics.values()):
+            raise ValueError(
+                f"Missing one or more required metrics in run {automl_experiment_id}: {metrics}"
+            )
+
+        tp, tn, fp, fn = (
+            metrics["test_true_positives"],
+            metrics["test_true_negatives"],
+            metrics["test_false_positives"],
+            metrics["test_false_negatives"],
+        )
+
+        tn_percentage = safe_div(tn, tn + fp)
+        tp_percentage = safe_div(tp, tp + fn)
+        fp_percentage = safe_div(fp, fp + tn)
+        fn_percentage = safe_div(fn, fn + tp)
+
+        confusion_matrix_table = pd.DataFrame(
+            {
+                "true_positive": [tp_percentage],
+                "false_positive": [fp_percentage],
+                "true_negative": [tn_percentage],
+                "false_negative": [fn_percentage],
+            }
+        )
+
+        confusion_matrix_table_spark = spark.createDataFrame(confusion_matrix_table)
+        confusion_matrix_table_spark.write.mode("overwrite").saveAsTable(
+            confusion_matrix_table_path
+        )
+        LOGGER.info(
+            "Confusion matrix written to table '%s' for run_id=%s",
+            confusion_matrix_table_path,
+            automl_experiment_id,
+        )
+
+    except mlflow.exceptions.MlflowException as e:
+        raise RuntimeError(
+            f"MLflow error while retrieving run {automl_experiment_id}: {e}"
+        )
+    except Exception:
+        LOGGER.exception("Failed to compute or store confusion matrix.")
+        raise
+
+
+def log_roc_table(
+    institution_id: str,
+    *,
+    automl_experiment_id: str,
+    experiment_id: str,
+    catalog: str,
+    target_col: str = "target",
+    split_col: Optional[str] = None,
+) -> None:
+    """
+    Computes and saves an ROC curve table (FPR, TPR, threshold, etc.) for a given MLflow run
+    by reloading the test dataset and the trained model.
+
+    Args:
+        institution_id (str): Institution ID prefix for table name.
+        automl_experiment_id (str): MLflow run ID of the trained model.
+        experiment_id
+        catalog (str): Destination catalog/schema for the ROC curve table.
+    """
+    try:
+        from databricks.connect import DatabricksSession
+
+        spark = DatabricksSession.builder.getOrCreate()
+    except Exception:
+        print("⚠️ Databricks Connect failed. Falling back to local Spark.")
+        from pyspark.sql import SparkSession
+
+        spark = (
+            SparkSession.builder.master("local[*]").appName("Fallback").getOrCreate()
+        )
+
+    split_col = split_col or "_automl_split_col_0000"
+
+    data_run_tag = "Training Data Storage and Analysis"
+    table_path = f"{catalog}.{institution_id}_gold.sample_training_{automl_experiment_id}_roc_curve"
+    tmp_dir = f"/tmp/{uuid.uuid4()}"  # unique tmp path
+
+    if mlflow.active_run() is None:
+        raise RuntimeError(
+            "No active MLflow run. Please call this within an MLflow run context."
+        )
+
+    try:
+        # Find the run that logged the data
+        runs_df: pd.DataFrame = mlflow.search_runs(
+            experiment_ids=[experiment_id], output_format="pandas"
+        )
+        data_run_id = runs_df[runs_df["tags.mlflow.runName"] == data_run_tag][
+            "automl_experiment_id"
+        ].item()
+
+        # Load test data
+        artifact_path = mlflow.artifacts.download_artifacts(
+            run_id=data_run_id, artifact_path="data", dst_path=tmp_dir
+        )
+
+        df = pd.read_parquet(os.path.join(artifact_path, "training_data"))
+        test_df = df[df[split_col] == "test"].copy()
+
+        # Load model + features
+        model = mlflow.sklearn.load_model(f"runs:/{automl_experiment_id}/model")
+        feature_names: List[str] = model.named_steps["column_selector"].get_params()[
+            "cols"
+        ]
+
+        # Prepare inputs for ROC
+        y_true = test_df[target_col].values
+        X_test = test_df[feature_names]
+        y_scores = model.predict_proba(X_test)[:, 1]  # probabilities for class 1
+
+        # Calculate ROC table manually and plot all thresholds.
+        # Down the line, we might want to specify a threshold to reduce plot density
+        thresholds = np.sort(np.unique(y_scores))[::-1]
+        P, N = np.sum(y_true == 1), np.sum(y_true == 0)
+
+        rows = []
+        for thresh in thresholds:
+            y_pred = (y_scores >= thresh).astype(int)
+            TP = np.sum((y_pred == 1) & (y_true == 1))
+            FP = np.sum((y_pred == 1) & (y_true == 0))
+            TN = np.sum((y_pred == 0) & (y_true == 0))
+            FN = np.sum((y_pred == 0) & (y_true == 1))
+            TPR = TP / P if P else 0
+            FPR = FP / N if N else 0
+            rows.append(
+                {
+                    "threshold": round(thresh, 4),
+                    "true_positive_rate": round(TPR, 4),
+                    "false_positive_rate": round(FPR, 4),
+                    "true_positive": int(TP),
+                    "false_positives": int(FP),
+                    "true_negatives": int(TN),
+                    "false_negatives": int(FN),
+                }
+            )
+
+        roc_df = pd.DataFrame(rows)
+        spark_df = spark.createDataFrame(roc_df)
+        spark_df.write.mode("overwrite").saveAsTable(table_path)
+
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed to log ROC table for run {automl_experiment_id}: {e}"
+        ) from e
+    finally:
+        if os.path.exists(tmp_dir):
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
 ############
 ## PLOTS! ##
 ############
@@ -520,6 +720,9 @@ def plot_trained_models_comparison(
     ax.tick_params(axis="x", colors="lightgrey", which="both")  # Color of ticks
     ax.xaxis.grid(True, color="lightgrey", linestyle="--", linewidth=0.5)
     fig.tight_layout()
+
+    mlflow.log_figure(fig, "model_comparison.png")
+    plt.close()
 
     return fig
 

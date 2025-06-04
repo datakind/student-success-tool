@@ -24,7 +24,7 @@
 
 # install dependencies, of which most/all should come through our 1st-party SST package
 
-# %pip install "student-success-tool == 0.2.0"
+# %pip install "student-success-tool == 0.3.1"
 
 # COMMAND ----------
 
@@ -40,10 +40,9 @@ import matplotlib.pyplot as plt
 import pandas as pd  # noqa: F401
 import seaborn as sb
 from databricks.connect import DatabricksSession
-from databricks.sdk.runtime import dbutils
 
-from student_success_tool import configs, dataio, eda, modeling, preprocessing, utils
-from student_success_tool.preprocessing import targets
+from student_success_tool import configs, dataio, eda, modeling, preprocessing
+from student_success_tool.preprocessing import checkpoints, selection, targets
 
 # COMMAND ----------
 
@@ -55,14 +54,6 @@ try:
 except Exception:
     logging.warning("unable to create spark session; are you in a Databricks runtime?")
     pass
-
-# COMMAND ----------
-
-# get run type + dataset from job params or manually specify
-run_type = utils.databricks.get_db_widget_param("run_type") or "TODO"
-dataset_name = utils.databricks.get_db_widget_param("dataset_name") or "TODO"
-
-logging.info("'%s' run of notebook using '%s' dataset", run_type, dataset_name)
 
 # COMMAND ----------
 
@@ -86,9 +77,6 @@ from pipelines import *  # noqa: F403
 # COMMAND ----------
 
 # project configuration should be stored in a config file in TOML format
-# it'll start out with just basic info: institution_id, institution_name
-# but as each step of the pipeline gets built, more parameters will be moved
-# from hard-coded notebook variables to shareable, persistent config fields
 cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig)
 cfg
 
@@ -104,7 +92,7 @@ cfg
 
 # COMMAND ----------
 
-raw_course_file_path = cfg.datasets[dataset_name].raw_course.file_path
+raw_course_file_path = cfg.datasets.bronze.raw_course.file_path
 df_course = dataio.pdp.read_raw_course_data(
     file_path=raw_course_file_path,
     schema=dataio.schemas.pdp.RawPDPCourseDataSchema,
@@ -114,7 +102,7 @@ df_course.head()
 
 # COMMAND ----------
 
-raw_cohort_file_path = cfg.datasets[dataset_name].raw_cohort.file_path
+raw_cohort_file_path = cfg.datasets.bronze.raw_cohort.file_path
 df_cohort = dataio.pdp.read_raw_cohort_data(
     file_path=raw_cohort_file_path, schema=dataio.schemas.pdp.RawPDPCohortDataSchema
 )
@@ -127,19 +115,8 @@ df_cohort.head()
 
 # COMMAND ----------
 
-# TODO: load featurization params from the project config
-# okay to hard-code it first then add it to the config later
+# load featurization params from the project config
 feature_params = cfg.preprocessing.features.model_dump()
-# feature_params = {
-#     "min_passing_grade": features.pdp.constants.DEFAULT_MIN_PASSING_GRADE,
-#     "min_num_credits_full_time": features.pdp.constants.DEFAULT_MIN_NUM_CREDITS_FULL_TIME,
-#     # NOTE: this pattern in particular may be something you need to change
-#     # schools have many different conventions for course numbering!
-#     "course_level_pattern": features.pdp.constants.DEFAULT_COURSE_LEVEL_PATTERN,
-#     "peak_covid_terms": features.pdp.constants.DEFAULT_PEAK_COVID_TERMS,
-#     "key_course_subject_areas": None,
-#     "key_course_ids": None,
-# }
 
 # COMMAND ----------
 
@@ -161,123 +138,111 @@ df_student_terms.columns.tolist()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC A single function call can be used to make a labeled dataset for modeling, which includes selecting eligible students, subsetting to just the terms from which predictions are made, and computing target variables. _Which_ function depends primarily on the target to be computed: a failure to earn enough credits within a timeframe since initial enrollment, or a particular mid-way checkpoint (other targets pending). Input parameters will vary depending on the school and the target.
+# MAGIC A checkpoint, selection, and target function can be used together to make a labeled dataset for modeling. This involves selecting eligible students, subsetting to just the terms from which predictions are made, and computing target variables. _Which_ function depends primarily on the target to be computed: a failure to earn enough credits within a timeframe since initial enrollment, or a particular mid-way checkpoint (other targets pending). Input parameters will vary depending on the school and the target.
 # MAGIC
-# MAGIC For example, here's how one could make a labeled dataset with the following setup: Filters for first-time students, enrolled either full- or part-time, seeking an Associate's degree; that earn at least 60 credits within 3 years of enrollment if full-time or 6 years of enrollment if part-time; making predictions from the first term for which they've earned 30 credits.
-# MAGIC
+# MAGIC Here's a concrete example below based on a retention model:
 # MAGIC ```python
-# MAGIC # school-specific parameters that configure target variable code
-# MAGIC min_num_credits_checkin = 30.0
-# MAGIC min_num_credits_target = 60.0
-# MAGIC student_criteria = {
-# MAGIC     "enrollment_type": "FIRST-TIME",
-# MAGIC     "enrollment_intensity_first_term": ["FULL-TIME", "PART-TIME"],
-# MAGIC     "credential_type_sought_year_1": "Associate's Degree",
-# MAGIC }
-# MAGIC intensity_time_limits = [
-# MAGIC     ("FULL-TIME", 3.0, "year"),
-# MAGIC     ("PART-TIME", 6.0, "year"),
-# MAGIC ]
+# MAGIC # school-specific parameters specified in config.toml
+# MAGIC [preprocessing.selection]
+# MAGIC student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year_1 = ["BACHELOR'S DEGREE", "ASSOCIATE'S Degree"], enrollment_intensity_first_term = ["FULL-TIME", "PART-TIME"] }
+# MAGIC intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
 # MAGIC
-# MAGIC df_labeled = pdp.targets.failure_to_earn_enough_credits_in_time_from_enrollment.make_labeled_dataset(
+# MAGIC [preprocessing.checkpoint]
+# MAGIC name = "end_of_first_term"
+# MAGIC type_ = "first"
+# MAGIC
+# MAGIC [preprocessing.target]
+# MAGIC name = "retention"
+# MAGIC type_ = "retention"
+# MAGIC max_academic_year = "2024"
+# MAGIC
+# MAGIC # creating checkpoint dataframe
+# MAGIC df_ckpt = checkpoints.pdp.first_student_terms_within_cohort(
 # MAGIC     df_student_terms,
-# MAGIC     min_num_credits_checkin=min_num_credits_checkin,
-# MAGIC     min_num_credits_target=min_num_credits_target,
-# MAGIC     student_criteria=student_criteria,
-# MAGIC     intensity_time_limits=intensity_time_limits,
+# MAGIC     sort_cols=cfg.preprocessing.checkpoint.sort_cols,
+# MAGIC     include_cols=cfg.preprocessing.checkpoint.include_cols,
 # MAGIC )
+# MAGIC # selecting students from student criteria
+# MAGIC selected_students = selection.pdp.select_students_by_attributes(
+# MAGIC     df_student_terms,
+# MAGIC     student_id_cols=cfg.student_id_col,
+# MAGIC     **cfg.preprocessing.selection.student_criteria,
+# MAGIC )
+# MAGIC # finding students who meet student criteria in checkpoints
+# MAGIC df_labeled = pd.merge(df_ckpt, pd.Series(selected_students.index), how="inner", on=cfg.student_id_col)
+# MAGIC
+# MAGIC # computing target and adding it to df_labeled
+# MAGIC target = targets.pdp.retention.compute_target(
+# MAGIC     df_labeled,
+# MAGIC     max_academic_year=cfg.preprocessing.target.max_academic_year,
+# MAGIC )
+# MAGIC df_labeled = pd.merge(df_labeled, target, how="inner", on=cfg.student_id_col)
 # MAGIC ```
-# MAGIC
-# MAGIC Check out the `pdp.targets` module for options and more info.
-# MAGIC
-# MAGIC **TODO(Burton?):**
-# MAGIC - Update these instructions to use new targets/selection/checkpoint functionality
+# MAGIC Check out the `checkpoint`, `selection`, & `targets` modules for options and more info.
 
 # COMMAND ----------
 
-# TODO: load target params from the project config
-# okay to hard-code it first then add it to the config later
-try:
-    target_params = cfg.preprocessing.target.params
-    logging.info("target params: %s", target_params)
-except AttributeError:
-    target_params = {}
+# TODO: choose checkpoint function suitable for school's use case
+# parameters should be specified in the config
+df_ckpt = checkpoints.pdp.TODO(
+    df_student_terms,
+    sort_cols=cfg.preprocessing.checkpoint.sort_cols,
+    include_cols=cfg.preprocessing.checkpoint.include_cols,
+)
+df_ckpt
 
 # COMMAND ----------
 
-# TODO: run target-specific function suitable for school's use case
-if run_type == "train":
-    df_labeled = targets.pdp.TODO.make_labeled_dataset(
-        df_student_terms, **target_params
-    )
-    print(df_labeled[cfg.target_col].value_counts())
-    print(df_labeled[cfg.target_col].value_counts(normalize=True))
-else:
-    logging.info("run_type != 'train', so skipping target variable computation...")
+# select students based on student criteria
+selected_students = selection.pdp.select_students_by_attributes(
+    df_student_terms,
+    student_id_cols=cfg.student_id_col,
+    **cfg.preprocessing.selection.student_criteria,
+)
+
+# merge checkpoint terms with selected students
+df_labeled = pd.merge(
+    df_ckpt, pd.Series(selected_students.index), how="inner", on=cfg.student_id_col
+)
+df_labeled
 
 # COMMAND ----------
 
-if run_type == "train":
-    ax = sb.histplot(
-        df_labeled.sort_values("cohort"),
-        y="cohort",
-        multiple="stack",
-        shrink=0.75,
-        edgecolor="white",
-    )
-    _ = ax.set(xlabel="Number of Students")
-    plt.show()
-    ax = sb.histplot(
-        df_labeled.sort_values("cohort"),
-        y="cohort",
-        hue=cfg.target_col,
-        multiple="stack",
-        shrink=0.75,
-        edgecolor="white",
-    )
-    _ = ax.set(xlabel="Number of Students")
-    plt.show()
+# TODO: choose target function suitable for school's use case
+# parameters should be specified in the config
+target = targets.pdp.TODO.compute_target(df_labeled, **cfg.preprocessing.target)
+df_labeled = pd.merge(df_labeled, target, how="inner", on=cfg.student_id_col)
+
+print(df_labeled[cfg.target_col].value_counts())
+print(df_labeled[cfg.target_col].value_counts(normalize=True))
+
+# COMMAND ----------
+
+ax = sb.histplot(
+    df_labeled.sort_values("cohort"),
+    y="cohort",
+    multiple="stack",
+    shrink=0.75,
+    edgecolor="white",
+)
+_ = ax.set(xlabel="Number of Students")
+plt.show()
+ax = sb.histplot(
+    df_labeled.sort_values("cohort"),
+    y="cohort",
+    hue=cfg.target_col,
+    multiple="stack",
+    shrink=0.75,
+    edgecolor="white",
+)
+_ = ax.set(xlabel="Number of Students")
+plt.show()
 
 # COMMAND ----------
 
 # drop unwanted columns and mask values by time
-if run_type == "train":
-    df_modeling = preprocessing.pdp.dataops.clean_up_labeled_dataset_cols_and_vals(
-        df_labeled
-    )
-else:
-    df_modeling = preprocessing.pdp.dataops.clean_up_labeled_dataset_cols_and_vals(
-        df_student_terms
-    )
-df_modeling.shape
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC # STOP HERE?
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC Everything after this point is for labeled training data only. In case of a non-"train" run type, we'll just save the modeling dataset here and bail out of the notebook early.
-
-# COMMAND ----------
-
-# TODO: fill in the actual table path for school's preprocessed dataset
-# okay to add it to project config now or later, whatever you prefer
-# preprocessed_table_path = cfg.datasets[dataset_name].preprocessed.table_path
-preprocessed_table_path = "CATALOG.INST_NAME_silver.modeling_dataset_DESCRIPTIVE_SUFFIX"
-
-# COMMAND ----------
-
-if run_type != "train":
-    dataio.write.to_delta_table(
-        df_modeling, preprocessed_table_path, spark_session=spark
-    )
-    dbutils.notebook.exit(
-        f"'{dataset_name}' modeling dataset saved to {preprocessed_table_path}; "
-        "exiting notebook..."
-    )
+df_preprocessed = preprocessing.pdp.clean_up_labeled_dataset_cols_and_vals(df_labeled)
+df_preprocessed.shape
 
 # COMMAND ----------
 
@@ -300,19 +265,19 @@ except AttributeError:
 # COMMAND ----------
 
 if splits:
-    df_modeling = df_modeling.assign(
+    df_preprocessed = df_preprocessed.assign(
         **{
             split_col: ft.partial(
                 modeling.utils.compute_dataset_splits, seed=cfg.random_state
             )
         }
     )
-    print(df_modeling[split_col].value_counts(normalize=True))
+    print(df_preprocessed[split_col].value_counts(normalize=True))
 
 # COMMAND ----------
 
 if sample_class_weight:
-    df_modeling = df_modeling.assign(
+    df_preprocessed = df_preprocessed.assign(
         **{
             sample_weight_col: ft.partial(
                 modeling.utils.compute_sample_weights,
@@ -321,7 +286,7 @@ if sample_class_weight:
             )
         }
     )
-    print(df_modeling[sample_weight_col].value_counts(normalize=True))
+    print(df_preprocessed[sample_weight_col].value_counts(normalize=True))
 
 # COMMAND ----------
 
@@ -339,9 +304,9 @@ non_feature_cols = (
 
 # COMMAND ----------
 
-target_corrs = df_modeling.drop(columns=non_feature_cols + [cfg.target_col]).corrwith(
-    df_modeling[cfg.target_col], method="spearman", numeric_only=True
-)
+target_corrs = df_preprocessed.drop(
+    columns=non_feature_cols + [cfg.target_col]
+).corrwith(df_preprocessed[cfg.target_col], method="spearman", numeric_only=True)
 print(target_corrs.sort_values(ascending=False).head(10))
 print("...")
 print(target_corrs.sort_values(ascending=False, na_position="first").tail(10))
@@ -349,7 +314,7 @@ print(target_corrs.sort_values(ascending=False, na_position="first").tail(10))
 # COMMAND ----------
 
 target_assocs = eda.compute_pairwise_associations(
-    df_modeling, ref_col=cfg.target_col, exclude_cols=non_feature_cols
+    df_preprocessed, ref_col=cfg.target_col, exclude_cols=non_feature_cols
 )
 print(target_assocs.sort_values(by="target", ascending=False).head(10))
 print("...")
@@ -367,10 +332,11 @@ print(
 # COMMAND ----------
 
 # save preprocessed dataset
-dataio.write.to_delta_table(df_modeling, preprocessed_table_path, spark_session=spark)
+dataio.write.to_delta_table(
+    df_preprocessed, cfg.datasets.silver.preprocessed.table_path, spark_session=spark
+)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC - [ ] Update project config with paremters for the preprocessed dataset (`datasets[dataset_name].preprocessed`), feature and target definitions (`preprocessing.features`, `preprocessing.target.params`), as well as any splits / sample weight parameters (`preprocessing.splits`, `preprocessing.sample_class_weight`)
 # MAGIC - [ ] Submit a PR including this notebook and any changes in project config
