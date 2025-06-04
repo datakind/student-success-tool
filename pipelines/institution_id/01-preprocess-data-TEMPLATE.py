@@ -182,10 +182,12 @@ df_student_terms.columns.tolist()
 
 # COMMAND ----------
 
-# TODO: choose checkpoint function suitable for school's use case
+# TODO: add additional parameters for your type of checkpoint
 # parameters should be specified in the config
-df_ckpt = checkpoints.pdp.TODO(
+df_ckpt = checkpoints.pdp.nth_student_terms(
     df_student_terms,
+    n=cfg.preprocessing.checkpoint.n,
+    type=cfg.preprocessing.checkpoint.type_,
     sort_cols=cfg.preprocessing.checkpoint.sort_cols,
     include_cols=cfg.preprocessing.checkpoint.include_cols,
 )

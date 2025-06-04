@@ -330,7 +330,7 @@ def test_first_student_terms(
 ):
     obs = pdp.nth_student_terms(
         df_test,
-        n="first",
+        n=0,
         student_id_cols="student_id",
         sort_cols="term_rank",
         include_cols=include_cols,
@@ -374,7 +374,7 @@ def test_last_student_terms(
 ):
     obs = pdp.nth_student_terms(
         df_test,
-        n="last",
+        n=-1,
         student_id_cols="student_id",
         sort_cols="term_rank",
         include_cols=include_cols,
@@ -423,8 +423,8 @@ def test_first_student_terms_at_num_credits_earned(
 ):
     obs = pdp.nth_student_terms(
         df_test,
-        n="first", 
-        context="num_credits_earned",
+        n=0, 
+        type="num_credits_earned",
         min_num_credits=min_num_credits,
         num_credits_col="num_credits_earned",
         student_id_cols="student_id",
@@ -458,8 +458,8 @@ def test_first_student_terms_at_num_credits_earned(
 def test_first_student_terms_within_cohort(df_test, include_cols, exp):
     obs = pdp.nth_student_terms(
         df_test,
-        n="first",
-        context="within_cohort",
+        n=0,
+        type="within_cohort",
         term_is_pre_cohort_col="term_is_pre_cohort",
         student_id_cols="student_id",
         sort_cols="term_rank",
@@ -507,8 +507,8 @@ def test_last_student_terms_in_enrollment_year(
 ):
     obs = pdp.nth_student_terms(
         df_test,
-        n="last",
-        context="enrollment_year",
+        n=-1,
+        type="enrollment_year",
         enrollment_year=enrollment_year,
         enrollment_year_col="enrollment_year",
         student_id_cols="student_id",

@@ -12,8 +12,8 @@ LOGGER = logging.getLogger(__name__)
 def nth_student_terms(
     df: pd.DataFrame,
     *,
-    n: t.Union[int, str] = 0,
-    context: t.Literal["all", "num_credits_earned", "within_cohort", "enrollment_year"] = "all",
+    n: int = 0,
+    type: t.Literal["all", "num_credits_earned", "within_cohort", "enrollment_year"] = "all",
     enrollment_year: t.Optional[int] = None,
     student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
@@ -24,7 +24,7 @@ def nth_student_terms(
     exclude_non_core_terms: bool = True,
     enrollment_year_col: t.Optional[str] = None,
     min_num_credits: t.Optional[float] = None,
-    num_credits_col: str = "num_credits_earned_cumsum",
+    num_credits_col: t.Optional[str] = "num_credits_earned_cumsum",
     valid_enrollment_year: t.Optional[int] = None,
 ) -> pd.DataFrame:
     """
@@ -46,13 +46,12 @@ def nth_student_terms(
         enrollment_year_col
         valid_enrollment_year
     """
-    n = _get_n(n)
     student_id_cols = utils.types.to_list(student_id_cols)
     sort_cols = utils.types.to_list(sort_cols)
 
-    df_context = _get_context_df(
+    df_type = _get_type_df(
         df,
-        context=context,
+        type=type,
         enrollment_year_col=enrollment_year_col,
         enrollment_year=enrollment_year,
         min_num_credits=min_num_credits,
@@ -60,15 +59,15 @@ def nth_student_terms(
         num_credits_col=num_credits_col,
     )
 
-    included_cols = _get_included_cols(df_context, student_id_cols, sort_cols, include_cols)
+    included_cols = _get_included_cols(df_type, student_id_cols, sort_cols, include_cols)
 
     if exclude_pre_cohort_terms:
-        df_context = df_context[df_context[term_is_pre_cohort_col] == False]
+        df_type = df_type[df_type[term_is_pre_cohort_col] == False]
     if exclude_non_core_terms:
-        df_context = df_context[df_context[term_is_core_col] == True]
+        df_type = df_type[df_type[term_is_core_col] == True]
 
     df_nth = (
-        df_context.loc[:, included_cols]
+        df_type.loc[:, included_cols]
         .sort_values(
             by=(student_id_cols + sort_cols), ascending=True, ignore_index=False
         )
@@ -87,25 +86,9 @@ def nth_student_terms(
     return df_nth
 
 
-def _get_n(which: t.Union[int, str]) -> int:
-    """
-    Convert 'which' parameter to integer n for pandas nth():
-    - "first" -> 0
-    - "last" -> -1
-    - int stays as is
-    """
-    if isinstance(which, int):
-        return which
-    which_lower = which.lower()
-    if which_lower == "first":
-        return 0
-    if which_lower == "last":
-        return -1
-    raise ValueError(f"Invalid value for 'which': {which}")
-
-def _get_context_df(
+def _get_type_df(
     df: pd.DataFrame,
-    context: t.Literal["all", "num_credits_earned", "within_cohort", "enrollment_year"],
+    type: t.Literal["all", "num_credits_earned", "within_cohort", "enrollment_year"],
     enrollment_year_col: t.Optional[str],
     enrollment_year: t.Optional[int],
     min_num_credits: t.Optional[float],
@@ -113,38 +96,28 @@ def _get_context_df(
     num_credits_col: t.Optional[str] = "num_credits_earned_cumsum",
 ) -> pd.DataFrame:
     """
-    Apply filtering on df based on context and flags.
+    Apply filtering on df based on type and flags.
     """
-    df_context = df.copy()
+    df_type = df.copy()
 
-    if context == "within_cohort":
-        if term_is_pre_cohort_col is None:
-            raise ValueError("Must specify 'term_is_pre_cohort_col' when context='within_cohort'")
+    if type == "within_cohort":
         if term_is_pre_cohort_col not in df.columns:
             raise KeyError(f"'{term_is_pre_cohort_col}' not in DataFrame")
-        df_context = df_context[~df_context[term_is_pre_cohort_col]]
-    elif context == "enrollment_year":
-        if enrollment_year is None:
-            raise ValueError("Must specify enrollment_year when context='enrollment_year'")
-        if enrollment_year_col is None:
-            raise ValueError("Must specify 'enrollment_year_col' when context='enrollment_year'")
+        df_type = df_type[~df_type[term_is_pre_cohort_col]]
+    elif type == "enrollment_year":
         if enrollment_year_col not in df.columns:
             raise KeyError(f"'{enrollment_year_col}' not in DataFrame")
-        df_context = df_context[df_context[enrollment_year_col] == enrollment_year]
-    elif context == "num_credits_earned":
-        if min_num_credits is None:
-            raise ValueError("Must specify 'min_num_credits' when context='num_credits_earned'")
-        if num_credits_col is None:
-            raise ValueError("Must specify 'num_credits_col' when context='num_credits_earned'")
+        df_type = df_type[df_type[enrollment_year_col] == enrollment_year]
+    elif type == "num_credits_earned":
         if num_credits_col not in df.columns:
             raise KeyError("{num_credits_col} not in DataFrame")
-        df_context = df_context.loc[df[num_credits_col].ge(min_num_credits), :]
-    elif context == "all":
+        df_type = df_type.loc[df[num_credits_col].ge(min_num_credits), :]
+    elif type == "all":
         pass
     else:
-        raise ValueError(f"Invalid context: {context}")
+        raise ValueError(f"Invalid type: {type}")
 
-    return df_context
+    return df_type
 
 
 def _get_included_cols(
