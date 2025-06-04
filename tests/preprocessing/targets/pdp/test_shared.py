@@ -37,6 +37,8 @@ def df_test_year2():
         },
         dtype="string",
     )
+import pytest
+import pandas as pd
 
 
 @pytest.mark.parametrize(
@@ -46,6 +48,7 @@ def df_test_year2():
         "max_term_rank",
         "num_terms_in_year",
         "exp",
+        "checkpoint_kwargs",
     ],
     [
         # max target term inferred
@@ -58,6 +61,7 @@ def df_test_year2():
                 data={"student_max_term_rank": [4, 10], "max_term_rank": [10, 10]},
                 index=pd.Index(["01", "02"], name="student_id", dtype="string"),
             ).astype("Int8"),
+            {},  # no additional kwargs
         ),
         # max target term manually specified
         (
@@ -72,6 +76,7 @@ def df_test_year2():
                 },
                 index=pd.Index(["01", "02", "03"], name="student_id", dtype="string"),
             ).astype("Int8"),
+            {},
         ),
         # num terms in year adjusted
         (
@@ -83,6 +88,7 @@ def df_test_year2():
                 data={"student_max_term_rank": [5], "max_term_rank": [10]},
                 index=pd.Index(["01"], name="student_id", dtype="string"),
             ).astype("Int8"),
+            {},
         ),
         # checkpoint given as dataframe
         (
@@ -104,8 +110,9 @@ def df_test_year2():
                 },
                 index=pd.Index(["01", "02", "03"], name="student_id", dtype="string"),
             ).astype("Int8"),
+            {},
         ),
-        # pre-cohort terms excluded when computing max target term
+        # pre-cohort terms excluded, also test type_ arg
         (
             checkpoints.pdp.nth_student_terms,
             {"FT": (1, "year"), "PT": (2, "year")},
@@ -115,6 +122,7 @@ def df_test_year2():
                 data={"student_max_term_rank": [4, 11], "max_term_rank": [12, 12]},
                 index=pd.Index(["01", "02"], name="student_id", dtype="string"),
             ).astype("Int8"),
+            {"type": "within_cohort"},
         ),
     ],
 )
@@ -125,10 +133,12 @@ def test_get_students_with_max_target_term_in_dataset(
     max_term_rank,
     num_terms_in_year,
     exp,
+    checkpoint_kwargs,
 ):
     obs = shared.get_students_with_max_target_term_in_dataset(
         df_test_max_term,
         checkpoint=checkpoint,
+        checkpoint_kwargs=checkpoint_kwargs,
         intensity_time_limits=intensity_time_limits,
         max_term_rank=max_term_rank,
         num_terms_in_year=num_terms_in_year,
@@ -137,7 +147,7 @@ def test_get_students_with_max_target_term_in_dataset(
         term_rank_col="term_rank",
     )
     assert isinstance(obs, pd.DataFrame)
-    assert pd.testing.assert_frame_equal(obs, exp) is None
+    pd.testing.assert_frame_equal(obs, exp)
 
 
 @pytest.mark.parametrize(

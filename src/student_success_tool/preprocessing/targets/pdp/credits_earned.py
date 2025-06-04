@@ -64,13 +64,17 @@ def compute_target(
     if df_ckpt.groupby(by=student_id_cols).size().gt(1).any():
         raise ValueError("checkpoint df must include exactly 1 row per student")
 
-    df_tgt = checkpoints.pdp.first_student_terms_at_num_credits_earned(
+    df_tgt = checkpoints.pdp.nth_student_terms(
         df,
+        n=0,
+        type="num_credits_earned",
         min_num_credits=min_num_credits,
         student_id_cols=student_id_cols,
         sort_cols=term_rank_col,
         num_credits_col=num_credits_col,
         include_cols=[enrollment_intensity_col],
+        exclude_non_core_terms= False,
+        exclude_pre_cohort_terms=False
     )
     df_at = pd.merge(
         df_ckpt,

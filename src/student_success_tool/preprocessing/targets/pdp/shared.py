@@ -8,11 +8,11 @@ from .... import utils
 
 LOGGER = logging.getLogger(__name__)
 
-
 def get_students_with_max_target_term_in_dataset(
     df: pd.DataFrame,
     *,
     checkpoint: pd.DataFrame | t.Callable[[pd.DataFrame], pd.DataFrame],
+    checkpoint_kwargs: t.Optional[dict] = None,
     intensity_time_limits: utils.types.IntensityTimeLimitsType,
     max_term_rank: int | t.Literal["infer"] = "infer",
     num_terms_in_year: int = 4,
@@ -27,45 +27,37 @@ def get_students_with_max_target_term_in_dataset(
 
     Args:
         df: Student-term dataset.
-        checkpoint: "Checkpoint" from which time limits to target term are measured,
-            typically either the first enrolled term or the first term above an intermediate
-            number of credits earned; may be given as a data frame with one row per student,
-            or as a callable that takes ``df`` as input and returns all checkpoint terms.
-        intensity_time_limits: Mapping of enrollment intensity value (e.g. "FULL-TIME")
-            to the maximum number of years or terms considered to be "on-time" for
-            the target number of credits earned (e.g. [4.0, "year"], [12.0, "term"]),
-            where the numeric values are for the time between "checkpoint" and "target"
-            terms. Passing special "*" as the only key applies the corresponding time limits
-            to all students, regardless of intensity.
-        max_term_rank: Maximum term rank value in the full dataset ``df`` , either inferred
-            from ``df[term_rank_col]`` itself or as a manually specified value which
-            may be different from the actual max value in ``df`` , depending on use case.
-        num_terms_in_year: Number of academic terms in one academic year,
-            used to convert from year-based time limits to term-based time limits;
-            default value assumes FALL, WINTER, SPRING, and SUMMER terms.
-        student_id_cols: One or multiple columns uniquely identifying students.
-        enrollment_intensity_col: Column whose values give students' "enrollment intensity"
-            (usually either "FULL-TIME" or "PART-TIME"), for use in applying a time limit.
-        term_rank_col: Column whose values give the absolute integer ranking of a given
-            term within the full dataset ``df`` .
+        checkpoint: "Checkpoint" data frame or callable returning one.
+        checkpoint_kwargs: Additional arguments to pass to callable checkpoint.
+        intensity_time_limits: Mapping from enrollment intensity to time limits.
+        max_term_rank: Max term rank in df, or "infer" to get it from data.
+        num_terms_in_year: Terms per academic year (e.g. 4 for semester+summer).
+        student_id_cols: Column(s) that identify each student.
+        enrollment_intensity_col: Column with FT/PT intensity.
+        term_rank_col: Column giving the rank of the term.
     """
+    checkpoint_kwargs = checkpoint_kwargs or {}
+
     if max_term_rank == "infer":
         max_term_rank = int(df[term_rank_col].max())
     assert isinstance(max_term_rank, int)  # type guard
 
     student_id_cols = utils.types.to_list(student_id_cols)
     nuq_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
+
     df_ckpt = (
         checkpoint.copy(deep=True)
         if isinstance(checkpoint, pd.DataFrame)
-        else checkpoint(df)
+        else checkpoint(df, **checkpoint_kwargs)
     )
+
     if df_ckpt.groupby(by=student_id_cols).size().gt(1).any():
         raise ValueError("checkpoint df must include exactly 1 row per student")
 
     intensity_num_terms = utils.misc.convert_intensity_time_limits(
         "term", intensity_time_limits, num_terms_in_year=num_terms_in_year
     )
+
     if "*" in intensity_num_terms:
         df_ckpt = df_ckpt.assign(
             student_max_term_rank=lambda df: df[term_rank_col]
@@ -76,20 +68,21 @@ def get_students_with_max_target_term_in_dataset(
             student_max_term_rank=lambda df: df[term_rank_col]
             + df[enrollment_intensity_col].map(intensity_num_terms)
         )
+
     df_out = (
         df_ckpt.loc[
             df_ckpt["student_max_term_rank"].le(max_term_rank),
             student_id_cols + ["student_max_term_rank"],
         ]
-        # get student ids from first eligible terms only
         .drop_duplicates(subset=student_id_cols, ignore_index=True)
         .set_index(student_id_cols)
-        # include relevant other columns, mostly just for debugging
         .assign(max_term_rank=max_term_rank)
         .astype("Int8")
     )
+
     _log_labelable_students(nuq_students_in, len(df_out))
     return df_out
+
 
 
 def get_students_with_second_year_in_dataset(
