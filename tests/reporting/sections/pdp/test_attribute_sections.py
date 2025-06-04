@@ -137,7 +137,7 @@ def test_target_population_section(mock_card):
         ),
         (
             "first_within_cohort", None, None, None, None,
-            "The model makes this prediction when the student has completed their first term within their cohort",
+            "The model makes this prediction when the student has completed their first term within their cohort.",
         ),
     ],
 )
