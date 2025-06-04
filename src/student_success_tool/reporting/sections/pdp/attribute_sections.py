@@ -100,17 +100,44 @@ def register_attribute_sections(card, registry):
         """
         checkpoint_type = card.cfg.preprocessing.checkpoint.type_
         base_message = "The model makes this prediction when the student has"
-        n_ckpt = card.cfg.preprocessing.checkpoint.n 
 
+        #add one because 0 is firrst, 1 is second term, etc.
+        n_ckpt = card.cfg.preprocessing.checkpoint.n + 1
+        # TODO : think about other neg values, technically people could put in -2 for 2nd to last, which would now throw the error
+        if n_ckpt == 0:
+            ordinality_message = 'last'
+        elif n_ckpt > 0:
+            ordinality_message = card.format.ordinal(n_ckpt)
+        else:
+            raise ValueError(f"Unable to interpret value for nth checkpoint: {n_ckpt}")
+            
         if checkpoint_type == "all":
-            return f"{base_message} completed their {card.format.ordinal(n_ckpt)} term."
+            type_message = f"{base_message} completed their {ordinality_message} term."
         elif checkpoint_type == "num_credits_earned":
             credit_thresh = card.cfg.preprocessing.checkpoint.min_num_credits
-            return f"{base_message} earned {credit_thresh} credits."
+            type_message = f"{base_message} earned {credit_thresh} credits."
         elif checkpoint_type == "within_cohort":
-            return f"{base_message} completed their {card.format.ordinal(n_ckpt)} term within their cohort."
+            type_message = f"{base_message} completed their {ordinality_message} term within their cohort."
         elif checkpoint_type == "enrollment_year":
             enrl_year = card.cfg.preprocessing.checkpoint.enrollment_year
-            return f"{base_message} completed their {card.format.ordinal(enrl_year)} year of enrollment."
+            type_message = f"{base_message} completed their {card.format.ordinal(enrl_year)} year of enrollment."
         else:
             raise ValueError(f"Unknown checkpoint type: {checkpoint_type}")
+
+
+        exclude_pre_cohort_terms = card.cfg.preprocessing.checkpoint.exclude_pre_cohort_terms
+        exclude_non_core_terms = card.cfg.preprocessing.checkpoint.exclude_non_core_terms
+        valid_enrollment_year = card.cfg.preprocessing.checkpoint.valid_enrollment_year
+        included = []
+        if not exclude_pre_cohort_terms:
+            included.append("pre-cohort terms")
+        if not exclude_non_core_terms:
+            included.append("non-core terms")
+        if included:
+            if len(included) == 1:
+                message += f" including {included[0]}"
+            else:
+                message += f" including {', '.join(included[:-1])} and {included[-1]}"
+        if valid_enrollment_year:
+            message += f", provided the term occurred in their {card.format.ordinal(valid_enrollment_year)} year of enrollment"
+        message = message.rstrip('. ') + '.'
