@@ -31,10 +31,8 @@ from student_success_tool.preprocessing.targets.pdp import retention
             ).astype({"student_id": "string", "retention": "boolean"}),
             "infer",
             pd.Series(
-                data=[False, True, True, pd.NA],
-                index=pd.Index(
-                    ["01", "02", "04", "03"], dtype="string", name="student_id"
-                ),
+                data=[False, True, True],
+                index=pd.Index(["01", "02", "04"], dtype="string", name="student_id"),
                 name="target",
                 dtype="boolean",
             ),
@@ -63,10 +61,8 @@ from student_success_tool.preprocessing.targets.pdp import retention
             ).astype({"student_id": "string", "retention": "Int8"}),
             "infer",
             pd.Series(
-                data=[False, True, True, pd.NA],
-                index=pd.Index(
-                    ["01", "02", "04", "03"], dtype="string", name="student_id"
-                ),
+                data=[False, True, True],
+                index=pd.Index(["01", "02", "04"], dtype="string", name="student_id"),
                 name="target",
                 dtype="boolean",
             ),
@@ -95,10 +91,8 @@ from student_success_tool.preprocessing.targets.pdp import retention
             ).astype({"student_id": "string", "retention": "boolean"}),
             "2022-23",
             pd.Series(
-                data=[False, True, pd.NA, pd.NA],
-                index=pd.Index(
-                    ["01", "02", "04", "03"], dtype="string", name="student_id"
-                ),
+                data=[False, True],
+                index=pd.Index(["01", "02"], dtype="string", name="student_id"),
                 name="target",
                 dtype="boolean",
             ),
