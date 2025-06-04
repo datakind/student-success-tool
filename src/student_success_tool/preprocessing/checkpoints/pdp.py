@@ -20,9 +20,9 @@ def nth_student_terms(
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
-    exclude_pre_cohort_terms: bool = False,
+    exclude_pre_cohort_terms: bool = True,
     term_is_core_col: str = "term_is_core",
-    exclude_non_core_terms: bool = False,
+    exclude_non_core_terms: bool = True,
     enrollment_year_col: t.Optional[str] = None,
     min_num_credits: t.Optional[float] = None,
     num_credits_col: t.Optional[str] = "num_credits_earned_cumsum",
@@ -34,18 +34,35 @@ def nth_student_terms(
     The parameter "exclude_non_core_terms" ensures that we only count core terms in choosing thr `nth` core term. This parameter can be set to False to count all terms in choosing the `nth` term.
     Valid_enrollment_year is a parameter that if set, we drop nth term if it falls outside this enrollment year.
 
+    type: This sets the checkpoint filtering you would like to do. The options and their respective parameters are: 
+        - "nth": Default, no filtering, all terms are considered.
+        - "num_credits_earned":   For each student, get the nth row in ``df`` in ascending order of ``sort_cols`` for which
+          their cumulative num credits earned is greater than or equal to the specified threshold value.
+            -parameters reqd: min_num_credits, num_credits_col
+        - "within_cohort": For each student, get the nth row in ``df`` in ascending order of ``sort_cols`` for which
+          the term occurred *within* the student's cohort, i.e. not prior to their official start of enrollment.
+            - parameters reqd: term_is_pre_cohort_col
+        - "enrollment_year": For each student, get the last row in ``df`` in ascending order of ``sort_cols`` for which 
+          the term occurred during a particular year of students' enrollment; for example, ``enrollment_year=1`` => last terms
+           n students' first year of enrollment.    
+             - parameters reqd: enrollment_year_col, enrollment_year
+
     Args:
         df
         n
+        type
         student_id_cols
         sort_cols
         include_cols
-        term_is_pre_cohort_col
         exclude_pre_cohort_terms
         term_is_core_col
         exclude_non_core_terms
-        enrollment_year_col
         valid_enrollment_year
+        min_num_credits: applicable for type="num_credits_earned" only, the minimum number of credits a student must have earned to be considered.
+        num_credits_col: applicable for type="num_credits_earned" only, the column in df that contains the cumulative number of credits earned by a student.
+        term_is_pre_cohort_col: applicable for type="within_cohort" only, the column in df that indicates whether a term is pre-cohort.
+        enrollment_year: applicable for type="enrollment_year" only, the year of enrollment for which to get the nth term.
+        enrollment_year_col: applicable for type="enrollment_year" only, the column in df that contains the enrollment year.
     """
     student_id_cols = utils.types.to_list(student_id_cols)
     sort_cols = utils.types.to_list(sort_cols)

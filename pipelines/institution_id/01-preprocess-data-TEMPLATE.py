@@ -184,6 +184,20 @@ df_student_terms.columns.tolist()
 
 # TODO: add additional parameters for your type of checkpoint
 # parameters should be specified in the config
+
+# type: This sets the checkpoint filtering you would like to do. The options and their respective parameters are: 
+#         - "nth": Default, no filtering, all terms are considered.
+#         - "num_credits_earned":   For each student, get the nth row in ``df`` in ascending order of ``sort_cols`` for which
+#           their cumulative num credits earned is greater than or equal to the specified threshold value.
+#             -parameters reqd: min_num_credits, num_credits_col
+#         - "within_cohort": For each student, get the nth row in ``df`` in ascending order of ``sort_cols`` for which
+#           the term occurred *within* the student's cohort, i.e. not prior to their official start of enrollment.
+#             - parameters reqd: term_is_pre_cohort_col
+#         - "enrollment_year": For each student, get the last row in ``df`` in ascending order of ``sort_cols`` for which 
+#           the term occurred during a particular year of students' enrollment; for example, ``enrollment_year=1`` => last terms
+#            n students' first year of enrollment.    
+#              - parameters reqd: enrollment_year_col, enrollment_year
+
 df_ckpt = checkpoints.pdp.nth_student_terms(
     df_student_terms,
     n=cfg.preprocessing.checkpoint.n,
