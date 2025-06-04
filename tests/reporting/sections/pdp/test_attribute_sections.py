@@ -82,27 +82,19 @@ def test_target_population_section(mock_card):
     "checkpoint_type,expected_output",
     [
         (
-            "nth",
+            "all",
             "The model makes this prediction when the student has completed their 3rd term",
         ),
         (
-            "first",
-            "The model makes this prediction when the student has completed their first term",
-        ),
-        (
-            "last",
-            "The model makes this prediction when the student has completed their last term",
-        ),
-        (
-            "first_at_num_credits_earned",
+            "num_credits_earned",
             "The model makes this prediction when the student has earned 30 credits",
         ),
         (
-            "first_within_cohort",
+            "within_cohort",
             "The model makes this prediction when the student has completed their first term within their cohort",
         ),
         (
-            "last_in_enrollment_year",
+            "enrollment_year",
             "The model makes this prediction when the student has completed their 2nd year of enrollment",
         ),
     ],
