@@ -44,7 +44,7 @@ def test_outcome_variants(
     mock_card.cfg.preprocessing.selection.intensity_time_limits = time_limits
 
     # Patching checkpoint since we are testing outcome
-    mock_card.cfg.preprocessing.checkpoint.type_ = "first"
+    mock_card.cfg.preprocessing.checkpoint.type_ = "all"
 
     if outcome_type == "credits_earned" and "min_num_credits" in extra_config:
         mock_card.cfg.preprocessing.target.min_num_credits = extra_config[
@@ -65,7 +65,7 @@ def test_target_population_section(mock_card):
     }
 
     # Patching checkpoint since we are testing target population
-    mock_card.cfg.preprocessing.checkpoint.type_ = "first"
+    mock_card.cfg.preprocessing.checkpoint.type_ = "all"
 
     registry = SectionRegistry()
     pdp_attribute_sections.register_attribute_sections(mock_card, registry)
