@@ -50,7 +50,7 @@ def df_test_year2():
     [
         # max target term inferred
         (
-            checkpoints.pdp.first_student_terms,
+            checkpoints.pdp.nth_student_terms,
             {"FT": (1, "year"), "PT": (2, "year")},
             "infer",
             3,
@@ -61,7 +61,7 @@ def df_test_year2():
         ),
         # max target term manually specified
         (
-            checkpoints.pdp.first_student_terms,
+            checkpoints.pdp.nth_student_terms,
             {"FT": (1, "year"), "PT": (2, "year")},
             13,
             3,
@@ -75,7 +75,7 @@ def df_test_year2():
         ),
         # num terms in year adjusted
         (
-            checkpoints.pdp.first_student_terms,
+            checkpoints.pdp.nth_student_terms,
             {"FT": (1, "year"), "PT": (2, "year")},
             "infer",
             4,
@@ -107,7 +107,7 @@ def df_test_year2():
         ),
         # pre-cohort terms excluded when computing max target term
         (
-            checkpoints.pdp.first_student_terms_within_cohort,
+            checkpoints.pdp.nth_student_terms,
             {"FT": (1, "year"), "PT": (2, "year")},
             12,
             3,

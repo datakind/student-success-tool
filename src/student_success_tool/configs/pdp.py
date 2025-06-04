@@ -256,13 +256,14 @@ class CheckpointBaseConfig(pyd.BaseModel):
         description="Descriptive name for checkpoint, used as a component in model name",
     )
     type_: types.CheckpointTypeType = pyd.Field(
-        default=..., description="Type of filtering to which config is applied: 'all', 'num_credits_earned',"
-        "'within_cohort', or 'enrollment_year'"
+        default=...,
+        description="Type of filtering to which config is applied: 'all', 'num_credits_earned',"
+        "'within_cohort', or 'enrollment_year'",
     )
     n: int = pyd.Field(
         default=0,
         description=(
-            "Term of interest: int where 0 is the first term, 1 is the second up until -1 is the last term." 
+            "Term of interest: int where 0 is the first term, 1 is the second up until -1 is the last term."
         ),
     )
     sort_cols: str | list[str] = pyd.Field(

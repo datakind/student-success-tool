@@ -8,12 +8,13 @@ from ... import utils
 LOGGER = logging.getLogger(__name__)
 
 
-
 def nth_student_terms(
     df: pd.DataFrame,
     *,
     n: int = 0,
-    type: t.Literal["all", "num_credits_earned", "within_cohort", "enrollment_year"] = "all",
+    type: t.Literal[
+        "all", "num_credits_earned", "within_cohort", "enrollment_year"
+    ] = "all",
     enrollment_year: t.Optional[int] = None,
     student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
@@ -59,7 +60,9 @@ def nth_student_terms(
         num_credits_col=num_credits_col,
     )
 
-    included_cols = _get_included_cols(df_type, student_id_cols, sort_cols, include_cols)
+    included_cols = _get_included_cols(
+        df_type, student_id_cols, sort_cols, include_cols
+    )
 
     if exclude_pre_cohort_terms:
         df_type = df_type[df_type[term_is_pre_cohort_col] == False]

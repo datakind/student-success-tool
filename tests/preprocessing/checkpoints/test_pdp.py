@@ -423,7 +423,7 @@ def test_first_student_terms_at_num_credits_earned(
 ):
     obs = pdp.nth_student_terms(
         df_test,
-        n=0, 
+        n=0,
         type="num_credits_earned",
         min_num_credits=min_num_credits,
         num_credits_col="num_credits_earned",
