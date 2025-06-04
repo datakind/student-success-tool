@@ -91,52 +91,96 @@ def test_target_population_section(mock_card):
     [
         # Basic nth
         (
-            "nth", 1, True, True, None,
-            "The model makes this prediction when the student has completed their 2nd term."
+            "nth",
+            1,
+            True,
+            True,
+            None,
+            "The model makes this prediction when the student has completed their 2nd term.",
         ),
         # Include pre-cohort terms only
         (
-            "nth", 3, False, True, None,
-            "The model makes this prediction when the student has completed their 4th term including pre-cohort terms."
+            "nth",
+            3,
+            False,
+            True,
+            None,
+            "The model makes this prediction when the student has completed their 4th term including pre-cohort terms.",
         ),
         # Include non-core terms only
         (
-            "nth", 3, True, False, None,
-            "The model makes this prediction when the student has completed their 4th term including non-core terms."
+            "nth",
+            3,
+            True,
+            False,
+            None,
+            "The model makes this prediction when the student has completed their 4th term including non-core terms.",
         ),
         # Include both
         (
-            "nth", 3, False, False, None,
-            "The model makes this prediction when the student has completed their 4th term including pre-cohort terms and non-core terms."
+            "nth",
+            3,
+            False,
+            False,
+            None,
+            "The model makes this prediction when the student has completed their 4th term including pre-cohort terms and non-core terms.",
         ),
         # Include both + valid enrollment year
         (
-            "nth", -1, False, False, 1,
-            "The model makes this prediction when the student has completed their last term including pre-cohort terms and non-core terms, provided the term occurred in their 1st year of enrollment."
+            "nth",
+            -1,
+            False,
+            False,
+            1,
+            "The model makes this prediction when the student has completed their last term including pre-cohort terms and non-core terms, provided the term occurred in their 1st year of enrollment.",
         ),
         # Only valid enrollment year
         (
-            "nth", 6, True, True, 3,
-            "The model makes this prediction when the student has completed their 7th term, provided the term occurred in their 3rd year of enrollment."
+            "nth",
+            6,
+            True,
+            True,
+            3,
+            "The model makes this prediction when the student has completed their 7th term, provided the term occurred in their 3rd year of enrollment.",
         ),
         (
-            "first", 0, False, False, None,
-            "The model makes this prediction when the student has completed their first term."
+            "first",
+            0,
+            False,
+            False,
+            None,
+            "The model makes this prediction when the student has completed their first term.",
         ),
         (
-            "last", -1, False, False, None,
-            "The model makes this prediction when the student has completed their last term."
+            "last",
+            -1,
+            False,
+            False,
+            None,
+            "The model makes this prediction when the student has completed their last term.",
         ),
         (
-            "first_at_num_credits_earned", None, None, None, None,
-            "The model makes this prediction when the student has earned 30 credits."
+            "first_at_num_credits_earned",
+            None,
+            None,
+            None,
+            None,
+            "The model makes this prediction when the student has earned 30 credits.",
         ),
         (
-            "last_in_enrollment_year", None, None, None, None,
+            "last_in_enrollment_year",
+            None,
+            None,
+            None,
+            None,
             "The model makes this prediction when the student has completed their 2nd year of enrollment."
         ),
         (
-            "first_within_cohort", None, None, None, None,
+            "first_within_cohort",
+            None,
+            None,
+            None,
+            None,
             "The model makes this prediction when the student has completed their first term within their cohort.",
         ),
     ],
