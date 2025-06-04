@@ -125,7 +125,7 @@ def test_target_population_section(mock_card):
         ),
         (
             "last", -1, False, False, None,
-            "The model makes this prediction when the student has completed their first term."
+            "The model makes this prediction when the student has completed their last term."
         ),
         (
             "first_at_num_credits_earned", None, None, None, None,
