@@ -5,8 +5,7 @@ from student_success_tool.dataio.read import from_toml_file
 @pytest.fixture
 def feature_table_data():
     # Path to TOML file relative to this test file
-    test_dir = os.path.dirname(__file__)  # e.g., /.../tests/assets
-    project_root = os.path.abspath(os.path.join(test_dir, "..", ".."))
+    project_root = os.getcwd()
     toml_path = os.path.join(project_root, "src", "student_success_tool", "assets", "feature_tables.toml")
     return from_toml_file(toml_path)
 
