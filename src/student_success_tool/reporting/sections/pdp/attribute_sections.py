@@ -102,7 +102,40 @@ def register_attribute_sections(card, registry):
         base_message = "The model makes this prediction when the student has"
         if checkpoint_type == "nth":
             n_ckpt = card.cfg.preprocessing.checkpoint.n
-            return f"{base_message} completed their {card.format.ordinal(n_ckpt)} term."
+            exclude_pre_cohort_terms = (
+                card.cfg.preprocessing.checkpoint.exclude_pre_cohort_terms
+            )
+            exclude_non_core_terms = (
+                card.cfg.preprocessing.checkpoint.exclude_non_core_terms
+            )
+            valid_enrollment_year = (
+                card.cfg.preprocessing.checkpoint.valid_enrollment_year
+            )
+            if n_ckpt >= 0:
+                message = f"{base_message} completed their {card.format.ordinal(n_ckpt + 1)} term"
+            elif n_ckpt == -1:
+                message = f"{base_message} completed their last term"
+            else:
+                raise ValueError(
+                    f"Unable to interpret value for nth checkpoint: {n_ckpt}"
+                )
+
+            included = []
+            if not exclude_pre_cohort_terms:
+                included.append("pre-cohort terms")
+            if not exclude_non_core_terms:
+                included.append("non-core terms")
+            if included:
+                if len(included) == 1:
+                    message += f" including {included[0]}"
+                else:
+                    message += (
+                        f" including {', '.join(included[:-1])} and {included[-1]}"
+                    )
+            if valid_enrollment_year:
+                message += f", provided the term occurred in their {card.format.ordinal(valid_enrollment_year)} year of enrollment"
+            message = message.rstrip(". ") + "."
+            return message
         elif checkpoint_type == "first":
             return f"{base_message} completed their first term."
         elif checkpoint_type == "last":
