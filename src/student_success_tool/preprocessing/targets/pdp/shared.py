@@ -8,6 +8,7 @@ from .... import utils
 
 LOGGER = logging.getLogger(__name__)
 
+
 def get_students_with_max_target_term_in_dataset(
     df: pd.DataFrame,
     *,
@@ -82,7 +83,6 @@ def get_students_with_max_target_term_in_dataset(
 
     _log_labelable_students(nuq_students_in, len(df_out))
     return df_out
-
 
 
 def get_students_with_second_year_in_dataset(

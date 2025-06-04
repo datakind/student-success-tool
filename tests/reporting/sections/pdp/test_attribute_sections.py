@@ -101,11 +101,11 @@ def test_target_population_section(mock_card):
 )
 def test_checkpoint_variants(mock_card, checkpoint_type, expected_output):
     mock_card.cfg.preprocessing.checkpoint.type_ = checkpoint_type
-    if checkpoint_type == "nth":
+    if checkpoint_type == "all":
         mock_card.cfg.preprocessing.checkpoint.n = 3
-    if checkpoint_type == "first_at_num_credits_earned":
+    if checkpoint_type == "num_credits_earned":
         mock_card.cfg.preprocessing.checkpoint.min_num_credits = 30
-    if checkpoint_type == "last_in_enrollment_year":
+    if checkpoint_type == "enrollment_year":
         mock_card.cfg.preprocessing.checkpoint.enrollment_year = 2
 
     registry = SectionRegistry()

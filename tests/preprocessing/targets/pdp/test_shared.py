@@ -37,6 +37,8 @@ def df_test_year2():
         },
         dtype="string",
     )
+
+
 import pytest
 import pandas as pd
 

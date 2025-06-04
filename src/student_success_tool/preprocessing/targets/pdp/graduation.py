@@ -117,7 +117,7 @@ def compute_target(
         df,
         checkpoint=ft.partial(
             checkpoints.pdp.nth_student_terms,
-            type = "within_cohort",
+            type="within_cohort",
             term_is_pre_cohort_col=term_is_pre_cohort_col,
             student_id_cols=student_id_cols,
             sort_cols=term_rank_col,

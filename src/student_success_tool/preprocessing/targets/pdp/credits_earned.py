@@ -73,8 +73,8 @@ def compute_target(
         sort_cols=term_rank_col,
         num_credits_col=num_credits_col,
         include_cols=[enrollment_intensity_col],
-        exclude_non_core_terms= False,
-        exclude_pre_cohort_terms=False
+        exclude_non_core_terms=False,
+        exclude_pre_cohort_terms=False,
     )
     df_at = pd.merge(
         df_ckpt,
