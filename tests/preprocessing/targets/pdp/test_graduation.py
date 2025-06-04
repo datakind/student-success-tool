@@ -145,4 +145,6 @@ def test_compute_target(
         enrollment_year_col="enrollment_year",
     )
     assert isinstance(obs, pd.Series)
+    print("obs:", obs)
+    print("exp:", exp)
     assert pd.testing.assert_series_equal(obs, exp) is None
