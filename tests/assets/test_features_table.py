@@ -5,7 +5,7 @@ from student_success_tool.dataio.read import from_toml_file
 @pytest.fixture
 def feature_table_data():
     project_root = os.getcwd()
-    toml_path = os.path.join(project_root, "src", "student_success_tool", "assets", "pdp", "feature_tables.toml")
+    toml_path = os.path.join(project_root, "src", "student_success_tool", "assets", "pdp", "features_table.toml")
     print(f"🔍 Looking for TOML file at: {toml_path}")  # helpful debug print
     return from_toml_file(toml_path)
 
