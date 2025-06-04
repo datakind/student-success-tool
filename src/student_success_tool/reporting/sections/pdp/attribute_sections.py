@@ -100,7 +100,7 @@ def register_attribute_sections(card, registry):
         """
         checkpoint_type = card.cfg.preprocessing.checkpoint.type_
         base_message = "The model makes this prediction when the student has"
-        n_ckpt = str(card.cfg.preprocessing.checkpoint.n) 
+        n_ckpt = card.cfg.preprocessing.checkpoint.n 
 
         if checkpoint_type == "all":
             return f"{base_message} completed their {card.format.ordinal(n_ckpt)} term."
