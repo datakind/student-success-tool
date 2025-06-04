@@ -105,8 +105,8 @@ def register_attribute_sections(card, registry):
             exclude_pre_cohort_terms = card.cfg.preprocessing.checkpoint.exclude_pre_cohort_terms
             exclude_non_core_terms = card.cfg.preprocessing.checkpoint.exclude_non_core_terms
             valid_enrollment_year = card.cfg.preprocessing.checkpoint.valid_enrollment_year
-            if n_ckpt > 0:
-                message = f"{base_message} completed their {card.format.ordinal(n_ckpt)} term"
+            if n_ckpt >= 0:
+                message = f"{base_message} completed their {card.format.ordinal(n_ckpt+1)} term"
             elif n_ckpt == -1:
                 message = f"{base_message} completed their last term"
             else:
@@ -126,9 +126,15 @@ def register_attribute_sections(card, registry):
                 message += f", provided the term occurred in their {card.format.ordinal(valid_enrollment_year)} year of enrollment"
             message = message.rstrip('. ') + '.'
             return message
+        elif checkpoint_type == "first":
+            return f"{base_message} completed their first term."
+        elif checkpoint_type == "last":
+            return f"{base_message} completed their last term."
         elif checkpoint_type == "first_at_num_credits_earned":
             credit_thresh = card.cfg.preprocessing.checkpoint.min_num_credits
             return f"{base_message} earned {credit_thresh} credits."
+        elif checkpoint_type == "first_within_cohort":
+            return f"{base_message} completed their first term within their cohort."
         elif checkpoint_type == "last_in_enrollment_year":
             enrl_year = card.cfg.preprocessing.checkpoint.enrollment_year
             return f"{base_message} completed their {card.format.ordinal(enrl_year)} year of enrollment."
