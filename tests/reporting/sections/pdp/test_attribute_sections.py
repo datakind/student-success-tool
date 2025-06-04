@@ -49,7 +49,7 @@ def test_outcome_variants(
     mock_card.cfg.preprocessing.checkpoint.exclude_pre_cohort_terms = False
     mock_card.cfg.preprocessing.checkpoint.exclude_non_core_terms = False
     mock_card.cfg.preprocessing.checkpoint.valid_enrollment_year = None
-    
+
     if outcome_type == "credits_earned" and "min_num_credits" in extra_config:
         mock_card.cfg.preprocessing.target.min_num_credits = extra_config[
             "min_num_credits"
@@ -173,7 +173,7 @@ def test_target_population_section(mock_card):
             None,
             None,
             None,
-            "The model makes this prediction when the student has completed their 2nd year of enrollment."
+            "The model makes this prediction when the student has completed their 2nd year of enrollment.",
         ),
         (
             "first_within_cohort",
@@ -186,7 +186,13 @@ def test_target_population_section(mock_card):
     ],
 )
 def test_checkpoint_variants(
-    mock_card, checkpoint_type, n, exclude_pre, exclude_non_core, valid_year, expected_output
+    mock_card,
+    checkpoint_type,
+    n,
+    exclude_pre,
+    exclude_non_core,
+    valid_year,
+    expected_output,
 ):
     mock_card.cfg.preprocessing.checkpoint.type_ = checkpoint_type
 

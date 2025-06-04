@@ -129,7 +129,9 @@ def register_attribute_sections(card, registry):
                 if len(included) == 1:
                     message += f" including {included[0]}"
                 else:
-                    message += f" including {', '.join(included[:-1])} and {included[-1]}"
+                    message += (
+                        f" including {', '.join(included[:-1])} and {included[-1]}"
+                    )
             if valid_enrollment_year:
                 message += f", provided the term occurred in their {card.format.ordinal(valid_enrollment_year)} year of enrollment"
             message = message.rstrip(". ") + "."
