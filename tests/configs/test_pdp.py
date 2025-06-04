@@ -59,7 +59,7 @@ def template_cfg_str():
 
     [preprocessing.checkpoint]
     name = "my_great_nth_checkpoint"
-    type_ = "nth"
+    type_ = "all"
     n = 4
 
     [preprocessing.target]

@@ -44,7 +44,7 @@ def test_outcome_variants(
     mock_card.cfg.preprocessing.selection.intensity_time_limits = time_limits
 
     # Patching checkpoint since we are testing outcome
-    mock_card.cfg.preprocessing.checkpoint.type_ = "first"
+    mock_card.cfg.preprocessing.checkpoint.type_ = "all"
 
     if outcome_type == "credits_earned" and "min_num_credits" in extra_config:
         mock_card.cfg.preprocessing.target.min_num_credits = extra_config[
@@ -65,7 +65,7 @@ def test_target_population_section(mock_card):
     }
 
     # Patching checkpoint since we are testing target population
-    mock_card.cfg.preprocessing.checkpoint.type_ = "first"
+    mock_card.cfg.preprocessing.checkpoint.type_ = "all"
 
     registry = SectionRegistry()
     pdp_attribute_sections.register_attribute_sections(mock_card, registry)
@@ -82,39 +82,35 @@ def test_target_population_section(mock_card):
     "checkpoint_type,expected_output",
     [
         (
-            "nth",
+            "all",
             "The model makes this prediction when the student has completed their 3rd term",
         ),
         (
-            "first",
-            "The model makes this prediction when the student has completed their first term",
-        ),
-        (
-            "last",
-            "The model makes this prediction when the student has completed their last term",
-        ),
-        (
-            "first_at_num_credits_earned",
+            "num_credits_earned",
             "The model makes this prediction when the student has earned 30 credits",
         ),
         (
-            "first_within_cohort",
+            "within_cohort",
             "The model makes this prediction when the student has completed their first term within their cohort",
         ),
         (
-            "last_in_enrollment_year",
+            "enrollment_year",
             "The model makes this prediction when the student has completed their 2nd year of enrollment",
         ),
     ],
 )
 def test_checkpoint_variants(mock_card, checkpoint_type, expected_output):
     mock_card.cfg.preprocessing.checkpoint.type_ = checkpoint_type
-    if checkpoint_type == "nth":
+    if checkpoint_type == "all":
         mock_card.cfg.preprocessing.checkpoint.n = 3
-    if checkpoint_type == "first_at_num_credits_earned":
+    if checkpoint_type == "num_credits_earned":
         mock_card.cfg.preprocessing.checkpoint.min_num_credits = 30
-    if checkpoint_type == "last_in_enrollment_year":
+        mock_card.cfg.preprocessing.checkpoint.n = 1
+    if checkpoint_type == "within_cohort":
+        mock_card.cfg.preprocessing.checkpoint.n = 1
+    if checkpoint_type == "enrollment_year":
         mock_card.cfg.preprocessing.checkpoint.enrollment_year = 2
+        mock_card.cfg.preprocessing.checkpoint.n = 2
 
     registry = SectionRegistry()
     pdp_attribute_sections.register_attribute_sections(mock_card, registry)

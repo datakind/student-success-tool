@@ -11,7 +11,11 @@ LOGGER = logging.getLogger(__name__)
 def nth_student_terms(
     df: pd.DataFrame,
     *,
-    n: int,
+    n: int = 0,
+    type: t.Literal[
+        "all", "num_credits_earned", "within_cohort", "enrollment_year"
+    ] = "all",
+    enrollment_year: t.Optional[int] = None,
     student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
@@ -20,6 +24,8 @@ def nth_student_terms(
     term_is_core_col: str = "term_is_core",
     exclude_non_core_terms: bool = True,
     enrollment_year_col: t.Optional[str] = None,
+    min_num_credits: t.Optional[float] = None,
+    num_credits_col: t.Optional[str] = "num_credits_earned_cumsum",
     valid_enrollment_year: t.Optional[int] = None,
 ) -> pd.DataFrame:
     """
@@ -28,28 +34,60 @@ def nth_student_terms(
     The parameter "exclude_non_core_terms" ensures that we only count core terms in choosing thr `nth` core term. This parameter can be set to False to count all terms in choosing the `nth` term.
     Valid_enrollment_year is a parameter that if set, we drop nth term if it falls outside this enrollment year.
 
+    type: This sets the checkpoint filtering you would like to do. The options and their respective parameters are: 
+        - "nth": Default, no filtering, all terms are considered.
+        - "num_credits_earned":   For each student, get the nth row in ``df`` in ascending order of ``sort_cols`` for which
+          their cumulative num credits earned is greater than or equal to the specified threshold value.
+            -parameters reqd: min_num_credits, num_credits_col
+        - "within_cohort": For each student, get the nth row in ``df`` in ascending order of ``sort_cols`` for which
+          the term occurred *within* the student's cohort, i.e. not prior to their official start of enrollment.
+            - parameters reqd: term_is_pre_cohort_col
+        - "enrollment_year": For each student, get the last row in ``df`` in ascending order of ``sort_cols`` for which 
+          the term occurred during a particular year of students' enrollment; for example, ``enrollment_year=1`` => last terms
+           n students' first year of enrollment.    
+             - parameters reqd: enrollment_year_col, enrollment_year
+
     Args:
         df
         n
+        type
         student_id_cols
         sort_cols
         include_cols
-        term_is_pre_cohort_col
         exclude_pre_cohort_terms
         term_is_core_col
         exclude_non_core_terms
-        enrollment_year_col
         valid_enrollment_year
+        min_num_credits: applicable for type="num_credits_earned" only, the minimum number of credits a student must have earned to be considered.
+        num_credits_col: applicable for type="num_credits_earned" only, the column in df that contains the cumulative number of credits earned by a student.
+        term_is_pre_cohort_col: applicable for type="within_cohort" only, the column in df that indicates whether a term is pre-cohort.
+        enrollment_year: applicable for type="enrollment_year" only, the year of enrollment for which to get the nth term.
+        enrollment_year_col: applicable for type="enrollment_year" only, the column in df that contains the enrollment year.
     """
     student_id_cols = utils.types.to_list(student_id_cols)
     sort_cols = utils.types.to_list(sort_cols)
-    included_cols = _get_included_cols(df, student_id_cols, sort_cols, include_cols)
+
+    df_type = _get_type_df(
+        df,
+        type=type,
+        enrollment_year_col=enrollment_year_col,
+        enrollment_year=enrollment_year,
+        min_num_credits=min_num_credits,
+        term_is_pre_cohort_col=term_is_pre_cohort_col,
+        num_credits_col=num_credits_col,
+    )
+
+    included_cols = _get_included_cols(
+        df_type, student_id_cols, sort_cols, include_cols
+    )
+
     if exclude_pre_cohort_terms:
-        df = df[df[term_is_pre_cohort_col] == False]
+        df_type = df_type[df_type[term_is_pre_cohort_col] == False]
     if exclude_non_core_terms:
-        df = df[df[term_is_core_col] == True]
+        df_type = df_type[df_type[term_is_core_col] == True]
+
     df_nth = (
-        df.loc[:, included_cols]
+        df_type.loc[:, included_cols]
         .sort_values(
             by=(student_id_cols + sort_cols), ascending=True, ignore_index=False
         )
@@ -68,196 +106,38 @@ def nth_student_terms(
     return df_nth
 
 
-def first_student_terms(
+def _get_type_df(
     df: pd.DataFrame,
-    *,
-    student_id_cols: str | list[str] = "student_id",
-    sort_cols: str | list[str] = "term_rank",
-    include_cols: t.Optional[list[str]] = None,
-    term_is_pre_cohort_col: str = "term_is_pre_cohort",
-    exclude_pre_cohort_terms: bool = False,
-    term_is_core_col: str = "term_is_core",
-    exclude_non_core_terms: bool = False,
+    type: t.Literal["all", "num_credits_earned", "within_cohort", "enrollment_year"],
+    enrollment_year_col: t.Optional[str],
+    enrollment_year: t.Optional[int],
+    min_num_credits: t.Optional[float],
+    term_is_pre_cohort_col: t.Optional[str] = "term_is_pre_cohort",
+    num_credits_col: t.Optional[str] = "num_credits_earned_cumsum",
 ) -> pd.DataFrame:
     """
-    For each student, get the first (0th) row in ``df`` in ascending order of ``sort_cols`` ,
-    and a configurable subset of columns.
-
-    Args:
-        df: Student-term dataset.
-        student_id_cols: Column(s) that uniquely identify students in ``df`` .
-        sort_cols: Column(s) used to sort students' terms, typically chronologically.
-        include_cols
-        term_is_pre_cohort_col: Column identifying if a term is pre-cohort
-        exclude_pre_cohort_terms:
-        term_is_core_col: Column identifying if a term is a core term, where core terms are by default FALL and SPRING
-        exclude_non_core_terms:
-
-    See Also:
-        - :func:`nth_student_terms()`
+    Apply filtering on df based on type and flags.
     """
-    return nth_student_terms(
-        df,
-        n=0,
-        student_id_cols=student_id_cols,
-        sort_cols=sort_cols,
-        include_cols=include_cols,
-        term_is_pre_cohort_col=term_is_pre_cohort_col,
-        exclude_pre_cohort_terms=exclude_pre_cohort_terms,
-        term_is_core_col=term_is_core_col,
-        exclude_non_core_terms=exclude_non_core_terms,
-    )
+    df_type = df.copy()
 
+    if type == "within_cohort":
+        if term_is_pre_cohort_col not in df.columns:
+            raise KeyError(f"'{term_is_pre_cohort_col}' not in DataFrame")
+        df_type = df_type[~df_type[term_is_pre_cohort_col]]
+    elif type == "enrollment_year":
+        if enrollment_year_col not in df.columns:
+            raise KeyError(f"'{enrollment_year_col}' not in DataFrame")
+        df_type = df_type[df_type[enrollment_year_col] == enrollment_year]
+    elif type == "num_credits_earned":
+        if num_credits_col not in df.columns:
+            raise KeyError("{num_credits_col} not in DataFrame")
+        df_type = df_type.loc[df[num_credits_col].ge(min_num_credits), :]
+    elif type == "all":
+        pass
+    else:
+        raise ValueError(f"Invalid type: {type}")
 
-def last_student_terms(
-    df: pd.DataFrame,
-    *,
-    student_id_cols: str | list[str] = "student_id",
-    sort_cols: str | list[str] = "term_rank",
-    include_cols: t.Optional[list[str]] = None,
-    term_is_pre_cohort_col: str = "term_is_pre_cohort",
-    exclude_pre_cohort_terms: bool = False,
-    term_is_core_col: str = "term_is_core",
-    exclude_non_core_terms: bool = False,
-) -> pd.DataFrame:
-    """
-    For each student, get the last (-1th) row in ``df`` in ascending order of ``sort_cols`` ,
-    and a configurable subset of columns.
-
-    Args:
-        df: Student-term dataset.
-        student_id_cols: Column(s) that uniquely identify students in ``df`` .
-        sort_cols: Column(s) used to sort students' terms, typically chronologically.
-        include_cols
-        term_is_pre_cohort_col: Column identifying if a term is pre-cohort
-        exclude_pre_cohort_terms:
-        term_is_core_col: Column identifying if a term is a core term, where core terms are by default FALL and SPRING
-        exclude_non_core_terms:
-
-    See Also:
-        - :func:`nth_student_terms()`
-    """
-    return nth_student_terms(
-        df,
-        n=-1,
-        student_id_cols=student_id_cols,
-        sort_cols=sort_cols,
-        include_cols=include_cols,
-        term_is_pre_cohort_col=term_is_pre_cohort_col,
-        exclude_pre_cohort_terms=exclude_pre_cohort_terms,
-        term_is_core_col=term_is_core_col,
-        exclude_non_core_terms=exclude_non_core_terms,
-    )
-
-
-def first_student_terms_at_num_credits_earned(
-    df: pd.DataFrame,
-    *,
-    min_num_credits: float,
-    num_credits_col: str = "num_credits_earned_cumsum",
-    student_id_cols: str | list[str] = "student_id",
-    sort_cols: str | list[str] = "term_rank",
-    include_cols: t.Optional[list[str]] = None,
-) -> pd.DataFrame:
-    """
-    For each student, get the first row in ``df`` in ascending order of ``sort_cols``
-    for which their cumulative num credits earned is greater than or equal
-    to the specified threshold value.
-
-    Args:
-        df: Student-term dataset.
-        min_num_credits
-        num_credits_col
-        student_id_cols
-        sort_cols
-        include_cols
-
-    See Also:
-        - :func:`first_student_terms()`
-
-    Warning:
-        Students that never earn at least ``min_num_credits`` are dropped.
-    """
-    return first_student_terms(
-        # exclude rows with insufficient num credits, so "first" meets our criteria here
-        df.loc[df[num_credits_col].ge(min_num_credits), :],
-        student_id_cols=student_id_cols,
-        sort_cols=sort_cols,
-        include_cols=include_cols,
-    )
-
-
-def first_student_terms_within_cohort(
-    df: pd.DataFrame,
-    *,
-    term_is_pre_cohort_col: str = "term_is_pre_cohort",
-    student_id_cols: str | list[str] = "student_id",
-    sort_cols: str | list[str] = "term_rank",
-    include_cols: t.Optional[list[str]] = None,
-) -> pd.DataFrame:
-    """
-    For each student, get the first row in ``df`` in ascending order of ``sort_cols``
-    for which the term occurred *within* the student's cohort, i.e. not prior to
-    their official start of enrollment.
-
-    Args:
-        df: Student-term dataset.
-        term_is_pre_cohort_col
-        student_id_cols
-        sort_cols
-        include_cols
-
-    See Also:
-        - :func:`first_student_terms()`
-
-    Warning:
-        Students that only have pre-cohort enrollments are dropped,
-        although such cases are very unlikely.
-    """
-    return first_student_terms(
-        # exclude rows that are "pre-cohort"
-        df.loc[df[term_is_pre_cohort_col].eq(False), :],
-        student_id_cols=student_id_cols,
-        sort_cols=sort_cols,
-        include_cols=include_cols,
-    )
-
-
-def last_student_terms_in_enrollment_year(
-    df: pd.DataFrame,
-    *,
-    enrollment_year: int,
-    enrollment_year_col: str = "year_of_enrollment_at_cohort_inst",
-    student_id_cols: str | list[str] = "student_id",
-    sort_cols: str | list[str] = "term_rank",
-    include_cols: t.Optional[list[str]] = None,
-) -> pd.DataFrame:
-    """
-    For each student, get the last row in ``df`` in ascending order of ``sort_cols``
-    for which the term occurred during a particular year of students' enrollment;
-    for example, ``enrollment_year=1`` => last terms in students' first year of enrollment.
-
-    Args:
-        df: Student-term dataset.
-        enrollment_year
-        enrollment_year_col
-        student_id_cols
-        sort_cols
-        include_cols
-
-    See Also:
-        - :func:`last_student_terms()`
-
-    Warning:
-        Students that aren't enrolled for at least ``enrollment_year`` years are dropped.
-    """
-    return last_student_terms(
-        # exclude rows that aren't in specified enrollment year
-        df.loc[df[enrollment_year_col].eq(enrollment_year), :],
-        student_id_cols=student_id_cols,
-        sort_cols=sort_cols,
-        include_cols=include_cols,
-    )
+    return df_type
 
 
 def _get_included_cols(
