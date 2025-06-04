@@ -2,6 +2,7 @@ import pytest
 import os
 from student_success_tool.dataio.read import from_toml_file
 
+
 @pytest.fixture
 def feature_table_data():
     project_root = os.getcwd()
@@ -11,7 +12,7 @@ def feature_table_data():
         "student_success_tool",
         "assets",
         "pdp",
-        "features_table.toml"
+        "features_table.toml",
     )
     return from_toml_file(toml_path)
 
