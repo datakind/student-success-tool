@@ -6,7 +6,7 @@ from student_success_tool.dataio.read import from_toml_file
 def feature_table_data():
     # Path to TOML file relative to this test file
     project_root = os.getcwd()
-    toml_path = os.path.join(project_root, "src", "student_success_tool", "assets", "feature_tables.toml")
+    toml_path = os.path.join(project_root, "src", "student_success_tool", "assets", "pdp", "feature_tables.toml")
     return from_toml_file(toml_path)
 
 def test_toml_file_loads(feature_table_data):
