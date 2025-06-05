@@ -3,6 +3,7 @@ import shutil
 import typing as t
 import logging
 import mlflow
+from mlflow.tracking import MlflowClient
 import pathlib
 from importlib.abc import Traversable
 from importlib.resources import as_file
@@ -142,3 +143,46 @@ def list_paths_in_directory(run_id: str, directory: str) -> t.List[str]:
     """
     artifacts = mlflow.artifacts.list_artifacts(run_id=run_id, artifact_path=directory)
     return [artifact.path for artifact in artifacts]
+
+
+def safe_count_runs(experiment_id: str, max_results_per_page: int = 1000) -> int:
+    """
+    Safely counts the number of runs in an MLflow experiment using pagination,
+    avoiding timeouts caused by large or artifact-heavy experiments.
+
+    This function uses the low-level MlflowClient with pagination to incrementally
+    count runs without loading them all into memory. It is robust against timeouts
+    and avoids unnecessary metadata resolution (e.g., avoids .output_format="pandas").
+
+    Args:
+        experiment_id: The MLflow experiment ID to count runs for.
+        max_results_per_page: Max runs to fetch per API call (default: 1000).
+
+    Returns:
+        Total number of runs in the experiment, or None if an error occurs.
+    """
+    LOGGER.info(f"Counting MLflow runs for experiment: {experiment_id}")
+
+    client = MlflowClient()
+    total_runs = 0
+    page_token = None
+
+    try:
+        while True:
+            runs = client.search_runs(
+                experiment_ids=[experiment_id],
+                max_results=max_results_per_page,
+                page_token=page_token,
+            )
+            total_runs += len(runs)
+
+            page_token = getattr(runs, "token", None)
+            if not page_token:
+                break
+
+        LOGGER.info(f"Total runs found for experiment {experiment_id}: {total_runs}")
+        return total_runs
+
+    except Exception as e:
+        LOGGER.warning(f"Failed to count runs for experiment {experiment_id}: {e}")
+        return None

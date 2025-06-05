@@ -39,6 +39,7 @@ class ModelCard(t.Generic[C]):
         catalog: str,
         model_name: str,
         assets_path: t.Optional[str] = None,
+        client: t.Optional[MlflowClient] = None,
     ):
         """
         Initializes the ModelCard object with the given config and the model name
@@ -50,7 +51,7 @@ class ModelCard(t.Generic[C]):
         self.uc_model_name = f"{catalog}.{self.cfg.institution_id}_gold.{model_name}"
         LOGGER.info("Initializing ModelCard for model: %s", self.uc_model_name)
 
-        self.client = MlflowClient()
+        self.client = client or MlflowClient()
         self.section_registry = SectionRegistry()
         self.format = Formatting()
         self.context: dict[str, t.Any] = {}

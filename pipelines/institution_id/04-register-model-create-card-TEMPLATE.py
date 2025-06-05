@@ -109,7 +109,7 @@ modeling.registration.register_mlflow_model(
 # COMMAND ----------
 
 # Initialize card
-card = PDPModelCard(config=cfg, catalog=catalog, model_name=model_name)
+card = PDPModelCard(config=cfg, catalog=catalog, model_name=model_name, mlflow_client=client)
 
 # COMMAND ----------
 
