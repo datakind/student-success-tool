@@ -1,6 +1,6 @@
 [project]
 name = "student-success-tool"
-version = "0.3.2"
+version = "0.3.3"
 description = "School-agnostic lib for implementing Student Success Tool workflows."
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
