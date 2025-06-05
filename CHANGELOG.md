@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 0.3.3 (2025-06)
+- Added unit test for PDP features table (PR 202)
+
 ## 0.3.2 (2025-05)
 - Moved logging of plots from templates to modules (PR 184)
 - Updated pre-cohort and core term parameters in the checkpointing functions (PRs 188, 190, 194, 195)
