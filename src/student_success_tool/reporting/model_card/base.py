@@ -3,7 +3,6 @@ import logging
 import typing as t
 from datetime import datetime
 
-import mlflow
 from mlflow.tracking import MlflowClient
 
 # export .md to .pdf

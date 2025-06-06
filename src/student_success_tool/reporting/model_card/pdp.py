@@ -1,5 +1,4 @@
 import typing as t
-import mlflow
 from mlflow.tracking import MlflowClient
 
 from ...configs.pdp import PDPProjectConfig
