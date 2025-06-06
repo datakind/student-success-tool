@@ -1,7 +1,6 @@
 import os
 import logging
 import typing as t
-from datetime import datetime
 
 from mlflow.tracking import MlflowClient
 
@@ -77,8 +76,8 @@ class ModelCard(t.Generic[C]):
         self.load_model()
         self.find_model_version()
         self.extract_training_data()
-        self.collect_metadata()
         self._register_sections()
+        self.collect_metadata()
         self.render()
 
     def load_model(self):
@@ -173,7 +172,6 @@ class ModelCard(t.Generic[C]):
             )
             or "",
             "institution_name": self.cfg.institution_name,
-            "current_year": str(datetime.now().year),
         }
 
     def get_feature_metadata(self) -> dict[str, str]:

@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 LOGGER = logging.getLogger(__name__)
 
@@ -128,7 +129,7 @@ def register_attribute_sections(card, registry):
         model version (if available).
         """
         version_number = card.context.get("version_number")
-        current_year = card.context.get("current_year")
+        current_year = str(datetime.now().year)
         if version_number:
             return f"Developed by DataKind in {current_year}, Model Version {version_number}"
         else:
