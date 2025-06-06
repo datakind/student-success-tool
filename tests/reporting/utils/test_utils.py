@@ -66,25 +66,23 @@ def test_list_paths_in_directory_failure_returns_empty(mock_list):
 
 @patch("student_success_tool.reporting.utils.utils.MlflowClient")
 def test_safe_count_runs_success(mock_mlflow_client):
-    # Simulate paginated search_runs return
     run_page_1 = [MagicMock(), MagicMock()]
     run_page_2 = [MagicMock()]
-    run_page_1_obj = MagicMock()
-    run_page_2_obj = MagicMock()
 
-    run_page_1_obj.__iter__.return_value = iter(run_page_1)
-    run_page_1_obj.token = "next-page-token"
-    run_page_2_obj.__iter__.return_value = iter(run_page_2)
-    run_page_2_obj.token = None  # End pagination
+    class RunPage(list):
+        def __init__(self, items, token):
+            super().__init__(items)
+            self.token = token
 
-    # Mock the client instance and method
     mock_client_instance = mock_mlflow_client.return_value
-    mock_client_instance.search_runs.side_effect = [run_page_1_obj, run_page_2_obj]
+    mock_client_instance.search_runs.side_effect = [
+        RunPage(run_page_1, "next-page-token"),
+        RunPage(run_page_2, None),
+    ]
 
     count = safe_count_runs("exp-123")
 
     assert count == 3
-    mock_client_instance.search_runs.assert_called()
 
 
 @patch("student_success_tool.reporting.utils.utils.MlflowClient")
