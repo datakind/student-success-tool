@@ -1,4 +1,5 @@
 import pytest
+import pandas as pd
 from unittest.mock import patch
 from student_success_tool.reporting.model_card.base import ModelCard
 from student_success_tool.reporting.model_card.pdp import PDPModelCard
