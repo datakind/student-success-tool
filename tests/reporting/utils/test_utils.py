@@ -80,7 +80,7 @@ def test_safe_count_runs_success(mock_mlflow_client):
     mock_client_instance = mock_mlflow_client.return_value
     mock_client_instance.search_runs.side_effect = [run_page_1_obj, run_page_2_obj]
 
-    count = safe_count_runs("exp-123")
+    count = utils.safe_count_runs("exp-123")
 
     assert count == 3
     mock_client_instance.search_runs.assert_called()
