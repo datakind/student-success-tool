@@ -1,5 +1,6 @@
 import pytest
 import pandas as pd
+import re
 from unittest.mock import patch
 from student_success_tool.reporting.model_card.base import ModelCard
 from student_success_tool.reporting.model_card.pdp import PDPModelCard
@@ -118,6 +119,7 @@ def make_pdp_config() -> PDPProjectConfig:
     )
 
 # Main test
+@patch("student_success_tool.reporting.sections.registry.SectionRegistry.render_all")
 @patch("student_success_tool.reporting.model_card.base.ModelCard.collect_metadata")
 @patch("student_success_tool.reporting.model_card.base.ModelCard.load_model")
 @patch("student_success_tool.reporting.model_card.base.ModelCard.extract_training_data")
@@ -161,6 +163,23 @@ def test_template_placeholders_are_in_context(
         "incomplete_threshold": 0.5,
     })
 
+    mock_render_all.return_value = {
+        "primary_metric_section": "Primary metric content",
+        "checkpoint_section": "Checkpoint content",
+        "bias_summary_section": "Bias summary",
+        "performance_by_splits_section": "Performance content",
+        "evaluation_by_group_section": "Group evaluation",
+        "logo": "logo.png",
+        "target_population_section": "Population info",
+        "institution_name": "Test University",
+        "sample_weight_section": "Sample weight info",
+        "data_split_table": "Data split table",
+        "bias_groups_section": "Bias groups",
+        "selected_features_ranked_by_shap": "Feature list",
+        "development_note_section": "Dev note",
+        "outcome_section": "Outcome explanation",
+    }
+
     card.load_model()
     card.find_model_version()
     card.extract_training_data()
@@ -171,7 +190,6 @@ def test_template_placeholders_are_in_context(
     with open(card.template_path, "r") as f:
         template = f.read()
 
-    import re
     matches = set(re.findall(r"{([\w_]+)}", template))
     missing = matches - card.context.keys()
     assert not missing, f"Missing context keys for template: {missing}"
