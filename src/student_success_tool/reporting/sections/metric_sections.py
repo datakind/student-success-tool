@@ -37,7 +37,7 @@ def register_metric_sections(card, registry):
             if used_weights
             else None
         )
-        num_runs = card.context.get("num_runs_in_experiment")
+        num_runs = card.context.get("num_runs_in_experiment", None)
         if isinstance(num_runs, int) and num_runs > 0:
             mlops_note = (
                 f"{card.format.indent_level(1)}- Utilizing Databricks and AutoML, "

@@ -44,7 +44,15 @@ class SectionRegistry:
         Returns:
             A mapping of section keys to their rendered markdown strings.
         """
-        return {key: fn() for key, fn in self._sections}
+        rendered = {}
+        for key, fn in self._sections:
+            try:
+                result = fn()
+                rendered[key] = result
+                LOGGER.info(f"✅ Rendered section: {key}")
+            except Exception as e:
+                LOGGER.error(f"❌ Failed to render section '{key}': {e}")
+        return rendered
 
     def clear(self) -> None:
         """
