@@ -26,7 +26,12 @@ def mock_client():
 
 
 def test_init_defaults(mock_config, mock_client):
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst_my_model", mlflow_client=mock_client)
+    card = ModelCard(
+        config=mock_config,
+        catalog="catalog",
+        model_name="inst_my_model",
+        mlflow_client=mock_client,
+    )
     assert card.model_name == "inst_my_model"
     assert card.uc_model_name == "catalog.inst_gold.inst_my_model"
     assert card.assets_folder == "card_assets"
@@ -35,7 +40,12 @@ def test_init_defaults(mock_config, mock_client):
 
 @patch("student_success_tool.reporting.model_card.base.dataio.models.load_mlflow_model")
 def test_load_model_success(mock_load_model, mock_config, mock_client):
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst_my_model", mlflow_client=mock_client)
+    card = ModelCard(
+        config=mock_config,
+        catalog="catalog",
+        model_name="inst_my_model",
+        mlflow_client=mock_client,
+    )
     card.load_model()
     mock_load_model.assert_called_once_with("uri", "sklearn")
     assert card.run_id == "123"
@@ -43,7 +53,12 @@ def test_load_model_success(mock_load_model, mock_config, mock_client):
 
 
 def test_find_model_version_found(mock_config, mock_client):
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst_my_model", mlflow_client=mock_client)
+    card = ModelCard(
+        config=mock_config,
+        catalog="catalog",
+        model_name="inst_my_model",
+        mlflow_client=mock_client,
+    )    
     card.run_id = "123"
     mock_version = MagicMock(run_id="123", version="5")
     mock_client.search_model_versions.return_value = [mock_version]
@@ -53,14 +68,24 @@ def test_find_model_version_found(mock_config, mock_client):
 
 def test_find_model_version_not_found(mock_config, mock_client):
     mock_client.search_model_versions.return_value = []
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst_my_model", mlflow_client=mock_client)
+    card = ModelCard(
+        config=mock_config,
+        catalog="catalog",
+        model_name="inst_my_model",
+        mlflow_client=mock_client,
+    )    
     card.run_id = "999"
     card.find_model_version()
     assert card.context["version_number"] is None
 
 
 def test_get_feature_metadata_success(mock_config, mock_client):
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst_my_model", mlflow_client=mock_client)
+    card = ModelCard(
+        config=mock_config,
+        catalog="catalog",
+        model_name="inst_my_model",
+        mlflow_client=mock_client,
+    )    
     card.model = MagicMock()
     card.model.named_steps = {
         "column_selector": MagicMock(get_params=lambda: {"cols": ["a", "b", "c"]})
@@ -75,7 +100,12 @@ def test_get_feature_metadata_success(mock_config, mock_client):
 def test_get_basic_context(mock_datetime, mock_download, mock_config, mock_client):
     mock_download.return_value = "<img>Logo</img>"
     mock_datetime.now.return_value.year = 2025
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst_my_model", mlflow_client=mock_client)
+    card = ModelCard(
+        config=mock_config,
+        catalog="catalog",
+        model_name="inst_my_model",
+        mlflow_client=mock_client,
+    )    
     result = card.get_basic_context()
     assert result["institution_name"] == "TestInstitution"
     assert result["current_year"] == "2025"
@@ -83,7 +113,12 @@ def test_get_basic_context(mock_datetime, mock_download, mock_config, mock_clien
 
 
 def test_build_calls_all_steps(mock_config, mock_client):
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst_my_model", mlflow_client=mock_client)
+    card = ModelCard(
+        config=mock_config,
+        catalog="catalog",
+        model_name="inst_my_model",
+        mlflow_client=mock_client,
+    )    
     for method in [
         "load_model",
         "find_model_version",
@@ -120,7 +155,12 @@ def test_extract_training_data_with_split_call_load_model(
     mock_extract_data.return_value = df
     mock_safe_count.return_value = 2  # simulate 2 runs in experiment
 
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst_my_model", mlflow_client=mock_client)
+    card = ModelCard(
+        config=mock_config,
+        catalog="catalog",
+        model_name="inst_my_model",
+        mlflow_client=mock_client,
+    )    
     card.load_model()
     card.extract_training_data()
 
@@ -134,7 +174,12 @@ def test_render_template_and_output(mock_open, mock_config, mock_client):
     mock_open.return_value.__enter__.return_value = mock_file
     mock_file.read.return_value = "Model: {institution_name}"
 
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst_my_model", mlflow_client=mock_client)
+    card = ModelCard(
+        config=mock_config,
+        catalog="catalog",
+        model_name="inst_my_model",
+        mlflow_client=mock_client,
+    )
     card.template_path = "template.md"
     card.output_path = "output.md"
     card.context = {"institution_name": "TestInstitution"}

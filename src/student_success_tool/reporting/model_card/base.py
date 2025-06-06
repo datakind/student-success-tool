@@ -117,7 +117,9 @@ class ModelCard(t.Generic[C]):
             LOGGER.warning(f"Unable to find model version for run id: {self.run_id}")
             self.context["version_number"] = None
         except Exception as e:
-            LOGGER.error(f"Error retrieving model version for run id {self.run_id}: {e}")
+            LOGGER.error(
+                f"Error retrieving model version for run id {self.run_id}: {e}"
+            )
             self.context["version_number"] = None
 
     def extract_training_data(self):
@@ -133,7 +135,9 @@ class ModelCard(t.Generic[C]):
                 self.modeling_data[self.cfg.split_col] == "train"
             ]
         self.context["training_dataset_size"] = self.training_data.shape[0]
-        self.context["num_runs_in_experiment"] = utils.safe_count_runs(self.experiment_id)
+        self.context["num_runs_in_experiment"] = utils.safe_count_runs(
+            self.experiment_id
+        )
 
     def collect_metadata(self):
         """
