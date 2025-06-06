@@ -34,11 +34,15 @@ def download_artifact(
     """
     os.makedirs(local_folder, exist_ok=True)
 
-    local_path = mlflow.artifacts.download_artifacts(
-        run_id=run_id,
-        artifact_path=artifact_path,
-        dst_path=local_folder,
-    )
+    try:
+        local_path = mlflow.artifacts.download_artifacts(
+            run_id=run_id,
+            artifact_path=artifact_path,
+            dst_path=local_folder,
+        )
+    except Exception as e:
+        LOGGER.error(f"Failed to download artifact '{artifact_path}' for run '{run_id}': {e}")
+        return None
 
     if local_path.lower().endswith((".png", ".jpg", ".jpeg")):
         if description is None:
@@ -72,8 +76,12 @@ def download_static_asset(
 
     dst_path = os.path.join(local_folder, static_path.name)
 
-    with as_file(static_path) as actual_path:
-        shutil.copy(actual_path, dst_path)
+    try:
+        with as_file(static_path) as actual_path:
+            shutil.copy(actual_path, dst_path)
+    except Exception as e:
+        LOGGER.error(f"Failed to copy static asset from '{static_path}' to '{dst_path}': {e}")
+        return None
 
     if dst_path.lower().endswith((".png", ".jpg", ".jpeg")):
         if description is None:
@@ -90,9 +98,12 @@ def log_card(local_path: str, run_id: str) -> None:
     Args:
         local_path: Path to model card PDF
     """
-    with mlflow.start_run(run_id=run_id) as run:
-        mlflow.log_artifact(local_path, "model_card")
-        LOGGER.info(f"Logged model card PDF as an ML artifact at '{run_id}'")
+    try:
+        with mlflow.start_run(run_id=run_id) as run:
+            mlflow.log_artifact(local_path, "model_card")
+            LOGGER.info(f"Logged model card PDF as an ML artifact at '{run_id}'")
+    except Exception as e:
+        LOGGER.error(f"Failed to log model card at '{local_path}' to run '{run_id}': {e}")
 
 
 def embed_image(
@@ -141,8 +152,12 @@ def list_paths_in_directory(run_id: str, directory: str) -> t.List[str]:
     Returns:
         A list of file or subfolder paths (relative to run root).
     """
-    artifacts = mlflow.artifacts.list_artifacts(run_id=run_id, artifact_path=directory)
-    return [artifact.path for artifact in artifacts]
+    try:
+        artifacts = mlflow.artifacts.list_artifacts(run_id=run_id, artifact_path=directory)
+        return [artifact.path for artifact in artifacts]
+    except Exception as e:
+        LOGGER.error(f"Failed to list artifacts in directory '{directory}' for run '{run_id}': {e}")
+        return []
 
 
 def safe_count_runs(experiment_id: str, max_results_per_page: int = 1000) -> int:
@@ -184,5 +199,5 @@ def safe_count_runs(experiment_id: str, max_results_per_page: int = 1000) -> int
         return total_runs
 
     except Exception as e:
-        LOGGER.warning(f"Failed to count runs for experiment {experiment_id}: {e}")
+        LOGGER.error(f"Failed to count runs for experiment {experiment_id}: {e}")
         return None

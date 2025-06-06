@@ -6,7 +6,7 @@
 ### Overview
 - {outcome_section}
 - {checkpoint_section}
-- Developed by DataKind in {current_year}, Model Version {version_number}
+- {development_note_section}
 - If there are questions or concerns about the model, you can contact **education@datakind.org** or your client success manager.
 
 ### Intended Use
