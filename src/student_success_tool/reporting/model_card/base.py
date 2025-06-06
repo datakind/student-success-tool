@@ -112,6 +112,7 @@ class ModelCard(t.Generic[C]):
             for v in versions:
                 if v.run_id == self.run_id:
                     self.context["version_number"] = v.version
+                    LOGGER.info(f"Model Version = {self.context['version_number']}")
                     return
             LOGGER.warning(f"Unable to find model version for run id: {self.run_id}")
             self.context["version_number"] = None
