@@ -107,18 +107,18 @@ def test_build_calls_all_steps(mock_config, mock_client):
         method.assert_called_once()
 
 
+@patch("student_success_tool.reporting.model_card.base.utils.safe_count_runs")
 @patch("student_success_tool.reporting.model_card.base.modeling.evaluation.extract_training_data_from_model")
 @patch("student_success_tool.reporting.model_card.base.dataio.models.load_mlflow_model")
 def test_extract_training_data_with_split_call_load_model(
-    mock_load_model, mock_extract_data, mock_config, mock_client
+    mock_load_model, mock_extract_data, mock_safe_count, mock_config, mock_client
 ):
     mock_config.split_col = "split"
     df = pd.DataFrame(
         {"feature": [1, 2, 3, 4], "split": ["train", "test", "train", "val"]}
     )
-
     mock_extract_data.return_value = df
-    mock_client.search_runs.return_value = pd.DataFrame({"run_id": ["123", "987"]})
+    mock_safe_count.return_value = 2  # simulate 2 runs in experiment
 
     card = ModelCard(config=mock_config, catalog="catalog", model_name="inst_my_model", mlflow_client=mock_client)
     card.load_model()
@@ -126,7 +126,6 @@ def test_extract_training_data_with_split_call_load_model(
 
     assert card.context["training_dataset_size"] == 2
     assert card.context["num_runs_in_experiment"] == 2
-
 
 
 @patch("builtins.open", new_callable=MagicMock)
