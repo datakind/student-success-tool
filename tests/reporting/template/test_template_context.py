@@ -34,6 +34,7 @@ class DummyPreprocessingConfig:
 
 class DummyConfig:
     def __init__(self):
+        self.institution_id = "test_uni"
         self.institution_name = "Test University"
         self.modeling = DummyModelingConfig()
         self.preprocessing = DummyPreprocessingConfig()
@@ -111,6 +112,7 @@ def test_template_placeholders_are_in_context(
         setattr(card, "run_id", "dummy_run_id")
         or setattr(card, "experiment_id", "dummy_experiment_id")
         or setattr(card, "model", object())
+        or setattr(card, "training_data", pd.DataFrame(columns=["sample_weight"]))
     )
 
     # Minimal context & registry population
