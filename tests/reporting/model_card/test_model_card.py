@@ -120,7 +120,7 @@ def test_extract_training_data_with_split_call_load_model(
     mock_extract_data.return_value = df
     mock_client.search_runs.return_value = pd.DataFrame({"run_id": ["123", "987"]})
 
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst_my_model", client=mock_client)
+    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst_my_model", mlflow_client=mock_client)
     card.load_model()
     card.extract_training_data()
 
