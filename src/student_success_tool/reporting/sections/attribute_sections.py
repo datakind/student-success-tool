@@ -11,6 +11,20 @@ def register_attribute_sections(card, registry):
     config.toml file.
     """
 
+    @registry.register("development_note_section")
+        def development_note():
+            """
+            Produce a note describing when the model was developed and listing the
+            model version (if available).
+            """
+            version_number = card.context.get("version_number", None)
+            current_year = str(datetime.now().year)
+            LOGGER.info("Logging development note")
+            if version_number:
+                return f"Developed by DataKind in {current_year}, Model Version {version_number}"
+            else:
+                return f"Developed by DataKind in {current_year}"
+
     # HACK: This section assumes certain standards in the config
     @registry.register("outcome_section")
     def outcome():
@@ -121,16 +135,3 @@ def register_attribute_sections(card, registry):
                 "Unable to determine checkpoint information. Please specify in model card or in config.toml."
             )
             return f"{card.format.bold('Checkpoint Information Not Found')}"
-
-    @registry.register("development_note_section")
-    def development_note():
-        """
-        Produce a note describing when the model was developed and listing the
-        model version (if available).
-        """
-        version_number = card.context.get("version_number", None)
-        current_year = str(datetime.now().year)
-        if version_number:
-            return f"Developed by DataKind in {current_year}, Model Version {version_number}"
-        else:
-            return f"Developed by DataKind in {current_year}"
