@@ -77,8 +77,8 @@ class ModelCard(t.Generic[C]):
         self.load_model()
         self.find_model_version()
         self.extract_training_data()
-        self._register_sections()
         self.collect_metadata()
+        self._register_sections()
         self.render()
 
     def load_model(self):
