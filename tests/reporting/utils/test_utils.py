@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch, MagicMock
 from student_success_tool.reporting.utils import utils
 from student_success_tool.reporting.utils.utils import safe_count_runs
