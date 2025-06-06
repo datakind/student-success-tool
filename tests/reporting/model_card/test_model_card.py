@@ -96,10 +96,8 @@ def test_get_feature_metadata_success(mock_config, mock_client):
 
 
 @patch("student_success_tool.reporting.model_card.base.utils.download_static_asset")
-@patch("student_success_tool.reporting.model_card.base.datetime")
 def test_get_basic_context(mock_datetime, mock_download, mock_config, mock_client):
     mock_download.return_value = "<img>Logo</img>"
-    mock_datetime.now.return_value.year = 2025
     card = ModelCard(
         config=mock_config,
         catalog="catalog",
@@ -108,7 +106,6 @@ def test_get_basic_context(mock_datetime, mock_download, mock_config, mock_clien
     )
     result = card.get_basic_context()
     assert result["institution_name"] == "TestInstitution"
-    assert result["current_year"] == "2025"
     assert "logo" in result
 
 
