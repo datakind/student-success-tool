@@ -2,16 +2,16 @@ import re
 import pytest
 from student_success_tool.reporting.model_card.base import ModelCard
 from student_success_tool.reporting.sections.registry import SectionRegistry
-from student_success_tool.reporting.pdp import PDPModelCard  # update as needed
+from student_success_tool.reporting.model_card.pdp import PDPModelCard
 
-# --- Utility to extract {placeholders} from the markdown template ---
+# Utility to extract placeholders from the markdown template
 def extract_placeholders(template_path) -> set[str]:
     with open(template_path, "r") as f:
         content = f.read()
     return set(re.findall(r"{([a-zA-Z0-9_]+)}", content))
 
 
-# --- Dummy config for safe context population ---
+# Dummy config for safe context population
 class DummyPreprocessingConfig:
     class Target:
         name = "graduation"
