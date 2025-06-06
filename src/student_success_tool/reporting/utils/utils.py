@@ -41,7 +41,9 @@ def download_artifact(
             dst_path=local_folder,
         )
     except Exception as e:
-        LOGGER.error(f"Failed to download artifact '{artifact_path}' for run '{run_id}': {e}")
+        LOGGER.error(
+            f"Failed to download artifact '{artifact_path}' for run '{run_id}': {e}"
+        )
         return None
 
     if local_path.lower().endswith((".png", ".jpg", ".jpeg")):
@@ -80,7 +82,9 @@ def download_static_asset(
         with as_file(static_path) as actual_path:
             shutil.copy(actual_path, dst_path)
     except Exception as e:
-        LOGGER.error(f"Failed to copy static asset from '{static_path}' to '{dst_path}': {e}")
+        LOGGER.error(
+            f"Failed to copy static asset from '{static_path}' to '{dst_path}': {e}"
+        )
         return None
 
     if dst_path.lower().endswith((".png", ".jpg", ".jpeg")):
@@ -103,7 +107,9 @@ def log_card(local_path: str, run_id: str) -> None:
             mlflow.log_artifact(local_path, "model_card")
             LOGGER.info(f"Logged model card PDF as an ML artifact at '{run_id}'")
     except Exception as e:
-        LOGGER.error(f"Failed to log model card at '{local_path}' to run '{run_id}': {e}")
+        LOGGER.error(
+            f"Failed to log model card at '{local_path}' to run '{run_id}': {e}"
+        )
 
 
 def embed_image(
@@ -153,10 +159,14 @@ def list_paths_in_directory(run_id: str, directory: str) -> t.List[str]:
         A list of file or subfolder paths (relative to run root).
     """
     try:
-        artifacts = mlflow.artifacts.list_artifacts(run_id=run_id, artifact_path=directory)
+        artifacts = mlflow.artifacts.list_artifacts(
+            run_id=run_id, artifact_path=directory
+        )
         return [artifact.path for artifact in artifacts]
     except Exception as e:
-        LOGGER.error(f"Failed to list artifacts in directory '{directory}' for run '{run_id}': {e}")
+        LOGGER.error(
+            f"Failed to list artifacts in directory '{directory}' for run '{run_id}': {e}"
+        )
         return []
 
 
@@ -201,5 +211,7 @@ def safe_count_runs(
         return total_runs
 
     except Exception as e:
-        LOGGER.error(f"Failed to count runs for experiment {experiment_id}: {e}")
+        LOGGER.error(
+            f"Failed to count runs for experiment {experiment_id}: {e}"
+        )
         return None

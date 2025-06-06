@@ -170,7 +170,8 @@ class ModelCard(t.Generic[C]):
                 description="Logo",
                 static_path=self.logo_path,
                 local_folder=self.assets_folder,
-            ) or "",
+            )
+            or "",
             "institution_name": self.cfg.institution_name,
             "current_year": str(datetime.now().year),
         }
@@ -250,7 +251,8 @@ class ModelCard(t.Generic[C]):
                 artifact_path=path,
                 local_folder=self.assets_folder,
                 fixed_width=width,
-            ) or ""
+            )
+            or ""
             for key, (description, path, width) in plots.items()
         }
 

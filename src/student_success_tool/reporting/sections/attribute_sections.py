@@ -120,11 +120,12 @@ def register_attribute_sections(card, registry):
                 "Unable to determine checkpoint information. Please specify in model card or in config.toml."
             )
             return f"{card.format.bold('Checkpoint Information Not Found')}"
-    
+
+
     @registry.register("development_note_section")
     def development_note():
         """
-        Produce a note describing when the model was developed and listing the 
+        Produce a note describing when the model was developed and listing the
         model version (if available).
         """
         version_number = card.context.get("version_number")

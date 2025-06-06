@@ -58,7 +58,7 @@ def test_find_model_version_found(mock_config, mock_client):
         catalog="catalog",
         model_name="inst_my_model",
         mlflow_client=mock_client,
-    )    
+    )
     card.run_id = "123"
     mock_version = MagicMock(run_id="123", version="5")
     mock_client.search_model_versions.return_value = [mock_version]
@@ -73,7 +73,7 @@ def test_find_model_version_not_found(mock_config, mock_client):
         catalog="catalog",
         model_name="inst_my_model",
         mlflow_client=mock_client,
-    )    
+    )
     card.run_id = "999"
     card.find_model_version()
     assert card.context["version_number"] is None
@@ -85,7 +85,7 @@ def test_get_feature_metadata_success(mock_config, mock_client):
         catalog="catalog",
         model_name="inst_my_model",
         mlflow_client=mock_client,
-    )    
+    )
     card.model = MagicMock()
     card.model.named_steps = {
         "column_selector": MagicMock(get_params=lambda: {"cols": ["a", "b", "c"]})
@@ -105,7 +105,7 @@ def test_get_basic_context(mock_datetime, mock_download, mock_config, mock_clien
         catalog="catalog",
         model_name="inst_my_model",
         mlflow_client=mock_client,
-    )    
+    )
     result = card.get_basic_context()
     assert result["institution_name"] == "TestInstitution"
     assert result["current_year"] == "2025"
@@ -118,7 +118,7 @@ def test_build_calls_all_steps(mock_config, mock_client):
         catalog="catalog",
         model_name="inst_my_model",
         mlflow_client=mock_client,
-    )    
+    )
     for method in [
         "load_model",
         "find_model_version",
@@ -160,7 +160,7 @@ def test_extract_training_data_with_split_call_load_model(
         catalog="catalog",
         model_name="inst_my_model",
         mlflow_client=mock_client,
-    )    
+    )
     card.load_model()
     card.extract_training_data()
 
