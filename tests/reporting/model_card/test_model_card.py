@@ -107,13 +107,10 @@ def test_build_calls_all_steps(mock_config, mock_client):
         method.assert_called_once()
 
 
-@patch("student_success_tool.reporting.model_card.base.mlflow.search_runs")
-@patch(
-    "student_success_tool.reporting.model_card.base.modeling.evaluation.extract_training_data_from_model"
-)
+@patch("student_success_tool.reporting.model_card.base.modeling.evaluation.extract_training_data_from_model")
 @patch("student_success_tool.reporting.model_card.base.dataio.models.load_mlflow_model")
 def test_extract_training_data_with_split_call_load_model(
-    mock_load_model, mock_extract_data, mock_search_runs, mock_config, mock_client
+    mock_load_model, mock_extract_data, mock_config, mock_client
 ):
     mock_config.split_col = "split"
     df = pd.DataFrame(
@@ -121,14 +118,15 @@ def test_extract_training_data_with_split_call_load_model(
     )
 
     mock_extract_data.return_value = df
-    mock_search_runs.return_value = pd.DataFrame({"run_id": ["123", "987"]})
+    mock_client.search_runs.return_value = pd.DataFrame({"run_id": ["123", "987"]})
 
-    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst_my_model", mlflow_client=mock_client)
+    card = ModelCard(config=mock_config, catalog="catalog", model_name="inst_my_model", client=mock_client)
     card.load_model()
     card.extract_training_data()
 
     assert card.context["training_dataset_size"] == 2
     assert card.context["num_runs_in_experiment"] == 2
+
 
 
 @patch("builtins.open", new_callable=MagicMock)
