@@ -18,14 +18,40 @@ def make_pdp_config() -> PDPProjectConfig:
         institution_id="inst_id",
         institution_name="Inst Name",
         model={"experiment_id": "exp123", "run_id": "abc", "framework": "sklearn"},
+        datasets={
+            "bronze": {"raw_course": {"file_path": "dummy.csv"}, "raw_cohort": {"file_path": "dummy.csv"}},
+            "silver": {"preprocessed": {"table_path": "dummy"}, "modeling": {"table_path": "dummy"}},
+            "gold": {"advisor_output": {"table_path": "dummy"}},
+        },
         preprocessing={
             "selection": {"student_criteria": {"status": "active"}},
-            "checkpoint": {"name": "credit", "params": {"min_num_credits": 30}},
-            "target": {"name": "retention"},
+            "checkpoint": {"name": "credit", "type_": "credit", "params": {"min_num_credits": 30}},
+            "target": {
+                "name": "retention",
+                "type_": "retention",
+                "max_academic_year": "2025-26",
+                "intensity_time_limits": {"FULL-TIME": {"years": 2}},
+                "max_term_rank": 6,
+                "years_to_degree_col": "years_to_grad",
+                "min_num_credits": 24
+            },
+            "features": {
+                "min_passing_grade": 1.0,
+                "min_num_credits_full_time": 12,
+                "course_level_pattern": "abc",
+                "key_course_subject_areas": ["24"],
+                "key_course_ids": ["ENGL101"]
+            },
         },
-        modeling={"feature_selection": {"collinear_threshold": 10.0, "low_variance_threshold": 0.0, "incomplete_threshold": 0.5}},
+        modeling={
+            "feature_selection": {
+                "collinear_threshold": 10.0,
+                "low_variance_threshold": 0.0,
+                "incomplete_threshold": 0.5,
+            },
+            "training": {"primary_metric": "log_loss", "timeout_minutes": 10}
+        },
         split_col=None,
-        datasets={},
     )
 
 # Dummy config for safe context population
@@ -75,18 +101,31 @@ def test_template_placeholders_are_in_context(
         config = make_pdp_config()
     else:
         config = DummyConfig()
-    
+
     card = card_class(config=config, catalog="demo", model_name="test_model")
 
-    # Register and collect context without needing full render
+    # 🧩 Patch dummy values that evaluation sections need
+    mock_load_model.side_effect = lambda: (
+        setattr(card, "run_id", "dummy_run_id")
+        or setattr(card, "experiment_id", "dummy_experiment_id")
+        or setattr(card, "model", object())  # if any method needs card.model
+    )
+
+    # 💡 Call methods that are required to populate the context
     card.load_model()
     card.find_model_version()
     card.extract_training_data()
     card._register_sections()
-    card.collect_metadata()
 
-    context_keys = set(card.context.keys())
-    template_keys = extract_placeholders(card.template_path)
+    # 🎯 Now you can test context against the template
+    card.context.update(card.get_basic_context())
+    card.context.update(card.section_registry.render_all())
 
-    missing = template_keys - context_keys
-    assert not missing, f"{card_class.__name__} is missing context for: {missing}"
+    template_path = card.template_path
+    with open(template_path, "r") as f:
+        template = f.read()
+
+    placeholders = set(re.findall(r"{(\w+)}", template))
+    missing = placeholders - set(card.context.keys())
+
+    assert not missing, f"Missing context keys for template: {missing}"
