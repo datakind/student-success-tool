@@ -1,5 +1,7 @@
 import re
+from unittest.mock import patch
 import pytest
+import pydantic
 from student_success_tool.reporting.model_card.base import ModelCard
 from student_success_tool.reporting.sections.registry import SectionRegistry
 from student_success_tool.reporting.model_card.pdp import PDPModelCard
@@ -10,6 +12,16 @@ def extract_placeholders(template_path) -> set[str]:
         content = f.read()
     return set(re.findall(r"{([a-zA-Z0-9_]+)}", content))
 
+def make_pdp_config() -> PDPProjectConfig:
+    return PDPProjectConfig(
+        institution_id="demo_inst",
+        institution_name="Test University",
+        model=DummyModelConfig(),
+        preprocessing=DummyPreprocessingConfig(),
+        modeling=DummyModelingConfig(),
+        split_col=None,
+        checkpoints=[],  # or a minimal valid checkpoint list
+    )
 
 # Dummy config for safe context population
 class DummyPreprocessingConfig:
@@ -47,9 +59,18 @@ class DummyConfig:
 
 
 # Parameterized test over multiple model card classes
+@patch("student_success_tool.reporting.model_card.base.ModelCard.load_model")
+@patch("student_success_tool.reporting.model_card.base.ModelCard.extract_training_data")
+@patch("student_success_tool.reporting.model_card.base.ModelCard.find_model_version")
 @pytest.mark.parametrize("card_class", [ModelCard, PDPModelCard])
-def test_template_placeholders_are_in_context(card_class):
-    config = DummyConfig()
+def test_template_placeholders_are_in_context(
+    mock_find_version, mock_extract_data, mock_load_model, card_class
+):
+    if card_class.__name__ == "PDPModelCard":
+        config = make_pdp_config()
+    else:
+        config = DummyConfig()
+    
     card = card_class(config=config, catalog="demo", model_name="test_model")
 
     # Register and collect context without needing full render
