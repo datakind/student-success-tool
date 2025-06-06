@@ -6,7 +6,13 @@ from student_success_tool.reporting.model_card.pdp import PDPModelCard
 from student_success_tool.configs.pdp import PDPProjectConfig
 from student_success_tool.reporting.sections import registry
 
-# Dummy config for base ModelCard
+# Dummy training config for base ModelCard
+class DummyTrainingConfig:
+    def __init__(self):
+        self.primary_metric = "log_loss"
+        self.timeout_minutes = 10
+
+# Dummy modeling config for base ModelCard
 class DummyModelingConfig:
     def __init__(self):
         self.feature_selection = {
@@ -14,15 +20,18 @@ class DummyModelingConfig:
             "low_variance_threshold": 0.0,
             "incomplete_threshold": 0.5,
         }
-        self.training = {
-            "primary_metric": "log_loss",
-            "timeout_minutes": 10,
-        }
+        self.training = DummyTrainingConfig()
 
+# Dummy preprocessing config for base ModelCard
 class DummyPreprocessingConfig:
     def __init__(self):
         self.selection = {"student_criteria": {"status": "active"}}
-        self.checkpoint = {"name": "credit", "params": {"min_num_credits": 30}}
+        self.checkpoint = {
+            "name": "checkpoint_nth",
+            "type_": "nth",
+            "n": 4,
+            "params": {"min_num_credits": 30}
+        }
         self.target = {
             "name": "retention",
             "type_": "retention",
@@ -32,7 +41,15 @@ class DummyPreprocessingConfig:
             "years_to_degree_col": "years_to_grad",
             "min_num_credits": 24
         }
+        self.features = {
+            "min_passing_grade": 1.0,
+            "min_num_credits_full_time": 12,
+            "course_level_pattern": "abc",
+            "key_course_subject_areas": ["24"],
+            "key_course_ids": ["ENGL101"]
+        }
 
+# Dummy config for base ModelCard
 class DummyConfig:
     def __init__(self):
         self.institution_id = "test_uni"
@@ -108,27 +125,25 @@ def test_template_placeholders_are_in_context(
 
     card = card_class(config=config, catalog="demo", model_name="test_model")
 
-    # Patch side effects for load_model
+    # Patch all expected side effects
     mock_load_model.side_effect = lambda: (
         setattr(card, "run_id", "dummy_run_id")
         or setattr(card, "experiment_id", "dummy_experiment_id")
         or setattr(card, "model", object())
         or setattr(card, "training_data", pd.DataFrame(columns=["sample_weight"]))
+        or setattr(card, "modeling_data", pd.DataFrame({"student_id": []}))
     )
 
-    # Minimal context & registry population
     card.load_model()
     card.find_model_version()
     card.extract_training_data()
     card._register_sections()
 
-    # Build context for template check
     card.context.update(card.get_basic_context())
     card.context.update(card.section_registry.render_all())
 
-    # Validate placeholders exist in context
-    template_path = card.template_path
-    with open(template_path, "r") as f:
+    # Validate placeholders in template
+    with open(card.template_path, "r") as f:
         template = f.read()
 
     import re
