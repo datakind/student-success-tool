@@ -5,6 +5,7 @@ import pydantic
 from student_success_tool.reporting.model_card.base import ModelCard
 from student_success_tool.reporting.sections.registry import SectionRegistry
 from student_success_tool.reporting.model_card.pdp import PDPModelCard
+from student_success_tool.configs.pdp import PDPProjectConfig
 
 # Utility to extract placeholders from the markdown template
 def extract_placeholders(template_path) -> set[str]:
