@@ -121,7 +121,6 @@ def register_attribute_sections(card, registry):
             )
             return f"{card.format.bold('Checkpoint Information Not Found')}"
 
-
     @registry.register("development_note_section")
     def development_note():
         """

@@ -211,7 +211,5 @@ def safe_count_runs(
         return total_runs
 
     except Exception as e:
-        LOGGER.error(
-            f"Failed to count runs for experiment {experiment_id}: {e}"
-        )
+        LOGGER.error(f"Failed to count runs for experiment {experiment_id}: {e}")
         return None

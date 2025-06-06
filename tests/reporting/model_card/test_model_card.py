@@ -143,7 +143,9 @@ def test_build_calls_all_steps(mock_config, mock_client):
 
 
 @patch("student_success_tool.reporting.model_card.base.utils.safe_count_runs")
-@patch("student_success_tool.reporting.model_card.base.modeling.evaluation.extract_training_data_from_model")
+@patch(
+    "student_success_tool.reporting.model_card.base.modeling.evaluation.extract_training_data_from_model"
+)
 @patch("student_success_tool.reporting.model_card.base.dataio.models.load_mlflow_model")
 def test_extract_training_data_with_split_call_load_model(
     mock_load_model, mock_extract_data, mock_safe_count, mock_config, mock_client
