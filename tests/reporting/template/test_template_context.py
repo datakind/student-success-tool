@@ -15,13 +15,17 @@ def extract_placeholders(template_path) -> set[str]:
 
 def make_pdp_config() -> PDPProjectConfig:
     return PDPProjectConfig(
-        institution_id="demo_inst",
-        institution_name="Test University",
-        model=DummyModelConfig(),
-        preprocessing=DummyPreprocessingConfig(),
-        modeling=DummyModelingConfig(),
+        institution_id="inst_id",
+        institution_name="Inst Name",
+        model={"experiment_id": "exp123", "run_id": "abc", "framework": "sklearn"},
+        preprocessing={
+            "selection": {"student_criteria": {"status": "active"}},
+            "checkpoint": {"name": "credit", "params": {"min_num_credits": 30}},
+            "target": {"name": "retention"},
+        },
+        modeling={"feature_selection": {"collinear_threshold": 10.0, "low_variance_threshold": 0.0, "incomplete_threshold": 0.5}},
         split_col=None,
-        checkpoints=[],  # or a minimal valid checkpoint list
+        datasets={},
     )
 
 # Dummy config for safe context population
