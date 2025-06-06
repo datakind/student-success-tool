@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from student_success_tool.reporting import utils
+from student_success_tool.reporting.utils import utils
 
 
 @patch("student_success_tool.reporting.utils.utils.mlflow.artifacts.download_artifacts")
