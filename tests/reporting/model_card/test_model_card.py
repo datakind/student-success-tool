@@ -96,7 +96,7 @@ def test_get_feature_metadata_success(mock_config, mock_client):
 
 
 @patch("student_success_tool.reporting.model_card.base.utils.download_static_asset")
-def test_get_basic_context(mock_datetime, mock_download, mock_config, mock_client):
+def test_get_basic_context(mock_download, mock_config, mock_client):
     mock_download.return_value = "<img>Logo</img>"
     card = ModelCard(
         config=mock_config,
