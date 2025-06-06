@@ -17,7 +17,7 @@ def download_artifact(
     artifact_path: str,
     description: t.Optional[str] = None,
     fixed_width: str = "125mm",
-) -> str:
+) -> t.Optional[str]:
     """
     Downloads artifact from MLflow run using mlflow.artifacts.download_artifacts(...) and
     returns the path. This method can be used for images, csv, and other files.
@@ -56,7 +56,7 @@ def download_static_asset(
     description: str,
     static_path: Traversable,
     local_folder: str,
-) -> str:
+) -> t.Optional[str]:
     """
     Downloads static asset from local folder and returns the path. This method
     does not use mlflow and is not associated with an mlflow run. This method
@@ -111,7 +111,7 @@ def embed_image(
     local_path: t.Optional[str | pathlib.Path],
     fixed_width: str = "125mm",
     alignment: str = "center",
-) -> str:
+) -> t.Optional[str]:
     """
     Embeds image in markdown with inline CSS to control rendering in WeasyPrint.
 
@@ -160,7 +160,9 @@ def list_paths_in_directory(run_id: str, directory: str) -> t.List[str]:
         return []
 
 
-def safe_count_runs(experiment_id: str, max_results_per_page: int = 1000) -> int:
+def safe_count_runs(
+    experiment_id: str, max_results_per_page: int = 1000
+) -> t.Optional[int]:
     """
     Safely counts the number of runs in an MLflow experiment using pagination,
     avoiding timeouts caused by large or artifact-heavy experiments.
