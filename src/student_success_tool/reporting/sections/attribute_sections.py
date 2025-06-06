@@ -12,18 +12,19 @@ def register_attribute_sections(card, registry):
     """
 
     @registry.register("development_note_section")
-        def development_note():
-            """
-            Produce a note describing when the model was developed and listing the
-            model version (if available).
-            """
-            version_number = card.context.get("version_number", None)
-            current_year = str(datetime.now().year)
-            LOGGER.info("Logging development note")
-            if version_number:
-                return f"Developed by DataKind in {current_year}, Model Version {version_number}"
-            else:
-                return f"Developed by DataKind in {current_year}"
+    def development_note():
+        """
+        Produce a note describing when the model was developed and listing the
+        model version (if available).
+        """
+        version_number = card.context.get("version_number", None)
+        current_year = str(datetime.now().year)
+        LOGGER.info("Logging dev note")
+        if version_number:
+            return f"Developed by DataKind in {current_year}, Model Version {version_number}"
+        else:
+            return f"Developed by DataKind in {current_year}"
+
 
     # HACK: This section assumes certain standards in the config
     @registry.register("outcome_section")
