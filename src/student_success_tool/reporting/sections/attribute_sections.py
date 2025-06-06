@@ -19,7 +19,6 @@ def register_attribute_sections(card, registry):
         """
         version_number = card.context.get("version_number", None)
         current_year = str(datetime.now().year)
-        LOGGER.info("Logging dev note")
         if version_number:
             return f"Developed by DataKind in {current_year}, Model Version {version_number}"
         else:
