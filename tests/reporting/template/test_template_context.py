@@ -12,6 +12,7 @@ class DummyTrainingConfig:
         self.primary_metric = "log_loss"
         self.timeout_minutes = 10
 
+
 class DummyModelingConfig:
     def __init__(self):
         self.feature_selection = {
@@ -20,6 +21,7 @@ class DummyModelingConfig:
             "incomplete_threshold": 0.5,
         }
         self.training = DummyTrainingConfig()
+
 
 class DummyTargetConfig:
     def __init__(self):
@@ -31,6 +33,7 @@ class DummyTargetConfig:
         self.years_to_degree_col = "years_to_grad"
         self.min_num_credits = 24
 
+
 class DummyCheckpointConfig:
     def __init__(self):
         self.name = "checkpoint_nth"
@@ -38,9 +41,11 @@ class DummyCheckpointConfig:
         self.n = 4
         self.params = {"min_num_credits": 30}
 
+
 class DummySelectionConfig:
     def __init__(self):
         self.student_criteria = {"status": "active"}
+
 
 class DummyFeaturesConfig:
     def __init__(self):
@@ -50,12 +55,14 @@ class DummyFeaturesConfig:
         self.key_course_subject_areas = ["24"]
         self.key_course_ids = ["ENGL101"]
 
+
 class DummyPreprocessingConfig:
     def __init__(self):
         self.selection = DummySelectionConfig()
         self.checkpoint = DummyCheckpointConfig()
         self.target = DummyTargetConfig()
         self.features = DummyFeaturesConfig()
+
 
 # Dummy config for base ModelCard
 class DummyConfig:
@@ -64,6 +71,7 @@ class DummyConfig:
         self.institution_name = "Test University"
         self.modeling = DummyModelingConfig()
         self.preprocessing = DummyPreprocessingConfig()
+
 
 # Valid PDPProjectConfig
 def make_pdp_config() -> PDPProjectConfig:
@@ -97,7 +105,7 @@ def make_pdp_config() -> PDPProjectConfig:
                 "intensity_time_limits": {"FULL-TIME": {"years": 2}},
                 "max_term_rank": 6,
                 "years_to_degree_col": "years_to_grad",
-                "min_num_credits": 24
+                "min_num_credits": 24,
             },
             "features": {
                 "min_passing_grade": 1.0,
@@ -113,7 +121,7 @@ def make_pdp_config() -> PDPProjectConfig:
                 "low_variance_threshold": 0.0,
                 "incomplete_threshold": 0.5,
             },
-            "training": {"primary_metric": "log_loss", "timeout_minutes": 10}
+            "training": {"primary_metric": "log_loss", "timeout_minutes": 10},
         },
         split_col=None,
     )
@@ -147,21 +155,23 @@ def test_template_placeholders_are_in_context(
         or setattr(card, "modeling_data", pd.DataFrame({"student_id": []}))
     )
 
-    mock_collect_metadata.side_effect = lambda: card.context.update({
-        "model_version": "12",
-        "artifact_path": "dummy/path",
-        "training_dataset_size": 100,
-        "number_of_features": 20,
-        "feature_importances_by_shap_plot": "![shap](shap.png)",
-        "test_confusion_matrix": "confusion_matrix.png",
-        "test_roc_curve": "roc_curve.png",
-        "test_calibration_curve": "calibration_curve.png",
-        "test_histogram": "histogram.png",
-        "model_comparison_plot": "comparison.png",
-        "collinearity_threshold": 10.0,
-        "low_variance_threshold": 0.0,
-        "incomplete_threshold": 0.5,
-    })
+    mock_collect_metadata.side_effect = lambda: card.context.update(
+        {
+            "model_version": "12",
+            "artifact_path": "dummy/path",
+            "training_dataset_size": 100,
+            "number_of_features": 20,
+            "feature_importances_by_shap_plot": "![shap](shap.png)",
+            "test_confusion_matrix": "confusion_matrix.png",
+            "test_roc_curve": "roc_curve.png",
+            "test_calibration_curve": "calibration_curve.png",
+            "test_histogram": "histogram.png",
+            "model_comparison_plot": "comparison.png",
+            "collinearity_threshold": 10.0,
+            "low_variance_threshold": 0.0,
+            "incomplete_threshold": 0.5,
+        }
+    )
 
     mock_render_all.return_value = {
         "primary_metric_section": "Primary metric content",

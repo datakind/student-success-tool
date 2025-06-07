@@ -24,7 +24,6 @@ def register_attribute_sections(card, registry):
         else:
             return f"Developed by DataKind in {current_year}"
 
-
     # HACK: This section assumes certain standards in the config
     @registry.register("outcome_section")
     def outcome():
