@@ -150,8 +150,8 @@ df_course
 # MAGIC
 # MAGIC ```python
 # MAGIC import pandas as pd
-# MAGIC import pandera as pda
-# MAGIC import pandera.typing as pt
+# MAGIC import pandera.pandas as pda
+# MAGIC import pandera.typing.pandas as pt
 # MAGIC
 # MAGIC class RawSCHOOLCourseDataSchema(dataio.schemas.pdp.RawPDPCourseDataSchema):
 # MAGIC     co_requisite_course: pt.Series[pd.CategoricalDtype] = pda.Field(

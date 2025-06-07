@@ -7,15 +7,15 @@ import typing as t
 import pandas as pd
 
 try:
-    import pandera as pda
-    import pandera.typing as pt
+    import pandera.pandas as pda
+    import pandera.typing.pandas as pt
 except ModuleNotFoundError:
-    from ... import utils
+    from .... import utils
 
     utils.databricks.mock_pandera()
 
-    import pandera as pda
-    import pandera.typing as pt
+    import pandera.pandas as pda
+    import pandera.typing.pandas as pt
 
 LOGGER = logging.getLogger(__name__)
 
@@ -252,67 +252,103 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
             )
         return df
 
-    @pda.parser(
-        "student_age",
-        "race",
-        "ethnicity",
-        "gender",
-        "first_gen",
-        "credential_type_sought_year_1",
-        "most_recent_bachelors_at_other_institution_locale",
-        "most_recent_associates_or_certificate_at_other_institution_locale",
-        "most_recent_last_enrollment_at_other_institution_locale",
-        "first_bachelors_at_other_institution_locale",
-        "first_associates_or_certificate_at_other_institution_locale",
-    )
-    def strip_and_uppercase_strings(cls, series):
-        return series.str.strip().str.upper()
+    @pda.dataframe_parser
+    def strip_upper_string_values(cls, df):
+        """Strip/uuppercase string values for some cols to avoid inconsistency later on."""
+        return df.assign(
+            **{
+                col: ft.partial(_strip_upper_string_values, col=col)
+                for col in (
+                    "cohort_term",
+                    "enrollment_type",
+                    "enrollment_intensity_first_term",
+                    "math_placement",
+                    "english_placement",
+                    "reading_placement",
+                    "dual_and_summer_enrollment",
+                    "student_age",
+                    "race",
+                    "ethnicity",
+                    "gender",
+                    "first_gen",
+                    "pell_status_first_year",
+                    "gateway_math_status",
+                    "gateway_english_status",
+                    "attempted_gateway_math_year_1",
+                    "attempted_gateway_english_year_1",
+                    "attempted_dev_math_y_1",
+                    "attempted_dev_english_y_1",
+                    "incarcerated_status",
+                    "disability_status",
+                    "credential_type_sought_year_1",
+                    "most_recent_bachelors_at_other_institution_locale",
+                    "most_recent_associates_or_certificate_at_other_institution_locale",
+                    "most_recent_last_enrollment_at_other_institution_locale",
+                    "first_bachelors_at_other_institution_locale",
+                    "first_associates_or_certificate_at_other_institution_locale",
+                )
+            }
+        )
+
+    @pda.dataframe_parser
+    def replace_bad_gpa_values_with_null(cls, df):
+        """Replace "UK" with null in GPA cols, so we can coerce to float dtype."""
+        return df.assign(
+            **{
+                col: ft.partial(_replace_values_with_null, col=col, to_replace="UK")
+                for col in ("gpa_group_term_1", "gpa_group_year_1")
+            }
+        )
+
+    @pda.dataframe_parser
+    def cast_to_bool_via_int(cls, df):
+        """Help pandas to coerce string "1"/"0" values into True/False."""
+        return df.assign(
+            **{
+                col: ft.partial(_cast_to_bool_via_int, col=col)
+                for col in ("retention", "persistence")
+            }
+        )
 
     @pda.parser("enrollment_type")
     def set_enrollment_type_categories(cls, series):
-        return _strip_upper_strings_to_cats(series).cat.set_categories(
-            ["FIRST-TIME", "RE-ADMIT", "TRANSFER-IN"]
-        )
+        return series.cat.set_categories(["FIRST-TIME", "RE-ADMIT", "TRANSFER-IN"])
 
     @pda.parser("enrollment_intensity_first_term")
     def set_enrollment_intensity_first_term_categories(cls, series):
-        return _strip_upper_strings_to_cats(series).cat.set_categories(
-            ["FULL-TIME", "PART-TIME"]
-        )
+        return series.cat.set_categories(["FULL-TIME", "PART-TIME"])
 
     @pda.parser("math_placement", "english_placement", "reading_placement")
     def set_subj_placement_categories(cls, series):
-        return _strip_upper_strings_to_cats(series).cat.set_categories(["C", "N"])
+        return series.cat.set_categories(["C", "N"])
 
     @pda.parser("dual_and_summer_enrollment")
     def set_dual_and_summer_enrollment_categories(cls, series):
-        return _strip_upper_strings_to_cats(series).cat.set_categories(
-            ["DE", "SE", "DS"]
-        )
+        return series.cat.set_categories(["DE", "SE", "DS"])
 
     @pda.parser("pell_status_first_year")
     def set_pell_status_first_year_categories(cls, series):
-        return _strip_upper_strings_to_cats(series).cat.set_categories(["Y", "N"])
+        return series.cat.set_categories(["Y", "N"])
 
     @pda.parser("gateway_math_status", "gateway_english_status")
     def set_gateway_math_english_status_categories(cls, series):
-        return _strip_upper_strings_to_cats(series).cat.set_categories(["R", "N"])
+        return series.cat.set_categories(["R", "N"])
 
     @pda.parser("attempted_gateway_math_year_1", "attempted_gateway_english_year_1")
     def set_attempted_gateway_math_english_year_1_categories(cls, series):
-        return _strip_upper_strings_to_cats(series).cat.set_categories(["Y", "N"])
+        return series.cat.set_categories(["Y", "N"])
 
     @pda.parser("attempted_dev_math_y_1", "attempted_dev_english_y_1")
     def set_attempted_dev_math_english_y_1_categories(cls, series):
-        return _strip_upper_strings_to_cats(series).cat.set_categories(["Y", "N", "NA"])
+        return series.cat.set_categories(["Y", "N", "NA"])
 
     @pda.parser("incarcerated_status")
     def set_incarcerated_status_categories(cls, series):
-        return _strip_upper_strings_to_cats(series).cat.set_categories(["Y", "P", "N"])
+        return series.cat.set_categories(["Y", "P", "N"])
 
     @pda.parser("disability_status")
     def set_disability_status_categories(cls, series):
-        return _strip_upper_strings_to_cats(series).cat.set_categories(["Y", "N"])
+        return series.cat.set_categories(["Y", "N"])
 
     @pda.parser("military_status")
     def set_military_status_categories(cls, series):
@@ -358,5 +394,29 @@ class RawPDPCohortDataSchema(pda.DataFrameModel):
         unique = ["student_id"]
 
 
-def _strip_upper_strings_to_cats(series: pd.Series) -> pd.Series:
-    return series.str.strip().str.upper().astype("category")
+def _strip_upper_string_values(df: pd.DataFrame, *, col: str) -> pd.Series:
+    return df[col].str.strip().str.upper()
+
+
+def _replace_values_with_null(
+    df: pd.DataFrame, *, col: str, to_replace: str | list[str]
+) -> pd.Series:
+    return df[col].replace(to_replace=to_replace, value=None)
+
+
+def _cast_to_bool_via_int(df: pd.DataFrame, *, col: str) -> pd.Series:
+    return (
+        df[col]
+        .astype("string")
+        .map(
+            {
+                "1": True,
+                "0": False,
+                "True": True,
+                "False": False,
+                "true": True,
+                "false": False,
+            }
+        )
+        .astype("boolean")
+    )
