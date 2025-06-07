@@ -37,5 +37,16 @@ def register_metric_sections(card, registry):
             if used_weights
             else None
         )
-        mlops_note = f"{card.format.indent_level(1)}- Utilizing Databricks and AutoML, we initiated an MLOps pipeline for data processing and model experimentation, processing {card.context['num_runs_in_experiment']} different machine-learning models to optimize our model."
+        num_runs = card.context.get("num_runs_in_experiment", None)
+        if isinstance(num_runs, int) and num_runs > 0:
+            mlops_note = (
+                f"{card.format.indent_level(1)}- Utilizing Databricks and AutoML, "
+                f"we initiated an MLOps pipeline for data processing and model experimentation, "
+                f"processing {num_runs} different machine-learning models to optimize our model."
+            )
+        else:
+            mlops_note = (
+                f"{card.format.indent_level(1)}- Utilizing Databricks and AutoML, "
+                f"we initiated an MLOps pipeline for data processing and model experimentation."
+            )
         return "\n".join(filter(None, [mlops_note, sw_note]))

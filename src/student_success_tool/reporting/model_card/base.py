@@ -1,9 +1,7 @@
 import os
 import logging
 import typing as t
-from datetime import datetime
 
-import mlflow
 from mlflow.tracking import MlflowClient
 
 # export .md to .pdf
@@ -39,6 +37,7 @@ class ModelCard(t.Generic[C]):
         catalog: str,
         model_name: str,
         assets_path: t.Optional[str] = None,
+        mlflow_client: t.Optional[MlflowClient] = None,
     ):
         """
         Initializes the ModelCard object with the given config and the model name
@@ -50,7 +49,7 @@ class ModelCard(t.Generic[C]):
         self.uc_model_name = f"{catalog}.{self.cfg.institution_id}_gold.{model_name}"
         LOGGER.info("Initializing ModelCard for model: %s", self.uc_model_name)
 
-        self.client = MlflowClient()
+        self.client = mlflow_client or MlflowClient()
         self.section_registry = SectionRegistry()
         self.format = Formatting()
         self.context: dict[str, t.Any] = {}
@@ -108,13 +107,20 @@ class ModelCard(t.Generic[C]):
         """
         Retrieves the model version from the MLflow client based on the run ID.
         """
-        versions = self.client.search_model_versions(f"name='{self.uc_model_name}'")
-        for v in versions:
-            if v.run_id == self.run_id:
-                self.context["version_number"] = v.version
-                return
-        LOGGER.warning(f"Unable to find model version for run id: {self.run_id}")
-        self.context["version_number"] = "Unknown"
+        try:
+            versions = self.client.search_model_versions(f"name='{self.uc_model_name}'")
+            for v in versions:
+                if v.run_id == self.run_id:
+                    self.context["version_number"] = v.version
+                    LOGGER.info(f"Model Version = {self.context['version_number']}")
+                    return
+            LOGGER.warning(f"Unable to find model version for run id: {self.run_id}")
+            self.context["version_number"] = None
+        except Exception as e:
+            LOGGER.error(
+                f"Error retrieving model version for run id {self.run_id}: {e}"
+            )
+            self.context["version_number"] = None
 
     def extract_training_data(self):
         """
@@ -129,9 +135,9 @@ class ModelCard(t.Generic[C]):
                 self.modeling_data[self.cfg.split_col] == "train"
             ]
         self.context["training_dataset_size"] = self.training_data.shape[0]
-        self.context["num_runs_in_experiment"] = mlflow.search_runs(
-            experiment_ids=[self.experiment_id]
-        ).shape[0]
+        self.context["num_runs_in_experiment"] = utils.safe_count_runs(
+            self.experiment_id
+        )
 
     def collect_metadata(self):
         """
@@ -164,9 +170,9 @@ class ModelCard(t.Generic[C]):
                 description="Logo",
                 static_path=self.logo_path,
                 local_folder=self.assets_folder,
-            ),
+            )
+            or "",
             "institution_name": self.cfg.institution_name,
-            "current_year": str(datetime.now().year),
         }
 
     def get_feature_metadata(self) -> dict[str, str]:
@@ -245,6 +251,7 @@ class ModelCard(t.Generic[C]):
                 local_folder=self.assets_folder,
                 fixed_width=width,
             )
+            or ""
             for key, (description, path, width) in plots.items()
         }
 

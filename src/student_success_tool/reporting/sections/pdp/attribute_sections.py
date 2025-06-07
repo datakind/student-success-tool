@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 LOGGER = logging.getLogger(__name__)
 
@@ -9,6 +10,19 @@ def register_attribute_sections(card, registry):
     checkpoint, and target population. All of this information is gathered from the model's
     config.toml file.
     """
+
+    @registry.register("development_note_section")
+    def development_note():
+        """
+        Produce a note describing when the model was developed and listing the
+        model version (if available).
+        """
+        version_number = card.context.get("version_number", None)
+        current_year = str(datetime.now().year)
+        if version_number:
+            return f"Developed by DataKind in {current_year}, Model Version {version_number}"
+        else:
+            return f"Developed by DataKind in {current_year}"
 
     @registry.register("outcome_section")
     def outcome():

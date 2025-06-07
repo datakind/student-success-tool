@@ -1,4 +1,7 @@
+import logging
 import typing as t
+
+LOGGER = logging.getLogger(__name__)
 
 
 class SectionRegistry:
