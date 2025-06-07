@@ -186,6 +186,9 @@ def test_template_placeholders_are_in_context(
     card._register_sections()
     card.collect_metadata()
 
+    # Add section content to the context
+    card.context.update(card.section_registry.render_all())
+
     # Validate placeholders in template
     with open(card.template_path, "r") as f:
         template = f.read()
