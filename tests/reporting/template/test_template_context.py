@@ -125,12 +125,12 @@ def make_pdp_config() -> PDPProjectConfig:
 @patch("student_success_tool.reporting.model_card.base.ModelCard.extract_training_data")
 @patch("student_success_tool.reporting.model_card.base.ModelCard.find_model_version")
 def test_template_placeholders_are_in_context(
-    card_class,
     mock_find_version,
     mock_extract_data,
     mock_load_model,
     mock_collect_metadata,
     mock_render_all,
+    card_class,
 ):
     if card_class.__name__ == "PDPModelCard":
         config = make_pdp_config()
