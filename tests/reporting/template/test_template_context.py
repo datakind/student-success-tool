@@ -126,6 +126,7 @@ def make_pdp_config() -> PDPProjectConfig:
         split_col=None,
     )
 
+
 @pytest.mark.parametrize("card_class", [ModelCard, PDPModelCard])
 @patch("student_success_tool.reporting.sections.registry.SectionRegistry.render_all")
 @patch("student_success_tool.reporting.model_card.base.ModelCard.collect_metadata")
