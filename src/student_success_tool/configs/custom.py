@@ -1,6 +1,5 @@
 import re
 import typing as t
-from enum import Enum
 
 import pydantic as pyd
 from ..utils import types
@@ -81,7 +80,7 @@ class CustomProjectConfig(pyd.BaseModel):
     model_config = pyd.ConfigDict(extra="forbid", strict=True)
 
 
-    @model_validator(mode="after")
+    @pyd.model_validator(mode="after")
     def check_sample_weight_requires_random_state(self):
         if self.sample_weight_col and self.random_state is None:
             raise ValueError(
@@ -103,7 +102,7 @@ class DatasetPathConfig(BaseModel):
         description="Full, absolute path to dataset on disk, e.g. a Databricks Volume",
     )
 
-    @model_validator(mode="after")
+    @pyd.model_validator(mode="after")
     def validate_paths(self) -> "DatasetPathConfig":
         if not self.table_path and not self.file_path:
             raise ValueError("Must specify either `table_path` or `file_path`")
@@ -213,7 +212,7 @@ class TargetConfig(pyd.BaseModel):
     params: t.Optional[dict[str, object]] = pyd.Field(default_factory=dict)
     unit: t.Literal["credit", "year", "term", "semester", "pct_completion"]
     value: int = pyd.Field(
-        default=60,
+        default=120,
         description=(
             "Number of target units (e.g. 4 years, 4 terms, 120 credits, 150 completion %)"
         ),
