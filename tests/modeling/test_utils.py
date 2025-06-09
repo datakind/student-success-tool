@@ -31,28 +31,23 @@ def test_compute_dataset_splits(df, label_fracs, shuffle, seed):
     obs = utils.compute_dataset_splits(
         df, label_fracs=label_fracs, shuffle=shuffle, seed=seed
     )
-
     assert isinstance(obs, pd.Series)
     assert len(obs) == len(df)
-
-    expected_labels = set(label_fracs.keys())
-    actual_labels = set(obs.unique())
-    assert actual_labels.issubset(expected_labels)
-
-    # Check that the number of rows per split is close to expected
-    total_rows = len(df)
-    value_counts = obs.value_counts()
-
-    for label, expected_frac in label_fracs.items():
-        expected_count = int(expected_frac * total_rows)
-        actual_count = value_counts.get(label, 0)
-
-        # Allow 1 row deviation to account for rounding
-        assert abs(actual_count - expected_count) <= 1, (
-            f"Label '{label}' has {actual_count} rows, "
-            f"expected around {expected_count}"
+    labels = list(label_fracs.keys())
+    fracs = list(label_fracs.values())
+    obs_value_counts = obs.value_counts(normalize=True)
+    exp_value_counts = pd.Series(
+        data=fracs,
+        index=pd.Index(labels, dtype="string", name="split"),
+        name="proportion",
+        dtype="Float64",
+    )
+    assert (
+        pd.testing.assert_series_equal(
+            obs_value_counts, exp_value_counts, rtol=0.15, check_like=True
         )
-
+        is None
+    )
     if seed is not None:
         obs2 = utils.compute_dataset_splits(
             df, label_fracs=label_fracs, shuffle=shuffle, seed=seed
