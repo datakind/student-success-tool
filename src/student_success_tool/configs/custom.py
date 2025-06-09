@@ -35,7 +35,7 @@ class CustomProjectConfig(pyd.BaseModel):
             "to use for model bias assessment, but *not* as model features"
         ),
     )
-    student_group_aliases: t.Optional[dict[str, str]] = pyd.Field(
+    student_group_aliases: dict[str, str] = pyd.Field(
         default_factory=dict,
         description=(
             "Mapping from raw column name (e.g., GENDER_DESC) to "
@@ -201,7 +201,7 @@ class PreprocessingConfig(pyd.BaseModel):
 
 class CheckpointConfig(pyd.BaseModel):
     name: str = pyd.Field(default="checkpoint")
-    params: t.Optional[dict[str, object]] = pyd.Field(default_factory=dict)
+    params: dict[str, object] = pyd.Field(default_factory=dict)
     unit: t.Literal["credit", "year", "term", "semester"]
     value: int = pyd.Field(
         default=30,
@@ -227,7 +227,7 @@ class CheckpointConfig(pyd.BaseModel):
 class TargetConfig(pyd.BaseModel):
     name: str = pyd.Field(default="target")
     category: t.Literal["graduation", "retention"]
-    params: t.Optional[dict[str, object]] = pyd.Field(default_factory=dict)
+    params: dict[str, object] = pyd.Field(default_factory=dict)
     unit: t.Literal["credit", "year", "term", "semester", "pct_completion"]
     value: int = pyd.Field(
         default=120,
