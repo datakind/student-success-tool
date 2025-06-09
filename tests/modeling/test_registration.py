@@ -3,10 +3,12 @@ from unittest.mock import Mock
 import mlflow
 from student_success_tool.modeling.registration import register_mlflow_model
 
+
 @pytest.fixture
 def mock_client():
     client = Mock(spec=mlflow.tracking.MlflowClient)
     return client
+
 
 def test_registers_new_model_and_sets_tag(mock_client):
     run_id = "abc123"
@@ -45,6 +47,7 @@ def test_registers_new_model_and_sets_tag(mock_client):
         model_path, "Staging", version.version
     )
 
+
 def test_skips_if_tag_indicates_already_registered(mock_client):
     mock_client.get_run.return_value.data.tags = {"model_registered": "true"}
 
@@ -60,8 +63,11 @@ def test_skips_if_tag_indicates_already_registered(mock_client):
     mock_client.set_tag.assert_not_called()
     mock_client.set_registered_model_alias.assert_not_called()
 
+
 def test_handles_existing_registered_model_gracefully(mock_client):
-    mock_client.create_registered_model.side_effect = mlflow.exceptions.MlflowException("RESOURCE_ALREADY_EXISTS")
+    mock_client.create_registered_model.side_effect = mlflow.exceptions.MlflowException(
+        "RESOURCE_ALREADY_EXISTS"
+    )
     mock_client.get_run.return_value.data.tags = {}
     mock_client.create_model_version.return_value.version = 1
 
@@ -75,6 +81,7 @@ def test_handles_existing_registered_model_gracefully(mock_client):
 
     mock_client.create_model_version.assert_called()
 
+
 def test_raises_if_tag_check_fails(mock_client):
     mock_client.get_run.side_effect = mlflow.exceptions.MlflowException("Bad request")
 
@@ -86,6 +93,7 @@ def test_raises_if_tag_check_fails(mock_client):
             catalog="main",
             mlflow_client=mock_client,
         )
+
 
 def test_skips_setting_alias_if_none(mock_client):
     mock_client.get_run.return_value.data.tags = {}
