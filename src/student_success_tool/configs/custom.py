@@ -35,7 +35,7 @@ class CustomProjectConfig(pyd.BaseModel):
             "to use for model bias assessment, but *not* as model features"
         ),
     )
-    student_group_aliases: t.Optional[Dict[str, str]] = pyd.Field(
+    student_group_aliases: t.Optional[dict[str, str]] = pyd.Field(
         default_factory=dict,
         description=(
             "Mapping from raw column name (e.g., GENDER_DESC) to "
@@ -150,9 +150,9 @@ class DatasetConfig(pyd.BaseModel):
 
 
 class AllDatasetStagesConfig(pyd.BaseModel):
-    bronze: t.Dict[str, DatasetConfig]
-    silver: t.Dict[str, DatasetConfig]
-    gold: t.Dict[str, DatasetConfig]
+    bronze: dict[str, DatasetConfig]
+    silver: dict[str, DatasetConfig]
+    gold: dict[str, DatasetConfig]
 
 
 class ModelConfig(pyd.BaseModel):
