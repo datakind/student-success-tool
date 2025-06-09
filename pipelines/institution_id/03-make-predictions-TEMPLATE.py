@@ -26,7 +26,7 @@
 # we need to manually install a certain version of pandas and scikit-learn in order
 # for our models to load and run properly.
 
-# %pip install "student-success-tool==0.3.1"
+# %pip install "student-success-tool==0.3.3"
 # %pip install "pandas==1.5.3"
 # %pip install "scikit-learn==1.3.0"
 
@@ -39,7 +39,6 @@
 import functools as ft
 import logging
 
-import matplotlib.pyplot as plt
 import mlflow
 import pandas as pd
 import shap
@@ -219,45 +218,28 @@ df_shap_values
 
 # COMMAND ----------
 
-shap.summary_plot(
-    df_shap_values.loc[:, model_feature_names].to_numpy(),
-    df_test.loc[:, model_feature_names],
-    class_names=model.classes_,
-    max_display=20,
-    show=False,
-)
-shap_fig = plt.gcf()
-# save shap summary plot via mlflow into experiment artifacts folder
-# HACK: plot name for shap summary needs to be hardcoded as below
-# in order to be picked up by model card module (so don't change it)
-with mlflow.start_run(run_id=cfg.model.run_id) as run:
-    mlflow.log_figure(shap_fig, "shap_summary_labeled_dataset_100_ref_rows.png")
+with mlflow.start_run(run_id=cfg.model.run_id):
+    # Create & log SHAP summary plot
+    inference.shap_summary_plot(
+        df_shap_values=df_shap_values,
+        df_test=df_test,
+        model_feature_names=model_feature_names,
+        model_classes=model.classes_,
+    )
 
-# COMMAND ----------
+    # Create & log ranked features by SHAP magnitude
+    selected_features_df = inference.generate_ranked_feature_table(
+        features,
+        df_shap_values[model_feature_names].to_numpy(),
+        features_table=features_table,
+    )
 
-# MAGIC %md
-# MAGIC TODO (for Vish): Add summary plot (and ranked selected features below) under the hood in SST package so we can set the paths. This will ensure alignment with model card module and no chance for user error.
+selected_features_df
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC # finalize results
-
-# COMMAND ----------
-
-# Generate table of all selected features and log as an artifact
-selected_features_df = inference.generate_ranked_feature_table(
-    features,
-    df_shap_values[model_feature_names].to_numpy(),
-    features_table=features_table,
-)
-with mlflow.start_run(run_id=cfg.model.run_id) as run:
-    selected_features_df.to_csv("/tmp/ranked_selected_features.csv", index=False)
-    mlflow.log_artifact(
-        "/tmp/ranked_selected_features.csv", artifact_path="selected_features"
-    )
-
-selected_features_df
 
 # COMMAND ----------
 

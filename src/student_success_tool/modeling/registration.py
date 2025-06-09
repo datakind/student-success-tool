@@ -19,7 +19,7 @@ def register_mlflow_model(
     mlflow_client: mlflow.tracking.MlflowClient,
 ) -> None:
     """
-    Register an mlflow model according to one of their various recommended approaches.
+    Register an mlflow model from a run, using run-level tags to prevent duplicate registration.
 
     Args:
         model_name
@@ -36,22 +36,42 @@ def register_mlflow_model(
     model_path = f"{catalog}.{institution_id}_gold.{model_name}"
     mlflow.set_registry_uri(registry_uri)
 
+    # Create the registered model if it doesn't exist
     try:
         mlflow_client.create_registered_model(name=model_path)
-        LOGGER.info("new registered model '%s' successfully created", model_path)
+        LOGGER.info("New registered model '%s' successfully created", model_path)
     except mlflow.exceptions.MlflowException as e:
         if "RESOURCE_ALREADY_EXISTS" in str(e):
-            LOGGER.info("model '%s' already created in registry", model_path)
+            LOGGER.info("Model '%s' already exists in registry", model_path)
         else:
             raise e
 
-    model_uri = get_mlflow_model_uri(run_id=run_id, model_path="model")
-    mv = mlflow_client.create_model_version(model_path, source=model_uri, run_id=run_id)
-    if model_alias is not None:
-        mlflow_client.set_registered_model_alias(
-            model_path, alias=model_alias, version=mv.version
-        )
-    LOGGER.info("model version successfully registered at '%s'", model_path)
+    # Check for the "model_registered" tag on the run
+    try:
+        run_tags = mlflow_client.get_run(run_id).data.tags
+        if run_tags.get("model_registered") == "true":
+            LOGGER.info("Run ID '%s' has already been registered. Skipping.", run_id)
+            return
+    except mlflow.exceptions.MlflowException as e:
+        LOGGER.warning("Unable to check tags for run_id '%s': %s", run_id, str(e))
+        raise
+
+    # Register new model version
+    model_uri = f"runs:/{run_id}/model"
+    mv = mlflow_client.create_model_version(
+        name=model_path,
+        source=model_uri,
+        run_id=run_id,
+    )
+    LOGGER.info("Registered new model version %s from run_id '%s'", mv.version, run_id)
+
+    # Mark the run as registered via tag
+    mlflow_client.set_tag(run_id, "model_registered", "true")
+
+    # Optionally assign alias
+    if model_alias:
+        mlflow_client.set_registered_model_alias(model_path, model_alias, mv.version)
+        LOGGER.info("Set alias '%s' to version %s", model_alias, mv.version)
 
 
 def get_model_name(
