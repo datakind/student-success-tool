@@ -8,15 +8,15 @@ References:
 """
 
 import pandas as pd  # noqa: F401
-import pandera as pda  # noqa: F401
-import pandera.typing as pt  # noqa: F401
+import pandera.pandas as pda  # noqa: F401
+import pandera.typing.pandas as pt  # noqa: F401
 
-from student_success_tool import schemas
+from student_success_tool import dataio
 
 
-class RawInstIDCohortDataSchema(schemas.pdp.RawPDPCohortDataSchema):
+class RawInstIDCohortDataSchema(dataio.schemas.pdp.RawPDPCohortDataSchema):
     pass
 
 
-class RawInstIDCourseDataSchema(schemas.pdp.RawPDPCourseDataSchema):
+class RawInstIDCourseDataSchema(dataio.schemas.pdp.RawPDPCourseDataSchema):
     pass

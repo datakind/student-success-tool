@@ -9,13 +9,13 @@ from ... import utils
 from .. import read
 
 try:
-    import pandera as pda
+    import pandera.pandas as pda
 except ModuleNotFoundError:
     from ... import utils
 
     utils.databricks.mock_pandera()
 
-    import pandera as pda
+    import pandera.pandas as pda
 
 LOGGER = logging.getLogger(__name__)
 
@@ -75,20 +75,14 @@ def read_raw_course_data(
         else read.from_delta_table(table_path, spark_session)  # type: ignore
     )
     # apply to the data what pandera calls "parsers" before validation
-    # ideally, all these operations would be dataframe parsers on the schema itself
-    # but pandera applies core before custom parsers under the hood :/
+    # the schema itself applies many parsers, but these are general "pre-requisites"
     df = (
         # standardize column names
         df.rename(columns=utils.misc.convert_to_snake_case)
         # standardize certain column values
         .assign(
-            # uppercase string values for some cols to avoid case inconsistency later on
-            **{
-                col: ft.partial(_uppercase_string_values, col=col)
-                for col in ("academic_term",)
-            }
             # help pandas to parse non-standard datetimes... read_csv() struggles
-            | {
+            **{
                 col: ft.partial(_parse_dttm_values, col=col, fmt=dttm_format)
                 for col in ("course_begin_date", "course_end_date")
             }
@@ -150,30 +144,10 @@ def read_raw_cohort_data(
         else read.from_delta_table(table_path, spark_session)  # type: ignore
     )
     # apply to the data what pandera calls "parsers" before validation
-    # ideally, all these operations would be dataframe parsers on the schema itself
-    # but pandera applies core before custom parsers under the hood :/
+    # the schema itself applies many parsers, but these are general "pre-requisites"
     df = (
         # standardize column names
         df.rename(columns=utils.misc.convert_to_snake_case)
-        # standardize column values
-        .assign(
-            # uppercase string values for some cols to avoid case inconsistency later on
-            # for practical reasons, this is the only place where it's easy to do so
-            **{
-                col: ft.partial(_uppercase_string_values, col=col)
-                for col in ("cohort_term",)
-            }
-            # replace "UK" with null in GPA cols, so we can coerce to float via schema
-            | {
-                col: ft.partial(_replace_values_with_null, col=col, to_replace="UK")
-                for col in ("gpa_group_term_1", "gpa_group_year_1")
-            }
-            # help pandas to coerce string "1"/"0" values into True/False
-            | {
-                col: ft.partial(_cast_to_bool_via_int, col=col)
-                for col in ("retention", "persistence")
-            }
-        )
     )
     return _maybe_convert_maybe_validate_data(df, converter_func, schema)
 
@@ -205,31 +179,3 @@ def _maybe_convert_maybe_validate_data(
 
 def _parse_dttm_values(df: pd.DataFrame, *, col: str, fmt: str) -> pd.Series:
     return pd.to_datetime(df[col], format=fmt)
-
-
-def _uppercase_string_values(df: pd.DataFrame, *, col: str) -> pd.Series:
-    return df[col].str.upper()
-
-
-def _replace_values_with_null(
-    df: pd.DataFrame, *, col: str, to_replace: str | list[str]
-) -> pd.Series:
-    return df[col].replace(to_replace=to_replace, value=None)
-
-
-def _cast_to_bool_via_int(df: pd.DataFrame, *, col: str) -> pd.Series:
-    return (
-        df[col]
-        .astype("string")
-        .map(
-            {
-                "1": True,
-                "0": False,
-                "True": True,
-                "False": False,
-                "true": True,
-                "false": False,
-            }
-        )
-        .astype("boolean")
-    )
