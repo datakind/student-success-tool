@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock
 import mlflow
 from student_success_tool.modeling.registration import register_mlflow_model
 

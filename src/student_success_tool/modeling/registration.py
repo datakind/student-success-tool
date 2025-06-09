@@ -19,19 +19,19 @@ def register_mlflow_model(
     mlflow_client: mlflow.tracking.MlflowClient,
 ) -> None:
     """
-    Register an MLflow model from a run, using run-level tags to prevent duplicate registration.
+    Register an mlflow model from a run, using run-level tags to prevent duplicate registration.
 
     Args:
-        model_name: Name of the model (e.g., "student_success_model")
-        institution_id: Institution namespace
-        run_id: MLflow run ID
-        catalog: Unity Catalog (e.g., "main" or "dev")
-        registry_uri: URI for MLflow registry (default is "databricks-uc")
-        model_alias: Optional alias to set (e.g., "Staging", "Production")
-        mlflow_client: Initialized MLflowClient
+        model_name
+        institution_id
+        run_id
+        catalog
+        registry_uri
+        model_alias
+        mlflow_client
 
-    Notes:
-        Uses the tag 'model_registered' on the run to ensure idempotency.
+    References:
+        - https://mlflow.org/docs/latest/model-registry.html
     """
     model_path = f"{catalog}.{institution_id}_gold.{model_name}"
     mlflow.set_registry_uri(registry_uri)
@@ -58,20 +58,20 @@ def register_mlflow_model(
 
     # Register new model version
     model_uri = f"runs:/{run_id}/model"
-    result = mlflow_client.create_model_version(
+    mv = mlflow_client.create_model_version(
         name=model_path,
         source=model_uri,
         run_id=run_id,
     )
-    LOGGER.info("Registered new model version %s from run_id '%s'", result.version, run_id)
+    LOGGER.info("Registered new model version %s from run_id '%s'", mv.version, run_id)
 
     # Mark the run as registered via tag
     mlflow_client.set_tag(run_id, "model_registered", "true")
 
     # Optionally assign alias
     if model_alias:
-        mlflow_client.set_registered_model_alias(model_path, model_alias, result.version)
-        LOGGER.info("Set alias '%s' to version %s", model_alias, result.version)
+        mlflow_client.set_registered_model_alias(model_path, model_alias, mv.version)
+        LOGGER.info("Set alias '%s' to version %s", model_alias, mv.version)
 
 
 def get_model_name(
