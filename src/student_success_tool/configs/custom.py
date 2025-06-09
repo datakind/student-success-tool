@@ -35,6 +35,13 @@ class CustomProjectConfig(pyd.BaseModel):
             "to use for model bias assessment, but *not* as model features"
         ),
     )
+    student_group_aliases: Optional[Dict[str, str]] = pyd.Field(
+        default_factory=dict,
+        description=(
+            "Mapping from raw column name (e.g., GENDER_DESC) to "
+            "friendly label (e.g., 'Gender') for use in model cards"
+        )
+    )
     pred_col: str = "pred"
     pred_prob_col: str = "pred_prob"
     pos_label: t.Optional[int | bool | str] = True
@@ -87,9 +94,20 @@ class CustomProjectConfig(pyd.BaseModel):
                 "random_state must be specified if sample_weight_col is provided"
             )
         return self
+    
+    @pyd.model_validator(mode="after")
+    def validate_student_group_aliases(self) -> "CustomProjectConfig":
+        missing = [
+            col for col in (self.student_group_cols or [])
+            if col not in (self.student_group_aliases or {})
+        ]
+        if missing:
+            raise ValueError(
+                f"Missing student_group_aliases for: {missing}"
+            )
+        return self
 
-
-class DatasetPathConfig(BaseModel):
+class DatasetPathConfig(pyd.BaseModel):
     table_path: t.Optional[str] = pyd.Field(
         default=None,
         description=(
@@ -109,7 +127,7 @@ class DatasetPathConfig(BaseModel):
         return self
 
 
-class DatasetConfig(BaseModel):
+class DatasetConfig(pyd.BaseModel):
     train: t.Optional[DatasetPathConfig]
     inference: t.Optional[DatasetPathConfig]
     primary_keys: t.Optional[t.List[str]] = pyd.Field(
@@ -131,7 +149,7 @@ class DatasetConfig(BaseModel):
         return getattr(self, mode)
 
 
-class AllDatasetStagesConfig(BaseModel):
+class AllDatasetStagesConfig(pyd.BaseModel):
     bronze: t.Dict[str, DatasetConfig]
     silver: t.Dict[str, DatasetConfig]
     gold: t.Dict[str, DatasetConfig]
