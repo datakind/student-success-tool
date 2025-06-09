@@ -35,7 +35,7 @@ class CustomProjectConfig(pyd.BaseModel):
             "to use for model bias assessment, but *not* as model features"
         ),
     )
-    student_group_aliases: Optional[Dict[str, str]] = pyd.Field(
+    student_group_aliases: t.Optional[Dict[str, str]] = pyd.Field(
         default_factory=dict,
         description=(
             "Mapping from raw column name (e.g., GENDER_DESC) to "
@@ -143,7 +143,7 @@ class DatasetConfig(pyd.BaseModel):
         description="Columns to be validated as non-null, if applicable"
     )
 
-    def get_mode(self, mode: str) -> Optional[DatasetPathConfig]:
+    def get_mode(self, mode: str) -> t.Optional[DatasetPathConfig]:
         if mode not in {"train", "inference"}:
             raise ValueError(f"Invalid mode: {mode}. Must be 'train' or 'inference'.")
         return getattr(self, mode)
