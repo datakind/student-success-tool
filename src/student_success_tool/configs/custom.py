@@ -146,7 +146,7 @@ class DatasetConfig(pyd.BaseModel):
     def get_mode(self, mode: str) -> t.Optional[DatasetPathConfig]:
         if mode not in {"train", "inference"}:
             raise ValueError(f"Invalid mode: {mode}. Must be 'train' or 'inference'.")
-        return getattr(self, mode)
+        return t.cast(t.Optional[DatasetPathConfig], getattr(self, mode))
 
 
 class AllDatasetStagesConfig(pyd.BaseModel):
