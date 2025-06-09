@@ -39,7 +39,7 @@ class CustomProjectConfig(pyd.BaseModel):
         description=(
             "Mapping from raw column name (e.g., GENDER_DESC) to "
             "friendly label (e.g., 'Gender') for use in model cards"
-        )
+        ),
     )
     pred_col: str = "pred"
     pred_prob_col: str = "pred_prob"
@@ -85,7 +85,6 @@ class CustomProjectConfig(pyd.BaseModel):
     # NOTE: this is for *pydantic* model -- not ML model -- configuration
     model_config = pyd.ConfigDict(extra="forbid", strict=True)
 
-
     @pyd.model_validator(mode="after")
     def check_sample_weight_requires_random_state(self):
         if self.sample_weight_col and self.random_state is None:
@@ -93,17 +92,16 @@ class CustomProjectConfig(pyd.BaseModel):
                 "random_state must be specified if sample_weight_col is provided"
             )
         return self
-    
+
     @pyd.model_validator(mode="after")
     def validate_student_group_aliases(self) -> "CustomProjectConfig":
         missing = [
-            col for col in (self.student_group_cols or [])
+            col
+            for col in (self.student_group_cols or [])
             if col not in (self.student_group_aliases or {})
         ]
         if missing:
-            raise ValueError(
-                f"Missing student_group_aliases for: {missing}"
-            )
+            raise ValueError(f"Missing student_group_aliases for: {missing}")
         return self
 
 class DatasetPathConfig(pyd.BaseModel):
@@ -131,15 +129,15 @@ class DatasetConfig(pyd.BaseModel):
     inference: t.Optional[DatasetPathConfig]
     primary_keys: t.Optional[t.List[str]] = pyd.Field(
         default=None,
-        description="Primary keys utilized for data validation, if applicable"
+        description="Primary keys utilized for data validation, if applicable",
     )
     drop_cols: t.Optional[t.List[str]] = pyd.Field(
         default=None,
-        description="Columns to be dropped during pre-processing, if applicable"
+        description="Columns to be dropped during pre-processing, if applicable",
     )
     non_null_cols: t.Optional[t.List[str]] = pyd.Field(
         default=None,
-        description="Columns to be validated as non-null, if applicable"
+        description="Columns to be validated as non-null, if applicable",
     )
 
     def get_mode(self, mode: str) -> t.Optional[DatasetPathConfig]:
@@ -215,6 +213,7 @@ class CheckpointConfig(pyd.BaseModel):
             "Used to provide further context for the particular institution and model. "
         ),
     )
+
     @pyd.field_validator("value")
     @classmethod
     def check_value_positive(cls, v):
@@ -259,6 +258,22 @@ class SelectionConfig(pyd.BaseModel):
             "Multiple criteria are combined with a logical 'AND'."
         ),
     )
+    student_criteria_aliases: dict[str, str] = pyd.Field(
+        default_factory=dict,
+        description="Human-readable display names for student_criteria keys"
+    )
+
+    @pyd.model_validator(mode="after")
+    def validate_criteria_aliases(self) -> "SelectionConfig":
+        criteria_keys = self.student_criteria.keys()
+        alias_keys = self.criteria_col_aliases or {}
+
+        missing = [k for k in criteria_keys if k not in alias_keys]
+        if missing:
+            raise ValueError(
+                f"Missing display aliases in `criteria_col_aliases` for: {missing}"
+            )
+        return self
 
 class ModelingConfig(pyd.BaseModel):
     feature_selection: t.Optional["FeatureSelectionConfig"] = None
