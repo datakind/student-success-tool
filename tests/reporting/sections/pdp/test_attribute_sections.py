@@ -21,19 +21,19 @@ def mock_card():
             "retention",
             {},
             {},
-            "The model predicts the risk of non-retention into the student's second academic year based on student, course, and academic data.",
+            "The model predicts the likelihood of non-retention into the student's second academic year based on student, course, and academic data.",
         ),
         (
             "graduation",
             {"FULL-TIME": (2.0, "year"), "PART-TIME": (3.0, "year")},
             {},
-            "The model predicts the risk of not graduating on time within 2 years for full-time students, and within 3 years for part-time students, based on student, course, and academic data.",
+            "The model predicts the likelihood of not graduating on time within 2 years for full-time students, and within 3 years for part-time students, based on student, course, and academic data.",
         ),
         (
             "credits_earned",
             {"FULL-TIME": (1.5, "year")},
             {"min_num_credits": 45},
-            "The model predicts the risk of not earning 45 credits within 1.5 years for full-time students, based on student, course, and academic data.",
+            "The model predicts the likelihood of not earning 45 credits within 1.5 years for full-time students, based on student, course, and academic data.",
         ),
     ],
 )
