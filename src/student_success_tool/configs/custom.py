@@ -2,7 +2,6 @@ import re
 import typing as t
 
 import pydantic as pyd
-from ..utils import types
 
 
 class CustomProjectConfig(pyd.BaseModel):
