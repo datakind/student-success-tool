@@ -266,12 +266,12 @@ class SelectionConfig(pyd.BaseModel):
     @pyd.model_validator(mode="after")
     def validate_criteria_aliases(self) -> "SelectionConfig":
         criteria_keys = self.student_criteria.keys()
-        alias_keys = self.criteria_col_aliases or {}
+        alias_keys = self.student_criteria_aliases or {}
 
         missing = [k for k in criteria_keys if k not in alias_keys]
         if missing:
             raise ValueError(
-                f"Missing display aliases in `criteria_col_aliases` for: {missing}"
+                f"Missing display aliases in `student_criteria_aliases` for: {missing}"
             )
         return self
 
