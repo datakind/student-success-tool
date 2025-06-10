@@ -260,7 +260,7 @@ class SelectionConfig(pyd.BaseModel):
     )
     student_criteria_aliases: dict[str, str] = pyd.Field(
         default_factory=dict,
-        description="Human-readable display names for student_criteria keys"
+        description="Human-readable display names for student_criteria keys",
     )
 
     @pyd.model_validator(mode="after")
