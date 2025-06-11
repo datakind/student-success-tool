@@ -296,7 +296,7 @@ if __name__ == "__main__":
     args = parse_arguments()
     sys.path.append(args.custom_schemas_path)
     sys.path.append(
-        f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs"
+        f"/Volumes/staging_sst_01/{args.databricks_institution_name}_gold/gold_volume/inference_inputs"
     )
     try:
         print("Listdir1", os.listdir("/Workspace/Users"))

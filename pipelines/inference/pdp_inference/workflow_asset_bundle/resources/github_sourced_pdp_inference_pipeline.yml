@@ -49,7 +49,7 @@ resources:
               - --course_dataset_validated_path
               - "{{tasks.data_ingestion.values.course_dataset_validated_path}}"
               - --toml_file_path
-              - "/Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/configuration_files/{{job.parameters.databricks_institution_name}}_{{job.parameters.model_name}}_configuration_file.toml"
+              - "/Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/inference_inputs/config_file.toml"
               - --custom_schemas_path
               - "{{job.parameters.custom_schemas_path}}"
           job_cluster_key: pdp-inference-pipeline-cluster
@@ -73,7 +73,7 @@ resources:
               - --input_table_path
               - "{{tasks.data_preprocessing.values.processed_dataset_path}}"
               - --input_schema_path
-              - /Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/configuration_files/schema.pbtxt # TODO(samroon2): Update once finalized.
+              - /Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/inference_inputs/schema.pbtxt # TODO(samroon2): Update once finalized.
               - --output_artifact_path
               - "{{tasks.data_ingestion.values.job_root_dir}}"
               - --environment
@@ -97,7 +97,7 @@ resources:
               - --input_table_path
               - "{{tasks.data_preprocessing.values.processed_dataset_path}}"
               - --input_schema_path
-              - /Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/configuration_files/schema.pbtxt # TODO(samroon2): Update once finalized.
+              - /Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/inference_inputs/schema.pbtxt # TODO(samroon2): Update once finalized.
               - --output_artifact_path
               - "{{tasks.data_ingestion.values.job_root_dir}}"
               - --environment
