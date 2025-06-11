@@ -302,7 +302,7 @@ if __name__ == "__main__":
         converter_func = importlib.import_module("dataio")
         cohort_converter_func = converter_func.converter_func_cohort
         logging.info("Running task with custom cohort converter func")
-    except ModuleNotFoundError:
+    except Exception:
         print("Running task without custom cohort converter func")
         cohort_converter_func = None
         logging.info("Running task without custom cohort converter func")
@@ -312,7 +312,7 @@ if __name__ == "__main__":
         converter_func = importlib.import_module("dataio")
         course_converter_func = converter_func.converter_func_course
         logging.info("Running task with custom course converter func")
-    except ModuleNotFoundError:
+    except Exception:
         print("Running task without custom course converter func")
         course_converter_func = None
         logging.info("Running task without custom course converter func") 
