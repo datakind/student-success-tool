@@ -330,5 +330,5 @@ if __name__ == "__main__":
 
         logging.info("Running task with default schema")
 
-    task = DataIngestionTask(args, cohort_converter_func, course_converter_func)
+    task = DataIngestionTask(args, cohort_converter_func=cohort_converter_func, course_converter_func=course_converter_func)
     task.run()
