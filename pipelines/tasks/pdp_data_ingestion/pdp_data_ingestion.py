@@ -231,10 +231,7 @@ class DataIngestionTask:
         print("raw_files_path:", raw_files_path)
         dbutils.fs.mkdirs(raw_files_path)
 
-        # fpath_course, fpath_cohort = self.download_data_from_gcs(raw_files_path)
-        # Hack to get around gcp permissions right now
-        fpath_course = f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs/{self.args.course_file_name}"
-        fpath_cohort = f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs/{self.args.cohort_file_name}"
+        fpath_course, fpath_cohort = self.download_data_from_gcs(raw_files_path)
         df_course, df_cohort = self.read_and_validate_data(fpath_course, fpath_cohort)
 
         course_dataset_validated_path, cohort_dataset_validated_path = (
@@ -303,14 +300,22 @@ if __name__ == "__main__":
         print("Listdir1", os.listdir("/Workspace/Users"))
         # converter_func = importlib.import_module(f"{args.databricks_institution_name}.dataio")
         converter_func = importlib.import_module("dataio")
-        course_converter_func = converter_func.converter_func_course
         cohort_converter_func = converter_func.converter_func_cohort
-        logging.info("Running task with custom converter func")
+        logging.info("Running task with custom cohort converter func")
     except ModuleNotFoundError:
-        print("Running task without custom converter func")
-        course_converter_func = None
+        print("Running task without custom cohort converter func")
         cohort_converter_func = None
-        logging.info("Running task without custom converter func")
+        logging.info("Running task without custom cohort converter func")
+    try:
+        print("Listdir1", os.listdir("/Workspace/Users"))
+        # converter_func = importlib.import_module(f"{args.databricks_institution_name}.dataio")
+        converter_func = importlib.import_module("dataio")
+        course_converter_func = converter_func.converter_func_course
+        logging.info("Running task with custom course converter func")
+    except ModuleNotFoundError:
+        print("Running task without custom course converter func")
+        course_converter_func = None
+        logging.info("Running task without custom course converter func") 
     try:
         print("sys.path:", sys.path)
         # schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")

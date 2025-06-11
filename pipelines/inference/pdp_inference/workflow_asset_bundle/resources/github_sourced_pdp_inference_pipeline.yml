@@ -205,18 +205,18 @@ resources:
       git_source:
         git_url: https://github.com/datakind/student-success-tool
         git_provider: gitHub
-        git_branch: develop
+        git_branch: inference-pipeline-testing-refactor-v3
       tags:
         dev: kayla_wilding
       queue:
         enabled: true
       parameters:
         - name: cohort_file_name
-          default: kentucky_state_uni_pdp_ar_deid_20241029000400.csv 
+          default: AO1600pdp_AO1600_AR_DEIDENTIFIED_STUDYID_20250522120554.csv
         - name: course_file_name
-          default: kentucky_state_uni_pdp_course_ar_deid_20241029000414_dedup.csv
+          default: AO1600pdp_AO1600_COURSE_LEVEL_AR_DEIDENTIFIED_STUDYID_20250522120554.csv
         - name: databricks_institution_name
-          default: kentucky_state_uni
+          default: midway_uni
         - name: db_run_id
           default: "{{job.run_id}}"
         - name: DB_workspace
@@ -224,7 +224,7 @@ resources:
         - name: gcp_bucket_name
           default: dev_6782b2f451f84c17ae6e14e918432b65
         - name: model_name
-          default: kentucky_state_uni_retention_end_of_first_year
+          default: midway_uni_graduation_4y_end_of_first_year
         - name: model_type
           default: sklearn
         - name: notification_email
