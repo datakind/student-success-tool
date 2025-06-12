@@ -82,7 +82,8 @@ class ModelInferenceTask:
 
     def load_mlflow_model(self):
         """Loads the MLflow model."""
-        model_uri = f"runs:/{self.cfg.model.run_id}/model"
+        # model_uri = f"runs:/{self.cfg.model.run_id}/model"
+        model_uri = f"models:/{self.args.DB_workspace}.{self.args.databricks_institution_name}_gold.{self.args.model_name}/latest"
 
         try:
             load_model_func = {
