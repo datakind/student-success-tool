@@ -36,6 +36,7 @@ from student_success_tool.modeling import inference
 from student_success_tool.configs.pdp import PDPProjectConfig
 from student_success_tool.modeling.evaluation import plot_shap_beeswarm
 from student_success_tool.utils import emails
+from mlflow.tracking import MlflowClient
 
 # Disable mlflow autologging (prevents conflicts in Databricks environments)
 mlflow.autolog(disable=True)
@@ -83,7 +84,15 @@ class ModelInferenceTask:
     def load_mlflow_model(self):
         """Loads the MLflow model."""
         # model_uri = f"runs:/{self.cfg.model.run_id}/model"
-        model_uri = f"models:/{self.args.DB_workspace}.{self.args.databricks_institution_name}_gold.{self.args.model_name}/latest"
+        client = MlflowClient(registry_uri="databricks-uc")
+        full_model_name = f"{self.args.DB_workspace}.{self.args.databricks_institution_name}_gold.{self.args.model_name}"
+
+        # List all versions of the model
+        all_versions = client.search_model_versions(f"name='{full_model_name}'")
+
+        # Sort by version number and create uri for latest model
+        latest_version = max(all_versions, key=lambda v: int(v.version))
+        model_uri = f"models:/{full_model_name}/{latest_version.version}"
 
         try:
             load_model_func = {
