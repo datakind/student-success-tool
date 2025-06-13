@@ -25,7 +25,7 @@ def nth_student_terms(
     """
     For each student, get the nth row in ``df`` (in ascending order of ``sort_cols`` ). If `exclude_pre_cohort_col` is true, then for each student, we want to get the nth row in ``df`` (in ascending order of ``sort_cols`` ) for which the term occurred *within* the student's cohort, i.e. not prior to their official start of enrollment, and a configurable subset of columns. This parameter can be set to False to ignore the student's cohort start date in choosing the `nth` term.
     Ex. n = 0 gets the first term, and is equivalent to the functionality of get_first_student_terms(); n = 1 gets the second term, n = 2, gets the third term, so on and so forth.
-    The parameter "exclude_non_core_terms" ensures that we only count core terms in choosing thr `nth` core term. This parameter can be set to False to count all terms in choosing the `nth` term.
+    The parameter "exclude_non_core_terms" ensures that we only count core terms in choosing the `nth` core term. This parameter can be set to False to count all terms in choosing the `nth` term.
     Valid_enrollment_year is a parameter that if set, we drop nth term if it falls outside this enrollment year.
 
     Args:

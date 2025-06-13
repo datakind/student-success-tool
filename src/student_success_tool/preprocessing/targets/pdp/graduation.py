@@ -21,6 +21,8 @@ def compute_target(
     enrollment_year_col: str = "year_of_enrollment_at_cohort_inst",
     term_is_pre_cohort_col: str = "term_is_pre_cohort",
     term_rank_col: str = "term_rank",
+    exclude_non_core_terms: bool = True,
+    checkpoint: t.Optional[str] = None,
 ) -> pd.Series:
     """
     Compute *non* graduation target for each distinct student in ``df`` , for which
@@ -52,9 +54,11 @@ def compute_target(
         enrollment_year_col: Column whose values give students' "current" year of enrollment
             at the cohort inst as of the given row, used to filter rows to pre-graduation
             when determining students' most common enrollment intensity.
-        term_is_pre_cohort_col
+        term_is_pre_cohort_col: Column indicating whether or not a term is a pre-cohort term
         term_rank_col: Column whose values give the absolute integer ranking of a given
             term within the full dataset ``df`` .
+        exclude_non_core_terms: Ensures that we only count core terms in counting up to the target. 
+        checkpoint: if seeking to count max terms from after a certain credit attained as opposed to the cohort term, use this parameter!
 
     See Also:
         - :func:`shared.get_students_with_max_target_term_in_dataset()`
@@ -113,15 +117,28 @@ def compute_target(
     )
     # get all students for which a target label can accurately be computed
     # i.e. the data in df covers their last "on-time" graduation term
-    df_labelable_students = shared.get_students_with_max_target_term_in_dataset(
-        df,
-        checkpoint=ft.partial(
+    # drop non-core terms
+    if exclude_non_core_terms:
+        df = df[df[term_is_core_col] == True]
+    if checkpoint == "num_credits_earned":
+        df_ckpt = ft.partial(
+            checkpoints.pdp.first_student_terms_at_num_credits_earned,
+            df_student_terms,
+            min_num_credits=cfg.preprocessing.checkpoint.min_num_credits,
+            sort_cols=cfg.preprocessing.checkpoint.sort_cols,
+            include_cols=cfg.preprocessing.checkpoint.include_cols,
+        )
+    else:
+        df_ckpt = ft.partial(
             checkpoints.pdp.first_student_terms_within_cohort,
             term_is_pre_cohort_col=term_is_pre_cohort_col,
             student_id_cols=student_id_cols,
             sort_cols=term_rank_col,
             include_cols=(student_id_cols + [term_rank_col, enrollment_intensity_col]),
         ),
+    df_labelable_students = shared.get_students_with_max_target_term_in_dataset(
+        df,
+        checkpoint=df_ckpt,
         intensity_time_limits=intensity_time_limits,
         max_term_rank=max_term_rank,
         num_terms_in_year=num_terms_in_year,
