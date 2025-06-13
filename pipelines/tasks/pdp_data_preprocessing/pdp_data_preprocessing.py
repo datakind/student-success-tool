@@ -126,6 +126,7 @@ class DataProcessingTask:
         """
 
         # Read preprocessing features from config
+        #Kayla - like TO DO :load all config at once and then just use parameters directly
         min_passing_grade = self.cfg.preprocessing.features.min_passing_grade
         min_num_credits_full_time = (
             self.cfg.preprocessing.features.min_num_credits_full_time
@@ -140,7 +141,10 @@ class DataProcessingTask:
         # Read preprocessing target parameters from config
         student_criteria = self.cfg.preprocessing.selection.student_criteria
         student_id_col = self.cfg.student_id_col
-
+        n = self.cfg.preprocessing.checkpoint.n
+        sort_cols = self.cfg.preprocessing.checkpoint.sort_cols
+        include_cols = self.cfg.preprocessing.checkpoint.include_cols
+        
         # Create student-term dataset
         df_student_terms = preprocessing.pdp.make_student_term_dataset(
             df_cohort,
@@ -152,17 +156,32 @@ class DataProcessingTask:
             key_course_subject_areas=key_course_subject_areas,
             key_course_ids=key_course_ids,
         )
-        eligible_students = selection.pdp.select_students_by_attributes(
+
+        selected_students = selection.pdp.select_students_by_attributes(
             df_student_terms, student_id_cols=student_id_col, **student_criteria
         )
-        max_term_rank = df_student_terms["term_rank"].max()
+
+        df_ckpt = preprocessing.checkpoints.pdp.nth_student_terms(
+            df_student_terms,
+            n=n, 
+            sort_cols=sort_cols,
+            include_cols=include_cols,
+            enrollment_year_col="year_of_enrollment_at_cohort_inst",
+            valid_enrollment_year=1
+        )
 
         df_processed = pd.merge(
-            df_student_terms.loc[df_student_terms["term_rank"].eq(max_term_rank), :],
-            eligible_students,
-            on=student_id_col,
-            how="inner",
+            df_ckpt, pd.Series(selected_students.index), how="inner", on=student_id_col
         )
+
+        # max_term_rank = df_student_terms["term_rank"].max()
+
+        # df_processed = pd.merge(
+        #     df_student_terms.loc[df_student_terms["term_rank"].eq(max_term_rank), :],
+        #     eligible_students,
+        #     on=student_id_col,
+        #     how="inner",
+        # )
 
         df_processed = preprocessing.pdp.clean_up_labeled_dataset_cols_and_vals(
             df_processed
