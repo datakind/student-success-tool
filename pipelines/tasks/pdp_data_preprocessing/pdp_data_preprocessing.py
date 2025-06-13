@@ -26,8 +26,9 @@ import student_success_tool.dataio as dataio
 
 # import student_success_tool.preprocessing.targets.pdp as targets
 from student_success_tool import preprocessing
-from student_success_tool.preprocessing import selection
+from student_success_tool.preprocessing import selection, checkpoints
 from student_success_tool.configs.pdp import PDPProjectConfig
+
 
 # Disable mlflow autologging (due to Databricks issues during feature selection)
 mlflow.autolog(disable=True)
@@ -161,7 +162,7 @@ class DataProcessingTask:
             df_student_terms, student_id_cols=student_id_col, **student_criteria
         )
 
-        df_ckpt = preprocessing.checkpoints.pdp.nth_student_terms(
+        df_ckpt = checkpoints.pdp.nth_student_terms(
             df_student_terms,
             n=n, 
             sort_cols=sort_cols,
