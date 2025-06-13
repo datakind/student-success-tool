@@ -175,15 +175,6 @@ class DataProcessingTask:
             df_ckpt, pd.Series(selected_students.index), how="inner", on=student_id_col
         )
 
-        # max_term_rank = df_student_terms["term_rank"].max()
-
-        # df_processed = pd.merge(
-        #     df_student_terms.loc[df_student_terms["term_rank"].eq(max_term_rank), :],
-        #     eligible_students,
-        #     on=student_id_col,
-        #     how="inner",
-        # )
-
         df_processed = preprocessing.pdp.clean_up_labeled_dataset_cols_and_vals(
             df_processed
         )

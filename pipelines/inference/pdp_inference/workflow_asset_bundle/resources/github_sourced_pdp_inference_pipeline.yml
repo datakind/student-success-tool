@@ -135,7 +135,7 @@ resources:
               - --DK_CC_EMAIL
               - "{{job.parameters.DK_CC_EMAIL}}"
               - --modeling_table_path
-              - "{{job.parameters.DB_workspace}}.{{job.parameters.databricks_institution_name}}_gold.modeling_table"
+              - "{{job.parameters.DB_workspace}}.{{job.parameters.databricks_institution_name}}_silver.{{job.parameters.databricks_institution_name}}_pdp_modeling_ar_deid"
               - --custom_schemas_path
               - "{{job.parameters.custom_schemas_path}}"
           job_cluster_key: pdp-inference-pipeline-cluster
