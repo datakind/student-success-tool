@@ -254,6 +254,7 @@ class ModelInferenceTask:
             raise
 
     def top_n_features(
+        self,
         features: pd.DataFrame,
         unique_ids: pd.Series,
         shap_values: npt.NDArray[np.float64],
@@ -398,73 +399,74 @@ class ModelInferenceTask:
         )
 
         if shap_values is not None:  # Proceed only if SHAP values were calculated
-            # --- SHAP Summary Plot ---
-            shap_fig = plot_shap_beeswarm(shap_values)
+            with mlflow.start_run(run_id=self.cfg.model.run_id):
+                # --- SHAP Summary Plot ---
+                shap_fig = plot_shap_beeswarm(shap_values)
 
-            # Inference_features_with_most_impact TABLE
-            inference_features_with_most_impact = self.top_n_features(
-                df_processed[model_feature_names], unique_ids, shap_values.values
-            )
-            # shap_feature_importance TABLE
-            shap_feature_importance = self.inference_shap_feature_importance(
-                df_processed[model_feature_names], shap_values
-            )
-            # support_overview TABLE
-            support_overview_table = self.support_score_distribution_table(
-                df_processed[model_feature_names], unique_ids, df_predicted, shap_values, model_feature_names
-            )
-            if (
-                inference_features_with_most_impact is None
-                or shap_feature_importance is None
-                or support_overview_table is None
-            ):
-                msg = "One or more inference outputs are empty: cannot write inference summary tables."
-                logging.error(msg)
-                raise Exception(msg)
-
-            self.write_data_to_delta(
-                inference_features_with_most_impact,
-                f"inference_{self.cfg.model.run_id}_features_with_most_impact",
-            )
-            self.write_data_to_delta(
-                shap_feature_importance,
-                "inference_{self.cfg.model.run_id}_shap_feature_importance",
-            )
-            self.write_data_to_delta(
-                support_overview_table,
-                "inference_{self.cfg.model.run_id}_support_overview",
-            )
-
-            # Shap Result Table
-            shap_results = self.get_top_features_for_display(
-                df_processed[model_feature_names], unique_ids, df_predicted, shap_values, model_feature_names
-            )
-
-            # --- Save Results to ext/ folder in Gold volume. ---
-            if shap_results is not None:
-                # Specify the folder for the output files to be stored.
-                result_path = f"{self.args.job_root_dir}/ext/"
-                os.makedirs(result_path, exist_ok=True)
-                print("result_path:", result_path)
-
-                # TODO What is the proper name for the table with the results?
-                # Write the DataFrame to Unity Catalog table
-                self.write_data_to_delta(shap_results, "inference_output")
-
-                # Write the DataFrame to CSV in the specified volume
-                spark_df = self.spark_session.createDataFrame(shap_results)
-                spark_df.coalesce(1).write.format("csv").option("header", "true").mode(
-                    "overwrite"
-                ).save(result_path + "inference_output")
-                # Write the SHAP chart png to the volume
-                shap_fig.savefig(result_path + "shap_chart.png", bbox_inches="tight")
-            else:
-                logging.error(
-                    "Empty Shap results, cannot create the SHAP chart and table"
+                # Inference_features_with_most_impact TABLE
+                inference_features_with_most_impact = self.top_n_features(
+                    df_processed[model_feature_names], unique_ids, shap_values.values
                 )
-                raise Exception(
-                    "Empty Shap results, cannot create the SHAP chart and table"
+                # shap_feature_importance TABLE
+                shap_feature_importance = self.inference_shap_feature_importance(
+                    df_processed[model_feature_names], shap_values
                 )
+                # support_overview TABLE
+                support_overview_table = self.support_score_distribution(
+                    df_processed[model_feature_names], unique_ids, df_predicted, shap_values, model_feature_names
+                )
+                if (
+                    inference_features_with_most_impact is None
+                    or shap_feature_importance is None
+                    or support_overview_table is None
+                ):
+                    msg = "One or more inference outputs are empty: cannot write inference summary tables."
+                    logging.error(msg)
+                    raise Exception(msg)
+
+                self.write_data_to_delta(
+                    inference_features_with_most_impact,
+                    f"inference_{self.cfg.model.run_id}_features_with_most_impact",
+                )
+                self.write_data_to_delta(
+                    shap_feature_importance,
+                    f"inference_{self.cfg.model.run_id}_shap_feature_importance",
+                )
+                self.write_data_to_delta(
+                    support_overview_table,
+                    f"inference_{self.cfg.model.run_id}_support_overview",
+                )
+
+                # Shap Result Table
+                shap_results = self.get_top_features_for_display(
+                    df_processed[model_feature_names], unique_ids, df_predicted, shap_values, model_feature_names
+                )
+
+                # --- Save Results to ext/ folder in Gold volume. ---
+                if shap_results is not None:
+                    # Specify the folder for the output files to be stored.
+                    result_path = f"{self.args.job_root_dir}/ext/"
+                    os.makedirs(result_path, exist_ok=True)
+                    print("result_path:", result_path)
+
+                    # TODO What is the proper name for the table with the results?
+                    # Write the DataFrame to Unity Catalog table
+                    self.write_data_to_delta(shap_results, "inference_output")
+
+                    # Write the DataFrame to CSV in the specified volume
+                    spark_df = self.spark_session.createDataFrame(shap_results)
+                    spark_df.coalesce(1).write.format("csv").option("header", "true").mode(
+                        "overwrite"
+                    ).save(result_path + "inference_output")
+                    # Write the SHAP chart png to the volume
+                    shap_fig.savefig(result_path + "shap_chart.png", bbox_inches="tight")
+                else:
+                    logging.error(
+                        "Empty Shap results, cannot create the SHAP chart and table"
+                    )
+                    raise Exception(
+                        "Empty Shap results, cannot create the SHAP chart and table"
+                    )
 
 
 def parse_arguments() -> argparse.Namespace:
