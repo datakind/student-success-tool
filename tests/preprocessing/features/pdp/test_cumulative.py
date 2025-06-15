@@ -49,10 +49,16 @@ def df():
             "term_rank": [1, 3, 4, 5, 9],
             "term_rank_core": [1, 2, pd.NA, 3, 5],
             "term_rank_noncore": [pd.NA, pd.NA, 2, pd.NA, pd.NA],
+            "term_rank_full_time": [1, 2, 3, 4, 5],
             "term_is_pre_cohort": [True, False, False, False, False],
         }
     ).astype(
-        {"term_rank": "Int8", "term_rank_core": "Int8", "term_rank_noncore": "Int8"}
+        {
+            "term_rank": "Int8",
+            "term_rank_core": "Int8",
+            "term_rank_noncore": "Int8",
+            "term_rank_full_time": "Int8",
+        }
     )
 
 
@@ -182,18 +188,22 @@ def test_cumnum_unique_and_repeated_features(df_grped, cols, exp):
                 "min_student_term_rank": [1, 1, 1, 1, 1],
                 "min_student_term_rank_core": [1, 1, 1, 1, 1],
                 "min_student_term_rank_noncore": [2, 2, 2, 2, 2],
+                "min_student_term_rank_full_time": [1, 1, 1, 1, 1],
                 "cumfrac_terms_enrolled": [1.0, 0.666, 0.75, 0.8, 0.556],
                 "cumfrac_core_terms_enrolled": [1.0, 1.0, pd.NA, 1.0, 0.8],
                 "cumfrac_noncore_terms_enrolled": [pd.NA, pd.NA, 1.0, pd.NA, pd.NA],
+                "cumfrac_full_time_terms_enrolled": [1.0, 1.0, 0.667, 0.75, 0.8],
             }
         ).astype(
             {
                 "min_student_term_rank": "Int8",
                 "min_student_term_rank_core": "Int8",
                 "min_student_term_rank_noncore": "Int8",
+                "min_student_term_rank_full_time": "Int8",
                 "cumfrac_terms_enrolled": "Float32",
                 "cumfrac_core_terms_enrolled": "Float32",
                 "cumfrac_noncore_terms_enrolled": "Float32",
+                "cumfrac_full_time_terms_enrolled": "Float32",
             }
         ),
     ],
@@ -204,6 +214,7 @@ def test_add_cumfrac_terms_enrolled_features(df, exp_new):
         cumnum_terms_enrolled=pd.Series([1.0, 2.0, 3.0, 4.0, 5.0]),
         cumnum_core_terms_enrolled=pd.Series([1.0, 2.0, 2.0, 3.0, 4.0]),
         cumnum_noncore_terms_enrolled=pd.Series([0.0, 0.0, 1.0, 1.0, 1.0]),
+        cumnum_full_time_terms_enrolled=pd.Series([1.0, 2.0, 2.0, 3.0, 4.0]),
     )
     obs = cumulative.add_cumfrac_terms_enrolled_features(
         df, student_id_cols=["student_id"]

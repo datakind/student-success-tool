@@ -4,6 +4,7 @@ from collections.abc import Collection, Iterable
 import pandas as pd
 
 TermType = t.Literal["FALL", "WINTER", "SPRING", "SUMMER"]
+EnrollmentIntensityType = t.Literal["FULL-TIME", "PART-TIME"]
 IntensityTimeLimitsType = dict[str, tuple[float, t.Literal["year", "term"]]]
 CheckpointType = t.Union[pd.DataFrame, t.Callable[[pd.DataFrame], pd.DataFrame]]
 CheckpointTypeType = t.Literal[

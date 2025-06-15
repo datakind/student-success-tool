@@ -80,7 +80,9 @@ from student_success_tool.preprocessing.features.pdp import term
                     "term_rank": [1, 1, 2, 3, 0, 4],
                     "term_rank_core": [1, 1, pd.NA, 2, 0, pd.NA],
                     "term_rank_noncore": [pd.NA, pd.NA, 0, pd.NA, pd.NA, 1],
+                    "term_rank_full_time": [1, 1, pd.NA, 2, 0, pd.NA],
                     "term_in_peak_covid": [False, False, False, True, False, False],
+                    "term_is_full_time": [1, 1, pd.NA, 2, 0, pd.NA],
                     "term_is_core": [True, True, False, True, True, False],
                     "term_is_noncore": [False, False, True, False, False, True],
                 }
@@ -88,6 +90,7 @@ from student_success_tool.preprocessing.features.pdp import term
                 {
                     "term_rank_core": "Int8",
                     "term_rank_noncore": "Int8",
+                    "term_rank_full_time": "Int8",
                     "academic_term": pd.CategoricalDtype(
                         ["FALL", "WINTER", "SPRING", "SUMMER"], ordered=True
                     ),
@@ -176,5 +179,34 @@ def test_term_in_peak_covid(df, year_col, term_col, peak_covid_terms, exp):
 )
 def test_term_in_subset(df, terms_subset, term_col, exp):
     obs = term.term_in_subset(df, terms_subset=terms_subset, term_col=term_col)
+    assert isinstance(obs, pd.Series)
+    assert pd.testing.assert_series_equal(obs, exp, check_names=False) is None
+
+
+@pytest.mark.parametrize(
+    ["df", "terms_subset", "term_col", "exp"],
+    [
+        (
+            pd.DataFrame(
+                {"term": ["FULL-TIME", "PART-TIME", "FULL-TIME", "PART-TIME"]}
+            ),
+            {"FULL-TIME"},
+            "term",
+            pd.Series([True, False, True, False], dtype="boolean"),
+        ),
+        (
+            pd.DataFrame(
+                {"term": ["FULL-TIME", "FULL-TIME", "FULL-TIME", "PART-TIME"]}
+            ),
+            {"FULL-TIME"},
+            "term",
+            pd.Series([True, True, True, False], dtype="boolean"),
+        ),
+    ],
+)
+def test_term_in_subset_enrollment_intensity(df, terms_subset, term_col, exp):
+    obs = term.term_in_subset_enrollment_intensity(
+        df, terms_subset=terms_subset, term_col=term_col
+    )
     assert isinstance(obs, pd.Series)
     assert pd.testing.assert_series_equal(obs, exp, check_names=False) is None
