@@ -216,13 +216,6 @@ class ModelInferenceTask:
             # TODO: Consider saving the explainer during training.
             shap_ref_data_size = 200  # Consider getting from config.
 
-            # experiment_id = self.cfg.models[
-            #     "graduation"
-            # ].experiment_id  # Consider refactoring this
-            # df_train = modeling.evaluation.extract_training_data_from_model(
-            #     experiment_id
-            # )
-
             df_train = dataio.from_delta_table(
                 self.args.modeling_table_path, spark_session=self.spark_session
             )
@@ -415,11 +408,11 @@ class ModelInferenceTask:
             )
             # shap_feature_importance TABLE
             shap_feature_importance = self.inference_shap_feature_importance(
-                df_processed, shap_values
+                df_processed[model_feature_names], shap_values
             )
             # support_overview TABLE
             support_overview_table = self.support_score_distribution_table(
-                df_processed, unique_ids, df_predicted, shap_values, model_feature_names
+                df_processed[model_feature_names], unique_ids, df_predicted, shap_values, model_feature_names
             )
             if (
                 inference_features_with_most_impact is None
@@ -445,7 +438,7 @@ class ModelInferenceTask:
 
             # Shap Result Table
             shap_results = self.get_top_features_for_display(
-                df_processed, unique_ids, df_predicted, shap_values, model_feature_names
+                df_processed[model_feature_names], unique_ids, df_predicted, shap_values, model_feature_names
             )
 
             # --- Save Results to ext/ folder in Gold volume. ---
