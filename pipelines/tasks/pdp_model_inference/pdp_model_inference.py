@@ -367,9 +367,7 @@ class ModelInferenceTask:
 
     def run(self):
         """Executes the model inference pipeline."""
-        df_processed = dataio.from_delta_table(
-            self.args.processed_dataset_path, spark_session=self.spark_session
-        )
+        df_processed = dataio.from_delta_table(self.args.processed_dataset_path, spark_session=self.spark_session).limit(100).toPandas()
         unique_ids = df_processed[self.cfg.student_id_col]
 
         model = self.load_mlflow_model()
