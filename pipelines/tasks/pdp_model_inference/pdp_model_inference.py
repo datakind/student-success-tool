@@ -258,7 +258,7 @@ class ModelInferenceTask:
         features: pd.DataFrame,
         unique_ids: pd.Series,
         shap_values: npt.NDArray[np.float64],
-        n: int = 10,
+        n: int = 5,
     ) -> pd.DataFrame:
         try:
             top_n_shap_features = inference.top_shap_features(
@@ -369,7 +369,7 @@ class ModelInferenceTask:
     def run(self):
         """Executes the model inference pipeline."""
         df_processed = dataio.from_delta_table(self.args.processed_dataset_path, spark_session=self.spark_session)
-        df_processed = df_processed[:100]
+        df_processed = df_processed[:200]
         unique_ids = df_processed[self.cfg.student_id_col]
 
         model = self.load_mlflow_model()
@@ -417,12 +417,30 @@ class ModelInferenceTask:
                 )
                 if (
                     inference_features_with_most_impact is None
-                    or shap_feature_importance is None
-                    or support_overview_table is None
                 ):
-                    msg = "One or more inference outputs are empty: cannot write inference summary tables."
+                    msg = "Inference features with most impact is empty: cannot write inference summary tables."
                     logging.error(msg)
                     raise Exception(msg)
+                if (
+                    shap_feature_importance is None
+                ):
+                    msg = "Shap Feature Importance is empty: cannot write inference summary tables."
+                    logging.error(msg)
+                    raise Exception(msg)
+                if (
+                    support_overview_table is None
+                ):
+                    msg = "Support overview table is empty: cannot write inference summary tables."
+                    logging.error(msg)
+                    raise Exception(msg)
+                #                 if (
+                #     inference_features_with_most_impact is None
+                #     or shap_feature_importance is None
+                #     or support_overview_table is None
+                # ):
+                #     msg = "One or more inference outputs are empty: cannot write inference summary tables."
+                #     logging.error(msg)
+                #     raise Exception(msg)
 
                 self.write_data_to_delta(
                     inference_features_with_most_impact,
