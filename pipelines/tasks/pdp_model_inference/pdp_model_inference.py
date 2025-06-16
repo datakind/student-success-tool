@@ -411,10 +411,10 @@ class ModelInferenceTask:
                 shap_feature_importance = self.inference_shap_feature_importance(
                     df_processed[model_feature_names], shap_values
                 )
-                # support_overview TABLE
-                support_overview_table = self.support_score_distribution(
-                    df_processed[model_feature_names], unique_ids, df_predicted, shap_values, model_feature_names
-                )
+                # # support_overview TABLE
+                # support_overview_table = self.support_score_distribution(
+                #     df_processed[model_feature_names], unique_ids, df_predicted, shap_values, model_feature_names
+                # )
                 if (
                     inference_features_with_most_impact is None
                 ):
@@ -427,12 +427,12 @@ class ModelInferenceTask:
                     msg = "Shap Feature Importance is empty: cannot write inference summary tables."
                     logging.error(msg)
                     raise Exception(msg)
-                if (
-                    support_overview_table is None
-                ):
-                    msg = "Support overview table is empty: cannot write inference summary tables."
-                    logging.error(msg)
-                    raise Exception(msg)
+                # if (
+                #     support_overview_table is None
+                # ):
+                #     msg = "Support overview table is empty: cannot write inference summary tables."
+                #     logging.error(msg)
+                #     raise Exception(msg)
                 #                 if (
                 #     inference_features_with_most_impact is None
                 #     or shap_feature_importance is None
@@ -450,10 +450,10 @@ class ModelInferenceTask:
                     shap_feature_importance,
                     f"inference_{self.cfg.model.run_id}_shap_feature_importance",
                 )
-                self.write_data_to_delta(
-                    support_overview_table,
-                    f"inference_{self.cfg.model.run_id}_support_overview",
-                )
+                # self.write_data_to_delta(
+                #     support_overview_table,
+                #     f"inference_{self.cfg.model.run_id}_support_overview",
+                # )
 
                 # Shap Result Table
                 shap_results = self.get_top_features_for_display(
