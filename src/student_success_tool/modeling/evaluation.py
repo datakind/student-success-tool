@@ -18,7 +18,13 @@ import sklearn.inspection
 import sklearn.metrics
 import sklearn.utils
 from sklearn.calibration import calibration_curve
+from sklearn.preprocessing import MinMaxScaler
 from statsmodels.nonparametric.smoothers_lowess import lowess
+
+try:
+    from IPython.display import display
+except ImportError:
+    display = print
 
 LOGGER = logging.getLogger(__name__)
 
@@ -161,45 +167,111 @@ def format_perf_metrics(perf_metrics_raw: dict) -> dict:
         "Log Loss": round(float(perf_metrics_raw["log_loss"]), 2),
     }
 
-
-def get_top_run_ids(
+def get_top_runs(
     experiment_id: str,
-    optimization_metric: str,
+    optimization_metrics: t.Union[str, list[str]],
     topn_runs_included: int = 1,
-) -> list[str]:
+) -> dict[str, str]:
     """
-    Retrieve top run IDs from an MLflow experiment using evaluation parameters.
+    Retrieve top runs from an MLflow experiment using a balanced score over multiple metrics.
 
-    Args:
+    Parameters:
         experiment_id: MLflow experiment ID.
-        optimization_metric: Metric used to optimize the model.
+        optimization_metrics: Single metric or list of metrics to sort by.
         topn_runs_included: Number of top runs to return.
+        debug: If True, display top rows with metrics and balanced scores.
 
     Returns:
-        top_run_ids: List of top run IDs based on the optimization metric.
+        A dictionary mapping run_name to run_id.
     """
+    if isinstance(optimization_metrics, str):
+        optimization_metrics = [optimization_metrics]
+
+    # Prepare column names and directions
+    sort_by = [f"metrics.{m}" for m in optimization_metrics]
+    directions = infer_directions(optimization_metrics)
+
     # Fetch all runs
     runs = mlflow.search_runs(
         experiment_ids=[experiment_id],
-        order_by=["metrics.m DESC"],
-        output_format="pandas",
+        output_format="pandas"
     )
-    assert isinstance(runs, pd.DataFrame)  # type guard
-    # Retrieve validation metric for sorting
-    search_metric = (
-        f"metrics.val_{optimization_metric}"
-        if optimization_metric in ["log_loss", "roc_auc"]
-        else f"metrics.val_{optimization_metric}_score"
-    )
-    # Sort and select top run IDs based on min/max with loss vs. score
-    ascending_order = optimization_metric == "log_loss"
-    top_run_ids: list[str] = (
-        runs.sort_values(by=search_metric, ascending=ascending_order)
-        .iloc[:topn_runs_included]["run_id"]
-        .tolist()
-    )
-    return top_run_ids
+    assert isinstance(runs, pd.DataFrame)
 
+    # Clean and filter
+    valid_runs = runs.dropna(subset=sort_by).copy()
+    for col in sort_by:
+        valid_runs[col] = valid_runs[col].astype(float)
+
+    # Score and sort
+    valid_runs["balanced_score"] = compute_balanced_score(valid_runs, sort_by, directions)
+    sorted_runs = valid_runs.sort_values("balanced_score")
+
+    # Display viz of top runs
+    display_cols = (
+        ["tags.mlflow.runName", "run_id"] +
+        sort_by +
+        ["balanced_score"]
+    )
+
+    print("Inferred directions:")
+    for metric, direction in zip(optimization_metrics, directions):
+        print(f"  • {metric}: {'minimize' if direction == 'asc' else 'maximize'}")
+
+    print(f"\n Top {topn_runs_included} runs (by balanced score):")
+    display(sorted_runs[display_cols].head(topn_runs_included))
+
+    # Return as {run_name: run_id}
+    top_runs = sorted_runs.head(topn_runs_included)
+    return {
+        row.get("tags.mlflow.runName", f"Unnamed_{row['run_id']}"): row["run_id"]
+        for _, row in top_runs.iterrows()
+    }
+
+def infer_directions(metrics: list[str]) -> list[str]:
+    """
+    When getting top runs, we can infer optimization direction 
+    for each metric: 'asc' (minimize) or 'desc' (maximize). 
+
+    Parameters: 
+        metrics: List of metric names.
+    
+    Returns:
+        List of directions, one for each metric.
+    """
+    minimize_keywords = ("loss", "error", "log_loss", "mae", "mse")
+    return [
+        "asc" if any(metric.lower().endswith(k) for k in minimize_keywords) else "desc"
+        for metric in metrics
+    ]
+
+def compute_balanced_score(df: pd.DataFrame, metrics: list[str], directions: list[str]) -> pd.Series:
+    """
+    When sorting through top runs, we need to average normalize our metrics in order to
+    properly find the best overall runs across all given metrics. We balance ALL metrics
+    equally. We then compute a balanced average score (lower is better).
+
+    TODO: Provide a priority list of metrics: higher recall, then ROC AUC, then log loss,
+    for example.
+
+    Parameters:
+        df: Pandas DataFrame containing metrics
+        metrics: List of metric names
+        directions: List of directions for each metric
+    
+    Returns:
+        Balanced score for each row in the DataFrame
+    """
+    scaler = MinMaxScaler()
+    data = df[metrics].copy()
+    normalized = scaler.fit_transform(data)
+
+    # Flip maximization metrics so that lower = better for everything
+    for i, direction in enumerate(directions):
+        if direction == "desc":
+            normalized[:, i] = 1 - normalized[:, i]
+
+    return pd.Series(normalized.mean(axis=1), index=df.index)
 
 def compute_classification_perf_metrics(
     targets: pd.Series,
