@@ -404,9 +404,9 @@ class ModelInferenceTask:
                 shap_fig = plot_shap_beeswarm(shap_values)
 
                 # Inference_features_with_most_impact TABLE
-                inference_features_with_most_impact = self.top_n_features(
-                    df_processed[model_feature_names], unique_ids, shap_values.values
-                )
+                # inference_features_with_most_impact = self.top_n_features(
+                #     df_processed[model_feature_names], unique_ids, shap_values.values
+                # )
                 # shap_feature_importance TABLE
                 shap_feature_importance = self.inference_shap_feature_importance(
                     df_processed[model_feature_names], shap_values
@@ -415,12 +415,12 @@ class ModelInferenceTask:
                 # support_overview_table = self.support_score_distribution(
                 #     df_processed[model_feature_names], unique_ids, df_predicted, shap_values, model_feature_names
                 # )
-                if (
-                    inference_features_with_most_impact is None
-                ):
-                    msg = "Inference features with most impact is empty: cannot write inference summary tables."
-                    logging.error(msg)
-                    raise Exception(msg)
+                # if (
+                #     inference_features_with_most_impact is None
+                # ):
+                #     msg = "Inference features with most impact is empty: cannot write inference summary tables."
+                #     logging.error(msg)
+                #     raise Exception(msg)
                 if (
                     shap_feature_importance is None
                 ):
@@ -442,10 +442,10 @@ class ModelInferenceTask:
                 #     logging.error(msg)
                 #     raise Exception(msg)
 
-                self.write_data_to_delta(
-                    inference_features_with_most_impact,
-                    f"inference_{self.cfg.model.run_id}_features_with_most_impact",
-                )
+                # self.write_data_to_delta(
+                #     inference_features_with_most_impact,
+                #     f"inference_{self.cfg.model.run_id}_features_with_most_impact",
+                # )
                 self.write_data_to_delta(
                     shap_feature_importance,
                     f"inference_{self.cfg.model.run_id}_shap_feature_importance",
