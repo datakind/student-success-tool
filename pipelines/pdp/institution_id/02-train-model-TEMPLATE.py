@@ -215,16 +215,14 @@ else:
 # Adjust optimization metrics & topn_runs_included as needed
 top_runs = modeling.evaluation.get_top_runs(
     experiment_id,
-    optimization_metrics= (
-        [
-            "test_recall_score",
-            "val_recall_score",
-            "test_roc_auc",
-            "val_roc_auc"
-            "test_log_loss",
-            "val_log_loss",
-        ]
-    ),
+    optimization_metrics=[
+        "test_recall_score",
+        "val_recall_score",
+        "test_roc_auc",
+        "val_roc_auc",
+        "test_log_loss",
+        "val_log_loss",
+    ],
     topn_runs_included=cfg.modeling.evaluation.topn_runs_included,
 )
 logging.info("top run ids = %s", top_runs)
