@@ -9,6 +9,7 @@ from student_success_tool.modeling import evaluation
 def patch_mlflow(monkeypatch):
     def _patch(mock_df, target="mlflow.search_runs"):
         monkeypatch.setattr(target, lambda *args, **kwargs: mock_df)
+
     return _patch
 
 
@@ -106,6 +107,7 @@ def mock_runs_df():
         }
     )
 
+
 @pytest.mark.parametrize(
     "metrics, expected_run_name",
     [
@@ -135,6 +137,7 @@ def test_get_top_runs_balanced(metrics, expected_run_name, mock_runs_df, patch_m
     )
 
     assert list(top.keys())[0] == expected_run_name
+
 
 @pytest.mark.parametrize(
     "metrics, expected_top",

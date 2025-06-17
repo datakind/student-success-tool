@@ -22,10 +22,12 @@ from sklearn.preprocessing import MinMaxScaler
 from statsmodels.nonparametric.smoothers_lowess import lowess
 
 try:
-    from IPython.display import display
+    from IPython.display import display as _display
 except ImportError:
-    def display(*objs: t.Any, **kwargs: t.Any) -> None:
+    def _display(*objs: t.Any, **kwargs: t.Any) -> None:
         print(*objs)
+
+display: t.Callable[..., t.Any] = _display
 
 LOGGER = logging.getLogger(__name__)
 
@@ -208,7 +210,7 @@ def get_top_runs(
     sorted_runs = valid_runs.sort_values("balanced_score")
 
     # Display viz of top runs
-    display_cols = (["tags.mlflow.runName", "run_id"] + sort_by + ["balanced_score"])
+    display_cols = ["tags.mlflow.runName", "run_id"] + sort_by + ["balanced_score"]
 
     print("Inferred directions:")
     for metric, direction in zip(optimization_metrics, directions):
@@ -241,6 +243,7 @@ def infer_directions(metrics: list[str]) -> list[str]:
         "asc" if any(metric.lower().endswith(k) for k in minimize_keywords) else "desc"
         for metric in metrics
     ]
+
 
 def compute_balanced_score(
     df: pd.DataFrame, metrics: list[str], directions: list[str]
