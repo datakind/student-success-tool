@@ -212,10 +212,20 @@ else:
 # COMMAND ----------
 
 # Get top runs from experiment for evaluation
-top_run_ids = modeling.evaluation.get_top_run_ids(
+# Adjust optimization metrics & topn_runs_included as needed
+top_run_ids = modeling.evaluation.get_top_runs(
     experiment_id,
-    cfg.modeling.training.primary_metric,
-    cfg.modeling.evaluation.topn_runs_included,
+    optimization_metrics= (
+        [
+            "test_recall_score",
+            "val_recall_score",
+            "test_roc_auc",
+            "val_roc_auc"
+            "test_log_loss",
+            "val_log_loss",
+        ]
+    ),
+    topn_runs_included=cfg.modeling.evaluation.topn_runs_included,
 )
 logging.info("top run ids = %s", top_run_ids)
 
