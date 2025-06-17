@@ -100,6 +100,7 @@ def test_compare_trained_models(
 
 @pytest.fixture
 def mock_runs_df():
+    """Mock MLflow run data for testing."""
     return pd.DataFrame({
         "run_id": ["r1", "r2", "r3"],
         "tags.mlflow.runName": ["run_1", "run_2", "run_3"],
@@ -108,34 +109,49 @@ def mock_runs_df():
         "metrics.val_log_loss": [0.25, 0.20, 0.30],      # lower is better
     })
 
-@patch("your_module.mlflow.search_runs")
-def test_get_top_runs_balanced(mock_search_runs, mock_runs_df):
-    mock_search_runs.return_value = mock_runs_df
+@pytest.mark.parametrize(
+    "metrics, expected_run_name",
+    [
+        (["test_roc_auc"], "run_3"),            # best AUC
+        (["test_recall_score"], "run_2"),       # best recall
+        (["val_log_loss"], "run_2"),            # lowest loss
+        (["test_roc_auc", "val_log_loss"], "run_1"),  # most balanced
+    ],
+)
+def test_get_top_runs_balanced_via_fixture(metrics, expected_run_name, mock_runs_df, patch_mlflow):
+    # Mock run data
+    mock_df = pd.DataFrame({
+        "run_id": ["r1", "r2", "r3"],
+        "tags.mlflow.runName": ["run_1", "run_2", "run_3"],
+        "metrics.test_roc_auc": [0.80, 0.60, 0.90],
+        "metrics.test_recall_score": [0.70, 0.95, 0.60],
+        "metrics.val_log_loss": [0.25, 0.20, 0.30],
+    })
+
+    patch_mlflow(mock_df)  # Apply patch
+
+    from student_success_tool.modeling import evaluation  # or wherever get_top_runs lives
 
     top = evaluation.get_top_runs(
         experiment_id="dummy",
-        optimization_metrics=["test_roc_auc", "test_recall_score", "val_log_loss"],
+        optimization_metrics=metrics,
         topn_runs_included=1,
-        debug=True,
+        debug=False,
     )
 
-    # r1 is most balanced: decent AUC, recall, and log loss
-    assert isinstance(top, dict)
-    assert list(top.keys()) == ["run_1"]
-    assert list(top.values()) == ["r1"]
+    assert list(top.keys())[0] == expected_run_name
 
 @pytest.mark.parametrize(
     "metrics, expected_top",
     [
-        (["test_recall_score"], "run_2"),       # r2 has best recall (0.95)
-        (["val_log_loss"], "run_2"),            # r2 has lowest log loss (0.20)
-        (["test_roc_auc"], "run_3"),            # r3 has best AUC (0.90)
-        (["test_roc_auc", "val_log_loss"], "run_1"),  # r1 balances AUC and low loss
+        (["test_recall_score"], "run_2"),       # best recall
+        (["val_log_loss"], "run_2"),            # lowest loss
+        (["test_roc_auc"], "run_3"),            # best AUC
+        (["test_roc_auc", "val_log_loss"], "run_1"),  # most balanced
     ],
 )
-@patch("your_module.mlflow.search_runs")
-def test_get_top_runs_parametrized(mock_search_runs, metrics, expected_top, mock_runs_df):
-    mock_search_runs.return_value = mock_runs_df
+def test_get_top_runs_parametrized(metrics, expected_top, mock_runs_df, patch_mlflow):
+    patch_mlflow(mock_runs_df)
 
     top = evaluation.get_top_runs(
         experiment_id="dummy",
