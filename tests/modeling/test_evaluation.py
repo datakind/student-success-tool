@@ -96,31 +96,35 @@ def test_compare_trained_models(
 @pytest.fixture
 def mock_runs_df():
     """Mock MLflow run data for testing."""
-    return pd.DataFrame({
-        "run_id": ["r1", "r2", "r3"],
-        "tags.mlflow.runName": ["run_1", "run_2", "run_3"],
-        "metrics.test_roc_auc": [0.80, 0.60, 0.90],      # higher is better
-        "metrics.test_recall_score": [0.70, 0.95, 0.60], # higher is better
-        "metrics.val_log_loss": [0.25, 0.20, 0.30],      # lower is better
-    })
+    return pd.DataFrame(
+        {
+            "run_id": ["r1", "r2", "r3"],
+            "tags.mlflow.runName": ["run_1", "run_2", "run_3"],
+            "metrics.test_roc_auc": [0.80, 0.60, 0.90],
+            "metrics.test_recall_score": [0.70, 0.95, 0.60],
+            "metrics.val_log_loss": [0.25, 0.20, 0.30],
+        }
+    )
 
 @pytest.mark.parametrize(
     "metrics, expected_run_name",
     [
-        (["test_roc_auc"], "run_3"),            # best AUC
-        (["test_recall_score"], "run_2"),       # best recall
-        (["val_log_loss"], "run_2"),            # lowest loss
-        (["test_roc_auc", "val_log_loss"], "run_1"),  # most balanced
+        (["test_roc_auc"], "run_3"),
+        (["test_recall_score"], "run_2"),
+        (["val_log_loss"], "run_2"),
+        (["test_roc_auc", "val_log_loss"], "run_1"),
     ],
 )
-def test_get_top_runs_balanced_via_fixture(metrics, expected_run_name, mock_runs_df, patch_mlflow):
-    mock_df = pd.DataFrame({
-        "run_id": ["r1", "r2", "r3"],
-        "tags.mlflow.runName": ["run_1", "run_2", "run_3"],
-        "metrics.test_roc_auc": [0.80, 0.60, 0.90],
-        "metrics.test_recall_score": [0.70, 0.95, 0.60],
-        "metrics.val_log_loss": [0.25, 0.20, 0.30],
-    })
+def test_get_top_runs_balanced(metrics, expected_run_name, mock_runs_df, patch_mlflow):
+    mock_df = pd.DataFrame(
+        {
+            "run_id": ["r1", "r2", "r3"],
+            "tags.mlflow.runName": ["run_1", "run_2", "run_3"],
+            "metrics.test_roc_auc": [0.80, 0.60, 0.90],
+            "metrics.test_recall_score": [0.70, 0.95, 0.60],
+            "metrics.val_log_loss": [0.25, 0.20, 0.30],
+        }
+    )
 
     patch_mlflow(mock_df)
 
@@ -135,10 +139,10 @@ def test_get_top_runs_balanced_via_fixture(metrics, expected_run_name, mock_runs
 @pytest.mark.parametrize(
     "metrics, expected_top",
     [
-        (["test_recall_score"], "run_2"),       # best recall
-        (["val_log_loss"], "run_2"),            # lowest loss
-        (["test_roc_auc"], "run_3"),            # best AUC
-        (["test_roc_auc", "val_log_loss"], "run_1"),  # most balanced
+        (["test_recall_score"], "run_2"),
+        (["val_log_loss"], "run_2"),
+        (["test_roc_auc"], "run_3"),
+        (["test_roc_auc", "val_log_loss"], "run_1"),
     ],
 )
 def test_get_top_runs_parametrized(metrics, expected_top, mock_runs_df, patch_mlflow):
