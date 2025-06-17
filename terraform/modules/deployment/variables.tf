@@ -71,3 +71,9 @@ variable "vpc_host_network" {
   description = "The name of the VPC host network"
   type        = string
 }
+
+variable "managed_ssl_certificate_domains" {
+  description = "List of domains for the Google-managed SSL certificate"
+  type        = list(string)
+  default     = []
+}

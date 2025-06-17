@@ -130,6 +130,8 @@ module "lb-http" {
   ssl                             = true
   managed_ssl_certificate_domains = [var.domain]
   https_redirect                  = true
+  random_certificate_suffix = true
+
 
   backends = {
     for s in local.services : "${var.environment}-${s.name}" => {
@@ -155,8 +157,8 @@ module "lb-http" {
       }
     }
   }
-  create_url_map = false
-  url_map        = google_compute_url_map.url_map.self_link
+ create_url_map = false
+ url_map        = google_compute_url_map.url_map.self_link
 }
 
 resource "google_compute_url_map" "url_map" {
