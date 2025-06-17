@@ -8,13 +8,9 @@ from student_success_tool.modeling import evaluation
 
 @pytest.fixture
 def patch_mlflow(monkeypatch):
-    """Patch the mlflow.search_runs function."""
-
-    def mock_search_runs():
-        # This mock function does nothing and will be overridden by each test case
-        pass
-
-    monkeypatch.setattr(mlflow.tracking.MlflowClient, "search_runs", mock_search_runs)
+    def _patch(mock_df, target="mlflow.search_runs"):
+        monkeypatch.setattr(target, lambda *args, **kwargs: mock_df)
+    return _patch
 
 
 def test_check_array_of_arrays_true():
@@ -97,11 +93,6 @@ def test_compare_trained_models(
         "DataFrame should contain specific columns."
     )
 
-@pytest.fixture
-def patch_mlflow(monkeypatch):
-    def _patch_with_df(mock_df):
-        monkeypatch.setattr("mlflow.search_runs", lambda *args, **kwargs: mock_df)
-    return _patch_with_df
 
 @pytest.fixture
 def mock_runs_df():
@@ -124,7 +115,6 @@ def mock_runs_df():
     ],
 )
 def test_get_top_runs_balanced_via_fixture(metrics, expected_run_name, mock_runs_df, patch_mlflow):
-    # Mock run data
     mock_df = pd.DataFrame({
         "run_id": ["r1", "r2", "r3"],
         "tags.mlflow.runName": ["run_1", "run_2", "run_3"],
@@ -133,15 +123,12 @@ def test_get_top_runs_balanced_via_fixture(metrics, expected_run_name, mock_runs
         "metrics.val_log_loss": [0.25, 0.20, 0.30],
     })
 
-    patch_mlflow(mock_df)  # Apply patch
-
-    from student_success_tool.modeling import evaluation  # or wherever get_top_runs lives
+    patch_mlflow(mock_df)
 
     top = evaluation.get_top_runs(
         experiment_id="dummy",
         optimization_metrics=metrics,
         topn_runs_included=1,
-        debug=False,
     )
 
     assert list(top.keys())[0] == expected_run_name
@@ -162,7 +149,6 @@ def test_get_top_runs_parametrized(metrics, expected_top, mock_runs_df, patch_ml
         experiment_id="dummy",
         optimization_metrics=metrics,
         topn_runs_included=1,
-        debug=False,
     )
 
     assert list(top.keys())[0] == expected_top
