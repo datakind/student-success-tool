@@ -22,12 +22,9 @@ from sklearn.preprocessing import MinMaxScaler
 from statsmodels.nonparametric.smoothers_lowess import lowess
 
 try:
-    from IPython.display import display as _display
+    from IPython.display import display
 except ImportError:
-    def _display(*objs: t.Any, **kwargs: t.Any) -> None:
-        print(*objs)
-
-display: t.Callable[..., t.Any] = _display
+    display = t.cast(t.Callable[..., t.Any], print)
 
 LOGGER = logging.getLogger(__name__)
 
