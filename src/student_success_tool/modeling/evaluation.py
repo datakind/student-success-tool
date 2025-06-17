@@ -179,7 +179,6 @@ def get_top_runs(
         experiment_id: MLflow experiment ID.
         optimization_metrics: Single metric or list of metrics to sort by.
         topn_runs_included: Number of top runs to return.
-        debug: If True, display top rows with metrics and balanced scores.
 
     Returns:
         A dictionary mapping run_name to run_id.
