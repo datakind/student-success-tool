@@ -97,6 +97,11 @@ def test_compare_trained_models(
         "DataFrame should contain specific columns."
     )
 
+@pytest.fixture
+def patch_mlflow(monkeypatch):
+    def _patch_with_df(mock_df):
+        monkeypatch.setattr("mlflow.search_runs", lambda *args, **kwargs: mock_df)
+    return _patch_with_df
 
 @pytest.fixture
 def mock_runs_df():
