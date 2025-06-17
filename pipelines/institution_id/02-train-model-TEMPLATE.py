@@ -213,7 +213,7 @@ else:
 
 # Get top runs from experiment for evaluation
 # Adjust optimization metrics & topn_runs_included as needed
-top_run_ids = modeling.evaluation.get_top_runs(
+top_runs = modeling.evaluation.get_top_runs(
     experiment_id,
     optimization_metrics= (
         [
@@ -227,11 +227,11 @@ top_run_ids = modeling.evaluation.get_top_runs(
     ),
     topn_runs_included=cfg.modeling.evaluation.topn_runs_included,
 )
-logging.info("top run ids = %s", top_run_ids)
+logging.info("top run ids = %s", top_runs)
 
 # COMMAND ----------
 
-for run_id in top_run_ids:
+for run_id in top_runs.values():
     with mlflow.start_run(run_id=run_id) as run:
         logging.info(
             "Run %s: Starting performance evaluation%s",
