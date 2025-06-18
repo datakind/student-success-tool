@@ -27,7 +27,9 @@ def dedupe_by_renumbering_courses(df: pd.DataFrame) -> pd.DataFrame:
     student_id_col = (
         "student_guid"
         if "student_guid" in df.columns
-        else "study_id" if "study_id" in df.columns else "student_id"
+        else "study_id"
+        if "study_id" in df.columns
+        else "student_id"
     )
     unique_cols = [
         student_id_col,

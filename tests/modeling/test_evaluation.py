@@ -89,12 +89,12 @@ def test_compare_trained_models(
     result, _ = evaluation.compare_trained_models("dummy_id", metric)
     print(result["tags.model_type"].tolist())
     assert isinstance(result, pd.DataFrame), "The result should be a pandas DataFrame."
-    assert (
-        result["tags.model_type"].tolist() == expected_order
-    ), "Models are not sorted in ascending order based on the metric."
-    assert all(
-        column in result.columns for column in expected_columns
-    ), "DataFrame should contain specific columns."
+    assert result["tags.model_type"].tolist() == expected_order, (
+        "Models are not sorted in ascending order based on the metric."
+    )
+    assert all(column in result.columns for column in expected_columns), (
+        "DataFrame should contain specific columns."
+    )
 
 
 @pytest.mark.parametrize(
@@ -120,9 +120,9 @@ def test_get_top_run_ids(
         mock_data = pd.DataFrame(
             {
                 "run_id": ["run_1", "run_2"],
-                f"metrics.val_{optimization_metric}_score": (
-                    [0.9, 0.8] if not ascending else [0.5, 0.3]
-                ),
+                f"metrics.val_{optimization_metric}_score": [0.9, 0.8]
+                if not ascending
+                else [0.5, 0.3],
             }
         )
 

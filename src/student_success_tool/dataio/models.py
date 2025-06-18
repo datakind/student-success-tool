@@ -32,15 +32,11 @@ def load_mlflow_model(
     load_model_func = (
         mlflow.sklearn.load_model
         if framework == "sklearn"
-        else (
-            mlflow.xgboost.load_model
-            if framework == "xgboost"
-            else (
-                mlflow.lightgbm.load_model
-                if framework == "lightgbm"
-                else mlflow.pyfunc.load_model
-            )
-        )
+        else mlflow.xgboost.load_model
+        if framework == "xgboost"
+        else mlflow.lightgbm.load_model
+        if framework == "lightgbm"
+        else mlflow.pyfunc.load_model
     )
     model = load_model_func(model_uri)
     LOGGER.info("mlflow model loaded from '%s'", model_uri)

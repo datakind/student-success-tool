@@ -40,11 +40,9 @@ def select_students_by_attributes(
     student_id_cols = utils.types.to_list(student_id_cols)
     nuq_students_in = df.groupby(by=student_id_cols, sort=False).ngroups
     is_selecteds = [
-        (
-            df[key].isin(set(val))  # type: ignore
-            if utils.types.is_collection_but_not_string(val)
-            else df[key].eq(val).fillna(value=False)
-        )  # type: ignore
+        df[key].isin(set(val))  # type: ignore
+        if utils.types.is_collection_but_not_string(val)
+        else df[key].eq(val).fillna(value=False)  # type: ignore
         for key, val in criteria.items()
     ]
     for (key, val), is_selected in zip(criteria.items(), is_selecteds):
@@ -60,9 +58,8 @@ def select_students_by_attributes(
     df_selected = (
         df.loc[is_selected, student_id_cols + list(criteria.keys())]
         # df is at student-term level; get student ids from first selected terms only
-        .drop_duplicates(subset=student_id_cols, ignore_index=True).set_index(
-            student_id_cols
-        )
+        .drop_duplicates(subset=student_id_cols, ignore_index=True)
+        .set_index(student_id_cols)
     )
     _log_selection(nuq_students_in, len(df_selected), "all criteria")
     return df_selected

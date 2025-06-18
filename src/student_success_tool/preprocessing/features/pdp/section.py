@@ -32,7 +32,8 @@ def add_features(df: pd.DataFrame, *, section_id_cols: list[str]) -> pd.DataFram
             section_num_students_passed=section_num_students_passed_col_agg(),
             section_num_students_completed=section_num_students_completed_col_agg(),
             section_course_grade_numeric_mean=section_course_grade_numeric_mean_col_agg(),
-        ).astype({"section_course_grade_numeric_mean": "Float32"})
+        )
+        .astype({"section_course_grade_numeric_mean": "Float32"})
     )
     return pd.merge(df, df_section, on=section_id_cols, how="left")
 
