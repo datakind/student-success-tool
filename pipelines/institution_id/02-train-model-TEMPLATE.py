@@ -28,7 +28,7 @@
 # we need to manually install a certain version of pandas and scikit-learn in order
 # for our models to load and run properly.
 
-# %pip install "student-success-tool==0.3.1"
+# %pip install "student-success-tool==0.3.3"
 # %pip install "pandas==1.5.3"
 # %pip install "scikit-learn==1.3.0"
 
@@ -40,7 +40,6 @@
 
 import logging
 
-import matplotlib.pyplot as plt
 import mlflow
 import sklearn.metrics
 from databricks.connect import DatabricksSession
@@ -116,9 +115,11 @@ mlflow.autolog(disable=True)
 
 # COMMAND ----------
 
-# TODO: load feature selection params from the project config
-# okay to hard-code it first then add it to the config later
+# load feature selection params from the project config
+# HACK: set non-feature cols in params since it's computed outside
+# of feature selection config
 selection_params = cfg.modeling.feature_selection.model_dump()
+selection_params["non_feature_cols"] = cfg.non_feature_cols
 logging.info("selection params = %s", selection_params)
 
 # COMMAND ----------
@@ -242,9 +243,6 @@ for run_id in top_run_ids:
         model_comp_fig = modeling.evaluation.plot_trained_models_comparison(
             experiment_id, cfg.modeling.training.primary_metric
         )
-        mlflow.log_figure(model_comp_fig, "model_comparison.png")
-        plt.close()
-
         modeling.evaluation.evaluate_performance(
             df_pred,
             target_col=cfg.target_col,
@@ -266,7 +264,7 @@ mlflow.end_run()
 # NOTE: This can be used for model diagnostics. It is NOT used
 # in our standard evaluation process and not pulled into model cards.
 model = mlflow.sklearn.load_model(f"runs:/{top_run_ids[0]}/model")
-ax = modeling.evaluation.plot_features_permutation_importance(
+result = modeling.evaluation.compute_feature_permutation_importance(
     model,
     df_features,
     df[cfg.target_col],
@@ -275,6 +273,9 @@ ax = modeling.evaluation.plot_features_permutation_importance(
     ),
     sample_weight=df[cfg.sample_weight_col],
     random_state=cfg.random_state,
+)
+ax = modeling.evaluation.plot_features_permutation_importance(
+    result, feature_cols=df_features.columns
 )
 fig = ax.get_figure()
 fig.tight_layout()

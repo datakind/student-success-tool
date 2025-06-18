@@ -271,6 +271,12 @@ class CheckpointBaseConfig(pyd.BaseModel):
 class CheckpointNthConfig(CheckpointBaseConfig):
     type_: types.CheckpointTypeType = "nth"
     n: int = pyd.Field(default=...)
+    term_is_pre_cohort_col: t.Optional[str] = pyd.Field(default="term_is_pre_cohort")
+    exclude_pre_cohort_terms: t.Optional[bool] = pyd.Field(default=True)
+    term_is_core_col: t.Optional[str] = pyd.Field(default="term_is_core")
+    exclude_non_core_terms: t.Optional[bool] = pyd.Field(default=True)
+    enrollment_year_col: t.Optional[str] = pyd.Field(default=None)
+    valid_enrollment_year: t.Optional[int] = pyd.Field(default=None)
 
 
 class CheckpointFirstConfig(CheckpointBaseConfig):
@@ -342,7 +348,6 @@ class FeatureSelectionConfig(pyd.BaseModel):
         - :func:`modeling.feature_selection.select_features()`
     """
 
-    non_feature_cols: t.Optional[list[str]] = None
     force_include_cols: t.Optional[list[str]] = None
     incomplete_threshold: float = 0.5
     low_variance_threshold: float = 0.0

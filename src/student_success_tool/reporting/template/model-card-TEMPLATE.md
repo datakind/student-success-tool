@@ -6,7 +6,7 @@
 ### Overview
 - {outcome_section}
 - {checkpoint_section}
-- Developed by DataKind in {current_year}, Model Version {version_number}
+- {development_note_section}
 - If there are questions or concerns about the model, you can contact **education@datakind.org** or your client success manager.
 
 ### Intended Use
@@ -73,7 +73,7 @@
 
 - **Analyzing Bias Across Student Groups**
 {bias_groups_section}
-    - From our analysis, we identified statistically significant differences across the following student groups _below_.
+    - We evaluated FNR across these student groups and tested for statistically significant disparities.
 
 {bias_summary_section}
 

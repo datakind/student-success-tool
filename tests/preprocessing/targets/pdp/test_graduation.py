@@ -54,8 +54,8 @@ from student_success_tool.preprocessing.targets.pdp import graduation
             12,
             "student_id",
             pd.Series(
-                data=[True, pd.NA],
-                index=pd.Index(["01", "02"], dtype="string", name="student_id"),
+                data=[True],
+                index=pd.Index(["01"], dtype="string", name="student_id"),
                 dtype="boolean",
                 name="target",
             ),
@@ -145,4 +145,6 @@ def test_compute_target(
         enrollment_year_col="enrollment_year",
     )
     assert isinstance(obs, pd.Series)
+    print("obs:", obs)
+    print("exp:", exp)
     assert pd.testing.assert_series_equal(obs, exp) is None

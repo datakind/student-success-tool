@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 LOGGER = logging.getLogger(__name__)
 
@@ -9,6 +10,19 @@ def register_attribute_sections(card, registry):
     checkpoint, and target population. All of this information is gathered from the model's
     config.toml file.
     """
+
+    @registry.register("development_note_section")
+    def development_note():
+        """
+        Produce a note describing when the model was developed and listing the
+        model version (if available).
+        """
+        version_number = card.context.get("version_number", None)
+        current_year = str(datetime.now().year)
+        if version_number:
+            return f"Developed by DataKind in {current_year}, Model Version {version_number}"
+        else:
+            return f"Developed by DataKind in {current_year}"
 
     @registry.register("outcome_section")
     def outcome():
@@ -21,7 +35,7 @@ def register_attribute_sections(card, registry):
 
         if outcome_type == "retention":
             outcome = "non-retention into the student's second academic year"
-            description = f"The model predicts the risk of {outcome} based on student, course, and academic data."
+            description = f"The model predicts the likelihood of {outcome} based on student, course, and academic data."
         else:
             limits = card.cfg.preprocessing.selection.intensity_time_limits
 
@@ -46,7 +60,7 @@ def register_attribute_sections(card, registry):
                 return f"{card.format.bold('Timeframe for Outcome Variable Not Found')}"
 
             full_str = card.format.format_intensity_time_limit(full_time)
-            description = f"The model predicts the risk of {outcome} within {full_str} for full-time students"
+            description = f"The model predicts the likelihood of {outcome} within {full_str} for full-time students"
 
             if part_time:
                 part_str = card.format.format_intensity_time_limit(part_time)
@@ -102,7 +116,40 @@ def register_attribute_sections(card, registry):
         base_message = "The model makes this prediction when the student has"
         if checkpoint_type == "nth":
             n_ckpt = card.cfg.preprocessing.checkpoint.n
-            return f"{base_message} completed their {card.format.ordinal(n_ckpt)} term."
+            exclude_pre_cohort_terms = (
+                card.cfg.preprocessing.checkpoint.exclude_pre_cohort_terms
+            )
+            exclude_non_core_terms = (
+                card.cfg.preprocessing.checkpoint.exclude_non_core_terms
+            )
+            valid_enrollment_year = (
+                card.cfg.preprocessing.checkpoint.valid_enrollment_year
+            )
+            if n_ckpt >= 0:
+                message = f"{base_message} completed their {card.format.ordinal(n_ckpt + 1)} term"
+            elif n_ckpt == -1:
+                message = f"{base_message} completed their last term"
+            else:
+                raise ValueError(
+                    f"Unable to interpret value for nth checkpoint: {n_ckpt}"
+                )
+
+            included = []
+            if not exclude_pre_cohort_terms:
+                included.append("pre-cohort terms")
+            if not exclude_non_core_terms:
+                included.append("non-core terms")
+            if included:
+                if len(included) == 1:
+                    message += f" including {included[0]}"
+                else:
+                    message += (
+                        f" including {', '.join(included[:-1])} and {included[-1]}"
+                    )
+            if valid_enrollment_year:
+                message += f", provided the term occurred in their {card.format.ordinal(valid_enrollment_year)} year of enrollment"
+            message = message.rstrip(". ") + "."
+            return message
         elif checkpoint_type == "first":
             return f"{base_message} completed their first term."
         elif checkpoint_type == "last":
