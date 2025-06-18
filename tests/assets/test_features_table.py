@@ -25,9 +25,9 @@ def test_toml_file_loads(feature_table_data):
 def test_all_features_have_name_and_desc(feature_table_data):
     for feature_id, entry in feature_table_data.items():
         assert isinstance(entry, dict), f"Entry for {feature_id} should be a dict."
-        assert "name" in entry and entry["name"].strip(), (
-            f"'name' missing or empty in feature: {feature_id}"
-        )
-        assert "desc" in entry and entry["desc"].strip(), (
-            f"'desc' missing or empty in feature: {feature_id}"
-        )
+        assert (
+            "name" in entry and entry["name"].strip()
+        ), f"'name' missing or empty in feature: {feature_id}"
+        assert (
+            "desc" in entry and entry["desc"].strip()
+        ), f"'desc' missing or empty in feature: {feature_id}"

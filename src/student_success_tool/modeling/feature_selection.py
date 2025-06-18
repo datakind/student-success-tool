@@ -206,7 +206,9 @@ def drop_collinear_features_iteratively(
 
     imputer: sklearn.impute.SimpleImputer = sklearn.impute.SimpleImputer(
         missing_values=np.nan, strategy="mean"
-    ).set_output(transform="pandas")  # type: ignore
+    ).set_output(
+        transform="pandas"
+    )  # type: ignore
     df_features = imputer.fit_transform(df_features)
     assert isinstance(df_features, pd.DataFrame)  # type guard
 

@@ -554,8 +554,7 @@ def multicol_grade_aggs_by_group(
                 grade_numeric_col=grade_numeric_col,
                 section_grade_numeric_col=section_grade_numeric_col,
             ),
-        )
-        .groupby(by=grp_cols, observed=True, as_index=False)
+        ).groupby(by=grp_cols, observed=True, as_index=False)
         # so that we can efficiently aggregate those intermediate values per group
         .agg(
             num_courses_grade_is_failing_or_withdrawal=(

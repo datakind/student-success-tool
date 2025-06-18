@@ -60,8 +60,7 @@ def add_features(
                 "term_is_core_cumsum": "Int8",
                 "term_is_noncore_cumsum": "Int8",
             }
-        )
-        .rename(
+        ).rename(
             columns={
                 "term_id_cumcount": "cumnum_terms_enrolled",
                 "term_is_core_cumsum": "cumnum_core_terms_enrolled",
@@ -80,8 +79,9 @@ def add_features(
         # however, by definition, these transforms shouldn't alter the original indexing, so:
         pd.concat(concat_dfs, axis="columns")
         # add a last couple features, which don't fit nicely into above logic
-        .pipe(add_cumfrac_terms_enrolled_features, student_id_cols=student_id_cols)
         .pipe(
+            add_cumfrac_terms_enrolled_features, student_id_cols=student_id_cols
+        ).pipe(
             add_term_diff_features,
             cols=[
                 "num_courses",
@@ -119,8 +119,7 @@ def expanding_agg_features(
         agg_dict |= {col: "max" for col in dummy_course_cols}
 
     df_cumaggs = (
-        df_grped.expanding()
-        .agg(agg_dict)
+        df_grped.expanding().agg(agg_dict)
         # pandas does weird stuff when indexing on windowed operations
         # this should get us back to student_id_cols only on the index
         .reset_index(level=-1, drop=True)

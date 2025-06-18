@@ -409,8 +409,7 @@ df = (
             "gender_cohort": "gender",
             "institution_id_cohort": "institution_id",
         }
-    )
-    .drop(
+    ).drop(
         columns=[
             "cohort_course",
             "cohort_term_course",
@@ -828,9 +827,7 @@ ax = sb.histplot(
     pd.merge(
         df_course.groupby(cfg.student_id_col)
         # df_course_filtered.groupby(cfg.student_id_col)
-        .size()
-        .rename("num_courses_enrolled")
-        .reset_index(drop=False),
+        .size().rename("num_courses_enrolled").reset_index(drop=False),
         df_cohort[[cfg.student_id_col, "enrollment_intensity_first_term"]],
         on=cfg.student_id_col,
         how="inner",

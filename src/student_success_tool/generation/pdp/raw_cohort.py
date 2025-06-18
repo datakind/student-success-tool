@@ -26,12 +26,12 @@ class Provider(BaseProvider):
 
         # TODO: handle other cases, e.g. gateway course attempted/completed/grades
         record = {
-            "Student GUID": student_guid
-            if student_guid is not None
-            else self.student_guid(),
-            "Institution ID": institution_id
-            if institution_id is not None
-            else self.institution_id(),
+            "Student GUID": (
+                student_guid if student_guid is not None else self.student_guid()
+            ),
+            "Institution ID": (
+                institution_id if institution_id is not None else self.institution_id()
+            ),
             "Cohort": self.cohort(min_yr=min_cohort_yr, max_yr=max_cohort_yr),
             "Cohort Term": self.cohort_term(),
             "Student Age": self.student_age(),
