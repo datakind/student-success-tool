@@ -46,7 +46,7 @@ from databricks.connect import DatabricksSession
 from pyspark.sql.types import FloatType, StringType, StructField, StructType
 
 from student_success_tool import configs, dataio, modeling
-from student_success_tool.modeling import inference
+from student_success_tool.modeling import inference, evaluation
 
 # COMMAND ----------
 
@@ -261,3 +261,26 @@ result
 dataio.write.to_delta_table(
     result, cfg.datasets.gold.advisor_output.table_path, spark_session=spark
 )
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Log Front-End Tables
+
+# COMMAND ----------
+
+# Log MLFlow confusion matrix & roc table figures in silver schema
+
+with mlflow.start_run() as run:
+    confusion_matrix = evaluation.log_confusion_matrix(
+        institution_id = cfg.institution_id,
+        automl_run_id = cfg.model.run_id,
+    )
+
+    # Log roc curve table for front-end
+    roc_logs = evaluation.log_roc_table(
+        institution_id = cfg.institution_id,
+        automl_run_id = cfg.model.run_id,
+        modeling_dataset_name= cfg.datasets.silver.modeling.table_path,
+    )
+
