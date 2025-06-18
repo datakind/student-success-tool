@@ -60,9 +60,8 @@ def select_students_by_attributes(
     df_selected = (
         df.loc[is_selected, student_id_cols + list(criteria.keys())]
         # df is at student-term level; get student ids from first selected terms only
-        .drop_duplicates(subset=student_id_cols, ignore_index=True).set_index(
-            student_id_cols
-        )
+        .drop_duplicates(subset=student_id_cols, ignore_index=True)
+        .set_index(student_id_cols)
     )
     _log_selection(nuq_students_in, len(df_selected), "all criteria")
     return df_selected

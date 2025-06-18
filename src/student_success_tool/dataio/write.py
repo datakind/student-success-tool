@@ -31,7 +31,8 @@ def to_delta_table(
         df.rename(columns=utils.misc.convert_to_snake_case)
     )
     (
-        pyspark.sql.DataFrameWriterV2(df_spark, table_path).options(format="delta")
+        pyspark.sql.DataFrameWriterV2(df_spark, table_path)
+        .options(format="delta")
         # this *should* do what databricks recomends -- and retains table history!
         .createOrReplace()
     )

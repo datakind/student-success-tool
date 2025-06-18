@@ -89,12 +89,12 @@ def test_compare_trained_models(
     result, _ = evaluation.compare_trained_models("dummy_id", metric)
     print(result["tags.model_type"].tolist())
     assert isinstance(result, pd.DataFrame), "The result should be a pandas DataFrame."
-    assert (
-        result["tags.model_type"].tolist() == expected_order
-    ), "Models are not sorted in ascending order based on the metric."
-    assert all(
-        column in result.columns for column in expected_columns
-    ), "DataFrame should contain specific columns."
+    assert result["tags.model_type"].tolist() == expected_order, (
+        "Models are not sorted in ascending order based on the metric."
+    )
+    assert all(column in result.columns for column in expected_columns), (
+        "DataFrame should contain specific columns."
+    )
 
 
 @pytest.mark.parametrize(
