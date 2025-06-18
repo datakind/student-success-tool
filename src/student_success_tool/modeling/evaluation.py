@@ -371,7 +371,7 @@ def log_confusion_matrix(
     institution_id: str,
     *,
     automl_run_id: str,
-    catalog: str = 'staging_sst_01',
+    catalog: str = "staging_sst_01",
 ) -> None:
     """
     Register an mlflow model according to one of their various recommended approaches.
@@ -393,7 +393,9 @@ def log_confusion_matrix(
             SparkSession.builder.master("local[*]").appName("Fallback").getOrCreate()
         )
 
-    confusion_matrix_table_path = f"{catalog}.{institution_id}_silver.training_{automl_run_id}_confusion_matrix"
+    confusion_matrix_table_path = (
+        f"{catalog}.{institution_id}_silver.training_{automl_run_id}_confusion_matrix"
+    )
 
     def safe_div(numerator, denominator):
         return numerator / denominator if denominator else 0.0
@@ -450,9 +452,7 @@ def log_confusion_matrix(
         )
 
     except mlflow.exceptions.MlflowException as e:
-        raise RuntimeError(
-            f"MLflow error while retrieving run {automl_run_id}: {e}"
-        )
+        raise RuntimeError(f"MLflow error while retrieving run {automl_run_id}: {e}")
     except Exception:
         LOGGER.exception("Failed to compute or store confusion matrix.")
         raise
@@ -490,7 +490,7 @@ def log_roc_table(
         )
 
     split_col = split_col or "split"
-    
+
     table_path = f"{catalog}.{institution_id}_silver.training_{automl_run_id}_roc_curve"
 
     try:
@@ -511,7 +511,9 @@ def log_roc_table(
         # Calculate ROC table manually and plot all thresholds.
         # Down the line, we might want to specify a threshold to reduce plot density
         thresholds = np.sort(np.unique(y_scores))[::-1]
-        rounded_thresholds = sorted(set([round(t, 4) for t in thresholds]), reverse=True)
+        rounded_thresholds = sorted(
+            set([round(t, 4) for t in thresholds]), reverse=True
+        )
 
         P, N = np.sum(y_true == 1), np.sum(y_true == 0)
 
@@ -539,7 +541,9 @@ def log_roc_table(
         roc_df = pd.DataFrame(rows)
         spark_df = spark.createDataFrame(roc_df)
         spark_df.write.mode("overwrite").saveAsTable(table_path)
-        logging.info("ROC table written to table '%s' for run_id=%s", table_path, automl_run_id)
+        logging.info(
+            "ROC table written to table '%s' for run_id=%s", table_path, automl_run_id
+        )
     except Exception as e:
         raise RuntimeError(
             f"Failed to log ROC table for run {automl_run_id}: {e}"
