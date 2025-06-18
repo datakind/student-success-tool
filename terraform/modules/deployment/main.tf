@@ -157,42 +157,42 @@ module "lb-http" {
       }
     }
   }
- create_url_map = false
- url_map        = google_compute_url_map.url_map.self_link
+ #create_url_map = false
+ #url_map        = google_compute_url_map.url_map.self_link
 }
 
-resource "google_compute_url_map" "url_map" {
-  name            = "${var.environment}-tf-cr-url-map-1"
-  default_service = module.lb-http.backend_services["${var.environment}-frontend"].self_link
+#resource "google_compute_url_map" "url_map" {
+#  name            = "${var.environment}-tf-cr-url-map-1"
+ # default_service = module.lb-http.backend_services["${var.environment}-frontend"].self_link
 
-  host_rule {
-    hosts        = ["*"]
-    path_matcher = "allpaths"
-  }
+#  host_rule {
+#    hosts        = ["*"]
+#    path_matcher = "allpaths"
+ # }
+#
+#  path_matcher {
+#    name            = "allpaths"
+ #   default_service = module.lb-http.backend_services["${var.environment}-frontend"].self_link
+#
+ #   path_rule {
+#     paths   = ["/api", "/api/*"]
+#      service = module.lb-http.backend_services["${var.environment}-webapp"].self_link
+#    }
 
-  path_matcher {
-    name            = "allpaths"
-    default_service = module.lb-http.backend_services["${var.environment}-frontend"].self_link
-
-    path_rule {
-      paths   = ["/api", "/api/*"]
-      service = module.lb-http.backend_services["${var.environment}-webapp"].self_link
-    }
-
-    path_rule {
-      paths   = ["/worker", "/worker/*"]
-      service = module.lb-http.backend_services["${var.environment}-worker"].self_link
-    }
-
-    path_rule {
-      paths = [
-        "/build",
-        "/build/*"
-      ]
-      service = google_compute_backend_bucket.build.self_link
-    }
-  }
-}
+ #   path_rule {
+ #     paths   = ["/worker", "/worker/*"]
+ #     service = module.lb-http.backend_services["${var.environment}-worker"].self_link
+ #   }
+#
+ #   path_rule {
+ #     paths = [
+ #       "/build",
+ #       "/build/*"
+ #     ]
+ #     service = google_compute_backend_bucket.build.self_link
+  #  }
+ # }
+#}
 
 resource "google_storage_bucket" "static_assets" {
   name                        = "${var.project}-${var.environment}-static"
