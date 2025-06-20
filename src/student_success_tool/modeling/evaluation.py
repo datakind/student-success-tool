@@ -370,15 +370,15 @@ def compute_feature_permutation_importance(
 def log_confusion_matrix(
     institution_id: str,
     *,
-    automl_experiment_id: str,
-    catalog: str,
+    automl_run_id: str,
+    catalog: str = "staging_sst_01",
 ) -> None:
     """
     Register an mlflow model according to one of their various recommended approaches.
 
     Args:
         institution_id
-        automl_experiment_id
+        automl_run_id
         catalog
     """
     try:
@@ -393,7 +393,9 @@ def log_confusion_matrix(
             SparkSession.builder.master("local[*]").appName("Fallback").getOrCreate()
         )
 
-    confusion_matrix_table_path = f"{catalog}.{institution_id}_gold.inference_{automl_experiment_id}_confusion_matrix"
+    confusion_matrix_table_path = (
+        f"{catalog}.{institution_id}_silver.training_{automl_run_id}_confusion_matrix"
+    )
 
     def safe_div(numerator, denominator):
         return numerator / denominator if denominator else 0.0
@@ -404,7 +406,7 @@ def log_confusion_matrix(
         )
 
     try:
-        run = mlflow.get_run(automl_experiment_id)
+        run = mlflow.get_run(automl_run_id)
         required_metrics = [
             "test_true_positives",
             "test_true_negatives",
@@ -415,7 +417,7 @@ def log_confusion_matrix(
 
         if any(v is None for v in metrics.values()):
             raise ValueError(
-                f"Missing one or more required metrics in run {automl_experiment_id}: {metrics}"
+                f"Missing one or more required metrics in run {automl_run_id}: {metrics}"
             )
 
         tp, tn, fp, fn = (
@@ -446,13 +448,11 @@ def log_confusion_matrix(
         LOGGER.info(
             "Confusion matrix written to table '%s' for run_id=%s",
             confusion_matrix_table_path,
-            automl_experiment_id,
+            automl_run_id,
         )
 
     except mlflow.exceptions.MlflowException as e:
-        raise RuntimeError(
-            f"MLflow error while retrieving run {automl_experiment_id}: {e}"
-        )
+        raise RuntimeError(f"MLflow error while retrieving run {automl_run_id}: {e}")
     except Exception:
         LOGGER.exception("Failed to compute or store confusion matrix.")
         raise
@@ -461,10 +461,10 @@ def log_confusion_matrix(
 def log_roc_table(
     institution_id: str,
     *,
-    automl_experiment_id: str,
-    experiment_id: str,
-    catalog: str,
+    automl_run_id: str,
+    catalog: str = "staging_sst_01",
     target_col: str = "target",
+    modeling_dataset_name: str = "modeling_dataset",
     split_col: Optional[str] = None,
 ) -> None:
     """
@@ -489,36 +489,16 @@ def log_roc_table(
             SparkSession.builder.master("local[*]").appName("Fallback").getOrCreate()
         )
 
-    split_col = split_col or "_automl_split_col_0000"
+    split_col = split_col or "split"
 
-    data_run_tag = "Training Data Storage and Analysis"
-    table_path = f"{catalog}.{institution_id}_gold.sample_training_{automl_experiment_id}_roc_curve"
-    tmp_dir = f"/tmp/{uuid.uuid4()}"  # unique tmp path
-
-    if mlflow.active_run() is None:
-        raise RuntimeError(
-            "No active MLflow run. Please call this within an MLflow run context."
-        )
+    table_path = f"{catalog}.{institution_id}_silver.training_{automl_run_id}_roc_curve"
 
     try:
-        # Find the run that logged the data
-        runs_df: pd.DataFrame = mlflow.search_runs(
-            experiment_ids=[experiment_id], output_format="pandas"
-        )
-        data_run_id = runs_df[runs_df["tags.mlflow.runName"] == data_run_tag][
-            "automl_experiment_id"
-        ].item()
-
-        # Load test data
-        artifact_path = mlflow.artifacts.download_artifacts(
-            run_id=data_run_id, artifact_path="data", dst_path=tmp_dir
-        )
-
-        df = pd.read_parquet(os.path.join(artifact_path, "training_data"))
+        df = spark.read.table(modeling_dataset_name).toPandas()
         test_df = df[df[split_col] == "test"].copy()
 
         # Load model + features
-        model = mlflow.sklearn.load_model(f"runs:/{automl_experiment_id}/model")
+        model = mlflow.sklearn.load_model(f"runs:/{automl_run_id}/model")
         feature_names: List[str] = model.named_steps["column_selector"].get_params()[
             "cols"
         ]
@@ -531,10 +511,14 @@ def log_roc_table(
         # Calculate ROC table manually and plot all thresholds.
         # Down the line, we might want to specify a threshold to reduce plot density
         thresholds = np.sort(np.unique(y_scores))[::-1]
+        rounded_thresholds = sorted(
+            set([round(t, 4) for t in thresholds]), reverse=True
+        )
+
         P, N = np.sum(y_true == 1), np.sum(y_true == 0)
 
         rows = []
-        for thresh in thresholds:
+        for thresh in rounded_thresholds:
             y_pred = (y_scores >= thresh).astype(int)
             TP = np.sum((y_pred == 1) & (y_true == 1))
             FP = np.sum((y_pred == 1) & (y_true == 0))
@@ -557,14 +541,13 @@ def log_roc_table(
         roc_df = pd.DataFrame(rows)
         spark_df = spark.createDataFrame(roc_df)
         spark_df.write.mode("overwrite").saveAsTable(table_path)
-
+        logging.info(
+            "ROC table written to table '%s' for run_id=%s", table_path, automl_run_id
+        )
     except Exception as e:
         raise RuntimeError(
-            f"Failed to log ROC table for run {automl_experiment_id}: {e}"
+            f"Failed to log ROC table for run {automl_run_id}: {e}"
         ) from e
-    finally:
-        if os.path.exists(tmp_dir):
-            shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
 ############
