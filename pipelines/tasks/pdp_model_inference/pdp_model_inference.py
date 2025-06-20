@@ -258,7 +258,7 @@ class ModelInferenceTask:
         features: pd.DataFrame,
         unique_ids: pd.Series,
         shap_values: npt.NDArray[np.float64],
-        n: int = 5,
+        n: int = 1,
     ) -> pd.DataFrame:
         try:
             top_n_shap_features = inference.top_shap_features(
@@ -406,6 +406,11 @@ class ModelInferenceTask:
                 # Inference_features_with_most_impact TABLE
                 inference_features_with_most_impact = self.top_n_features(
                     df_processed[model_feature_names], unique_ids, shap_values.values
+                )
+                #print or log the inference_features_with_most_impact
+                logging.info(
+                    "Inference features with most impact:\n%s",
+                    inference_features_with_most_impact,
                 )
                 # shap_feature_importance TABLE
                 shap_feature_importance = self.inference_shap_feature_importance(
