@@ -302,6 +302,7 @@ class ModelInferenceTask:
                 shap_values.values,
                 inference_params=inference_params,
                 features_table=features_table,   
+                model_feature_names= model_feature_names,
             )
 
             return result
