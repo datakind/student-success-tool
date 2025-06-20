@@ -127,7 +127,7 @@ class ModelInferenceTask:
     def write_data_to_delta(self, df: pd.DataFrame, table_name_suffix: str):
         """Writes a DataFrame to a Delta Lake table."""
         write_schema = f"{self.args.databricks_institution_name}_silver"
-        table_path = f"{self.args.DB_workspace}.{write_schema}.{self.args.db_run_id}_{table_name_suffix}"
+        table_path = f"{self.args.DB_workspace}.{write_schema}.{table_name_suffix}"
 
         try:
             dataio.to_delta_table(df, table_path, spark_session=self.spark_session)
