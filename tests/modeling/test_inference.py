@@ -406,12 +406,16 @@ def sample_data():
             [0.3, 0.1, 0.3, 0.0, 0.2, 0.0, 0.0, 0.1, 0.4, 0.3, 0.4],
         ]
     )
-    return features, unique_ids, shap_values
+    features_table = {
+        "feature1": {"name": "Feature 1 Name"},
+        "feature2": {"name": "Feature 2 Name"},
+    }
+    return features, unique_ids, shap_values, features_table
 
 
 def test_top_shap_features_behavior(sample_data):
-    features, unique_ids, shap_values = sample_data
-    result = top_shap_features(features, unique_ids, shap_values)
+    features, unique_ids, shap_values, features_table = sample_data
+    result = top_shap_features(features, unique_ids, shap_values, features_table=features_table)
 
     # Check output shape and columns
     assert isinstance(result, pd.DataFrame)
@@ -434,8 +438,10 @@ def test_top_shap_features_behavior(sample_data):
         shap_values[i] >= shap_values[i + 1] for i in range(len(shap_values) - 1)
     )
 
-    assert set(grouped.index).issubset(set(features.columns))
     assert len(grouped) == 10
+    print(grouped)
+    assert grouped.index[0] == "Feature 1 Name"
+    assert grouped.index[1] == "Feature 2 Name"
 
 
 def test_handles_fewer_than_10_features():
