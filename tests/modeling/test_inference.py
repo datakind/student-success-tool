@@ -415,7 +415,9 @@ def sample_data():
 
 def test_top_shap_features_behavior(sample_data):
     features, unique_ids, shap_values, features_table = sample_data
-    result = top_shap_features(features, unique_ids, shap_values, features_table=features_table)
+    result = top_shap_features(
+        features, unique_ids, shap_values, features_table=features_table
+    )
 
     # Check output shape and columns
     assert isinstance(result, pd.DataFrame)

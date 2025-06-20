@@ -340,7 +340,7 @@ def top_shap_features(
     unique_ids: pd.Series,
     shap_values: npt.NDArray[np.float64],
     top_n: int = 10,
-    features_table: t.Optional[dict[str, dict[str, str]]] = None
+    features_table: t.Optional[dict[str, dict[str, str]]] = None,
 ) -> pd.DataFrame:
     """
     Extracts the top N most important SHAP features across all samples.
