@@ -340,6 +340,7 @@ def top_shap_features(
     unique_ids: pd.Series,
     shap_values: npt.NDArray[np.float64],
     top_n: int = 10,
+    features_table: t.Optional[dict[str, dict[str, str]]] = None,
 ) -> pd.DataFrame:
     """
     Extracts the top N most important SHAP features across all samples.
@@ -349,6 +350,7 @@ def top_shap_features(
         unique_ids (pd.Series): Unique identifiers for each sample.
         shap_values (np.ndarray): SHAP values for the input features.
         top_n (int): Number of top features to select (default is 10).
+        features_table (dict, optional): Mapping of feature names to human-readable names.
 
     Returns:
         pd.DataFrame: Long-form DataFrame with columns:
@@ -382,6 +384,12 @@ def top_shap_features(
     )
 
     top_features = summary_df[summary_df["feature_name"].isin(top_n_features)].copy()
+
+    if features_table is not None:
+        top_features["feature_name"] = top_features["feature_name"].apply(
+            lambda feature: _get_mapped_feature_name(feature, features_table)
+        )
+    top_features['feature_value'] = top_features['feature_value'].astype(str)
 
     return top_features
 
