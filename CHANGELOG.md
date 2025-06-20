@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.3.4 (2025-06)
+- Update features table (PR #218)
+- Add features table to top shap feature output table (PR #217)
+
 ## 0.3.3 (2025-06)
 - Added unit test for PDP features table (PR 202)
 
