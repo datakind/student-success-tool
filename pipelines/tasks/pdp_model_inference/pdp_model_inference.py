@@ -299,7 +299,7 @@ class ModelInferenceTask:
                 df_serving,
                 unique_ids,
                 pred_probs,
-                shap_values.values,
+                shap_values,
                 inference_params=inference_params,
                 features_table=features_table,   
                 model_feature_names= model_feature_names,
