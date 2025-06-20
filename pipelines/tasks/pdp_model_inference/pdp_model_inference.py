@@ -258,11 +258,12 @@ class ModelInferenceTask:
         features: pd.DataFrame,
         unique_ids: pd.Series,
         shap_values: npt.NDArray[np.float64],
-        n: int = 1,
+        n: int = 5,
     ) -> pd.DataFrame:
+        features_table = dataio.read_features_table("assets/pdp/features_table.toml")
         try:
             top_n_shap_features = inference.top_shap_features(
-                features, unique_ids, shap_values, n
+                features, unique_ids, shap_values, n, features_table=features_table
             )
             return top_n_shap_features
 
