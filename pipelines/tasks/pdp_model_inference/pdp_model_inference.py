@@ -300,9 +300,8 @@ class ModelInferenceTask:
                 unique_ids,
                 pred_probs,
                 shap_values.values,
-                n_features=inference_params["num_top_features"],
-                features_table=features_table,
-                needs_support_threshold_prob=inference_params["min_prob_pos_label"],
+                inference_params=inference_params,
+                features_table=features_table,   
             )
 
             return result
