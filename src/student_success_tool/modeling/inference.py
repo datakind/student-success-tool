@@ -389,7 +389,7 @@ def top_shap_features(
         top_features["feature_name"] = top_features["feature_name"].apply(
             lambda feature: _get_mapped_feature_name(feature, features_table)
         )
-    top_features['feature_value'] = top_features['feature_value'].astype(str)
+    top_features["feature_value"] = top_features["feature_value"].astype(str)
 
     return top_features
 
