@@ -412,11 +412,17 @@ class ModelInferenceTask:
             inference_features_with_most_impact = self.top_n_features(
                 df_processed[model_feature_names], unique_ids, shap_values.values
             )
-            support_scores = pd.DataFrame({
-                "student_id": unique_ids.values,  # From the original df_test
-                "support_score": df_predicted["predicted_prob"].values
-            })
-            inference_features_with_most_impact = inference_features_with_most_impact.merge(support_scores, on="student_id", how="left")
+            support_scores = pd.DataFrame(
+                {
+                    "student_id": unique_ids.values,  # From the original df_test
+                    "support_score": df_predicted["predicted_prob"].values,
+                }
+            )
+            inference_features_with_most_impact = (
+                inference_features_with_most_impact.merge(
+                    support_scores, on="student_id", how="left"
+                )
+            )
 
             # shap_feature_importance TABLE
             shap_feature_importance = self.inference_shap_feature_importance(
