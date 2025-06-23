@@ -283,3 +283,42 @@ with mlflow.start_run() as run:
         automl_run_id=cfg.model.run_id,
         modeling_dataset_name=cfg.datasets.silver.modeling.table_path,
     )
+
+# COMMAND ----------
+
+shap_feature_importance = inference.generate_ranked_feature_table(
+    features, df_shap_values[model_feature_names].to_numpy(), features_table
+)
+shap_feature_importance
+
+
+# COMMAND ----------
+
+# save sample advisor output dataset
+dataio.write.to_delta_table(
+    shap_feature_importance, f"staging_sst_01.{cfg.institution_id}_silver.training_{cfg.model.run_id}_shap_feature_importance", spark_session=spark
+)
+
+# COMMAND ----------
+
+support_score_distribution = inference.support_score_distribution_table(
+    features,
+    unique_ids,
+    pred_probs,
+    df_shap_values[model_feature_names],
+    cfg.inference.dict(),
+    features_table,
+    None,
+)
+support_score_distribution
+
+# COMMAND ----------
+
+# save sample advisor output dataset
+dataio.write.to_delta_table(
+    support_score_distribution, f"staging_sst_01.{cfg.institution_id}_silver.training_{cfg.model.run_id}_support_overview", spark_session=spark
+)
+
+# COMMAND ----------
+
+
