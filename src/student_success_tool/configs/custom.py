@@ -145,8 +145,8 @@ class DatasetConfig(pyd.BaseModel):
             self.predict_file_path,
             self.train_table_path,
             self.predict_table_path,
-            self.file_path, # Legacy, not used in pipeline/DB workflow
-            self.table_path, # Legacy, not used in pipeline/DB workflow
+            self.file_path,  # Legacy, not used in pipeline/DB workflow
+            self.table_path,  # Legacy, not used in pipeline/DB workflow
         ]
         if not any(any_paths):
             raise ValueError(
