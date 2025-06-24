@@ -275,10 +275,12 @@ class SelectionConfig(pyd.BaseModel):
             )
         return self
 
+
 class ModelingConfig(pyd.BaseModel):
     feature_selection: t.Optional["FeatureSelectionConfig"] = None
     training: "TrainingConfig"
     evaluation: t.Optional["EvaluationConfig"] = None
+    bias_mitigation: t.Optional["BiasMitigationConfig"] = None
 
 
 class FeatureSelectionConfig(pyd.BaseModel):
@@ -328,6 +330,25 @@ class EvaluationConfig(pyd.BaseModel):
     topn_runs_included: int = pyd.Field(
         default=3,
         description="Number of top-scoring mlflow runs to include for detailed evaluation",
+    )
+
+
+class BiasMitigationConfig(pyd.BaseModel):
+    student_group_col: str = pyd.Field(
+        default="student_group",
+        description="Column name in dataset to have a custom threshold set."
+    )
+    student_group_col_alias: str = pyd.Field(
+        default="Student Group",
+        description="Human-readable display name for student_group column."
+    )
+    student_group: str = pyd.Field(
+        default="freshmen",
+        description="Value in student_group column that has a custom threshold based on bias considerations."
+    )
+    custom_threshold: float = pyd.Field(
+        default=0.5,
+        description="Threshold for student group based on bias considerations."
     )
 
 

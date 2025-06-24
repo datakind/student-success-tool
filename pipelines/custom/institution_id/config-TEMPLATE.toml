@@ -1,4 +1,4 @@
-institution_id = "CUSTOM_INST_ID"
+institution_id = "custom_inst_id"
 institution_name = "Custom Institution Name"
 
 student_id_col = "student_id"
