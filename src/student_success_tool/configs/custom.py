@@ -103,37 +103,39 @@ class CustomProjectConfig(pyd.BaseModel):
         if missing:
             raise ValueError(f"Missing student_group_aliases for: {missing}")
         return self
+
+
 class DatasetConfig(pyd.BaseModel):
     train_file_path: t.Optional[str] = pyd.Field(
         default=None,
-        description="Absolute path to training dataset on disk."
+        description="Absolute path to training dataset on disk.",
     )
     predict_file_path: t.Optional[str] = pyd.Field(
         default=None,
-        description="Absolute path to prediction/inference dataset on disk."
+        description="Absolute path to prediction/inference dataset on disk.",
     )
     train_table_path: t.Optional[str] = pyd.Field(
         default=None,
-        description="Unity Catalog table path for training dataset, e.g., 'catalog.schema.table'."
+        description="Unity Catalog table path for training dataset, e.g., 'catalog.schema.table'.",
     )
     predict_table_path: t.Optional[str] = pyd.Field(
         default=None,
-        description="Unity Catalog table path for prediction/inference dataset."
+        description="Unity Catalog table path for prediction/inference dataset.",
     )
     file_path: t.Optional[str] = None
     table_path: t.Optional[str] = None
 
     primary_keys: t.Optional[t.List[str]] = pyd.Field(
         default=None,
-        description="Primary keys utilized for data validation, if applicable"
+        description="Primary keys utilized for data validation, if applicable",
     )
     drop_cols: t.Optional[t.List[str]] = pyd.Field(
         default=None,
-        description="Columns to be dropped during pre-processing, if applicable"
+        description="Columns to be dropped during pre-processing, if applicable",
     )
     non_null_cols: t.Optional[t.List[str]] = pyd.Field(
         default=None,
-        description="Columns to be validated as non-null, if applicable"
+        description="Columns to be validated as non-null, if applicable",
     )
 
     @pyd.model_validator(mode="after")
@@ -143,8 +145,8 @@ class DatasetConfig(pyd.BaseModel):
             self.predict_file_path,
             self.train_table_path,
             self.predict_table_path,
-            self.file_path,     # Legacy
-            self.table_path     # Legacy
+            self.file_path,     # Legacy, not used in pipeline/DB workflow
+            self.table_path     # Legacy, not used in pipeline/DB workflow
         ]
         if not any(any_paths):
             raise ValueError(
