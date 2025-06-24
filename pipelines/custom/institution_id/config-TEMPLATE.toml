@@ -19,52 +19,55 @@ ethnicity = "Ethnicity"
 disabilityflag = "Disability Status"
 
 [datasets.bronze]
-raw_cohort = { 
-  primary_keys = ["student_id"],
-  non_null_cols = ["acad_year"],
-  train_file_path = "/Volumes/CATALOG/INST_ID_bronze/.../FILE_NAME_cohort_train.csv", 
-  predict_file_path = "/Volumes/CATALOG/INST_ID_bronze/.../FILE_NAME_cohort_inference.csv",
-}
-raw_course = { 
-  primary_keys = ["student_id", "course_id"],
-  drop_cols = ["timestamp"],
-  train_file_path = "/Volumes/CATALOG/INST_ID_bronze/.../FILE_NAME_course_train.csv",
-  predict_file_path = "/Volumes/CATALOG/INST_ID_bronze/.../FILE_NAME_course_inference.csv",
-}
-raw_semester = { 
-  train_file_path = "/Volumes/CATALOG/INST_ID_bronze/.../FILE_NAME_semester_train.csv",
-  predict_file_path = "/Volumes/CATALOG/INST_ID_bronze/.../FILE_NAME_semester_inference.csv",
-}
+
+[datasets.bronze.raw_cohort]
+primary_keys = ["student_id"]
+non_null_cols = ["acad_year"]
+train_file_path = "/Volumes/CATALOG/INST_ID_bronze/.../FILE_NAME_cohort_train.csv"
+predict_file_path = "/Volumes/CATALOG/INST_ID_bronze/.../FILE_NAME_cohort_inference.csv"
+
+[datasets.bronze.raw_course]
+primary_keys = ["student_id", "course_id"]
+drop_cols = ["timestamp"]
+train_file_path = "/Volumes/CATALOG/INST_ID_bronze/.../FILE_NAME_course_train.csv"
+predict_file_path = "/Volumes/CATALOG/INST_ID_bronze/.../FILE_NAME_course_inference.csv"
+
+[datasets.bronze.raw_semester]
+train_file_path = "/Volumes/CATALOG/INST_ID_bronze/.../FILE_NAME_semester_train.csv"
+predict_file_path = "/Volumes/CATALOG/INST_ID_bronze/.../FILE_NAME_semester_inference.csv"
+
 
 [datasets.silver]
-cohort = { 
-  train_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_cohort_train",
-  predict_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_preprocessed_inference",
-}
-course = { 
-  train_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_course_train",
-  predict_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_course_inference",
-}
-semester = { 
-  train_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_semester_train",
-  predict_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_semester_inference",
-}
-modeling = {
-  primary_keys = ["student_id"],
-  train_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_modeling_train", 
-}
-model_features = {
-  primary_keys = ["student_id"],
-  predict_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_model_features_inference", 
-}
+
+[datasets.silver.cohort]
+train_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_cohort_train"
+predict_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_preprocessed_inference"
+
+[datasets.silver.course]
+train_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_course_train"
+predict_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_course_inference"
+
+[datasets.silver.semester]
+train_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_semester_train"
+predict_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_semester_inference"
+
+[datasets.silver.modeling]
+primary_keys = ["student_id"]
+train_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_modeling_train"
+
+[datasets.silver.model_features]
+primary_keys = ["student_id"]
+predict_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_model_features_inference"
+
 
 [datasets.gold]
-sample_advisor_output = { 
-  train_table_path = "CATALOG.INST_ID_gold.INST_ID_sample_advisor_output", 
-}
-advisor_output = { 
-  predict_table_path = "CATALOG.INST_ID_gold.INST_ID_predictions", 
-}
+
+[datasets.gold.sample_advisor_output]
+train_table_path = "CATALOG.INST_ID_gold.INST_ID_sample_advisor_output"
+
+[datasets.gold.advisor_output]
+predict_table_path = "CATALOG.INST_ID_gold.INST_ID_predictions"
+
 
 [model]
 experiment_id = "EXPERIMENT_ID"
