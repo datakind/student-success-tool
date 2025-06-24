@@ -103,47 +103,66 @@ class CustomProjectConfig(pyd.BaseModel):
         if missing:
             raise ValueError(f"Missing student_group_aliases for: {missing}")
         return self
-
-class DatasetPathConfig(pyd.BaseModel):
-    table_path: t.Optional[str] = pyd.Field(
-        default=None,
-        description=(
-            "Path to a table in Unity Catalog where dataset is stored, "
-            "including the full three-level namespace: 'CATALOG.SCHEMA.TABLE'"
-        ),
-    )
-    file_path: t.Optional[str] = pyd.Field(
-        default=None,
-        description="Full, absolute path to dataset on disk, e.g. a Databricks Volume",
-    )
-
-    @pyd.model_validator(mode="after")
-    def validate_paths(self) -> "DatasetPathConfig":
-        if not self.table_path and not self.file_path:
-            raise ValueError("Must specify either `table_path` or `file_path`")
-        return self
-
-
 class DatasetConfig(pyd.BaseModel):
-    train: t.Optional[DatasetPathConfig]
-    inference: t.Optional[DatasetPathConfig]
+    train_file_path: t.Optional[str] = pyd.Field(
+        default=None,
+        description="Absolute path to training dataset on disk."
+    )
+    predict_file_path: t.Optional[str] = pyd.Field(
+        default=None,
+        description="Absolute path to prediction/inference dataset on disk."
+    )
+    train_table_path: t.Optional[str] = pyd.Field(
+        default=None,
+        description="Unity Catalog table path for training dataset, e.g., 'catalog.schema.table'."
+    )
+    predict_table_path: t.Optional[str] = pyd.Field(
+        default=None,
+        description="Unity Catalog table path for prediction/inference dataset."
+    )
+    file_path: t.Optional[str] = None
+    table_path: t.Optional[str] = None
+
     primary_keys: t.Optional[t.List[str]] = pyd.Field(
         default=None,
-        description="Primary keys utilized for data validation, if applicable",
+        description="Primary keys utilized for data validation, if applicable"
     )
     drop_cols: t.Optional[t.List[str]] = pyd.Field(
         default=None,
-        description="Columns to be dropped during pre-processing, if applicable",
+        description="Columns to be dropped during pre-processing, if applicable"
     )
     non_null_cols: t.Optional[t.List[str]] = pyd.Field(
         default=None,
-        description="Columns to be validated as non-null, if applicable",
+        description="Columns to be validated as non-null, if applicable"
     )
 
-    def get_mode(self, mode: str) -> t.Optional[DatasetPathConfig]:
-        if mode not in {"train", "inference"}:
-            raise ValueError(f"Invalid mode: {mode}. Must be 'train' or 'inference'.")
-        return t.cast(t.Optional[DatasetPathConfig], getattr(self, mode))
+    @pyd.model_validator(mode="after")
+    def validate_paths(self) -> "DatasetConfig":
+        any_paths = [
+            self.train_file_path,
+            self.predict_file_path,
+            self.train_table_path,
+            self.predict_table_path,
+            self.file_path,     # Legacy
+            self.table_path     # Legacy
+        ]
+        if not any(any_paths):
+            raise ValueError(
+                "At least one dataset path must be specified: "
+                "`train_file_path`, `predict_file_path`, "
+                "`train_table_path`, `predict_table_path`, "
+                "`file_path`, or `table_path`"
+            )
+        return self
+
+    def get_path(self, mode: t.Literal["train", "predict"]) -> t.Optional[str]:
+        """Convenience accessor for the train/predict path."""
+        if mode == "train":
+            return self.train_file_path or self.train_table_path
+        elif mode == "predict":
+            return self.predict_file_path or self.predict_table_path
+        else:
+            raise ValueError(f"Unknown mode: {mode}")
 
 
 class AllDatasetStagesConfig(pyd.BaseModel):
