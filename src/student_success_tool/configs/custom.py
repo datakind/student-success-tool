@@ -145,8 +145,8 @@ class DatasetConfig(pyd.BaseModel):
             self.predict_file_path,
             self.train_table_path,
             self.predict_table_path,
-            self.file_path,     # Legacy, not used in pipeline/DB workflow
-            self.table_path     # Legacy, not used in pipeline/DB workflow
+            self.file_path, # Legacy, not used in pipeline/DB workflow
+            self.table_path, # Legacy, not used in pipeline/DB workflow
         ]
         if not any(any_paths):
             raise ValueError(
@@ -357,19 +357,19 @@ class EvaluationConfig(pyd.BaseModel):
 class BiasMitigationConfig(pyd.BaseModel):
     student_group_col: str = pyd.Field(
         default="student_group",
-        description="Column name in dataset to have a custom threshold set."
+        description="Column name in dataset to have a custom threshold set.",
     )
     student_group_col_alias: str = pyd.Field(
         default="Student Group",
-        description="Human-readable display name for student_group column."
+        description="Human-readable display name for student_group column.",
     )
     student_group: str = pyd.Field(
         default="freshmen",
-        description="Value in student_group column that has a custom threshold based on bias considerations."
+        description="Value in student_group column that has a custom threshold based on bias considerations.",
     )
     custom_threshold: float = pyd.Field(
         default=0.5,
-        description="Threshold for student group based on bias considerations."
+        description="Threshold for student group based on bias considerations.",
     )
 
 
