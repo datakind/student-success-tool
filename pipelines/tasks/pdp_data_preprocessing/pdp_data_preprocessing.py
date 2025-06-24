@@ -127,49 +127,41 @@ class DataProcessingTask:
         """
 
         # Read preprocessing features from config
-        #Kayla - like TO DO :load all config at once and then just use parameters directly
-        min_passing_grade = self.cfg.preprocessing.features.min_passing_grade
-        min_num_credits_full_time = (
-            self.cfg.preprocessing.features.min_num_credits_full_time
-        )
-        course_level_pattern = self.cfg.preprocessing.features.course_level_pattern
-        core_terms = self.cfg.preprocessing.features.core_terms
-        key_course_subject_areas = (
-            self.cfg.preprocessing.features.key_course_subject_areas
-        )
-        key_course_ids = self.cfg.preprocessing.features.key_course_ids
+        checkpoint_type = self.cfg.preprocessing.checkpoint.type_
 
         # Read preprocessing target parameters from config
         student_criteria = self.cfg.preprocessing.selection.student_criteria
         student_id_col = self.cfg.student_id_col
-        n = self.cfg.preprocessing.checkpoint.n
-        sort_cols = self.cfg.preprocessing.checkpoint.sort_cols
-        include_cols = self.cfg.preprocessing.checkpoint.include_cols
         
         # Create student-term dataset
         df_student_terms = preprocessing.pdp.make_student_term_dataset(
             df_cohort,
             df_course,
-            min_passing_grade=min_passing_grade,
-            min_num_credits_full_time=min_num_credits_full_time,
-            course_level_pattern=course_level_pattern,
-            core_terms=core_terms,
-            key_course_subject_areas=key_course_subject_areas,
-            key_course_ids=key_course_ids,
+            min_passing_grade=self.cfg.preprocessing.features.min_passing_grade,
+            min_num_credits_full_time=self.cfg.preprocessing.features.min_num_credits_full_time,
+            course_level_pattern=self.cfg.preprocessing.features.course_level_pattern,
+            core_terms=self.cfg.preprocessing.features.core_terms,
+            key_course_subject_areas=self.cfg.preprocessing.features.key_course_subject_areas,
+            key_course_ids=self.cfg.preprocessing.features.key_course_ids,
         )
 
         selected_students = selection.pdp.select_students_by_attributes(
             df_student_terms, student_id_cols=student_id_col, **student_criteria
         )
-
-        df_ckpt = checkpoints.pdp.nth_student_terms(
-            df_student_terms,
-            n=n, 
-            sort_cols=sort_cols,
-            include_cols=include_cols,
-            enrollment_year_col="year_of_enrollment_at_cohort_inst",
-            valid_enrollment_year=1
-        )
+        if checkpoint_type == "nth":
+            df_ckpt = checkpoints.pdp.nth_student_terms(
+                df_student_terms,
+                n=self.cfg.preprocessing.checkpoint.n, 
+                sort_cols=self.cfg.preprocessing.checkpoint.sort_cols,
+                include_cols=self.cfg.preprocessing.checkpoint.include_cols,
+                enrollment_year_col="year_of_enrollment_at_cohort_inst",
+                valid_enrollment_year=1
+            )
+        elif checkpoint_type == "first_at_num_credits_earned":
+            df_ckpt = checkpoints.pdp.first_student_terms_at_num_credits_earned(
+                df_student_terms,
+                min_num_credits = self.cfg.preprocessing.checkpoint.min_num_credits,
+            )
 
         df_processed = pd.merge(
             df_ckpt, pd.Series(selected_students.index), how="inner", on=student_id_col
