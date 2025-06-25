@@ -311,7 +311,7 @@ if __name__ == "__main__":
         course_converter_func = None
         logging.info("Running task default course converter func") 
     try:
-        schemas = importlib.import_module("schemas")
+        schemas = importlib.import_module("sst_schemas")
         logging.info("Running task with custom schema")
     except Exception:
         from student_success_tool.dataio.schemas import pdp as schemas
