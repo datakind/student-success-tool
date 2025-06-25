@@ -310,9 +310,18 @@ if __name__ == "__main__":
     except Exception:
         course_converter_func = None
         logging.info("Running task default course converter func") 
+    # try:
+    #     schemas = importlib.import_module("sst_schemas")
+    #     logging.info("Running task with custom schema")
     try:
-        schemas = importlib.import_module("sst_schemas")
-        logging.info("Running task with custom schema")
+        import importlib.util
+        schema_path = f"/Volumes/staging_sst_01/{args.databricks_institution_name}_gold/gold_volume/inference_inputs/sst_schemas.py"
+        spec = importlib.util.spec_from_file_location("sst_schemas", schema_path)
+        sst_schemas = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(sst_schemas)
+        schemas = sst_schemas
+        logging.info("Running task with custom schema from: %s", schema_path)
+
     except Exception:
         from student_success_tool.dataio.schemas import pdp as schemas
         logging.info("Running task with default schema")
