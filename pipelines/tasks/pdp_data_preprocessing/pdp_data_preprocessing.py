@@ -149,6 +149,7 @@ class DataProcessingTask:
             df_student_terms, student_id_cols=student_id_col, **student_criteria
         )
         if checkpoint_type == "nth":
+            logging.info('Checkpoint type: nth')
             df_ckpt = checkpoints.pdp.nth_student_terms(
                 df_student_terms,
                 n=self.cfg.preprocessing.checkpoint.n, 
@@ -158,6 +159,7 @@ class DataProcessingTask:
                 valid_enrollment_year=1
             )
         elif checkpoint_type == "first_at_num_credits_earned":
+            logging.info('Checkpoint type: first_at_num_credits_earned')
             df_ckpt = checkpoints.pdp.first_student_terms_at_num_credits_earned(
                 df_student_terms,
                 min_num_credits = self.cfg.preprocessing.checkpoint.min_num_credits,

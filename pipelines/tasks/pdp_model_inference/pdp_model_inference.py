@@ -228,7 +228,7 @@ class ModelInferenceTask:
                 .fillna(train_mode)
                 .loc[:, model_feature_names]
             )
-
+            logging.info("Object dtype columns:", df_ref.select_dtypes(include=['object']).columns.tolist())
             explainer = shap.explainers.KernelExplainer(
                 ft.partial(
                     self.predict_proba,  # Use the static method
