@@ -237,9 +237,20 @@ class ModelInferenceTask:
                 if len(unique_types) > 1:
                     logging.info(f"Column '{col}' has mixed types: {unique_types}")
 
+            # explainer = shap.explainers.KernelExplainer(
+            #     lambda x: inference.predict_probs(
+            #         pd.DataFrame(x, columns=model_feature_names).astype(ref_dtypes),
+            #         model=model,
+            #         feature_names=model_feature_names,
+            #         pos_label=self.cfg.pos_label
+            #     ),
+            #     df_ref.astype(ref_dtypes),
+            #     link="identity"
+            # )
+
             explainer = shap.explainers.KernelExplainer(
-                lambda x: inference.predict_probs(
-                    pd.DataFrame(x, columns=model_feature_names).astype(ref_dtypes),
+                ft.partial(
+                    self.predict_proba(x[model_feature_names].astype(ref_dtypes)),
                     model=model,
                     feature_names=model_feature_names,
                     pos_label=self.cfg.pos_label
