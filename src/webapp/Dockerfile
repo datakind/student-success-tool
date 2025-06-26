@@ -32,5 +32,5 @@ COPY --from=builder /app/src /app/src
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Run the application.
-#CMD ["fastapi", "run", "app/src/webapp", "--port", "8080", "--host", "0.0.0.0"]
-CMD ["uvicorn", "src.webapp.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["sh", "-c", "uvicorn src.webapp.main:app --host 0.0.0.0 --port ${PORT}"]
+#CMD ["uvicorn", "src.webapp.main:app", "--host", "0.0.0.0", "--port", "8080"]
