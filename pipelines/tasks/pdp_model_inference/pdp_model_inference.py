@@ -249,8 +249,8 @@ class ModelInferenceTask:
             # )
 
             explainer = shap.explainers.KernelExplainer(
-                ft.partial(
-                    self.predict_proba(x[model_feature_names].astype(ref_dtypes)),
+                lambda x: self.predict_proba(
+                    pd.DataFrame(x[model_feature_names].astype(ref_dtypes)),
                     model=model,
                     feature_names=model_feature_names,
                     pos_label=self.cfg.pos_label
