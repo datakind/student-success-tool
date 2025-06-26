@@ -73,8 +73,6 @@ class ModelInferenceTask:
         """Reads the institution's model's configuration file."""
         try:
             cfg = dataio.read_config(toml_file_path, schema=PDPProjectConfig)
-            logging.info(f"cfg.model.run_id = {self.cfg.model.run_id}")
-            logging.info(f"cfg.model.experiment_id = {self.cfg.model.experiment_id}")
             return cfg
         except FileNotFoundError:
             logging.error("Configuration file not found at %s", toml_file_path)
