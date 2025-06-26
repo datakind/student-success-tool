@@ -18,8 +18,6 @@ def df():
             "low_variance_feature": [1, 1, 1, 1, 2],
             "zero_variance_feature": [1, 1, 1, 1, 1],
             "high_collinear_feature": [6, 7, 8, 9, 10],
-            "bool_feature": [True, False, True, False, True],
-            "bool_numeric_feature": [1, 0, 1, 0, 1],
             "low_collinear_feature": [6.5, 1.5, 4, 3.5, 2],
         }
     ).astype({"id": "string", "categorical_feature": "category"})
