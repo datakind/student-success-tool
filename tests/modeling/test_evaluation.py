@@ -7,13 +7,10 @@ from student_success_tool.modeling import evaluation
 
 @pytest.fixture
 def patch_mlflow(monkeypatch):
-    """Patch the mlflow.search_runs function."""
+    def _patch(mock_df, target="mlflow.search_runs"):
+        monkeypatch.setattr(target, lambda *args, **kwargs: mock_df)
 
-    def mock_search_runs():
-        # This mock function does nothing and will be overridden by each test case
-        pass
-
-    monkeypatch.setattr(mlflow.tracking.MlflowClient, "search_runs", mock_search_runs)
+    return _patch
 
 
 def test_check_array_of_arrays_true():
@@ -97,39 +94,67 @@ def test_compare_trained_models(
     )
 
 
+@pytest.fixture
+def mock_runs_df():
+    """Mock MLflow run data for testing."""
+    return pd.DataFrame(
+        {
+            "run_id": ["r1", "r2", "r3"],
+            "tags.mlflow.runName": ["run_1", "run_2", "run_3"],
+            "metrics.test_roc_auc": [0.80, 0.60, 0.90],
+            "metrics.test_recall_score": [0.70, 0.95, 0.60],
+            "metrics.val_log_loss": [0.25, 0.20, 0.30],
+        }
+    )
+
+
 @pytest.mark.parametrize(
-    ["optimization_metric", "ascending", "expected"],
+    "metrics, expected_run_name",
     [
-        ("recall", False, ["run_1", "run_2"]),
-        ("log_loss", True, ["run_2", "run_1"]),
-        ("f1", False, ["run_1", "run_2"]),
+        (["test_roc_auc"], "run_3"),
+        (["test_recall_score"], "run_2"),
+        (["val_log_loss"], "run_2"),
+        (["test_roc_auc", "val_log_loss"], "run_1"),
     ],
 )
-def test_get_top_run_ids(
-    optimization_metric, ascending, expected, patch_mlflow, monkeypatch
-):
-    # Create mock DataFrame
-    if optimization_metric == "log_loss":
-        mock_data = pd.DataFrame(
-            {
-                "run_id": ["run_1", "run_2"],
-                "metrics.val_log_loss": [0.5, 0.3],
-            }
-        )
-    else:
-        mock_data = pd.DataFrame(
-            {
-                "run_id": ["run_1", "run_2"],
-                f"metrics.val_{optimization_metric}_score": [0.9, 0.8]
-                if not ascending
-                else [0.5, 0.3],
-            }
-        )
+def test_get_top_runs_balanced(metrics, expected_run_name, mock_runs_df, patch_mlflow):
+    mock_df = pd.DataFrame(
+        {
+            "run_id": ["r1", "r2", "r3"],
+            "tags.mlflow.runName": ["run_1", "run_2", "run_3"],
+            "metrics.test_roc_auc": [0.80, 0.60, 0.90],
+            "metrics.test_recall_score": [0.70, 0.95, 0.60],
+            "metrics.val_log_loss": [0.25, 0.20, 0.30],
+        }
+    )
 
-    def _search_runs_patch(experiment_ids, order_by, output_format):
-        return mock_data
+    patch_mlflow(mock_df)
 
-    monkeypatch.setattr(mlflow, "search_runs", _search_runs_patch)
+    top = evaluation.get_top_runs(
+        experiment_id="dummy",
+        optimization_metrics=metrics,
+        topn_runs_included=1,
+    )
 
-    result = evaluation.get_top_run_ids("dummy_id", optimization_metric, 2)
-    assert result == expected
+    assert list(top.keys())[0] == expected_run_name
+
+
+@pytest.mark.parametrize(
+    "metrics, expected_top",
+    [
+        (["test_recall_score"], "run_2"),
+        (["val_log_loss"], "run_2"),
+        (["test_roc_auc"], "run_3"),
+        (["test_roc_auc", "val_log_loss"], "run_1"),
+    ],
+)
+def test_get_top_runs_parametrized(metrics, expected_top, mock_runs_df, patch_mlflow):
+    patch_mlflow(mock_runs_df)
+
+    top = evaluation.get_top_runs(
+        experiment_id="dummy",
+        optimization_metrics=metrics,
+        topn_runs_included=1,
+    )
+
+    assert list(top.keys())[0] == expected_top
