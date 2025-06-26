@@ -232,10 +232,10 @@ class ModelInferenceTask:
 
             ref_dtypes = df_ref.dtypes.apply(lambda dt: dt.name).to_dict()
 
-            for col in df_ref.columns:
-                unique_types = df_ref[col].map(type).unique()
-                if len(unique_types) > 1:
-                    logging.info(f"Column '{col}' has mixed types: {unique_types}")
+            # for col in df_ref.columns:
+            #     unique_types = df_ref[col].map(type).unique()
+            #     if len(unique_types) > 1:
+            #         logging.info(f"Column '{col}' has mixed types: {unique_types}")
 
             # explainer = shap.explainers.KernelExplainer(
             #     lambda x: inference.predict_probs(
