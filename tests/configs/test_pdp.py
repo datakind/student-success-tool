@@ -21,6 +21,7 @@ def template_cfg_dict():
 
 def test_template_pdp_cfgs(template_cfg_dict):
     result = pdp.PDPProjectConfig.model_validate(template_cfg_dict)
+    print(result)
     assert isinstance(result, pyd.BaseModel)
 
 
