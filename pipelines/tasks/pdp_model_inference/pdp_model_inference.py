@@ -73,6 +73,8 @@ class ModelInferenceTask:
         """Reads the institution's model's configuration file."""
         try:
             cfg = dataio.read_config(toml_file_path, schema=PDPProjectConfig)
+            logging.info(f"cfg.model.run_id = {self.cfg.model.run_id}")
+            logging.info(f"cfg.model.experiment_id = {self.cfg.model.experiment_id}")
             return cfg
         except FileNotFoundError:
             logging.error("Configuration file not found at %s", toml_file_path)
@@ -430,6 +432,8 @@ class ModelInferenceTask:
         )
 
         if shap_values is not None:  # Proceed only if SHAP values were calculated
+            logging.info(f"now cfg.model.run_id = {self.cfg.model.run_id}")
+            logging.info(f"now cfg.model.experiment_id = {self.cfg.model.experiment_id}")
             with mlflow.start_run(run_id=self.cfg.model.run_id):
                 #full_model_name = f"{self.args.DB_workspace}.{self.args.databricks_institution_name}_gold.{self.args.model_name}"
                 # --- SHAP Summary Plot ---
