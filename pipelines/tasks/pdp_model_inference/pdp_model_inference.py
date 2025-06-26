@@ -229,16 +229,35 @@ class ModelInferenceTask:
                 .loc[:, model_feature_names]
             )
             logging.info(f"Object dtype columns: {df_ref.select_dtypes(include=['object']).columns.tolist()}")
+
+            ref_dtypes = df_ref.dtypes.apply(lambda dt: dt.name).to_dict()
+
+            for col in df_ref.columns:
+                unique_types = df_ref[col].map(type).unique()
+                if len(unique_types) > 1:
+                    logging.info(f"Column '{col}' has mixed types: {unique_types}")
+
             explainer = shap.explainers.KernelExplainer(
-                ft.partial(
-                    self.predict_proba,  # Use the static method
+                lambda x: inference.predict_probs(
+                    pd.DataFrame(x, columns=model_feature_names).astype(ref_dtypes),
                     model=model,
                     feature_names=model_feature_names,
-                    pos_label=self.cfg.pos_label,
+                    pos_label=self.cfg.pos_label
                 ),
-                df_ref,
-                link="identity",
+                df_ref.astype(ref_dtypes),
+                link="identity"
             )
+
+            # explainer = shap.explainers.KernelExplainer(
+            #     ft.partial(
+            #         self.predict_proba,  # Use the static method
+            #         model=model,
+            #         feature_names=model_feature_names,
+            #         pos_label=self.cfg.pos_label,
+            #     ),
+            #     df_ref,
+            #     link="identity",
+            # )
 
             shap_values_explanation = self.parallel_explanations(
                 model=model,
