@@ -199,16 +199,19 @@ def drop_collinear_features_iteratively(
     np.seterr(divide="ignore", invalid="ignore")
     force_include_cols = force_include_cols or []
 
-    df_features = df.select_dtypes(include="number")
-    if df_features.shape[1] == 0:
+    bool_df = df.select_dtypes(include=["boolean"])
+    numeric_df = df.select_dtypes(include=["number"])
+    if numeric_df.shape[1] == 0 and bool_df.shape[1] == 0:
         LOGGER.warning("no numeric columns found, so no collinear features to drop")
         return df
 
     imputer: sklearn.impute.SimpleImputer = sklearn.impute.SimpleImputer(
         missing_values=np.nan, strategy="mean"
     ).set_output(transform="pandas")  # type: ignore
-    df_features = imputer.fit_transform(df_features)
-    assert isinstance(df_features, pd.DataFrame)  # type guard
+    df_imputed_features = imputer.fit_transform(numeric_df)
+    assert isinstance(df_imputed_features, pd.DataFrame)  # type guard
+
+    df_features = pd.concat([df_imputed_features, bool_df], axis="columns").reset_index(drop=True)
 
     n_features_dropped_so_far = 0
 
