@@ -4,6 +4,7 @@ except ImportError:  # => PY3.10
     import tomli as tomllib  # noqa
 
 import pydantic as pyd
+import pathlib
 import pytest
 
 from student_success_tool.configs import pdp
