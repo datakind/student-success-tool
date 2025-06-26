@@ -80,12 +80,12 @@ def test_drop_collinear_features_iteratively():
 
 def test_booleans_drop_collinear_features_iteratively():
     related_features = pd.DataFrame(
-        {"bool": [True, False, True, False, True], "numeric": [1, 0, 1, 0, 1]}
+        {"A": [2, 12, 6.5, 4, 3.5], "bool": [True, False, True, False, True], "numeric": [1, 0, 1, 0, 1]}
     )
     returned_df = fs.drop_collinear_features_iteratively(
         related_features, force_include_cols=[]
     )
-    assert returned_df.columns.tolist() == ["bool"]
+    assert returned_df.columns.tolist() == ["A", "numeric"]
     assert returned_df.shape[0] == related_features.shape[0]
 
 def test_drop_collinear_features_iteratively_force_include():
