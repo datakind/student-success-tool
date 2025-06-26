@@ -18,6 +18,8 @@ def df():
             "low_variance_feature": [1, 1, 1, 1, 2],
             "zero_variance_feature": [1, 1, 1, 1, 1],
             "high_collinear_feature": [6, 7, 8, 9, 10],
+            "bool_feature": [True, False, True, False, True],
+            "bool_numeric_feature": [1, 0, 1, 0, 1],
             "low_collinear_feature": [6.5, 1.5, 4, 3.5, 2],
         }
     ).astype({"id": "string", "categorical_feature": "category"})
@@ -78,6 +80,15 @@ def test_drop_collinear_features_iteratively():
     assert returned_df.columns.tolist() == ["A", "C"]
     assert returned_df.shape[0] == related_features.shape[0]
 
+def test_booleans_drop_collinear_features_iteratively():
+    related_features = pd.DataFrame(
+        {"bool": [True, False, True, False, True], "numeric": [1, 0, 1, 0, 1]}
+    )
+    returned_df = fs.drop_collinear_features_iteratively(
+        related_features, force_include_cols=[]
+    )
+    assert returned_df.columns.tolist() == ["bool"]
+    assert returned_df.shape[0] == related_features.shape[0]
 
 def test_drop_collinear_features_iteratively_force_include():
     related_features = pd.DataFrame(
