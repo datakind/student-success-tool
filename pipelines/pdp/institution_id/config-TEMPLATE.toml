@@ -55,7 +55,7 @@ name = "graduation_150pct_time"
 type_ = "graduation"
 intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
 years_to_degree_col = "first_year_to_associates_at_cohort_inst"
-num_years_in_term = 4
+num_terms_in_year = 4
 max_term_rank = "infer"
 
 [modeling.feature_selection]
