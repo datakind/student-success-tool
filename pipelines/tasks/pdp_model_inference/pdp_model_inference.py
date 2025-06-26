@@ -430,7 +430,7 @@ class ModelInferenceTask:
         )
 
         if shap_values is not None:  # Proceed only if SHAP values were calculated
-            with mlflow.start_run(run_id=self.cfg.model.run_id):
+            with mlflow.start_run(experiment_id=self.cfg.model.experiment_id, run_id=self.cfg.model.run_id):
                 # --- SHAP Summary Plot ---
                 shap_fig = plot_shap_beeswarm(shap_values)
 
