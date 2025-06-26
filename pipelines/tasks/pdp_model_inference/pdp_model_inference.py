@@ -214,7 +214,7 @@ class ModelInferenceTask:
         try:
             # --- SHAP Values Calculation ---
             # TODO: Consider saving the explainer during training.
-            shap_ref_data_size = 200  # Consider getting from config.
+            shap_ref_data_size = 100  # Consider getting from config.
 
             df_train = dataio.from_delta_table(
                 self.args.modeling_table_path, spark_session=self.spark_session
@@ -250,7 +250,7 @@ class ModelInferenceTask:
 
             explainer = shap.explainers.KernelExplainer(
                 lambda x: self.predict_proba(
-                    pd.DataFrame(x, columns=model_feature_names.astype(ref_dtypes)),
+                    pd.DataFrame(x, columns=model_feature_names).astype(ref_dtypes),
                     model=model,
                     feature_names=model_feature_names,
                     pos_label=self.cfg.pos_label
