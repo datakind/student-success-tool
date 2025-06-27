@@ -208,18 +208,19 @@ class FeaturesConfig(pyd.BaseModel):
             "as 'peak' COVID, for use in control variables to account for pandemic effects"
         ),
     )
-    key_course_subject_areas: t.Optional[list[str]] = pyd.Field(
+    key_course_subject_areas: t.Optional[t.List[t.Union[str, t.List[str]]] ]= pyd.Field(
         default=None,
         description=(
             "One or more course subject areas (formatted as 2-digit CIP codes) "
-            "for which custom features should be computed"
+            "for which custom features should be computed, can be a list or include a nested list"
+            "Example: ['51', ['27', '48']], so you would get features for 51 alone and features for 27 and 48 combined."
         ),
     )
-    key_course_ids: t.Optional[list[str]] = pyd.Field(
+    key_course_ids: t.Optional[t.List[t.Union[str, t.List[str]]]] = pyd.Field(
         default=None,
         description=(
             "One or more course ids (formatted as '[COURSE_PREFIX][COURSE_NUMBER]') "
-            "for which custom features should be computed"
+            "for which custom features should be computed, can be a list or include nested lists"
         ),
     )
 

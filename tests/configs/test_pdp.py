@@ -51,8 +51,8 @@ def template_cfg_str():
     min_num_credits_full_time = 12
     # NOTE: single quotes *required* here; it's TOML syntax for literal strings
     course_level_pattern = 'asdf'
-    key_course_subject_areas = ["24", "51"]
-    key_course_ids = ["ENGL101", "MATH101"]
+    key_course_subject_areas = ["24", "51", ["27", "31"]]
+    key_course_ids = ["ENGL101", "MATH101", ["ENGL102", "MATH102"]]
 
     [preprocessing.selection]
     student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year_1 = "Bachelor's Degree" }
