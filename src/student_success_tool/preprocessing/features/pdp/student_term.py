@@ -483,10 +483,15 @@ def equal_cols_by_group(
     num_prefix = constants.NUM_COURSE_FEATURE_COL_PREFIX
     dummy_prefix = constants.DUMMY_COURSE_FEATURE_COL_PREFIX
 
+    course_subject_prefixes = [
+        constants.NUM_COURSE_FEATURE_COL_PREFIX + "_course_id",
+        constants.NUM_COURSE_FEATURE_COL_PREFIX + "_course_subject_area",
+    ]
+
     dummy_cols = {
         col.replace(num_prefix, dummy_prefix, 1): df[col].ge(1)
         for col in df.columns
-        if col.startswith(constants.NUM_COURSE_FEATURE_COL_PREFIX)
+        if any(col.startswith(prefix) for prefix in course_subject_prefixes)
     }
 
     return df.assign(**dummy_cols).reindex(columns=grp_cols + list(dummy_cols.keys()))
