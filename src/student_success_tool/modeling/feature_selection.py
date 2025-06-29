@@ -223,8 +223,10 @@ def drop_collinear_features_iteratively(
         df_bool_imputed = bool_imputer.fit_transform(bool_df)
         assert isinstance(df_bool_imputed, pd.DataFrame)  # type guard
         df_features = pd.concat([df_features, df_bool_imputed], axis=1)
-        #drop if there are any boolean columns perfectly duplicate of the numeric cols 
-        duplicated_cols = df_features.columns[df_features.T.duplicated(keep="first")].tolist()
+        # drop if there are any boolean columns perfectly duplicate of the numeric cols
+        duplicated_cols = df_features.columns[
+            df_features.T.duplicated(keep="first")
+        ].tolist()
         df_features = df_features.drop(columns=duplicated_cols)
         df = df.drop(columns=duplicated_cols)
         n_features_dropped_so_far += len(duplicated_cols)

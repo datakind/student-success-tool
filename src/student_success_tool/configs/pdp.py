@@ -208,7 +208,7 @@ class FeaturesConfig(pyd.BaseModel):
             "as 'peak' COVID, for use in control variables to account for pandemic effects"
         ),
     )
-    key_course_subject_areas: t.Optional[t.List[t.Union[str, t.List[str]]] ]= pyd.Field(
+    key_course_subject_areas: t.Optional[t.List[t.Union[str, t.List[str]]]] = pyd.Field(
         default=None,
         description=(
             "One or more course subject areas (formatted as 2-digit CIP codes) "

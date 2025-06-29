@@ -290,8 +290,8 @@ def test_add_empty_cols_if_missing(df, col_val_dtypes, exp):
 def test_clean_up_labeled_dataset_cols_and_vals(df, exp):
     obs = preprocessing.pdp.clean_up_labeled_dataset_cols_and_vals(df)
     assert isinstance(obs, pd.DataFrame) and not obs.empty
-    print('observed cols', obs.columns)
-    print('expected cols', exp.columns)
+    print("observed cols", obs.columns)
+    print("expected cols", exp.columns)
     assert obs.equals(exp) or obs.compare(exp).empty
 
 
