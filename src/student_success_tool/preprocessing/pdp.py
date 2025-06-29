@@ -238,11 +238,25 @@ def add_empty_cols_if_missing(
     )
 
 
-def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
+def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame, num_credits_col: str = "num_credits_earned_cumsum") -> pd.DataFrame:
     """
     Drop a bunch of columns not needed or wanted for modeling, and set to null
     any values corresponding to time after a student's current year of enrollment.
+
+    Args:
+        df: DataFrame as created with features and targets and limited to the checkpoint term.
+        num_credits_col: Name of the column containing cumulative earned credits. 
     """
+    num_credit_check = constants.DEFAULT_COURSE_CREDIT_CHECK
+    credit_pattern = re.compile(rf"in_{num_credit_check}_credits")
+    # To prevent data leakage, students that have not reached the 12 credits and not taken the course 
+    # by the checkpoint term (which this data is limited to at the time of this function),
+    # will have the applicable in_12_credits columns set to null. Students that took the course will remain True, regardless of
+    # credits acheived. 
+    for col in df.columns:
+        if credit_pattern.search(col):
+            df[col] = df[col].mask((df[num_credits_col] < num_credit_check)&(df[col]==False))
+
     return (
         # drop many columns that *should not* be included as features in a model
         df.pipe(

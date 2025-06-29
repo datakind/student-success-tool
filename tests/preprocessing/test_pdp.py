@@ -234,6 +234,8 @@ def test_add_empty_cols_if_missing(df, col_val_dtypes, exp):
                     "frac_credits_earned_year_2": [0.9, 0.75, 0.8, 0.85],
                     "num_courses_diff_term_2_to_term_3": [0.0, 1.0, -1.0, 0.0],
                     "num_courses_diff_term_3_to_term_4": [1.0, -1.0, 0.0, 1.0],
+                    "num_credits_earned_cumsum": [10, 15, 20, 15],
+                    "took_subject_area_51_in_12_credits": [False, True, True, True],
                 }
             ).astype(
                 {
@@ -241,6 +243,7 @@ def test_add_empty_cols_if_missing(df, col_val_dtypes, exp):
                     "first_year_to_bachelors_at_cohort_inst": "Int8",
                     "first_year_to_associates_or_certificate_at_other_inst": "Int8",
                     "first_year_to_bachelor_at_other_inst": "Int8",
+                    "took_subject_area_51_in_12_credits": "boolean",
                 }
             ),
             pd.DataFrame(
@@ -270,6 +273,8 @@ def test_add_empty_cols_if_missing(df, col_val_dtypes, exp):
                     "frac_credits_earned_year_2": [np.nan, np.nan, 0.8, 0.85],
                     "num_courses_diff_term_2_to_term_3": [np.nan, 1.0, -1.0, 0.0],
                     "num_courses_diff_term_3_to_term_4": [np.nan, np.nan, 0.0, 1.0],
+                    "num_credits_earned_cumsum": [10, 15, 20, 15],
+                    "took_subject_area_51_in_12_credits": [np.nan, True, True, True],
                 }
             ).astype(
                 {
@@ -285,6 +290,8 @@ def test_add_empty_cols_if_missing(df, col_val_dtypes, exp):
 def test_clean_up_labeled_dataset_cols_and_vals(df, exp):
     obs = preprocessing.pdp.clean_up_labeled_dataset_cols_and_vals(df)
     assert isinstance(obs, pd.DataFrame) and not obs.empty
+    print('observed cols', obs.columns)
+    print('expected cols', exp.columns)
     assert obs.equals(exp) or obs.compare(exp).empty
 
 
