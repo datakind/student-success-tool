@@ -69,7 +69,9 @@ os.environ["MLFLOW_ENABLE_ARTIFACTS_PROGRESS_BAR"] = "false"
 # COMMAND ----------
 
 # project configuration stored as a config file in TOML format
-cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.custom.CustomProjectConfig)
+cfg = dataio.read_config(
+    "./config-TEMPLATE.toml", schema=configs.custom.CustomProjectConfig
+)
 cfg
 
 # COMMAND ----------

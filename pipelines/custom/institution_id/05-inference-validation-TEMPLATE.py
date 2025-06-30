@@ -38,7 +38,7 @@ from student_success_tool import dataio, configs
 if "DATABRICKS_RUNTIME_VERSION" in os.environ:
     sys.path.insert(1, "../")
 
-run_type = "predict" # always predict
+run_type = "predict"  # always predict
 
 try:
     spark = DatabricksSession.builder.getOrCreate()
@@ -49,12 +49,16 @@ except Exception:
 # COMMAND ----------
 
 # load config file
-cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.custom.CustomProjectConfig)
+cfg = dataio.read_config(
+    "./config-TEMPLATE.toml", schema=configs.custom.CustomProjectConfig
+)
 cfg
 
 # COMMAND ----------
 
-gold_prediction_table_name = getattr(cfg.datasets.gold['advisor_output'], f"{run_type}_table_path")
+gold_prediction_table_name = getattr(
+    cfg.datasets.gold['advisor_output'], f"{run_type}_table_path"
+)
 print(gold_prediction_table_name)
 
 predict_df = dataio.read.from_delta_table(
@@ -76,7 +80,8 @@ num_students = len(predict_df[student_id_col])
 print(f"Number of students: {num_students}")
 
 # Assert that all STUDENT_ID values are unique
-assert predict_df[student_id_col].is_unique, "The student ID column contains duplicate values."
+assert predict_df[student_id_col].is_unique, 
+"The student ID column contains duplicate values."
 
 # COMMAND ----------
 
@@ -85,14 +90,14 @@ assert predict_df[student_id_col].is_unique, "The student ID column contains dup
 
 # COMMAND ----------
 
-predict_df['support_score'].hist(bins=50)
-plt.title('Distribution of Support Scores on Inference Dataset')
-plt.ylabel('# of Students')
-plt.xlabel('support_score')
+predict_df["support_score"].hist(bins=50)
+plt.title("Distribution of Support Scores on Inference Dataset")
+plt.ylabel("# of Students")
+plt.xlabel("support_score")
 
 # COMMAND ----------
 
-predict_df['support_needed'].value_counts(normalize=True)
+predict_df["support_score"].value_counts(normalize=True)
 
 # COMMAND ----------
 
@@ -102,7 +107,7 @@ predict_df['support_needed'].value_counts(normalize=True)
 
 # COMMAND ----------
 
-predict_df[[f"feature_{i}_name" for i in range(1,6)]].describe()
+predict_df[[f"feature_{i}_name" for i in range(1, 6)]].describe()
 
 # COMMAND ----------
 
@@ -129,7 +134,7 @@ assert all(
 
 # COMMAND ----------
 
-predict_df.loc[(predict_df[[f'feature_{i}_value' for i in range(1,6)]] == 'nan').any(axis=1)]
+predict_df.loc[(predict_df[[f'feature_{i}_value' for i in range(1, 6)]] == "nan").any(axis=1)]
 
 # COMMAND ----------
 
@@ -140,7 +145,7 @@ predict_df.loc[(predict_df[[f'feature_{i}_value' for i in range(1,6)]] == 'nan')
 
 # Maximum Risk Student
 max_student = predict_df[
-    predict_df['support_score'] == predict_df['support_score'].max()
+    predict_df["support_score"] == predict_df["support_score"].max()
 ]
 max_student
 
@@ -148,13 +153,13 @@ max_student
 
 # Minimum Risk Student
 min_student = predict_df[
-    predict_df['support_score'] == predict_df['support_score'].min()
+    predict_df["support_score"] == predict_df["support_score"].min()
 ]
 min_student
 
 # COMMAND ----------
 
 # Median Risk Student
-median_value = predict_df['support_score'].median()
-median_student = predict_df.loc[(predict_df['support_score'] - median_value).abs().nsmallest(1).index]
+median_value = predict_df["support_score"].median()
+median_student = predict_df.loc[(predict_df["support_score"] - median_value).abs().nsmallest(1).index]
 median_student
