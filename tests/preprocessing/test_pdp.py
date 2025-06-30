@@ -234,7 +234,7 @@ def test_add_empty_cols_if_missing(df, col_val_dtypes, exp):
                     "frac_credits_earned_year_2": [0.9, 0.75, 0.8, 0.85],
                     "num_courses_diff_term_2_to_term_3": [0.0, 1.0, -1.0, 0.0],
                     "num_courses_diff_term_3_to_term_4": [1.0, -1.0, 0.0, 1.0],
-                    "num_credits_earned_cumsum": [10, 15, 20, 15],
+                    "num_credits_earned_cumsum": [10, 15, 20, 9],
                     "took_subject_area_51_in_12_credits": [False, True, True, True],
                 }
             ).astype(
@@ -273,8 +273,8 @@ def test_add_empty_cols_if_missing(df, col_val_dtypes, exp):
                     "frac_credits_earned_year_2": [np.nan, np.nan, 0.8, 0.85],
                     "num_courses_diff_term_2_to_term_3": [np.nan, 1.0, -1.0, 0.0],
                     "num_courses_diff_term_3_to_term_4": [np.nan, np.nan, 0.0, 1.0],
-                    "num_credits_earned_cumsum": [10, 15, 20, 15],
-                    "took_subject_area_51_in_12_credits": [np.nan, True, True, True],
+                    "num_credits_earned_cumsum": [10, 15, 20, 9],
+                    "took_subject_area_51_in_12_credits": [np.nan, True, True, np.nan],
                 }
             ).astype(
                 {
