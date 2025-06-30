@@ -57,10 +57,10 @@ except Exception:
 
 try:
     # Get the pipeline type from job definition
-    run_type = dbutils.widgets.get("run_type") # noqa: F821
+    run_type = dbutils.widgets.get("run_type")  # noqa: F821
 except Py4JJavaError:
     # Run script interactively
-    run_type = "predict" 
+    run_type = "predict"
 
 # COMMAND ----------
 
