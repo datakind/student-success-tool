@@ -62,11 +62,15 @@ def test_feature_matches_some_regex_key(feature_name, feature_table_data):
         if r"\d" in key
     ]
 
+    print("\n[DEBUG] Regex patterns with \\d:")
+    for key in regex_keys:
+        print(" →", key)
+
     # Compile the regex patterns
     compiled_patterns = [re.compile(pattern) for pattern in regex_keys]
 
     # Check if the feature_name matches ANY of them
-    matched = any(pat.match(feature_name) for pat in compiled_patterns)
+    matched = any(pat.fullmatch(feature_name) for pat in compiled_patterns)
 
     assert matched, (
         f"Feature '{feature_name}' did not match any regex pattern with \\d in the TOML"
