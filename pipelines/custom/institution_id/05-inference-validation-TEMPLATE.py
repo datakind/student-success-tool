@@ -57,7 +57,7 @@ cfg
 # COMMAND ----------
 
 gold_prediction_table_name = getattr(
-    cfg.datasets.gold['advisor_output'], f"{run_type}_table_path"
+    cfg.datasets.gold["advisor_output"], f"{run_type}_table_path"
 )
 print(gold_prediction_table_name)
 
@@ -80,7 +80,9 @@ num_students = len(predict_df[student_id_col])
 print(f"Number of students: {num_students}")
 
 # Assert that all STUDENT_ID values are unique
-assert predict_df[student_id_col].is_unique, "The student ID column contains duplicate values."
+assert predict_df[student_id_col].is_unique, (
+    "The student ID column contains duplicate values."
+)
 
 # COMMAND ----------
 
@@ -133,7 +135,9 @@ assert all(
 
 # COMMAND ----------
 
-predict_df.loc[(predict_df[[f'feature_{i}_value' for i in range(1, 6)]] == "nan").any(axis=1)]
+predict_df.loc[
+    (predict_df[[f'feature_{i}_value' for i in range(1, 6)]] == "nan").any(axis=1)
+]
 
 # COMMAND ----------
 
@@ -161,9 +165,6 @@ min_student
 # Median Risk Student
 median_value = predict_df["support_score"].median()
 median_student = predict_df.loc[
-    (predict_df["support_score"] - median_value)
-    .abs()
-    .nsmallest(1)
-    .index
+    (predict_df["support_score"] - median_value).abs().nsmallest(1).index
 ]
 median_student
