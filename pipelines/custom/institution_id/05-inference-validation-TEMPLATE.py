@@ -35,8 +35,6 @@ import matplotlib.pyplot as plt
 
 from student_success_tool import dataio, configs
 
-from py4j.protocol import Py4JJavaError
-
 if "DATABRICKS_RUNTIME_VERSION" in os.environ:
     sys.path.insert(1, "../")
 
