@@ -61,10 +61,7 @@ def test_feature_matches_some_regex_key(feature_name, feature_table_data):
         return bool(re.search(r"[\(\[\.\*\+\?\\]", key))
 
     # Only consider keys with \d in them — implying dynamic regex patterns
-    regex_keys = [
-        key for key in feature_table_data.keys()
-        if is_likely_regex(key)
-    ]
+    regex_keys = [key for key in feature_table_data.keys() if is_likely_regex(key)]
 
     # Compile the regex patterns
     compiled_patterns = [re.compile(pattern) for pattern in regex_keys]
