@@ -43,6 +43,12 @@ VALID_FEATURE_NAMES = [
     "took_course_subject_area_51",
     "took_course_subject_area_51_cummax",
     "took_course_subject_area_51_cummax_in_12_creds",
+    "num_courses_course_subject_area_51",
+    "num_courses_course_subject_area_51_cumfrac",
+    "frac_courses_course_subject_area_51",
+    "num_courses_course_id_eng_101",
+    "num_courses_course_id_eng_101_cumfrac",
+    "frac_courses_course_id_eng_101",
 ]
 
 
@@ -50,8 +56,11 @@ VALID_FEATURE_NAMES = [
 def test_feature_matches_some_regex_key(feature_name, feature_table_data):
     """Check if each valid feature name matches at least one of the TOML regex keys."""
 
-    # Extract only regex-style keys from the TOML
-    regex_keys = [key for key in feature_table_data.keys() if key.startswith("^")]
+    # Only consider keys with \d in them — implying dynamic regex patterns
+    regex_keys = [
+        key for key in feature_table_data.keys()
+        if r"\d" in key
+    ]
 
     # Compile the regex patterns
     compiled_patterns = [re.compile(pattern) for pattern in regex_keys]
@@ -60,5 +69,5 @@ def test_feature_matches_some_regex_key(feature_name, feature_table_data):
     matched = any(pat.match(feature_name) for pat in compiled_patterns)
 
     assert matched, (
-        f"Feature '{feature_name}' did not match any regex pattern in the TOML"
+        f"Feature '{feature_name}' did not match any regex pattern with \\d in the TOML"
     )
