@@ -59,4 +59,6 @@ def test_feature_matches_some_regex_key(feature_name, feature_table_data):
     # Check if the feature_name matches ANY of them
     matched = any(pat.match(feature_name) for pat in compiled_patterns)
 
-    assert matched, f"Feature '{feature_name}' did not match any regex pattern in the TOML"
+    assert matched, (
+        f"Feature '{feature_name}' did not match any regex pattern in the TOML"
+    )
