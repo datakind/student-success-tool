@@ -253,12 +253,10 @@ def clean_up_labeled_dataset_cols_and_vals(
     credit_pattern = re.compile(rf"in_{num_credit_check}_credits")
     # To prevent data leakage, students that have not reached the 12 credits and not taken the course
     # by the checkpoint term (which this data is limited to at the time of this function),
-    # will have the applicable in_12_credits columns set to null. 
+    # will have the applicable in_12_credits columns set to null.
     for col in df.columns:
         if credit_pattern.search(col):
-            df[col] = df[col].mask(
-                (df[num_credits_col] < num_credit_check)
-            )
+            df[col] = df[col].mask((df[num_credits_col] < num_credit_check))
 
     return (
         # drop many columns that *should not* be included as features in a model
