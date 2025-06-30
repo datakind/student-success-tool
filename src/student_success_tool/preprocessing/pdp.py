@@ -250,7 +250,7 @@ def clean_up_labeled_dataset_cols_and_vals(
         num_credits_col: Name of the column containing cumulative earned credits.
     """
     num_credit_check = constants.DEFAULT_COURSE_CREDIT_CHECK
-    credit_pattern = re.compile(rf"in_{num_credit_check}_credits")
+    credit_pattern = re.compile(rf"in_{num_credit_check}_creds")
     # To prevent data leakage, students that have not reached the 12 credits and not taken the course
     # by the checkpoint term (which this data is limited to at the time of this function),
     # will have the applicable in_12_credits columns set to null.
