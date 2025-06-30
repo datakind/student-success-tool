@@ -55,6 +55,13 @@ except Exception:
     logging.warning("unable to create spark session; are you in a Databricks runtime?")
     pass
 
+try:
+  # Get the pipeline type from job definition
+  run_type = dbutils.widgets.get("run_type") # noqa: F821
+except Py4JJavaError:
+  # Run script interactively
+  run_type = "predict" 
+
 # COMMAND ----------
 
 # Databricks logs every instance that uses sklearn or other modelling libraries
