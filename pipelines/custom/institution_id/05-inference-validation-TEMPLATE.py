@@ -51,7 +51,7 @@ except Exception:
 # COMMAND ----------
 
 # load config file
-cfg = dataio.read_config(f"./config.toml", schema=configs.custom.CustomProjectConfig)
+cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.custom.CustomProjectConfig)
 cfg
 
 # COMMAND ----------
@@ -121,7 +121,7 @@ assert all(
     )
     for i in range(len(predict_df))
 ), (
-    f"Final output has invalid SHAP values across top 5 ranked features for one or more students."
+    "Final output has invalid SHAP values across top ranked features for one or more students."
 )
 
 # COMMAND ----------
