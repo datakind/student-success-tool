@@ -1,4 +1,5 @@
 import pytest
+import re
 import os
 from student_success_tool.dataio.read import from_toml_file
 
@@ -31,3 +32,23 @@ def test_all_features_have_name_and_desc(feature_table_data):
         assert "desc" in entry and entry["desc"].strip(), (
             f"'desc' missing or empty in feature: {feature_id}"
         )
+
+
+# Add test cases to this as needed! This helps us make sure
+# that are regex patterns work *as intended* in our features table
+VALID_FEATURE_NAMES = [
+    "took_course_id_eng_101",
+    "took_course_id_eng_101_cummax",
+    "took_course_id_eng_101_cummax_in_12_creds",
+    "took_course_subject_area_51",
+    "took_course_subject_area_51_cummax",
+    "took_course_subject_area_51_cummax_in_12_creds",
+]
+
+@pytest.mark.parametrize("feature_name", VALID_FEATURE_NAMES)
+def test_feature_name_matches_toml_patterns(feature_name, feature_table_data):
+    """Check if each valid feature name matches at least one of the TOML regex keys."""
+    regex_patterns = list(feature_table_data.keys())
+    assert any(re.match(pattern, feature_name) for pattern in regex_patterns), (
+        f"Feature name '{feature_name}' did not match any defined regex patterns."
+    )
