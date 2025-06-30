@@ -24,7 +24,7 @@
 
 # install dependencies, of which most/all should come through our 1st-party SST package
 
-# %pip install "student-success-tool == 0.3.4"
+# %pip install "student-success-tool == 0.3.5"
 
 # COMMAND ----------
 
