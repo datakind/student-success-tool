@@ -91,8 +91,8 @@ def test_sum_dummy_cols_by_group(df, grp_cols, agg_cols, exp):
                         "23-24 SPRING",
                     ],
                     "num_courses_course_type_CC|CD": [0, 3, 1, 0],
-                    "num_courses_course_level_0": [0, 0, 0, 0],
-                    "num_courses_course_level_1": [2, 1, 1, 1],
+                    "num_courses_course_id_eng_101": [0, 0, 0, 1],
+                    "num_courses_course_subject_area_51": [2, 1, 1, 1],
                 }
             ),
             ["student_guid", "term_id"],
@@ -105,9 +105,8 @@ def test_sum_dummy_cols_by_group(df, grp_cols, agg_cols, exp):
                         "23-24 FALL",
                         "23-24 SPRING",
                     ],
-                    "took_course_course_type_CC|CD": [False, True, True, False],
-                    "took_course_course_level_0": [False, False, False, False],
-                    "took_course_course_level_1": [True, True, True, True],
+                    "took_course_id_eng_101": [False, False, False, True],
+                    "took_course_subject_area_51": [True, True, True, True],
                 }
             ),
         ),
