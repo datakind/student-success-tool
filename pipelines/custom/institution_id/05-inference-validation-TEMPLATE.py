@@ -136,7 +136,7 @@ assert all(
 # COMMAND ----------
 
 predict_df.loc[
-    (predict_df[[f'feature_{i}_value' for i in range(1, 6)]] == "nan").any(axis=1)
+    (predict_df[[f"feature_{i}_value" for i in range(1, 6)]] == "nan").any(axis=1)
 ]
 
 # COMMAND ----------
