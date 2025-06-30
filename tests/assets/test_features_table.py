@@ -56,10 +56,14 @@ VALID_FEATURE_NAMES = [
 def test_feature_matches_some_regex_key(feature_name, feature_table_data):
     """Check if each valid feature name matches at least one of the TOML regex keys."""
 
+    def is_likely_regex(key: str) -> bool:
+        # Matches if the key contains metacharacters indicating it's a regex
+        return bool(re.search(r"[\(\[\.\*\+\?\\]", key))
+
     # Only consider keys with \d in them — implying dynamic regex patterns
     regex_keys = [
         key for key in feature_table_data.keys()
-        if r"\d" in key
+        if is_likely_regex(key)
     ]
 
     print("\n[DEBUG] Regex patterns with \\d:")
