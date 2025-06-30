@@ -34,7 +34,7 @@ def test_all_features_have_name_and_desc(feature_table_data):
         )
 
 
-# Add test cases to this as needed! This helps us make sure
+# Add regex test cases to this as needed! This helps us make sure
 # that are regex patterns work *as intended* in our features table
 VALID_FEATURE_NAMES = [
     "took_course_id_eng_101",
@@ -45,10 +45,18 @@ VALID_FEATURE_NAMES = [
     "took_course_subject_area_51_cummax_in_12_creds",
 ]
 
+
 @pytest.mark.parametrize("feature_name", VALID_FEATURE_NAMES)
-def test_feature_name_matches_toml_patterns(feature_name, feature_table_data):
+def test_feature_matches_some_regex_key(feature_name, feature_table_data):
     """Check if each valid feature name matches at least one of the TOML regex keys."""
-    regex_patterns = list(feature_table_data.keys())
-    assert any(re.match(pattern, feature_name) for pattern in regex_patterns), (
-        f"Feature name '{feature_name}' did not match any defined regex patterns."
-    )
+
+    # Extract only regex-style keys from the TOML
+    regex_keys = [key for key in feature_table_data.keys() if key.startswith("^")]
+
+    # Compile the regex patterns
+    compiled_patterns = [re.compile(pattern) for pattern in regex_keys]
+
+    # Check if the feature_name matches ANY of them
+    matched = any(pat.match(feature_name) for pat in compiled_patterns)
+
+    assert matched, f"Feature '{feature_name}' did not match any regex pattern in the TOML"
