@@ -56,11 +56,11 @@ except Exception:
     pass
 
 try:
-  # Get the pipeline type from job definition
-  run_type = dbutils.widgets.get("run_type") # noqa: F821
+    # Get the pipeline type from job definition
+    run_type = dbutils.widgets.get("run_type") # noqa: F821
 except Py4JJavaError:
-  # Run script interactively
-  run_type = "predict" 
+    # Run script interactively
+    run_type = "predict" 
 
 # COMMAND ----------
 
