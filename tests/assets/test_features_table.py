@@ -66,10 +66,6 @@ def test_feature_matches_some_regex_key(feature_name, feature_table_data):
         if is_likely_regex(key)
     ]
 
-    print("\n[DEBUG] Regex patterns with \\d:")
-    for key in regex_keys:
-        print(" →", key)
-
     # Compile the regex patterns
     compiled_patterns = [re.compile(pattern) for pattern in regex_keys]
 
