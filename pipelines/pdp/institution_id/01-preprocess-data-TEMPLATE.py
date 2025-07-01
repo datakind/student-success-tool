@@ -76,18 +76,6 @@ from pipelines import *  # noqa: F403
 
 # COMMAND ----------
 
-features_table = dataio.read_features_table("/Workspace/Users/noreen@datakind.org/student-success-tool/src/student_success_tool/assets/pdp/features_table.toml")
-
-# COMMAND ----------
-
-features_table 
-
-# COMMAND ----------
-
-len(features_table)
-
-# COMMAND ----------
-
 # project configuration should be stored in a config file in TOML format
 cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig)
 cfg
