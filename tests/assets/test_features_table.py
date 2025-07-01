@@ -50,7 +50,7 @@ VALID_FEATURE_NAMES = [
     "frac_courses_course_subject_area_51",
     "num_courses_course_id_eng_101",
     "num_courses_course_id_eng_101_cumfrac",
-    "frac_courses_course_id_eng_101"
+    "frac_courses_course_id_eng_101",
 ]
 
 
