@@ -43,13 +43,14 @@ VALID_FEATURE_NAMES = [
     "took_course_subject_area_51",
     "took_course_subject_area_51_cummax",
     "took_course_subject_area_51_cummax_in_12_creds",
+    "took_course_id_english_composition_and_writing_098_cummax",
+    "took_course_id_english_composition_and_writing_101_1_cummax",
     "num_courses_course_subject_area_51",
     "num_courses_course_subject_area_51_cumfrac",
     "frac_courses_course_subject_area_51",
     "num_courses_course_id_eng_101",
     "num_courses_course_id_eng_101_cumfrac",
-    "frac_courses_course_id_eng_101",
-    "took_course_id_english_composition_and_writing_098_cummax"
+    "frac_courses_course_id_eng_101"
 ]
 
 
