@@ -49,6 +49,7 @@ VALID_FEATURE_NAMES = [
     "num_courses_course_id_eng_101",
     "num_courses_course_id_eng_101_cumfrac",
     "frac_courses_course_id_eng_101",
+    "took_course_id_english_composition_and_writing_098_cummax"
 ]
 
 
