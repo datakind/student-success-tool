@@ -395,11 +395,11 @@ def top_shap_features(
 
 
 def support_score_distribution_table(
-    df_serving,
-    unique_ids,
-    pred_probs,
-    shap_values,
-    inference_params,
+    df_serving: pd.DataFrame,
+    unique_ids: t.Any,
+    pred_probs: t.Any,
+    shap_values: t.Any,
+    inference_params: dict,
     features_table: t.Optional[dict[str, dict[str, str]]] = None,
 ) -> pd.DataFrame:
     """
