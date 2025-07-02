@@ -29,8 +29,11 @@ def test_all_features_have_name_and_desc(feature_table_data):
         assert "name" in entry and entry["name"].strip(), (
             f"'name' missing or empty in feature: {feature_id}"
         )
-        assert "desc" in entry and entry["desc"].strip(), (
-            f"'desc' missing or empty in feature: {feature_id}"
+        assert "short_desc" in entry and entry["short_desc"].strip(), (
+            f"'short_desc' missing or empty in feature: {feature_id}"
+        )
+        assert "long_desc" in entry and entry["long_desc"].strip(), (
+            f"'long_desc' missing or empty in feature: {feature_id}"
         )
 
 
@@ -43,32 +46,56 @@ VALID_FEATURE_NAMES = [
     "took_course_subject_area_51",
     "took_course_subject_area_51_cummax",
     "took_course_subject_area_51_cummax_in_12_creds",
+    "took_course_id_english_composition_and_writing_098",
+    "took_course_id_english_composition_and_writing_098_cummax",
+    "took_course_id_english_composition_and_writing_098_cummax_in_12_creds",
+    "took_course_id_english_composition_and_writing_101_1",
+    "took_course_id_english_composition_and_writing_101_1_cummax",
+    "took_course_id_english_composition_and_writing_101_1_cummax_in_12_creds",
     "num_courses_course_subject_area_51",
     "num_courses_course_subject_area_51_cumfrac",
     "frac_courses_course_subject_area_51",
     "num_courses_course_id_eng_101",
     "num_courses_course_id_eng_101_cumfrac",
     "frac_courses_course_id_eng_101",
+    "took_course_id_english1010",
+    "took_course_id_english1010_cummax",
+    "took_course_id_english1010_cummax_in_12_creds",
+    "took_course_id_mathematics_science1210",
+    "took_course_id_mathematics_science1210_cummax",
+    "took_course_id_mathematics_science1210_cummax_in_12_creds",
+    "num_courses_course_id_mathematics_science1210",
+    "num_courses_course_id_english1010",
+    "num_courses_course_id_english_composition_and_writing_098",
+    "num_courses_course_id_english_composition_and_writing_101_1",
+    "num_courses_course_id_mathematics_science1210_cumfrac",
+    "num_courses_course_id_english1010_cumfrac",
+    "num_courses_course_id_english_composition_and_writing_098_cumfrac",
+    "num_courses_course_id_english_composition_and_writing_101_1_cumfrac",
+    "frac_courses_course_id_mathematics_science1210",
+    "frac_courses_course_id_english1010",
+    "frac_courses_course_id_english_composition_and_writing_098",
+    "frac_courses_course_id_english_composition_and_writing_101_1",
 ]
 
 
 @pytest.mark.parametrize("feature_name", VALID_FEATURE_NAMES)
-def test_feature_matches_some_regex_key(feature_name, feature_table_data):
-    """Check if each valid feature name matches at least one of the TOML regex keys."""
+def test_feature_matches_exactly_one_regex_key(feature_name, feature_table_data):
+    """Ensure each valid feature name matches exactly one regex key from the TOML."""
 
     def is_likely_regex(key: str) -> bool:
         # Matches if the key contains metacharacters indicating it's a regex
-        return bool(re.search(r"[\(\[\.\*\+\?\\]", key))
+        return key.startswith("^") or bool(re.search(r"[\(\[\.\*\+\?\\]", key))
 
-    # Only consider keys with \d in them — implying dynamic regex patterns
+    # Only consider keys with escape sequences or regex metacharacters
     regex_keys = [key for key in feature_table_data.keys() if is_likely_regex(key)]
 
     # Compile the regex patterns
-    compiled_patterns = [re.compile(pattern) for pattern in regex_keys]
+    compiled_patterns = [re.compile(pat) for pat in regex_keys]
 
-    # Check if the feature_name matches ANY of them
-    matched = any(pat.fullmatch(feature_name) for pat in compiled_patterns)
+    matches = [pat.pattern for pat in compiled_patterns if pat.fullmatch(feature_name)]
 
-    assert matched, (
-        f"Feature '{feature_name}' did not match any regex pattern with \\d in the TOML"
+    assert len(matches) == 1, (
+        f"Feature '{feature_name}' matched {len(matches)} regex patterns: {matches}. "
+        "Expected to match exactly one."
     )
