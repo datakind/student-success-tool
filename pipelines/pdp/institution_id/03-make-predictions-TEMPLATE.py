@@ -26,7 +26,7 @@
 # we need to manually install a certain version of pandas and scikit-learn in order
 # for our models to load and run properly.
 
-# %pip install "student-success-tool==0.3.4"
+# %pip install "student-success-tool==0.3.6"
 # %pip install "pandas==1.5.3"
 # %pip install "scikit-learn==1.3.0"
 

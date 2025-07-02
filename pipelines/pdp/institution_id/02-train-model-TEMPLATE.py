@@ -28,7 +28,7 @@
 # we need to manually install a certain version of pandas and scikit-learn in order
 # for our models to load and run properly.
 
-# %pip install "student-success-tool==0.3.4"
+# %pip install "student-success-tool==0.3.6"
 # %pip install "pandas==1.5.3"
 # %pip install "scikit-learn==1.3.0"
 
@@ -212,16 +212,24 @@ else:
 # COMMAND ----------
 
 # Get top runs from experiment for evaluation
-top_run_ids = modeling.evaluation.get_top_run_ids(
+# Adjust optimization metrics & topn_runs_included as needed
+top_runs = modeling.evaluation.get_top_runs(
     experiment_id,
-    cfg.modeling.training.primary_metric,
-    cfg.modeling.evaluation.topn_runs_included,
+    optimization_metrics=[
+        "test_recall_score",
+        "val_recall_score",
+        "test_roc_auc",
+        "val_roc_auc",
+        "test_log_loss",
+        "val_log_loss",
+    ],
+    topn_runs_included=cfg.modeling.evaluation.topn_runs_included,
 )
-logging.info("top run ids = %s", top_run_ids)
+logging.info("top run ids = %s", top_runs)
 
 # COMMAND ----------
 
-for run_id in top_run_ids:
+for run_id in top_runs.values():
     with mlflow.start_run(run_id=run_id) as run:
         logging.info(
             "Run %s: Starting performance evaluation%s",

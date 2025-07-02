@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 0.3.6 (2025-06)
+- Fixed bug in features table (PR 229)
+- Fixed bug in 12 credit features (PR 230)
+
+## 0.3.5 (2025-06)
+- Added support scores to to features (PR 222)
+- Limit boolean features to courses and subjects (PR 223)
+- Add boolean features into VIF calcs (PR 223)
+- Clean up features table (PR 223)
+- Adjusting config unit tests to import templates directly (PR 224)
+
 ## 0.3.4 (2025-06)
 - Update features table (PR #218)
 - Add features table to top shap feature output table (PR #217)

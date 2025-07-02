@@ -37,8 +37,8 @@ min_num_credits_full_time = 12
 # NOTE: single quotes *required* here; it's TOML syntax for literal strings
 course_level_pattern = '^TODO(?P<course_level>\d)TODO$'
 core_terms = ["FALL", "SPRING"]
-key_course_subject_areas = ["24", "51"]
-key_course_ids = ["ENGL101", "MATH101"]
+key_course_subject_areas = ["24", "51", ["27", "31"]]
+key_course_ids = ["ENGL101", "MATH101", ["ENGL102", "MATH102"]]
 
 [preprocessing.selection]
 student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year_1 = "Bachelor's Degree" }
@@ -55,7 +55,7 @@ name = "graduation_150pct_time"
 type_ = "graduation"
 intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
 years_to_degree_col = "first_year_to_associates_at_cohort_inst"
-num_years_in_term = 4
+num_terms_in_year = 4
 max_term_rank = "infer"
 
 [modeling.feature_selection]
@@ -71,7 +71,7 @@ timeout_minutes = 10
 # exclude_cols = []
 
 [modeling.evaluation]
-topn_runs_included = 3
+topn_runs_included = 5
 
 [inference]
 num_top_features = 5

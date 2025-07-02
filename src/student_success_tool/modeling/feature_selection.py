@@ -199,18 +199,40 @@ def drop_collinear_features_iteratively(
     np.seterr(divide="ignore", invalid="ignore")
     force_include_cols = force_include_cols or []
 
-    df_features = df.select_dtypes(include="number")
-    if df_features.shape[1] == 0:
+    numeric_df = df.select_dtypes(include=["number"])
+    bool_df = df.select_dtypes(include=["boolean"]).astype("Int64")
+
+    if numeric_df.empty and bool_df.empty:
         LOGGER.warning("no numeric columns found, so no collinear features to drop")
         return df
 
     imputer: sklearn.impute.SimpleImputer = sklearn.impute.SimpleImputer(
         missing_values=np.nan, strategy="mean"
     ).set_output(transform="pandas")  # type: ignore
-    df_features = imputer.fit_transform(df_features)
-    assert isinstance(df_features, pd.DataFrame)  # type guard
+    df_num_imputed = imputer.fit_transform(numeric_df)
+    assert isinstance(df_num_imputed, pd.DataFrame)  # type guard
+
+    df_features = df_num_imputed
 
     n_features_dropped_so_far = 0
+
+    if not bool_df.empty:
+        bool_imputer: sklearn.impute.SimpleImputer = sklearn.impute.SimpleImputer(
+            missing_values=np.nan, strategy="most_frequent"
+        ).set_output(transform="pandas")  # type: ignore
+        df_bool_imputed = bool_imputer.fit_transform(bool_df)
+        assert isinstance(df_bool_imputed, pd.DataFrame)  # type guard
+        df_features = pd.concat([df_features, df_bool_imputed], axis=1)
+        # drop if there are any boolean columns perfectly duplicate of the numeric cols
+        duplicated_cols = df_features.columns[
+            df_features.T.duplicated(keep="first")
+        ].tolist()
+        df_features = df_features.drop(columns=duplicated_cols)
+        df = df.drop(columns=duplicated_cols)
+        n_features_dropped_so_far += len(duplicated_cols)
+
+    print(df_features.columns.tolist())
+    print(df_features.dtypes)
 
     # calculate initial VIFs for features that aren't force-included
     uncentered_vif_dict = {
