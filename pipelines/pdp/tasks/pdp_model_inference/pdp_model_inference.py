@@ -288,7 +288,7 @@ class ModelInferenceTask:
             return None
 
         # --- Load features table ---
-        #TODO: Might re-add if requirements change --> features_table = dataio.read_features_table("assets/pdp/features_table.toml")
+        # TODO: Might re-add if requirements change --> features_table = dataio.read_features_table("assets/pdp/features_table.toml")
 
         # --- Inference Parameters ---
         inference_params = {
@@ -301,11 +301,11 @@ class ModelInferenceTask:
 
         try:
             result = inference.support_score_distribution_table(
-                df_serving = df_serving,
-                unique_ids = unique_ids,
-                pred_probs = pred_probs,
-                shap_values = shap_values.values,
-                inference_params = inference_params,
+                df_serving=df_serving,
+                unique_ids=unique_ids,
+                pred_probs=pred_probs,
+                shap_values=shap_values.values,
+                inference_params=inference_params,
             )
 
             return result
@@ -323,9 +323,10 @@ class ModelInferenceTask:
                 "Spark session not initialized. Cannot post process shap values."
             )
             return None
-        #TODO: Might re-add if requirements change --> features_table = dataio.read_features_table("assets/pdp/features_table.toml")
+        # TODO: Might re-add if requirements change --> features_table = dataio.read_features_table("assets/pdp/features_table.toml")
         shap_feature_importance = inference.generate_ranked_feature_table(
-            df_serving, shap_values.values,
+            df_serving,
+            shap_values.values,
         )
 
         return shap_feature_importance

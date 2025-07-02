@@ -401,7 +401,7 @@ def support_score_distribution_table(
     shap_values,
     inference_params,
     features_table: t.Optional[dict[str, dict[str, str]]] = None,
-):
+) -> pd.DataFrame:
     """
     Selects top SHAP features for each student, and bins the support scores.
 
@@ -428,11 +428,11 @@ def support_score_distribution_table(
 
     try:
         result = select_top_features_for_display(
-            features = df_serving,
-            unique_ids = unique_ids,
-            predicted_probabilities = pred_probs,
-            shap_values = shap_values.values,
-            n_features = inference_params["num_top_features"],
+            features=df_serving,
+            unique_ids=unique_ids,
+            predicted_probabilities=pred_probs,
+            shap_values=shap_values.values,
+            n_features=inference_params["num_top_features"],
             needs_support_threshold_prob=inference_params["min_prob_pos_label"],
             features_table=features_table,
         )

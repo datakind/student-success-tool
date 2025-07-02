@@ -552,7 +552,6 @@ def test_support_score_distribution_table(
         shap_values=pd.DataFrame(shap_values),
         inference_params=inference_params,
         features_table=features_table,
-        model_feature_names=features.columns.tolist(),
     )
 
     assert isinstance(result, pd.DataFrame)
