@@ -287,7 +287,7 @@ with mlflow.start_run() as run:
 # COMMAND ----------
 
 shap_feature_importance = inference.generate_ranked_feature_table(
-    features, df_shap_values[model_feature_names].to_numpy(), features_table
+    features = features, shap_values = df_shap_values[model_feature_names].to_numpy()
 )
 shap_feature_importance
 
@@ -304,13 +304,11 @@ dataio.write.to_delta_table(
 # COMMAND ----------
 
 support_score_distribution = inference.support_score_distribution_table(
-    features,
-    unique_ids,
-    pred_probs,
-    df_shap_values[model_feature_names],
-    cfg.inference.dict(),
-    features_table,
-    None,
+    df_serving = features,
+    unique_ids = unique_ids,
+    pred_probs = pred_probs,
+    shap_values = df_shap_values[model_feature_names],
+    inference_params = cfg.inference.dict(),
 )
 support_score_distribution
 
