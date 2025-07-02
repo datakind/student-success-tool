@@ -646,6 +646,20 @@ df_pct_creds_by_yr.groupby("year_of_enrollment")[
     ).set(xlabel="Year of Enrollment", ylabel="Avg. % Credits Earned")
 )
 
+# Add percent labels on top of each bar
+for bar in ax.patches:
+    height = bar.get_height()
+    ax.annotate(
+        f"{height:.1f}%",  
+        (bar.get_x() + bar.get_width() / 2, height),
+        ha='center',
+        va='bottom',
+        fontsize=10
+    )
+
+plt.tight_layout()
+plt.show()
+
 # COMMAND ----------
 
 ax = sb.histplot(
