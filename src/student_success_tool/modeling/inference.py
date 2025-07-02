@@ -395,14 +395,13 @@ def top_shap_features(
 
 
 def support_score_distribution_table(
-    df_serving,
-    unique_ids,
-    pred_probs,
-    shap_values,
-    inference_params,
-    features_table,
-    model_feature_names,
-):
+    df_serving: pd.DataFrame,
+    unique_ids: t.Any,
+    pred_probs: t.Any,
+    shap_values: t.Any,
+    inference_params: dict,
+    features_table: t.Optional[dict[str, dict[str, str]]] = None,
+) -> pd.DataFrame:
     """
     Selects top SHAP features for each student, and bins the support scores.
 
@@ -429,13 +428,13 @@ def support_score_distribution_table(
 
     try:
         result = select_top_features_for_display(
-            df_serving,
-            unique_ids,
-            pred_probs,
-            shap_values.values,
+            features=df_serving,
+            unique_ids=unique_ids,
+            predicted_probabilities=pred_probs,
+            shap_values=shap_values.values,
             n_features=inference_params["num_top_features"],
-            features_table=features_table,
             needs_support_threshold_prob=inference_params["min_prob_pos_label"],
+            features_table=features_table,
         )
 
         # --- Bin support scores for histogram (e.g., 0.0 to 1.0 in 0.1 steps) ---
