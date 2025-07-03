@@ -2,8 +2,7 @@ import pytest
 import re
 import os
 from student_success_tool.dataio.read import from_toml_file
-from student_success_tool.modeling.inference import _get_mapped_feature_name  
-
+from student_success_tool.modeling.inference import _get_mapped_feature_name
 
 
 @pytest.fixture
@@ -85,30 +84,35 @@ VALID_FEATURE_NAMES = [
 def test_feature_maps_to_named_entry(feature_name, feature_table_data):
     """Ensure each feature maps to a named entry in the feature table using the production mapping logic."""
     mapped = _get_mapped_feature_name(feature_name, feature_table_data)
-    
+
     # If it mapped to something, it must not be the identity (fallback case)
-    assert mapped != feature_name, f"Feature '{feature_name}' was not mapped correctly using _get_mapped_feature_name."
-    
+    assert mapped != feature_name, (
+        f"Feature '{feature_name}' was not mapped correctly using _get_mapped_feature_name."
+    )
+
     # Ensure that the result is a formatted name string
-    assert isinstance(mapped, str) and mapped.strip(), f"Mapped name for '{feature_name}' is empty or invalid: {mapped}"
+    assert isinstance(mapped, str) and mapped.strip(), (
+        f"Mapped name for '{feature_name}' is empty or invalid: {mapped}"
+    )
+
 
 # DEPRECATED - BACKUP
 # def test_feature_matches_exactly_one_regex_key(feature_name, feature_table_data):
 #     """Ensure each valid feature name matches exactly one regex key from the TOML."""
 
-    # def is_likely_regex(key: str) -> bool:
-        # Matches if the key contains metacharacters indicating it's a regex
-        # return key.startswith("^") or bool(re.search(r"[\(\[\.\*\+\?\\]", key))
+# def is_likely_regex(key: str) -> bool:
+# Matches if the key contains metacharacters indicating it's a regex
+# return key.startswith("^") or bool(re.search(r"[\(\[\.\*\+\?\\]", key))
 
-    # Only consider keys with escape sequences or regex metacharacters
-    # regex_keys = [key for key in feature_table_data.keys() if is_likely_regex(key)]
+# Only consider keys with escape sequences or regex metacharacters
+# regex_keys = [key for key in feature_table_data.keys() if is_likely_regex(key)]
 
-    # Compile the regex patterns
-    # compiled_patterns = [re.compile(pat) for pat in regex_keys]
+# Compile the regex patterns
+# compiled_patterns = [re.compile(pat) for pat in regex_keys]
 
-    # matches = [pat.pattern for pat in compiled_patterns if pat.fullmatch(feature_name)]
+# matches = [pat.pattern for pat in compiled_patterns if pat.fullmatch(feature_name)]
 
-    # assert len(matches) == 1, (
-    #     f"Feature '{feature_name}' matched {len(matches)} regex patterns: {matches}. "
-    #     "Expected to match exactly one."
-    # )
+# assert len(matches) == 1, (
+#     f"Feature '{feature_name}' matched {len(matches)} regex patterns: {matches}. "
+#     "Expected to match exactly one."
+# )
