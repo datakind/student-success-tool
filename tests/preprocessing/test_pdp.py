@@ -217,9 +217,9 @@ def test_add_empty_cols_if_missing(df, col_val_dtypes, exp):
                     ],
                     "retention": [False, True, True, True],
                     "years_to_bachelors_at_cohort_inst": [pd.NA, pd.NA, 4, 3],
-                    "years_to_bachelors_at_other_inst": [pd.NA, 3, 2, 2],
+                    "years_to_bachelor_at_other_inst": [pd.NA, 3, 2, 2],
                     "first_year_to_bachelors_at_cohort_inst": [pd.NA, pd.NA, 4, 4],
-                    "first_year_to_bachelors_at_other_inst": [pd.NA, pd.NA, pd.NA, 6],
+                    "first_year_to_bachelor_at_other_inst": [pd.NA, pd.NA, pd.NA, 6],
                     "years_to_latest_associates_at_cohort_inst": [pd.NA, 3, 2, 2],
                     "years_to_latest_associates_at_other_inst": [pd.NA, pd.NA, 2, 1],
                     "first_year_to_associates_at_cohort_inst": [pd.NA, pd.NA, 4, 3],
@@ -269,9 +269,9 @@ def test_add_empty_cols_if_missing(df, col_val_dtypes, exp):
             ).astype(
                 {
                     "years_to_bachelors_at_cohort_inst": "Int8",
-                    "years_to_bachelors_at_other_inst": "Int8",
+                    "years_to_bachelor_at_other_inst": "Int8",
                     "first_year_to_bachelors_at_cohort_inst": "Int8",
-                    "first_year_to_bachelors_at_other_inst": "Int8",
+                    "first_year_to_bachelor_at_other_inst": "Int8",
                     "years_to_latest_associates_at_cohort_inst": "Int8",
                     "years_to_latest_associates_at_other_inst": "Int8",
                     "first_year_to_associates_at_cohort_inst": "Int8",
