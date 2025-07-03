@@ -253,7 +253,7 @@ def _get_mapped_feature_name(
     else:
         for fkey, fval in features_table.items():
             if "(" in fkey and ")" in fkey:
-                if match := re.match(fkey, feature_col):
+                if match := re.fullmatch(fkey, feature_col):
                     feature_name = fval["name"].format(*match.groups())
                     break
         else:
