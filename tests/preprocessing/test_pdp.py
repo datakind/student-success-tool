@@ -262,7 +262,7 @@ def test_add_empty_cols_if_missing(df, col_val_dtypes, exp):
                     "first_year_to_associates_at_cohort_inst": "Int8",
                     "first_year_to_associates_at_other_inst": "Int8",
                     "years_to_latest_associates_at_cohort_inst": "Int8",
-                    "years_to_latest_associates_at_other_inst": "Int8
+                    "years_to_latest_associates_at_other_inst": "Int8",
                     "first_year_to_associates_or_certificate_at_cohort_inst": "Int8",
                     "first_year_to_associates_or_certificate_at_other_inst": "Int8",
                     "took_subject_area_51_in_12_creds": "boolean",
