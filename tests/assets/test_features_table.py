@@ -97,6 +97,7 @@ def test_feature_maps_to_named_entry(feature_name, feature_table_data):
 
 
 # DEPRECATED - BACKUP
+# import re
 # def test_feature_matches_exactly_one_regex_key(feature_name, feature_table_data):
 #     """Ensure each valid feature name matches exactly one regex key from the TOML."""
 
