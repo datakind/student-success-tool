@@ -322,7 +322,7 @@ def clean_up_labeled_dataset_cols_and_vals(
             **{
                 col: ft.partial(_mask_year_values_based_on_enrollment_year, col=col)
                 for col in df.columns[
-                    df.columns.str.contains(r"^(?:first_year_to|years_to_latest)")
+                    df.columns.str.contains(r"^(?:first_year_to_certificate|years_to_latest_certificate)")
                 ].tolist()
             }
             # keep values in "*_year_X" columns if they occurred in any year prior
