@@ -296,21 +296,35 @@ def clean_up_labeled_dataset_cols_and_vals(
                 # "outcome" variables / likely sources of data leakage
                 "retention",
                 "persistence",
+                # years to bachelors
                 "years_to_bachelors_at_cohort_inst",
-                "years_to_bachelor_at_other_inst",
+                "years_to_bachelors_at_other_inst",
+                "first_year_to_bachelors_at_cohort_inst",
+                "first_year_to_bachelors_at_other_inst",
+                # years to associates
+                "years_to_latest_associates_at_cohort_inst",
+                "years_to_latest_associates_at_other_inst",
+                "first_year_to_associates_at_cohort_inst",
+                "first_year_to_associates_at_other_inst",
+                # years to associates / certificate
                 "years_to_associates_or_certificate_at_cohort_inst",
                 "years_to_associates_or_certificate_at_other_inst",
+                "first_year_to_associates_or_certificate_at_cohort_inst",
+                "first_year_to_associates_or_certificate_at_other_inst",
+                # years of last enrollment
                 "years_of_last_enrollment_at_cohort_institution",
                 "years_of_last_enrollment_at_other_institution",
             ],
         ).assign(
-            # keep "first year to X credential at Y inst" values if they occurred
+            # keep "first year to X credential at Y inst"  or "years to latest X credential at Y inst" values if they occurred
             # in any year prior to the current year of enrollment; otherwise, set to null
             # in this case, the values themselves represent years
             **{
                 col: ft.partial(_mask_year_values_based_on_enrollment_year, col=col)
                 for col in df.columns[
-                    df.columns.str.contains(r"^first_year_to")
+                    df.columns.str.contains(
+                        r"^(?:first_year_to_certificate|years_to_latest_certificate)"
+                    )
                 ].tolist()
             }
             # keep values in "*_year_X" columns if they occurred in any year prior
