@@ -306,7 +306,12 @@ def test_add_empty_cols_if_missing(df, col_val_dtypes, exp):
                         2,
                         pd.NA,
                     ],
-                    "years_to_latest_certificate_at_other_inst": [pd.NA, pd.NA, pd.NA, 3],
+                    "years_to_latest_certificate_at_other_inst": [
+                        pd.NA,
+                        pd.NA,
+                        pd.NA,
+                        3,
+                    ],
                     "frac_credits_earned_year_1": [np.nan, 0.5, 0.75, 0.9],
                     "frac_credits_earned_year_2": [np.nan, np.nan, 0.8, 0.85],
                     "num_courses_diff_term_2_to_term_3": [np.nan, 1.0, -1.0, 0.0],
