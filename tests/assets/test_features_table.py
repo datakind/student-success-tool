@@ -1,5 +1,4 @@
 import pytest
-import re
 import os
 from student_success_tool.dataio.read import from_toml_file
 from student_success_tool.modeling.inference import _get_mapped_feature_name
