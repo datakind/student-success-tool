@@ -298,20 +298,20 @@ def clean_up_labeled_dataset_cols_and_vals(
                 "persistence",
                 # years to bachelors
                 "years_to_bachelors_at_cohort_inst",
-                "years_to_bachelor_at_other_inst",
+                "years_to_bachelors_at_other_inst",
                 "first_year_to_bachelors_at_cohort_inst",
                 "first_year_to_bachelors_at_other_inst",
-                # years to associates  
+                # years to associates
                 "years_to_latest_associates_at_cohort_inst",
-                "years_to_latest_associates_at_other_inst", 
+                "years_to_latest_associates_at_other_inst",
                 "first_year_to_associates_at_cohort_inst",
                 "first_year_to_associates_at_other_inst",
-                # years to associates / certificate 
+                # years to associates / certificate
                 "years_to_associates_or_certificate_at_cohort_inst",
                 "years_to_associates_or_certificate_at_other_inst",
                 "first_year_to_associates_or_certificate_at_cohort_inst",
                 "first_year_to_associates_or_certificate_at_other_inst",
-                # years of last enrollment  
+                # years of last enrollment
                 "years_of_last_enrollment_at_cohort_institution",
                 "years_of_last_enrollment_at_other_institution",
             ],
