@@ -169,12 +169,6 @@ def add_features(
     feature_name_funcs = (
         {
             "year_of_enrollment_at_cohort_inst": year_of_enrollment_at_cohort_inst,
-            "student_has_prior_degree_at_cohort_inst": ft.partial(
-                student_has_prior_degree, inst="cohort"
-            ),
-            "student_has_prior_degree_at_other_inst": ft.partial(
-                student_has_prior_degree, inst="other"
-            ),
             "term_is_pre_cohort": term_is_pre_cohort,
             "term_is_while_student_enrolled_at_other_inst": term_is_while_student_enrolled_at_other_inst,
             "term_program_of_study_area": term_program_of_study_area,
@@ -234,25 +228,6 @@ def year_of_enrollment_at_cohort_inst(
 ) -> pd.Series:
     dts_diff = (df[term_start_dt_col].sub(df[cohort_start_dt_col])).dt.days
     return pd.Series(np.ceil((dts_diff + 1) / 365.25), dtype="Int8")
-
-
-def student_has_prior_degree(
-    df: pd.DataFrame,
-    *,
-    inst: t.Literal["cohort", "other"],
-    enrollment_year_col: str = "year_of_enrollment_at_cohort_inst",
-) -> pd.Series:
-    degree_year_cols = [
-        f"first_year_to_certificate_at_{inst}_inst",
-        f"first_year_to_associates_at_{inst}_inst",
-        f"first_year_to_associates_or_certificate_at_{inst}_inst",
-    ]
-    # yes, they really are inconsistent here
-    if inst == "cohort":
-        degree_year_cols.append("first_year_to_bachelors_at_cohort_inst")
-    else:
-        degree_year_cols.append("first_year_to_bachelor_at_other_inst")
-    return df.loc[:, degree_year_cols].lt(df[enrollment_year_col], axis=0).any(axis=1)
 
 
 def term_is_pre_cohort(
