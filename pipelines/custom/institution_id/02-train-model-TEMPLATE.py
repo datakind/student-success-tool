@@ -76,7 +76,7 @@ cfg
 # COMMAND ----------
 
 df = dataio.read.from_delta_table(
-    cfg.datasets.silver.preprocessed.table_path,
+    cfg.datasets.silver["preprocessed"].table_path,
     spark_session=spark,
 )
 df.head()
@@ -137,7 +137,7 @@ df = df.loc[:, df_selected.columns]
 
 # save modeling dataset with all splits
 dataio.write.to_delta_table(
-    df, cfg.datasets.silver.modeling.table_path, spark_session=spark
+    df, cfg.datasets.silver["modeling"].table_path, spark_session=spark
 )
 
 # COMMAND ----------

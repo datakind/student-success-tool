@@ -97,7 +97,7 @@ features_table = dataio.read_features_table("./features_table.toml")
 # COMMAND ----------
 
 df = dataio.read.from_delta_table(
-    cfg.datasets.silver.modeling.table_path,
+    cfg.datasets.silver["modeling"].table_path,
     spark_session=spark,
 )
 df.head()
@@ -265,7 +265,7 @@ result
 
 # save sample advisor output dataset
 dataio.write.to_delta_table(
-    result, cfg.datasets.gold.advisor_output.table_path, spark_session=spark
+    result, cfg.datasets.gold["advisor_output"].table_path, spark_session=spark
 )
 
 # COMMAND ----------
