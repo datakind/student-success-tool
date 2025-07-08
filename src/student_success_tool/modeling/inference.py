@@ -419,7 +419,7 @@ def top_shap_features(
 
     if features_table is not None:
         top_features[
-            ["readable_feature_name", "short_feature_desc", "long_feature_desc"]
+            ["feature_readable_name", "feature_short_desc", "feature_long_desc"]
         ] = top_features["feature_name"].apply(
             lambda feature: pd.Series(
                 _get_mapped_feature_metadata(feature, features_table)
