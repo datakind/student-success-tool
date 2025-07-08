@@ -290,10 +290,16 @@ shap_feature_importance = inference.generate_ranked_feature_table(
     features=features, shap_values=df_shap_values[model_feature_names].to_numpy()
 )
 if shap_feature_importance is not None and features_table is not None:
-            shap_feature_importance[["readable_feature_name", "short_feature_desc", "long_feature_desc"]] = shap_feature_importance["Feature Name"].apply(
-                lambda feature: pd.Series(inference._get_mapped_feature_metadata(feature, features_table))
-            )
-            shap_feature_importance.columns = shap_feature_importance.columns.str.replace(" ", "_").str.lower()
+    shap_feature_importance[
+        ["readable_feature_name", "short_feature_desc", "long_feature_desc"]
+    ] = shap_feature_importance["Feature Name"].apply(
+        lambda feature: pd.Series(
+            inference._get_mapped_feature_metadata(feature, features_table)
+        )
+    )
+    shap_feature_importance.columns = shap_feature_importance.columns.str.replace(
+        " ", "_"
+    ).str.lower()
 shap_feature_importance
 
 

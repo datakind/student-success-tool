@@ -418,9 +418,13 @@ def top_shap_features(
     top_features = summary_df[summary_df["feature_name"].isin(top_n_features)].copy()
 
     if features_table is not None:
-        top_features[["readable_feature_name", "short_feature_desc", "long_feature_desc"]] = top_features["feature_name"].apply(
-                    lambda feature: pd.Series(_get_mapped_feature_metadata(feature, features_table))
-                )
+        top_features[
+            ["readable_feature_name", "short_feature_desc", "long_feature_desc"]
+        ] = top_features["feature_name"].apply(
+            lambda feature: pd.Series(
+                _get_mapped_feature_metadata(feature, features_table)
+            )
+        )
 
     top_features["feature_value"] = top_features["feature_value"].astype(str)
 
