@@ -169,7 +169,7 @@ def add_features(
     feature_name_funcs = (
         {
             "year_of_enrollment_at_cohort_inst": year_of_enrollment_at_cohort_inst,
-            "student_earned_certificate_at_cohort_inst": ft.partial(
+            "student_has_earned_certificate_at_cohort_inst": ft.partial(
                 student_earned_certificate, inst="cohort"
             ),
             "student_has_earned_certificate_at_other_inst": ft.partial(
