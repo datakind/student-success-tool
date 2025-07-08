@@ -1,7 +1,8 @@
 import pytest
-import re
 import os
 from student_success_tool.dataio.read import from_toml_file
+import re
+from student_success_tool.modeling.inference import _get_mapped_feature_name
 
 
 @pytest.fixture
@@ -64,12 +65,17 @@ VALID_FEATURE_NAMES = [
     "took_course_id_mathematics_science1210",
     "took_course_id_mathematics_science1210_cummax",
     "took_course_id_mathematics_science1210_cummax_in_12_creds",
+    "took_course_id_computer_science_1050_cummax",
+    "took_course_id_communication_studies_1010_cummax_in_12_creds",
+    "took_course_id_computer_science_1050_cummax_in_12_creds",
     "num_courses_course_id_mathematics_science1210",
     "num_courses_course_id_english1010",
     "num_courses_course_id_english_composition_and_writing_098",
     "num_courses_course_id_english_composition_and_writing_101_1",
+    "num_courses_course_id_english_1020_cumfrac",
     "num_courses_course_id_mathematics_science1210_cumfrac",
     "num_courses_course_id_english1010_cumfrac",
+    "num_courses_course_id_philosophy_1010_cumfrac",
     "num_courses_course_id_english_composition_and_writing_098_cumfrac",
     "num_courses_course_id_english_composition_and_writing_101_1_cumfrac",
     "frac_courses_course_id_mathematics_science1210",
@@ -80,22 +86,25 @@ VALID_FEATURE_NAMES = [
 
 
 @pytest.mark.parametrize("feature_name", VALID_FEATURE_NAMES)
-def test_feature_matches_exactly_one_regex_key(feature_name, feature_table_data):
-    """Ensure each valid feature name matches exactly one regex key from the TOML."""
+def test_feature_maps_to_named_entry(feature_name, feature_table_data):
+    """Ensure each feature maps to a named entry in the feature table using the production mapping logic."""
+    mapped = _get_mapped_feature_name(feature_name, feature_table_data)
 
-    def is_likely_regex(key: str) -> bool:
-        # Matches if the key contains metacharacters indicating it's a regex
-        return key.startswith("^") or bool(re.search(r"[\(\[\.\*\+\?\\]", key))
+    # If it mapped to something, it must not be the identity (fallback case)
+    assert mapped != feature_name, (
+        f"Feature '{feature_name}' was not mapped correctly using _get_mapped_feature_name."
+    )
 
-    # Only consider keys with escape sequences or regex metacharacters
-    regex_keys = [key for key in feature_table_data.keys() if is_likely_regex(key)]
+    # Ensure that the result is a formatted name string
+    assert isinstance(mapped, str) and mapped.strip(), (
+        f"Mapped name for '{feature_name}' is empty or invalid: {mapped}"
+    )
 
-    # Compile the regex patterns
-    compiled_patterns = [re.compile(pat) for pat in regex_keys]
-
-    matches = [pat.pattern for pat in compiled_patterns if pat.fullmatch(feature_name)]
-
-    assert len(matches) == 1, (
-        f"Feature '{feature_name}' matched {len(matches)} regex patterns: {matches}. "
-        "Expected to match exactly one."
+    # Ensure only one regex pattern matches this feature
+    matching_patterns = [
+        pattern for pattern in feature_table_data if re.fullmatch(pattern, feature_name)
+    ]
+    assert len(matching_patterns) == 1, (
+        f"Feature '{feature_name}' matches {len(matching_patterns)} patterns: {matching_patterns}. "
+        "Feature should match exactly one pattern."
     )
