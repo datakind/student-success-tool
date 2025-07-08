@@ -435,7 +435,7 @@ def test_top_shap_features_behavior(sample_data):
     top_features = result["feature_name"].unique()
     assert len(top_features) == 10
 
-    grouped = result.groupby("feature_name")["shap_value"].apply(
+    grouped = result.groupby("feature_readable_name")["shap_value"].apply(
         lambda x: np.mean(np.abs(x))
     )
     shap_values = grouped.sort_values(ascending=False).values
