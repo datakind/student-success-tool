@@ -25,7 +25,7 @@
 
 # install dependencies, of which most/all should come through our 1st-party SST package
 
-# %pip install "student-success-tool == 0.3.5"
+# %pip install "student-success-tool == 0.3.6"
 
 # COMMAND ----------
 
@@ -645,6 +645,20 @@ df_pct_creds_by_yr.groupby("year_of_enrollment")[
         errorbar=None,
     ).set(xlabel="Year of Enrollment", ylabel="Avg. % Credits Earned")
 )
+
+# Add percent labels on top of each bar
+for bar in ax.patches:
+    height = bar.get_height()
+    ax.annotate(
+        f"{height:.1f}%",
+        (bar.get_x() + bar.get_width() / 2, height),
+        ha="center",
+        va="bottom",
+        fontsize=10,
+    )
+
+plt.tight_layout()
+plt.show()
 
 # COMMAND ----------
 
