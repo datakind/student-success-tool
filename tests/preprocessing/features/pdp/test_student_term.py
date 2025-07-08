@@ -289,10 +289,10 @@ def test_year_of_enrollment_at_cohort_inst(df, ccol, tcol, exp):
                         4,
                     ],
                     "years_to_latest_certificate_at_other_inst": [
-                        pd.NA, 
-                        pd.NA, 
-                        pd.NA, 
-                        pd.NA
+                        pd.NA,
+                        pd.NA,
+                        pd.NA,
+                        pd.NA,
                     ],
                 },
                 dtype="Int8",
