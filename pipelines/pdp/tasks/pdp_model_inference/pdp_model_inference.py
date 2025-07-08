@@ -323,16 +323,23 @@ class ModelInferenceTask:
                 "Spark session not initialized. Cannot post process shap values."
             )
             return None
-        # TODO: Might re-add if requirements change --> features_table = dataio.read_features_table("assets/pdp/features_table.toml")
+        # TODO: Might re-add if requirements change --> 
+        features_table = dataio.read_features_table("assets/pdp/features_table.toml")
         shap_feature_importance = inference.generate_ranked_feature_table(
             df_serving,
             shap_values.values,
         )
 
+        if shap_feature_importance is not None and features_table is not None:
+            shap_feature_importance[["Feature Name", "short_desc", "long_desc"]] = shap_feature_importance["Feature Name"].apply(
+                lambda feature: pd.Series(inference._get_mapped_feature_metadata(feature, features_table))
+            )
+            shap_feature_importance.columns = shap_feature_importance.columns.str.replace(" ", "_").str.lower()
+
         return shap_feature_importance
 
     def get_top_features_for_display(
-        self, df_serving, unique_ids, df_predicted, shap_values, model_feature_names
+        self, df_serving, unique_ids, df_predicted, shap_values
     ):
         """
         Selects top features to display and store

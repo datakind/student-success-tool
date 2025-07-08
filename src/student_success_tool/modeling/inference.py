@@ -261,6 +261,38 @@ def _get_mapped_feature_name(
     return feature_name
 
 
+def _get_mapped_feature_metadata(
+    feature_col: str, features_table: dict[str, dict[str, str]]
+) -> tuple[str, str | None, str | None]:
+    """
+    Returns:
+        - feature_name: mapped (with formatting if regex)
+        - short_desc: as-is from features_table
+        - long_desc: as-is from features_table
+    """
+    feature_col = feature_col.lower()
+
+    if feature_col in features_table:
+        entry = features_table[feature_col]
+        feature_name = entry["name"]
+        short_desc = entry.get("short_desc")
+        long_desc = entry.get("long_desc")
+    else:
+        for fkey, fval in features_table.items():
+            if "(" in fkey and ")" in fkey:
+                if match := re.fullmatch(fkey, feature_col):
+                    feature_name = fval["name"].format(*match.groups())
+                    short_desc = fval.get("short_desc")
+                    long_desc = fval.get("long_desc")
+                    break
+        else:
+            feature_name = feature_col
+            short_desc = None
+            long_desc = None
+
+    return feature_name, short_desc, long_desc
+
+
 def calculate_shap_values_spark_udf(
     dfs: t.Iterator[pd.DataFrame],
     *,
@@ -386,9 +418,10 @@ def top_shap_features(
     top_features = summary_df[summary_df["feature_name"].isin(top_n_features)].copy()
 
     if features_table is not None:
-        top_features["feature_name"] = top_features["feature_name"].apply(
-            lambda feature: _get_mapped_feature_name(feature, features_table)
-        )
+        top_features[["feature_name", "short_desc", "long_desc"]] = top_features["feature_name"].apply(
+                    lambda feature: pd.Series(_get_mapped_feature_metadata(feature, features_table))
+                )
+
     top_features["feature_value"] = top_features["feature_value"].astype(str)
 
     return top_features
