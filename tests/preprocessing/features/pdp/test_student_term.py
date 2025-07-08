@@ -297,7 +297,7 @@ def test_year_of_enrollment_at_cohort_inst(df, ccol, tcol, exp):
                 },
                 dtype="Int8",
             ),
-            ["cohort"],
+            "cohort",
             pd.Series([False, False, True, True], dtype="boolean"),
         ),
     ],
