@@ -169,11 +169,11 @@ def add_features(
     feature_name_funcs = (
         {
             "year_of_enrollment_at_cohort_inst": year_of_enrollment_at_cohort_inst,
-            "student_has_prior_degree_at_cohort_inst": ft.partial(
-                student_has_prior_degree, inst="cohort"
+            "student_earned_certificate_at_cohort_inst": ft.partial(
+                student_earned_certificate, inst="cohort"
             ),
-            "student_has_prior_degree_at_other_inst": ft.partial(
-                student_has_prior_degree, inst="other"
+            "student_has_earned_certificate_at_other_inst": ft.partial(
+                student_earned_certificate, inst="other"
             ),
             "term_is_pre_cohort": term_is_pre_cohort,
             "term_is_while_student_enrolled_at_other_inst": term_is_while_student_enrolled_at_other_inst,
@@ -236,7 +236,7 @@ def year_of_enrollment_at_cohort_inst(
     return pd.Series(np.ceil((dts_diff + 1) / 365.25), dtype="Int8")
 
 
-def student_has_prior_degree(
+def student_earned_certificate(
     df: pd.DataFrame,
     *,
     inst: t.Literal["cohort", "other"],

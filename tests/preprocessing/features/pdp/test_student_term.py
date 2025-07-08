@@ -297,8 +297,8 @@ def test_year_of_enrollment_at_cohort_inst(df, ccol, tcol, exp):
         ),
     ],
 )
-def test_student_has_prior_degree(df, inst, exp):
-    obs = student_term.student_has_prior_degree(df, inst=inst)
+def test_student_earned_certificate(df, inst, exp):
+    obs = student_term.student_earned_certificate(df, inst=inst)
     assert isinstance(obs, pd.Series) and not obs.empty
     assert pd.testing.assert_series_equal(obs, exp) is None
 
