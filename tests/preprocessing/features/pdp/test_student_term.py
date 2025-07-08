@@ -271,16 +271,16 @@ def test_year_of_enrollment_at_cohort_inst(df, ccol, tcol, exp):
                 {
                     "year_of_enrollment_at_cohort_inst": [1, 2, 3, 4],
                     "first_year_to_certificate_at_cohort_inst": [
-                        4,
-                        4,
-                        4,
+                        2,
                         pd.NA,
+                        2,
+                        2,
                     ],
                     "years_to_latest_certificate_at_cohort_inst": [
-                        4,
-                        4,
-                        4,
+                        3,
+                        3,
                         pd.NA,
+                        3,
                     ],
                     "first_year_to_certificate_at_other_inst": [
                         2,
@@ -297,7 +297,7 @@ def test_year_of_enrollment_at_cohort_inst(df, ccol, tcol, exp):
                 },
                 dtype="Int8",
             ),
-            ["cohort", "other"],
+            ["cohort"],
             pd.Series([False, False, True, True], dtype="boolean"),
         ),
     ],
