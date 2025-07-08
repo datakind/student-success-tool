@@ -407,8 +407,16 @@ def sample_data():
         ]
     )
     features_table = {
-        "feature1": {"name": "Feature 1 Name", "short_desc": "A short description of feature 1", "long_desc": "A long description of feature 1"},
-        "feature2": {"name": "Feature 2 Name", "short_desc": "A short description of feature 2", "long_desc": "A long description of feature 2"},
+        "feature1": {
+            "name": "Feature 1 Name",
+            "short_desc": "A short description of feature 1",
+            "long_desc": "A long description of feature 1",
+        },
+        "feature2": {
+            "name": "Feature 2 Name",
+            "short_desc": "A short description of feature 2",
+            "long_desc": "A long description of feature 2",
+        },
     }
     return features, unique_ids, shap_values, features_table
 
