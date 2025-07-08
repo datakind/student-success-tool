@@ -331,7 +331,7 @@ class ModelInferenceTask:
         )
 
         if shap_feature_importance is not None and features_table is not None:
-            shap_feature_importance[["feature_readable_name", "feature_short_desc", "feature_long_desc"]] = shap_feature_importance["Feature Name"].apply(
+            shap_feature_importance[["readable_feature_name", "short_feature_desc", "long_feature_desc"]] = shap_feature_importance["Feature Name"].apply(
                 lambda feature: pd.Series(inference._get_mapped_feature_metadata(feature, features_table))
             )
             shap_feature_importance.columns = shap_feature_importance.columns.str.replace(" ", "_").str.lower()
