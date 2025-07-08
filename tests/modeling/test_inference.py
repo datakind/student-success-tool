@@ -426,6 +426,9 @@ def test_top_shap_features_behavior(sample_data):
         "feature_name",
         "shap_value",
         "feature_value",
+        "feature_readable_name",
+        "feature_short_desc",
+        "feature_long_desc",
     }
 
     # Check top 10 feature selection
