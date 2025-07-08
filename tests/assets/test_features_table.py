@@ -1,7 +1,7 @@
 import pytest
 import os
 from student_success_tool.dataio.read import from_toml_file
-import re 
+import re
 from student_success_tool.modeling.inference import _get_mapped_feature_name
 
 
@@ -97,8 +97,7 @@ def test_feature_maps_to_named_entry(feature_name, feature_table_data):
 
     # Ensure only one regex pattern matches this feature
     matching_patterns = [
-        pattern for pattern in feature_table_data
-        if re.fullmatch(pattern, feature_name)
+        pattern for pattern in feature_table_data if re.fullmatch(pattern, feature_name)
     ]
     assert len(matching_patterns) == 1, (
         f"Feature '{feature_name}' matches {len(matching_patterns)} patterns: {matching_patterns}. "
