@@ -1,6 +1,7 @@
 import pytest
 import os
 from student_success_tool.dataio.read import from_toml_file
+import re 
 from student_success_tool.modeling.inference import _get_mapped_feature_name
 
 
@@ -94,25 +95,12 @@ def test_feature_maps_to_named_entry(feature_name, feature_table_data):
         f"Mapped name for '{feature_name}' is empty or invalid: {mapped}"
     )
 
-
-# DEPRECATED - BACKUP
-# import re
-# def test_feature_matches_exactly_one_regex_key(feature_name, feature_table_data):
-#     """Ensure each valid feature name matches exactly one regex key from the TOML."""
-
-# def is_likely_regex(key: str) -> bool:
-# Matches if the key contains metacharacters indicating it's a regex
-# return key.startswith("^") or bool(re.search(r"[\(\[\.\*\+\?\\]", key))
-
-# Only consider keys with escape sequences or regex metacharacters
-# regex_keys = [key for key in feature_table_data.keys() if is_likely_regex(key)]
-
-# Compile the regex patterns
-# compiled_patterns = [re.compile(pat) for pat in regex_keys]
-
-# matches = [pat.pattern for pat in compiled_patterns if pat.fullmatch(feature_name)]
-
-# assert len(matches) == 1, (
-#     f"Feature '{feature_name}' matched {len(matches)} regex patterns: {matches}. "
-#     "Expected to match exactly one."
-# )
+    # Ensure only one regex pattern matches this feature
+    matching_patterns = [
+        pattern for pattern in feature_table_data
+        if re.fullmatch(pattern, feature_name)
+    ]
+    assert len(matching_patterns) == 1, (
+        f"Feature '{feature_name}' matches {len(matching_patterns)} patterns: {matching_patterns}. "
+        "Feature should match exactly one pattern."
+    )
