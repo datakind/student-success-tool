@@ -56,16 +56,16 @@ def add_features(
         # rename/dtype special cols for clarity in downstream calcs
         .astype(
             {
-                "term_id_cumcount": "Int8",
-                "term_is_core_cumsum": "Int8",
-                "term_is_noncore_cumsum": "Int8",
+                "cumcount_term_id": "Int8",
+                "cumsum_term_is_core": "Int8",
+                "cumsum_term_is_noncore": "Int8",
             }
         )
         .rename(
             columns={
-                "term_id_cumcount": "cumnum_terms_enrolled",
-                "term_is_core_cumsum": "cumnum_core_terms_enrolled",
-                "term_is_noncore_cumsum": "cumnum_noncore_terms_enrolled",
+                "cumcount_term_id": "cumnum_terms_enrolled",
+                "cumsum_term_is_core": "cumnum_core_terms_enrolled",
+                "cumsum_term_is_noncore": "cumnum_noncore_terms_enrolled",
             }
         )
     )
@@ -128,32 +128,33 @@ def expanding_agg_features(
 
     # unfortunately, expanding doesn't support the "named agg" syntax
     # so we have to (flatten and) rename the columns manually
-    df_cumaggs.columns = [f"{col}_cum{fn}" for col, fn in df_cumaggs.columns]
+    # df_cumaggs.columns = [f"{col}_cum{fn}" for col, fn in df_cumaggs.columns]
+    df_cumaggs.columns = [f"cum{fn}_{col}" for col, fn in df_cumaggs.columns]
     # for all num_courses_*_cumsum columns, divide by num_courses_cumsum
     # to get equivalent cumfracs, whose relative values are easier for models to learn from
     num_courses_cumsum_cols = [
         col
         for col in df_cumaggs.columns
         if (
-            col.startswith(f"{constants.NUM_COURSE_FEATURE_COL_PREFIX}_")
-            and col.endswith("_cumsum")
-            and col != "num_courses_cumsum"  # HACK
+            col.startswith(f"cumsum_{constants.NUM_COURSE_FEATURE_COL_PREFIX}_")
+            and col != "cumsum_num_courses"  # HACK
         )
     ]
     df_cumfracs = (
         df_cumaggs[num_courses_cumsum_cols]
-        .div(df_cumaggs["num_courses_cumsum"], axis="index")
+        .div(df_cumaggs["cumsum_num_courses"], axis="index")
         .rename(columns=lambda col: col.replace("cumsum", "cumfrac"))
     )
     concat_dfs = [df_cumaggs, df_cumfracs]
     if dummy_course_cols is not None:
-        action_cols = [f"{dummy_course}_cummax" for dummy_course in dummy_course_cols]
+        action_cols = [f"cummax_{dummy_course}" for dummy_course in dummy_course_cols]
         action_status_df = pd.DataFrame(index=df_cumaggs.index)
 
         for col in action_cols:
-            within_col = f"{col}_in_{credits}_creds"
+            # within_col = f"{col}_in_{credits}_creds"
+            within_col = col.replace("cummax_", f"cummax_in_{credits}_creds_")
             action_status_df[within_col] = (df_cumaggs[col].astype(bool)) & (
-                df_cumaggs["num_credits_earned_cumsum"] <= credits
+                df_cumaggs["cumsum_num_credits_earned"] <= credits
             )
 
         action_status_df = action_status_df.groupby(
