@@ -417,6 +417,9 @@ def sample_data():
             "short_desc": "A short description of feature 2",
             "long_desc": "A long description of feature 2",
         },
+        "feature3": {
+            "name": "Feature 3 Name",
+        },
     }
     return features, unique_ids, shap_values, features_table
 
@@ -455,6 +458,17 @@ def test_top_shap_features_behavior(sample_data):
     print(grouped)
     assert grouped.index[0] == "Feature 1 Name"
     assert grouped.index[1] == "Feature 2 Name"
+
+    assert (
+        result["feature_short_desc"]
+        .apply(lambda x: isinstance(x, str) or x is None)
+        .all()
+    )
+    assert (
+        result["feature_long_desc"]
+        .apply(lambda x: isinstance(x, str) or x is None)
+        .all()
+    )
 
 
 def test_handles_fewer_than_10_features():
