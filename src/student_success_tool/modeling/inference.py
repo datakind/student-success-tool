@@ -245,52 +245,33 @@ def generate_ranked_feature_table(
 
 
 def _get_mapped_feature_name(
-    feature_col: str, features_table: dict[str, dict[str, str]]
-) -> str:
+    feature_col: str, features_table: dict[str, dict[str, str]], metadata: bool = False
+) -> t.Any:
     feature_col = feature_col.lower()  # just in case
-    if feature_col in features_table:
-        feature_name = features_table[feature_col]["name"]
-    else:
-        for fkey, fval in features_table.items():
-            if "(" in fkey and ")" in fkey:
-                if match := re.fullmatch(fkey, feature_col):
-                    feature_name = fval["name"].format(*match.groups())
-                    break
-        else:
-            feature_name = feature_col
-    return feature_name
-
-
-def _get_mapped_feature_metadata(
-    feature_col: str, features_table: dict[str, dict[str, str]]
-) -> tuple[str, str | None, str | None]:
-    """
-    Returns:
-        - feature_name: mapped (with formatting if regex)
-        - short_desc: as-is from features_table
-        - long_desc: as-is from features_table
-    """
-    feature_col = feature_col.lower()
-
     if feature_col in features_table:
         entry = features_table[feature_col]
         feature_name = entry["name"]
-        short_desc = entry.get("short_desc")
-        long_desc = entry.get("long_desc")
+        if metadata:
+            short_desc = entry.get("short_desc")
+            long_desc = entry.get("long_desc")
+            return feature_name, short_desc, long_desc
+        return feature_name
     else:
         for fkey, fval in features_table.items():
             if "(" in fkey and ")" in fkey:
                 if match := re.fullmatch(fkey, feature_col):
                     feature_name = fval["name"].format(*match.groups())
-                    short_desc = fval.get("short_desc")
-                    long_desc = fval.get("long_desc")
-                    break
+                    if metadata:
+                        short_desc = fval.get("short_desc")
+                        long_desc = fval.get("long_desc")
+                        return feature_name, short_desc, long_desc
+                    return feature_name
+
         else:
             feature_name = feature_col
-            short_desc = None
-            long_desc = None
-
-    return feature_name, short_desc, long_desc
+            if metadata:
+                return feature_name, None, None
+            return feature_name
 
 
 def calculate_shap_values_spark_udf(
@@ -422,7 +403,7 @@ def top_shap_features(
             ["feature_readable_name", "feature_short_desc", "feature_long_desc"]
         ] = top_features["feature_name"].apply(
             lambda feature: pd.Series(
-                _get_mapped_feature_metadata(feature, features_table)
+                _get_mapped_feature_name(feature, features_table, metadata=True)
             )
         )
 
