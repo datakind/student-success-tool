@@ -154,7 +154,7 @@ def first_student_terms_at_num_credits_earned(
     df: pd.DataFrame,
     *,
     min_num_credits: float,
-    num_credits_col: str = "num_credits_earned_cumsum",
+    num_credits_col: str = "cumsum_num_credits_earned",
     student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
