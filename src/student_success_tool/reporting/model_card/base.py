@@ -317,8 +317,12 @@ class ModelCard(t.Generic[C]):
         except Exception as e:
             raise RuntimeError(f"Failed to create PDF: {e}")
 
-        # Log card as an ML artifact
-        utils.log_card(local_path=self.pdf_path, run_id=self.run_id)
+        # Save model card into gold volume for access web app compatibility
+        utils.save_card_to_gold_volume(
+            local_path=self.pdf_path,
+            catalog=self.catalog,
+            institution_id=self.cfg.institution_id,
+        )
 
     def _build_output_path(self) -> str:
         """

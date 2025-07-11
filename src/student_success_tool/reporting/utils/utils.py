@@ -95,20 +95,31 @@ def download_static_asset(
         return dst_path
 
 
-def log_card(local_path: str, run_id: str) -> None:
+def save_card_to_gold_volume(filename: str, catalog: str, institution_id: str) -> None:
     """
-    Logs card as an ML artifact in the run.
+    Saves the model card PDF to a subdirectory of "model_cards" in Unity Catalog-backed gold volume.
 
     Args:
-        local_path: Path to model card PDF
+        filename: Path to the model card PDF
+        catalog: Unity Catalog name
+        institution_id: e.g. 'inst_id'
     """
     try:
-        with mlflow.start_run(run_id=run_id) as run:
-            mlflow.log_artifact(local_path, "model_card")
-            LOGGER.info(f"Logged model card PDF as an ML artifact at '{run_id}'")
+        # Build the destination directory path
+        volume_dir = f"/Volumes/{catalog}/{institution_id}_gold_file_volume/model_cards"
+        os.makedirs(volume_dir, exist_ok=True)  # Ensure the directory exists
+
+        # Copy the file
+        dst_path = os.path.join(volume_dir, os.path.basename(filename))
+
+        if os.path.exists(dst_path):
+            LOGGER.warning(f"Overwriting existing model card at '{dst_path}'")
+        
+        shutil.copy(filename, dst_path)
+        LOGGER.info(f"Saved model card to gold volume at '{dst_path}'")
     except Exception as e:
         LOGGER.error(
-            f"Failed to log model card at '{local_path}' to run '{run_id}': {e}"
+            f"Failed to save model card to gold volume: {e}"
         )
 
 
