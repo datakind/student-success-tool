@@ -142,4 +142,4 @@ def compute_target(
         df_all_student_targets["target"].astype("boolean").dropna()
     )
     # return as a series with target as values and student ids as index
-    return df_all_student_targets.loc[:, "target"]
+    return df_all_student_targets.loc[:, "target"].dropna()
