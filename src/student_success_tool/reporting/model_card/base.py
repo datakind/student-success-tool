@@ -319,7 +319,7 @@ class ModelCard(t.Generic[C]):
 
         # Save model card into gold volume for access web app compatibility
         utils.save_card_to_gold_volume(
-            local_path=self.pdf_path,
+            filename=self.pdf_path,
             catalog=self.catalog,
             institution_id=self.cfg.institution_id,
         )
