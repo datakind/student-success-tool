@@ -7,7 +7,6 @@ from mlflow.tracking import MlflowClient
 import pathlib
 from importlib.abc import Traversable
 from importlib.resources import as_file
-from pyspark.dbutils import DBUtils
 
 
 LOGGER = logging.getLogger(__name__)
@@ -99,29 +98,34 @@ def download_static_asset(
 
 def save_card_to_gold_volume(filename: str, catalog: str, institution_id: str) -> None:
     """
-    Saves the model card PDF to a subdirectory of "model_cards" in Unity Catalog-backed gold volume.
+    Saves the model card PDF to a subdirectory of "model_cards" in a Unity Catalog-backed gold volume.
 
     Args:
-        filename: Path to the model card PDF
-        catalog: Unity Catalog name
-        institution_id: e.g. 'inst_id'
+        filename: Path to the model card PDF (local path)
+        catalog: Unity Catalog name (e.g. 'sst_dev')
+        institution_id: institution ID from config that matches schema
     """
-    
     try:
-        # Build the destination directory path
-        volume_dir = f"/Volumes/{catalog}/{institution_id}_gold_file_volume/model_cards"
-        dst_path = f"{volume_dir}/{os.path.basename(filename)}"
+        # Construct volume base and target directory
+        schema = f"{institution_id}_bronze"
+        file_volume = f"{schema}_file_volume"
+        volume_dir = f"/Volumes/{catalog}/{schema}/{file_volume}"
+        model_card_dir = os.path.join(volume_dir, "model_cards")
+        dst_path = os.path.join(model_card_dir, os.path.basename(filename))
 
-        # Ensure volume path exists
-        dbutils.fs.mkdirs(volume_dir)
+        # Check if the volume exists
+        if not os.path.exists(volume_dir):
+            LOGGER.error(f"❌ Volume directory does not exist: {volume_dir}. Please create it in Unity Catalog.")
+            return
 
-        # Copy local file to UC volume
-        dbutils.fs.cp(f"file:{filename}", f"dbfs:{dst_path}", overwrite=True)
-        LOGGER.info(f"Saved model card to gold volume at '{dst_path}'")
+        # Ensure model_cards subdirectory exists
+        os.makedirs(model_card_dir, exist_ok=True)
+
+        # Copy the model card file
+        shutil.copyfile(filename, dst_path)
+        LOGGER.info(f"✅ Saved model card to gold volume at: {dst_path}")
     except Exception as e:
-        LOGGER.error(
-            f"Failed to save model card to gold volume: {e}"
-        )
+        LOGGER.error(f"❌ Failed to save model card under {dst_path} to gold file volume: {e}")
 
 
 def embed_image(
