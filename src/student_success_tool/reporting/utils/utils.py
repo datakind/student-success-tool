@@ -7,6 +7,8 @@ from mlflow.tracking import MlflowClient
 import pathlib
 from importlib.abc import Traversable
 from importlib.resources import as_file
+from pyspark.dbutils import DBUtils
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -104,18 +106,17 @@ def save_card_to_gold_volume(filename: str, catalog: str, institution_id: str) -
         catalog: Unity Catalog name
         institution_id: e.g. 'inst_id'
     """
+    
     try:
         # Build the destination directory path
         volume_dir = f"/Volumes/{catalog}/{institution_id}_gold_file_volume/model_cards"
-        os.makedirs(volume_dir, exist_ok=True)  # Ensure the directory exists
+        dst_path = f"{volume_dir}/{os.path.basename(filename)}"
 
-        # Copy the file
-        dst_path = os.path.join(volume_dir, os.path.basename(filename))
+        # Ensure volume path exists
+        dbutils.fs.mkdirs(volume_dir)
 
-        if os.path.exists(dst_path):
-            LOGGER.warning(f"Overwriting existing model card at '{dst_path}'")
-        
-        shutil.copy(filename, dst_path)
+        # Copy local file to UC volume
+        dbutils.fs.cp(f"file:{filename}", f"dbfs:{dst_path}", overwrite=True)
         LOGGER.info(f"Saved model card to gold volume at '{dst_path}'")
     except Exception as e:
         LOGGER.error(
