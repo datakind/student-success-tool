@@ -239,7 +239,7 @@ def add_empty_cols_if_missing(
 
 
 def clean_up_labeled_dataset_cols_and_vals(
-    df: pd.DataFrame, num_credits_col: str = "num_credits_earned_cumsum"
+    df: pd.DataFrame, num_credits_col: str = "cumsum_num_credits_earned"
 ) -> pd.DataFrame:
     """
     Drop a bunch of columns not needed or wanted for modeling, and set to null

@@ -82,48 +82,48 @@ def df_grped(df):
             ],
             pd.DataFrame(
                 {
-                    "term_id_cumcount": [1.0, 2.0, 3.0, 4.0, 5.0],
-                    "term_is_pre_cohort_cumsum": [1.0, 1.0, 1.0, 1.0, 1.0],
-                    "course_grade_num_mean_cummean": [4.0, 3.25, 2.75, 2.875, 3.0],
-                    "course_grade_num_mean_cumstd": [
+                    "cumcount_term_id": [1.0, 2.0, 3.0, 4.0, 5.0],
+                    "cumsum_term_is_pre_cohort": [1.0, 1.0, 1.0, 1.0, 1.0],
+                    "cummean_course_grade_num_mean": [4.0, 3.25, 2.75, 2.875, 3.0],
+                    "cumstd_course_grade_num_mean": [
                         np.nan,
                         1.061,
                         1.146,
                         0.968,
                         0.884,
                     ],
-                    "num_courses_cumsum": [3.0, 5.0, 7.0, 9.0, 10.0],
-                    "num_credits_earned_cumsum": [3.0, 15.0, 30.0, 34.0, 49.0],
-                    "took_course_subject_area_02_cummax": [1.0, 1.0, 1.0, 1.0, 1.0],
-                    "took_course_subject_area_05_06_cummax": [
+                    "cumsum_num_courses": [3.0, 5.0, 7.0, 9.0, 10.0],
+                    "cumsum_num_credits_earned": [3.0, 15.0, 30.0, 34.0, 49.0],
+                    "cummax_took_course_subject_area_02": [1.0, 1.0, 1.0, 1.0, 1.0],
+                    "cummax_took_course_subject_area_05_06": [
                         0.0,
                         0.0,
                         0.0,
                         1.0,
                         1.0,
                     ],
-                    "num_courses_course_level_0_cumfrac": [
+                    "cumfrac_num_courses_course_level_0": [
                         0.667,
                         0.6,
                         0.429,
                         0.333,
                         0.3,
                     ],
-                    "num_courses_course_level_1_cumfrac": [
+                    "cumfrac_num_courses_course_level_1": [
                         0.333,
                         0.4,
                         0.571,
                         0.667,
                         0.7,
                     ],
-                    "took_course_subject_area_02_cummax_in_12_creds": [
+                    "cummax_in_12_creds_took_course_subject_area_02": [
                         True,
                         True,
                         True,
                         True,
                         True,
                     ],
-                    "took_course_subject_area_05_06_cummax_in_12_creds": [
+                    "cummax_in_12_creds_took_course_subject_area_05_06": [
                         False,
                         False,
                         False,
@@ -147,6 +147,8 @@ def test_expanding_agg_features(
     )
     assert isinstance(obs, pd.DataFrame) and not obs.empty
     # raises error if not equal
+    print(obs.columns)
+    print(exp.columns)
     assert pd.testing.assert_frame_equal(obs, exp, rtol=0.001) is None
 
 
