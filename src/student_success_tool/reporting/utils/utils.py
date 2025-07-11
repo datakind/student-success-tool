@@ -8,7 +8,6 @@ import pathlib
 from importlib.abc import Traversable
 from importlib.resources import as_file
 
-
 LOGGER = logging.getLogger(__name__)
 
 
@@ -115,7 +114,9 @@ def save_card_to_gold_volume(filename: str, catalog: str, institution_id: str) -
 
         # Check if the volume exists
         if not os.path.exists(volume_dir):
-            LOGGER.error(f"❌ Volume directory does not exist: {volume_dir}. Please create it in Unity Catalog.")
+            LOGGER.error(
+                f"❌ Volume directory does not exist: {volume_dir}. Please create it in Unity Catalog."
+            )
             return
 
         # Ensure model_cards subdirectory exists
@@ -125,7 +126,9 @@ def save_card_to_gold_volume(filename: str, catalog: str, institution_id: str) -
         shutil.copyfile(filename, dst_path)
         LOGGER.info(f"✅ Saved model card to gold volume at: {dst_path}")
     except Exception as e:
-        LOGGER.error(f"❌ Failed to save model card under {dst_path} to gold file volume: {e}")
+        LOGGER.error(
+            f"❌ Failed to save model card under {dst_path} to gold file volume: {e}"
+        )
 
 
 def embed_image(
