@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 0.3.8 (2025-07)
+- Patching up gold volume path due to Azure/GCP naming differences (PR 249)
+
 ## 0.3.7 (2025-07)
 - Adjusted feature naming for better flexibility and robustness in feature table (PR 243)
 - Updated codebased to have better data leakage handling (PR 237)
