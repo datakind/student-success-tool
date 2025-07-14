@@ -407,8 +407,19 @@ def sample_data():
         ]
     )
     features_table = {
-        "feature1": {"name": "Feature 1 Name"},
-        "feature2": {"name": "Feature 2 Name"},
+        "feature1": {
+            "name": "Feature 1 Name",
+            "short_desc": "A short description of feature 1",
+            "long_desc": "A long description of feature 1",
+        },
+        "feature2": {
+            "name": "Feature 2 Name",
+            "short_desc": "A short description of feature 2",
+            "long_desc": "A long description of feature 2",
+        },
+        "feature3": {
+            "name": "Feature 3 Name",
+        },
     }
     return features, unique_ids, shap_values, features_table
 
@@ -426,13 +437,16 @@ def test_top_shap_features_behavior(sample_data):
         "feature_name",
         "shap_value",
         "feature_value",
+        "feature_readable_name",
+        "feature_short_desc",
+        "feature_long_desc",
     }
 
     # Check top 10 feature selection
     top_features = result["feature_name"].unique()
     assert len(top_features) == 10
 
-    grouped = result.groupby("feature_name")["shap_value"].apply(
+    grouped = result.groupby("feature_readable_name")["shap_value"].apply(
         lambda x: np.mean(np.abs(x))
     )
     shap_values = grouped.sort_values(ascending=False).values
@@ -444,6 +458,17 @@ def test_top_shap_features_behavior(sample_data):
     print(grouped)
     assert grouped.index[0] == "Feature 1 Name"
     assert grouped.index[1] == "Feature 2 Name"
+
+    assert (
+        result["feature_short_desc"]
+        .apply(lambda x: isinstance(x, str) or x is None)
+        .all()
+    )
+    assert (
+        result["feature_long_desc"]
+        .apply(lambda x: isinstance(x, str) or x is None)
+        .all()
+    )
 
 
 def test_handles_fewer_than_10_features():
@@ -552,7 +577,6 @@ def test_support_score_distribution_table(
         shap_values=pd.DataFrame(shap_values),
         inference_params=inference_params,
         features_table=features_table,
-        model_feature_names=features.columns.tolist(),
     )
 
     assert isinstance(result, pd.DataFrame)

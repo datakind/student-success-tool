@@ -130,8 +130,8 @@ from student_success_tool.preprocessing.targets.pdp import credits_earned
             4,
             "infer",
             pd.Series(
-                data=[pd.NA],
-                index=pd.Index(["01"], dtype="string", name="student_id"),
+                data=[],
+                index=pd.Index([], dtype="string", name="student_id"),
                 name="target",
                 dtype="boolean",
             ),

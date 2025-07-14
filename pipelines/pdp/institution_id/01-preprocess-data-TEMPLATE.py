@@ -24,7 +24,7 @@
 
 # install dependencies, of which most/all should come through our 1st-party SST package
 
-# %pip install "student-success-tool == 0.3.6"
+# %pip install "student-success-tool == 0.3.7"
 
 # COMMAND ----------
 
@@ -210,7 +210,7 @@ df_labeled
 
 # TODO: choose target function suitable for school's use case
 # parameters should be specified in the config
-target = targets.pdp.TODO.compute_target(df_labeled, **cfg.preprocessing.target)
+target = targets.pdp.TODO.compute_target(df_student_terms, **cfg.preprocessing.target)
 df_labeled = pd.merge(df_labeled, target, how="inner", on=cfg.student_id_col)
 
 print(df_labeled[cfg.target_col].value_counts())

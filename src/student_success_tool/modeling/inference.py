@@ -245,20 +245,33 @@ def generate_ranked_feature_table(
 
 
 def _get_mapped_feature_name(
-    feature_col: str, features_table: dict[str, dict[str, str]]
-) -> str:
+    feature_col: str, features_table: dict[str, dict[str, str]], metadata: bool = False
+) -> t.Any:
     feature_col = feature_col.lower()  # just in case
     if feature_col in features_table:
-        feature_name = features_table[feature_col]["name"]
+        entry = features_table[feature_col]
+        feature_name = entry["name"]
+        if metadata:
+            short_desc = entry.get("short_desc")
+            long_desc = entry.get("long_desc")
+            return feature_name, short_desc, long_desc
+        return feature_name
     else:
         for fkey, fval in features_table.items():
             if "(" in fkey and ")" in fkey:
-                if match := re.match(fkey, feature_col):
+                if match := re.fullmatch(fkey, feature_col):
                     feature_name = fval["name"].format(*match.groups())
-                    break
+                    if metadata:
+                        short_desc = fval.get("short_desc")
+                        long_desc = fval.get("long_desc")
+                        return feature_name, short_desc, long_desc
+                    return feature_name
+
         else:
             feature_name = feature_col
-    return feature_name
+            if metadata:
+                return feature_name, None, None
+            return feature_name
 
 
 def calculate_shap_values_spark_udf(
@@ -386,23 +399,27 @@ def top_shap_features(
     top_features = summary_df[summary_df["feature_name"].isin(top_n_features)].copy()
 
     if features_table is not None:
-        top_features["feature_name"] = top_features["feature_name"].apply(
-            lambda feature: _get_mapped_feature_name(feature, features_table)
+        top_features[
+            ["feature_readable_name", "feature_short_desc", "feature_long_desc"]
+        ] = top_features["feature_name"].apply(
+            lambda feature: pd.Series(
+                _get_mapped_feature_name(feature, features_table, metadata=True)
+            )
         )
+
     top_features["feature_value"] = top_features["feature_value"].astype(str)
 
     return top_features
 
 
 def support_score_distribution_table(
-    df_serving,
-    unique_ids,
-    pred_probs,
-    shap_values,
-    inference_params,
-    features_table,
-    model_feature_names,
-):
+    df_serving: pd.DataFrame,
+    unique_ids: t.Any,
+    pred_probs: t.Any,
+    shap_values: t.Any,
+    inference_params: dict,
+    features_table: t.Optional[dict[str, dict[str, str]]] = None,
+) -> pd.DataFrame:
     """
     Selects top SHAP features for each student, and bins the support scores.
 
@@ -429,13 +446,13 @@ def support_score_distribution_table(
 
     try:
         result = select_top_features_for_display(
-            df_serving,
-            unique_ids,
-            pred_probs,
-            shap_values.values,
+            features=df_serving,
+            unique_ids=unique_ids,
+            predicted_probabilities=pred_probs,
+            shap_values=shap_values.values,
             n_features=inference_params["num_top_features"],
-            features_table=features_table,
             needs_support_threshold_prob=inference_params["min_prob_pos_label"],
+            features_table=features_table,
         )
 
         # --- Bin support scores for histogram (e.g., 0.0 to 1.0 in 0.1 steps) ---

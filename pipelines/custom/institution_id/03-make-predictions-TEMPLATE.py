@@ -1,14 +1,13 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # SST Make and Explain Predictions: [SCHOOL]
+# MAGIC # SST Make and Explain Predictions
 # MAGIC
-# MAGIC Fourth step in the process of transforming raw (PDP) data into actionable, data-driven insights for advisors: generate predictions and feature importances for new (unlabeled) data.
+# MAGIC Fourth step in the process of transforming rawdata into actionable, data-driven insights for advisors: generate predictions and feature importances for new (unlabeled) data.
 # MAGIC
 # MAGIC ### References
 # MAGIC
 # MAGIC - [Data science product components (Confluence doc)](https://datakind.atlassian.net/wiki/spaces/TT/pages/237862913/Data+science+product+components+the+modeling+process)
 # MAGIC - [Databricks runtimes release notes](https://docs.databricks.com/en/release-notes/runtime/index.html)
-# MAGIC - [SCHOOL WEBSITE](https://example.com)
 
 # COMMAND ----------
 
@@ -29,10 +28,7 @@
 # %pip install "student-success-tool==0.3.7"
 # %pip install "pandas==1.5.3"
 # %pip install "scikit-learn==1.3.0"
-
-# COMMAND ----------
-
-# MAGIC %restart_python
+# %restart_python
 
 # COMMAND ----------
 
@@ -59,6 +55,13 @@ except Exception:
     logging.warning("unable to create spark session; are you in a Databricks runtime?")
     pass
 
+try:
+    # Get the pipeline type from job definition
+    run_type = dbutils.widgets.get("run_type")  # noqa: F821
+except Py4JJavaError:
+    # Run script interactively
+    run_type = "predict"
+
 # COMMAND ----------
 
 # Databricks logs every instance that uses sklearn or other modelling libraries
@@ -72,14 +75,19 @@ mlflow.autolog(disable=True)
 
 # COMMAND ----------
 
-# project configuration should be stored in a config file in TOML format
-cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig)
+# project configuration stored as a config file in TOML format
+cfg = dataio.read_config(
+    "./config-TEMPLATE.toml", schema=configs.custom.CustomProjectConfig
+)
 cfg
 
 # COMMAND ----------
 
-# Load human-friendly PDP feature names
-features_table = dataio.read_features_table("assets/pdp/features_table.toml")
+# Assign student ID column name
+student_id_col = cfg.student_id_col
+
+# Load custom human-friendly feature names
+features_table = dataio.read_features_table("./features_table.toml")
 
 # COMMAND ----------
 
@@ -88,11 +96,9 @@ features_table = dataio.read_features_table("assets/pdp/features_table.toml")
 
 # COMMAND ----------
 
-df = dataio.schemas.pdp.PDPLabeledDataSchema(
-    dataio.read.from_delta_table(
-        cfg.datasets.silver.modeling.table_path,
-        spark_session=spark,
-    )
+df = dataio.read.from_delta_table(
+    cfg.datasets.silver["modeling"].table_path,
+    spark_session=spark,
 )
 df.head()
 
@@ -138,7 +144,7 @@ if cfg.target_col in df.columns:
 # COMMAND ----------
 
 features = df_test.loc[:, model_feature_names]
-unique_ids = df_test[cfg.student_id_col]
+unique_ids = df_test[student_id_col]
 
 # COMMAND ----------
 
@@ -190,19 +196,19 @@ explainer
 # COMMAND ----------
 
 shap_schema = StructType(
-    [StructField(cfg.student_id_col, StringType(), nullable=False)]
+    [StructField(student_id_col, StringType(), nullable=False)]
     + [StructField(col, FloatType(), nullable=False) for col in model_feature_names]
 )
 
 df_shap_values = (
     spark.createDataFrame(
-        df_test.reindex(columns=model_feature_names + [cfg.student_id_col])
+        df_test.reindex(columns=model_feature_names + [student_id_col])
     )  # noqa: F821
     .repartition(sc.defaultParallelism)  # noqa: F821
     .mapInPandas(
         ft.partial(
             inference.calculate_shap_values_spark_udf,
-            student_id_col=cfg.student_id_col,
+            student_id_col=student_id_col,
             model_features=model_feature_names,
             explainer=explainer,
             mode=train_mode,
@@ -210,8 +216,8 @@ df_shap_values = (
         schema=shap_schema,
     )
     .toPandas()
-    .set_index(cfg.student_id_col)
-    .reindex(df_test[cfg.student_id_col])
+    .set_index(student_id_col)
+    .reindex(df_test[student_id_col])
     .reset_index(drop=False)
 )
 df_shap_values
@@ -259,7 +265,7 @@ result
 
 # save sample advisor output dataset
 dataio.write.to_delta_table(
-    result, cfg.datasets.gold.advisor_output.table_path, spark_session=spark
+    result, cfg.datasets.gold["advisor_output"].table_path, spark_session=spark
 )
 
 # COMMAND ----------
@@ -287,19 +293,8 @@ with mlflow.start_run() as run:
 # COMMAND ----------
 
 shap_feature_importance = inference.generate_ranked_feature_table(
-    features=features, shap_values=df_shap_values[model_feature_names].to_numpy()
+    features, df_shap_values[model_feature_names].to_numpy(), features_table
 )
-if shap_feature_importance is not None and features_table is not None:
-    shap_feature_importance[
-        ["readable_feature_name", "short_feature_desc", "long_feature_desc"]
-    ] = shap_feature_importance["Feature Name"].apply(
-        lambda feature: pd.Series(
-            inference._get_mapped_feature_name(feature, features_table, metadata=True)
-        )
-    )
-    shap_feature_importance.columns = shap_feature_importance.columns.str.replace(
-        " ", "_"
-    ).str.lower()
 shap_feature_importance
 
 
@@ -315,11 +310,13 @@ dataio.write.to_delta_table(
 # COMMAND ----------
 
 support_score_distribution = inference.support_score_distribution_table(
-    df_serving=features,
-    unique_ids=unique_ids,
-    pred_probs=pred_probs,
-    shap_values=df_shap_values[model_feature_names],
-    inference_params=cfg.inference.dict(),
+    features,
+    unique_ids,
+    pred_probs,
+    df_shap_values[model_feature_names],
+    cfg.inference.dict(),
+    features_table,
+    model_feature_names,
 )
 support_score_distribution
 
