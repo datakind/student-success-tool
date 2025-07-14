@@ -18,7 +18,7 @@ def compute_target(
     max_term_rank: int | t.Literal["infer"] = "infer",
     student_id_cols: str | list[str] = "student_id",
     enrollment_intensity_col: str = "student_term_enrollment_intensity",
-    num_credits_col: str = "num_credits_earned_cumsum",
+    num_credits_col: str = "cumsum_num_credits_earned",
     term_rank_col: str = "term_rank",
 ) -> pd.Series:
     """
