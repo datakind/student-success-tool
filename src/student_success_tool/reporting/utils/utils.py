@@ -107,7 +107,7 @@ def save_card_to_gold_volume(filename: str, catalog: str, institution_id: str) -
     try:
         # Construct volume base and target directory
         schema = f"{institution_id}_gold"
-        file_volume = f"{schema}_file_volume"
+        file_volume = "gold_volume"
         volume_dir = f"/Volumes/{catalog}/{schema}/{file_volume}"
         model_card_dir = os.path.join(volume_dir, "model_cards")
         dst_path = os.path.join(model_card_dir, os.path.basename(filename))
