@@ -19,7 +19,8 @@ def test_development_note_with_version(mock_card):
     mock_card.context["version_number"] = "1.2.3"
     registry = SectionRegistry()
     custom_attribute_sections.register_attribute_sections(mock_card, registry)
-    result = registry.get("development_note_section")()
+    rendered = registry.render_all()
+    result = rendered["development_note_section"]
 
     assert "Model Version 1.2.3" in result
     assert "Developed by DataKind" in result
@@ -29,8 +30,9 @@ def test_development_note_without_version(mock_card):
     mock_card.context = {}  # no version_number
     registry = SectionRegistry()
     custom_attribute_sections.register_attribute_sections(mock_card, registry)
-    result = registry.get("development_note_section")()
-
+    rendered = registry.render_all()
+    result = rendered["development_note_section"]
+    
     assert "Model Version" not in result
     assert "Developed by DataKind" in result
 
@@ -61,7 +63,8 @@ def test_outcome_section_variants(mock_card, category, unit, value, expected_sni
     registry = SectionRegistry()
     custom_attribute_sections.register_attribute_sections(mock_card, registry)
 
-    result = registry.get("outcome_section")()
+    rendered = registry.render_all()
+    result = rendered["outcome_section"]
     assert expected_snippet in result
 
 
@@ -73,7 +76,8 @@ def test_outcome_section_fallback_on_missing_config(mock_card, caplog):
     custom_attribute_sections.register_attribute_sections(mock_card, registry)
 
     with caplog.at_level("WARNING"):
-        result = registry.get("outcome_section")()
+        rendered = registry.render_all()
+        result = rendered["outcome_section"]
         assert "Unable to retrieve model outcome information" in result
         assert any("Failed to generate outcome description" in msg for msg in caplog.messages)
 
@@ -85,7 +89,8 @@ def test_target_population_valid_dict(mock_card):
 
     registry = SectionRegistry()
     custom_attribute_sections.register_attribute_sections(mock_card, registry)
-    result = registry.get("target_population_section")()
+    rendered = registry.render_all()
+    result = rendered["target_population_section"]
 
     assert "- Full-Time" in result
     assert "- Bachelor's" in result
@@ -96,7 +101,8 @@ def test_target_population_empty(mock_card, caplog):
 
     registry = SectionRegistry()
     custom_attribute_sections.register_attribute_sections(mock_card, registry)
-    result = registry.get("target_population_section")()
+    rendered = registry.render_all()
+    result = rendered["target_population_section"]
 
     assert "No specific student criteria were applied." in result
     assert "No student criteria" in caplog.text
@@ -106,7 +112,8 @@ def test_target_population_non_dict(mock_card):
 
     registry = SectionRegistry()
     custom_attribute_sections.register_attribute_sections(mock_card, registry)
-    result = registry.get("target_population_section")()
+    rendered = registry.render_all()
+    result = rendered["target_population_section"]
 
     assert "Student criteria should be provided as a dictionary." in result
 
@@ -127,7 +134,8 @@ def test_checkpoint_valid_variants(mock_card, category, unit, value, expected_sn
 
     registry = SectionRegistry()
     custom_attribute_sections.register_attribute_sections(mock_card, registry)
-    result = registry.get("checkpoint_section")()
+    rendered = registry.render_all()
+    result = rendered["checkpoint_section"]
 
     assert expected_snippet in result
 
@@ -139,7 +147,8 @@ def test_checkpoint_section_missing_config(mock_card, caplog):
     custom_attribute_sections.register_attribute_sections(mock_card, registry)
 
     with caplog.at_level("WARNING"):
-        result = registry.get("checkpoint_section")()
+        rendered = registry.render_all()
+        result = rendered["checkpoint_section"]
         assert "Unable to retrieve model checkpoint information" in result
         assert "Failed to generate checkpoint description" in caplog.text
 

@@ -26,7 +26,8 @@ def test_bias_groups_section_with_valid_aliases(mock_card, registry):
 
     custom_bias_sections.register_bias_sections(mock_card, registry)
 
-    result = registry.get("bias_groups_section")()
+    rendered = registry.render_all()
+    result = rendered["bias_groups_section"]
 
     assert "- Our assessment for FNR Parity was conducted across the following student groups." in result
     assert "- First-Generation Status" in result
