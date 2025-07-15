@@ -19,16 +19,15 @@ def register_evaluation_sections(card, registry):
     evaluation_sections = [f"{card.format.header_level(4)}Evaluation Metrics by Student Group\n"]
     group_eval_artifacts = utils.list_paths_in_directory(run_id=card.run_id, directory="group_metrics")
 
-    # Try to load group aliases from config
-    try:
-        alias_dict = card.cfg.student_group_aliases
-        assert isinstance(alias_dict, dict)
-    except Exception:
-        alias_dict = {}
-
-    def resolve_group_label(group_name: str) -> str:
+    def resolve_student_group_label(card, group_key: str) -> str:
         """Convert internal group name to user-friendly alias if available."""
-        return alias_dict.get(group_name, card.format.friendly_case(group_name))
+        try:
+            aliases = card.cfg.student_group_aliases
+            if isinstance(aliases, dict):
+                return str(aliases.get(group_key, card.format.friendly_case(group_key)))
+        except Exception:
+            pass
+        return card.format.friendly_case(group_key)
 
     def make_metric_table(path: str, title: str) -> t.Callable[[], str]:
         def metric_table():
@@ -73,7 +72,7 @@ def register_evaluation_sections(card, registry):
         if "bias" not in parts or "perf" not in parts:
             continue
 
-        label = resolve_group_label(group)
+        label = resolve_student_group_label(group)
         section_text = []
 
         bias_title = f"{label} Bias Metrics"
