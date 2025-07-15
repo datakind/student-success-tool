@@ -31,48 +31,52 @@ def register_attribute_sections(card, registry):
         validation around the config file, which enables us to assume
         that fields will be present.
         """
-        outcome_type = card.cfg.preprocessing.target.category
+        try:
+            outcome_type = card.cfg.preprocessing.target.category
 
-        if outcome_type == "retention":
-            outcome = "non-retention into the student's second academic year"
-            description = f"The model predicts the likelihood of {outcome} based on student, course, and academic data."
-        else:
-            outcome = "not graduating on time"
-            unit = card.cfg.preprocessing.target.unit
-            value = card.cfg.preprocessing.target.value
-
-            if unit in {"credit", "year", "term", "semester"}:
-                unit_label = unit + ("s" if value != 1 else "")
-                unit_str = f"{value} {unit_label}"
-            elif unit == "pct_completion":
-                unit_str = f"{value}% completion"
+            if outcome_type == "retention":
+                outcome = "non-retention into the student's second academic year"
+                description = f"The model predicts the likelihood of {outcome} based on student, course, and academic data."
             else:
-                unit_str = f"{value} {unit}"
+                outcome = "not graduating on time"
+                unit = card.cfg.preprocessing.target.unit
+                value = card.cfg.preprocessing.target.value
 
-            # Customize phrasing based on unit
-            if unit == "credit":
-                timeframe_phrase = f"in achieving {unit_str} required for graduation"
-            elif unit == "year":
-                timeframe_phrase = f"within {unit_str}"
-            elif unit in {"term", "semester"}:
-                timeframe_phrase = f"within {unit_str}"
-            elif unit == "pct_completion":
-                timeframe_phrase = f"at {unit_str}"
-            else:
-                timeframe_phrase = f"within {unit_str}"
+                if unit in {"credit", "year", "term", "semester"}:
+                    unit_label = unit + ("s" if value != 1 else "")
+                    unit_str = f"{value} {unit_label}"
+                elif unit == "pct_completion":
+                    unit_str = f"{value}% completion"
+                else:
+                    unit_str = f"{value} {unit}"
 
-            description = (
-                f"The model predicts the likelihood of {outcome} {timeframe_phrase}, "
-                "based on student, course, and academic data."
-            )
+                # Customize phrasing based on unit
+                if unit == "credit":
+                    timeframe_phrase = f"in achieving {unit_str} required for graduation"
+                elif unit == "year":
+                    timeframe_phrase = f"within {unit_str}"
+                elif unit in {"term", "semester"}:
+                    timeframe_phrase = f"within {unit_str}"
+                elif unit == "pct_completion":
+                    timeframe_phrase = f"at {unit_str}"
+                else:
+                    timeframe_phrase = f"within {unit_str}"
 
-        return description
+                description = (
+                    f"The model predicts the likelihood of {outcome} {timeframe_phrase}, "
+                    "based on student, course, and academic data."
+                )
+
+            return description
+
+        except (AttributeError, TypeError, KeyError) as e:
+            LOGGER.warning(f"[outcome_section] Failed to generate outcome description: {e}")
+            return "Unable to retrieve model outcome information"
 
     @registry.register("target_population_section")
     def target_population():
         """
-        Produce a section for the target population.  This
-        will need to later be refined to support both PDP and custom institutions well.
+        Produce a section for the target population.
         """
         try:
             criteria = card.cfg.preprocessing.selection.student_criteria_aliases
@@ -117,58 +121,21 @@ def register_attribute_sections(card, registry):
     @registry.register("checkpoint_section")
     def checkpoint():
         """
-        Produce a section for the PDP checkpoint. Also defines an
-        ordinal function
+        Produce a section for the custom checkpoint. Also defines an
+        ordinal function.
         """
-        checkpoint_type = card.cfg.preprocessing.checkpoint.type_
-        base_message = "The model makes this prediction when the student has"
-        if checkpoint_type == "nth":
-            n_ckpt = card.cfg.preprocessing.checkpoint.n
-            exclude_pre_cohort_terms = (
-                card.cfg.preprocessing.checkpoint.exclude_pre_cohort_terms
-            )
-            exclude_non_core_terms = (
-                card.cfg.preprocessing.checkpoint.exclude_non_core_terms
-            )
-            valid_enrollment_year = (
-                card.cfg.preprocessing.checkpoint.valid_enrollment_year
-            )
-            if n_ckpt >= 0:
-                message = f"{base_message} completed their {card.format.ordinal(n_ckpt + 1)} term"
-            elif n_ckpt == -1:
-                message = f"{base_message} completed their last term"
-            else:
-                raise ValueError(
-                    f"Unable to interpret value for nth checkpoint: {n_ckpt}"
-                )
-
-            included = []
-            if not exclude_pre_cohort_terms:
-                included.append("pre-cohort terms")
-            if not exclude_non_core_terms:
-                included.append("non-core terms")
-            if included:
-                if len(included) == 1:
-                    message += f" including {included[0]}"
+        try:
+            category = card.cfg.preprocessing.checkpoint.category
+            unit = card.cfg.preprocessing.checkpoint.unit
+            value = card.cfg.preprocessing.checkpoint.value
+            base_message = "The model makes this prediction when the student has"
+            if category == "credit":
+                return f"{base_message} earned {card.cfg.preprocessing.checkpoint.value} credits."
+            elif category == "year" or category == "term" or category == "semester":
+                if value > 1:
+                    return f"{base_message} completed {card.cfg.preprocessing.checkpoint.value} {unit}"
                 else:
-                    message += (
-                        f" including {', '.join(included[:-1])} and {included[-1]}"
-                    )
-            if valid_enrollment_year:
-                message += f", provided the term occurred in their {card.format.ordinal(valid_enrollment_year)} year of enrollment"
-            message = message.rstrip(". ") + "."
-            return message
-        elif checkpoint_type == "first":
-            return f"{base_message} completed their first term."
-        elif checkpoint_type == "last":
-            return f"{base_message} completed their last term."
-        elif checkpoint_type == "first_at_num_credits_earned":
-            credit_thresh = card.cfg.preprocessing.checkpoint.min_num_credits
-            return f"{base_message} earned {credit_thresh} credits."
-        elif checkpoint_type == "first_within_cohort":
-            return f"{base_message} completed their first term within their cohort."
-        elif checkpoint_type == "last_in_enrollment_year":
-            enrl_year = card.cfg.preprocessing.checkpoint.enrollment_year
-            return f"{base_message} completed their {card.format.ordinal(enrl_year)} year of enrollment."
-        else:
-            raise ValueError(f"Unknown checkpoint type: {checkpoint_type}")
+                    return f"{base_message} completed {card.cfg.preprocessing.checkpoint.value} {unit}s"
+        except (AttributeError, TypeError, KeyError) as e:
+            LOGGER.warning(f"[checkpoint_section] Failed to generate checkpoint description: {e}")
+            return "Unable to retrieve model checkpoint information"    

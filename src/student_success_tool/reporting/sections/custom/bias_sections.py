@@ -22,7 +22,7 @@ def register_bias_sections(card, registry):
             assert isinstance(alias_dict, dict), "student_group_aliases must be a dictionary"
 
             group_labels = list(alias_dict.values())  # Extract the human-readable names
-            nested = [f"{card.format.indent_level(2)}- {label}\n" for label in group_labels]
+            nested = [f"{card.format.indent_level(2)}- {card.format.friendly_case(label)}\n" for label in group_labels]
             return intro + "".join(nested)
 
         except (AttributeError, AssertionError, TypeError) as e:
