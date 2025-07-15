@@ -5,7 +5,6 @@ from student_success_tool.reporting.sections.custom import (
     bias_sections as custom_bias_sections,
 )
 from student_success_tool.reporting.utils.formatting import Formatting
-import logging
 
 
 @pytest.fixture

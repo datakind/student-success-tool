@@ -2,9 +2,7 @@ import pytest
 import pandas as pd
 import re
 from unittest.mock import patch
-from student_success_tool.reporting.model_card.base import ModelCard
 from student_success_tool.reporting.model_card.custom import CustomModelCard
-
 from student_success_tool.configs.custom import CustomProjectConfig
 
 
@@ -171,10 +169,10 @@ def dummy_custom_config():
 
 
 @patch("student_success_tool.reporting.sections.registry.SectionRegistry.render_all")
-@patch("student_success_tool.reporting.model_card.base.ModelCard.collect_metadata")
-@patch("student_success_tool.reporting.model_card.base.ModelCard.load_model")
-@patch("student_success_tool.reporting.model_card.base.ModelCard.extract_training_data")
-@patch("student_success_tool.reporting.model_card.base.ModelCard.find_model_version")
+@patch("student_success_tool.reporting.model_card.base.CustomModelCard.collect_metadata")
+@patch("student_success_tool.reporting.model_card.base.CustomModelCard.load_model")
+@patch("student_success_tool.reporting.model_card.base.CustomModelCard.extract_training_data")
+@patch("student_success_tool.reporting.model_card.base.CustomModelCard.find_model_version")
 def test_custom_school_model_card_template_placeholders_filled(
     mock_find_version,
     mock_extract_data,
