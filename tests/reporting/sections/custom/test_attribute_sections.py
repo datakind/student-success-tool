@@ -123,18 +123,16 @@ def test_target_population_valid_dict(mock_card):
 
 
 def test_target_population_empty(mock_card, caplog):
+    mock_card.cfg.preprocessing.selection.student_criteria = {}
     mock_card.cfg.preprocessing.selection.student_criteria_aliases = {}
 
     registry = SectionRegistry()
-    custom_attribute_sections.register_attribute_sections(mock_card, registry)
-    rendered = registry.render_all()
-    result = rendered["target_population_section"]
-
     with caplog.at_level("WARNING"):
+        custom_attribute_sections.register_attribute_sections(mock_card, registry)
         result = registry.render_all()["target_population_section"]
 
     assert "No specific student criteria were applied." in result
-    assert "No student criteria" in caplog.text
+    assert any("No student criteria provided in config." in m for m in caplog.messages)
 
 
 def test_target_population_non_dict(mock_card):
