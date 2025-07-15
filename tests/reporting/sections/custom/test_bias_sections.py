@@ -28,6 +28,7 @@ def test_bias_groups_section_with_valid_aliases(mock_card, registry):
 
     rendered = registry.render_all()
     result = rendered["bias_groups_section"]
+    print(result)
 
     assert "- Our assessment for FNR Parity was conducted across the following student groups." in result
     assert "- First-Generation Status" in result
@@ -46,6 +47,7 @@ def test_bias_groups_section_with_aliases_that_need_friendlycase(mock_card):
 
     rendered = registry.render_all()
     result = rendered["bias_groups_section"]
+    print(result)
 
     assert "- First Generation Status" in result
     assert "- Disability Status" in result
