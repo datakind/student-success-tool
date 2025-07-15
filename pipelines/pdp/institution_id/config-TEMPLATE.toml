@@ -43,6 +43,7 @@ key_course_ids = ["ENGL101", "MATH101", ["ENGL102", "MATH102"]]
 [preprocessing.selection]
 student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year_1 = "Bachelor's Degree" }
 intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
+include_pre_cohort_courses = False 
 
 [preprocessing.checkpoint]
 name = "30_credits_earned"
