@@ -113,7 +113,7 @@ def register_attribute_sections(card, registry):
             )
             return description
 
-        except Exception as e:
+        except Exception:
             LOGGER.error("Unable to retrieve student criteria configuration in config", exc_info=True)
             return f"{card.format.indent_level(1)}- Student criteria configuration was unavailable."
 

@@ -36,11 +36,6 @@ def test_development_note_without_version(mock_card):
     assert "Model Version" not in result
     assert "Developed by DataKind" in result
 
-import pytest
-from student_success_tool.reporting.sections.registry import SectionRegistry
-from student_success_tool.reporting.sections.custom import attribute_sections as custom_attribute_sections
-
-
 @pytest.mark.parametrize(
     "category,unit,value,expected_snippet",
     [
