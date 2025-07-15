@@ -30,6 +30,7 @@ framework = "sklearn"
 [preprocessing]
 splits = { train = 0.6, test = 0.2, validate = 0.2 }
 sample_class_weight = "balanced"
+include_pre_cohort_courses = false
 
 [preprocessing.features]
 min_passing_grade = 1.0
@@ -48,7 +49,7 @@ intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
 name = "30_credits_earned"
 type_ = "first_at_num_credits_earned"
 min_num_credits = 30.0
-num_credits_col = "num_credits_earned_cumsum"
+num_credits_col = "cumsum_num_credits_earned"
 
 [preprocessing.target]
 name = "graduation_150pct_time"

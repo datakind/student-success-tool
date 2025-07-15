@@ -245,20 +245,33 @@ def generate_ranked_feature_table(
 
 
 def _get_mapped_feature_name(
-    feature_col: str, features_table: dict[str, dict[str, str]]
-) -> str:
+    feature_col: str, features_table: dict[str, dict[str, str]], metadata: bool = False
+) -> t.Any:
     feature_col = feature_col.lower()  # just in case
     if feature_col in features_table:
-        feature_name = features_table[feature_col]["name"]
+        entry = features_table[feature_col]
+        feature_name = entry["name"]
+        if metadata:
+            short_desc = entry.get("short_desc")
+            long_desc = entry.get("long_desc")
+            return feature_name, short_desc, long_desc
+        return feature_name
     else:
         for fkey, fval in features_table.items():
             if "(" in fkey and ")" in fkey:
-                if match := re.match(fkey, feature_col):
+                if match := re.fullmatch(fkey, feature_col):
                     feature_name = fval["name"].format(*match.groups())
-                    break
+                    if metadata:
+                        short_desc = fval.get("short_desc")
+                        long_desc = fval.get("long_desc")
+                        return feature_name, short_desc, long_desc
+                    return feature_name
+
         else:
             feature_name = feature_col
-    return feature_name
+            if metadata:
+                return feature_name, None, None
+            return feature_name
 
 
 def calculate_shap_values_spark_udf(
@@ -386,9 +399,14 @@ def top_shap_features(
     top_features = summary_df[summary_df["feature_name"].isin(top_n_features)].copy()
 
     if features_table is not None:
-        top_features["feature_name"] = top_features["feature_name"].apply(
-            lambda feature: _get_mapped_feature_name(feature, features_table)
+        top_features[
+            ["feature_readable_name", "feature_short_desc", "feature_long_desc"]
+        ] = top_features["feature_name"].apply(
+            lambda feature: pd.Series(
+                _get_mapped_feature_name(feature, features_table, metadata=True)
+            )
         )
+
     top_features["feature_value"] = top_features["feature_value"].astype(str)
 
     return top_features

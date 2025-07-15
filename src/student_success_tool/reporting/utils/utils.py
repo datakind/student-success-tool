@@ -95,20 +95,39 @@ def download_static_asset(
         return dst_path
 
 
-def log_card(local_path: str, run_id: str) -> None:
+def save_card_to_gold_volume(filename: str, catalog: str, institution_id: str) -> None:
     """
-    Logs card as an ML artifact in the run.
+    Saves the model card PDF to a subdirectory of "model_cards" in a Unity Catalog-backed gold volume.
 
     Args:
-        local_path: Path to model card PDF
+        filename: Path to the model card PDF (local path)
+        catalog: Unity Catalog name (e.g. 'sst_dev')
+        institution_id: institution ID from config that matches schema
     """
     try:
-        with mlflow.start_run(run_id=run_id) as run:
-            mlflow.log_artifact(local_path, "model_card")
-            LOGGER.info(f"Logged model card PDF as an ML artifact at '{run_id}'")
+        # Construct volume base and target directory
+        schema = f"{institution_id}_gold"
+        file_volume = "gold_volume"
+        volume_dir = f"/Volumes/{catalog}/{schema}/{file_volume}"
+        model_card_dir = os.path.join(volume_dir, "model_cards")
+        dst_path = os.path.join(model_card_dir, os.path.basename(filename))
+
+        # Check if the volume exists
+        if not os.path.exists(volume_dir):
+            LOGGER.error(
+                f"❌ Volume directory does not exist: {volume_dir}. Please create it in Unity Catalog."
+            )
+            return
+
+        # Ensure model_cards subdirectory exists
+        os.makedirs(model_card_dir, exist_ok=True)
+
+        # Copy the model card file
+        shutil.copyfile(filename, dst_path)
+        LOGGER.info(f"✅ Saved model card to gold volume at: {dst_path}")
     except Exception as e:
         LOGGER.error(
-            f"Failed to log model card at '{local_path}' to run '{run_id}': {e}"
+            f"❌ Failed to save model card under {dst_path} to gold file volume: {e}"
         )
 
 
