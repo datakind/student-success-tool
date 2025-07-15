@@ -131,13 +131,12 @@ def register_attribute_sections(card, registry):
         ordinal function.
         """
         try:
-            category = card.cfg.preprocessing.checkpoint.category
             unit = card.cfg.preprocessing.checkpoint.unit
             value = card.cfg.preprocessing.checkpoint.value
             base_message = "The model makes this prediction when the student has"
-            if category == "credit":
+            if unit == "credit":
                 return f"{base_message} earned {card.cfg.preprocessing.checkpoint.value} credits."
-            elif category in {"year", "term", "semester"}:
+            elif unit in {"year", "term", "semester"}:
                 unit_label = unit + ("s" if value != 1 else "")
                 return f"{base_message} completed {value} {unit_label}"
         except (AttributeError, TypeError, KeyError) as e:

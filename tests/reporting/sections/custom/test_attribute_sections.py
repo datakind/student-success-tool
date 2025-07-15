@@ -146,16 +146,15 @@ def test_target_population_non_dict(mock_card):
 
 
 @pytest.mark.parametrize(
-    "category,unit,value,expected_snippet",
+    "unit,value,expected_snippet",
     [
-        ("credit", "credit", 30, "earned 30 credits"),
-        ("year", "year", 2, "completed 2 years"),
-        ("term", "term", 1, "completed 1 term"),
-        ("semester", "semester", 3, "completed 3 semesters"),
+        ("credit", 30, "earned 30 credits"),
+        ("year", 2, "completed 2 years"),
+        ("term", 1, "completed 1 term"),
+        ("semester", 3, "completed 3 semesters"),
     ],
 )
-def test_checkpoint_valid_variants(mock_card, category, unit, value, expected_snippet):
-    mock_card.cfg.preprocessing.checkpoint.category = category
+def test_checkpoint_valid_variants(mock_card, unit, value, expected_snippet):
     mock_card.cfg.preprocessing.checkpoint.unit = unit
     mock_card.cfg.preprocessing.checkpoint.value = value
 
