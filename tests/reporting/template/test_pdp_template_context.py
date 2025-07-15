@@ -1,4 +1,3 @@
-# This file also tests whether context is rendered correctly for generic ModelCard AND PDPModelCard
 import pytest
 import pandas as pd
 import re

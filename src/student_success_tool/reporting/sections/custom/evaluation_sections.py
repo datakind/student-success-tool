@@ -88,7 +88,7 @@ def register_evaluation_sections(card, registry):
         if "bias" not in parts or "perf" not in parts:
             continue
 
-        label = resolve_student_group_label(group)
+        label = resolve_student_group_label(card, group)
         section_text = []
 
         bias_title = f"{label} Bias Metrics"
