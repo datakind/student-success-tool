@@ -293,7 +293,7 @@ dbutils.data.summarize(df_cohort, precise=True)
 
 # MAGIC %md
 # MAGIC ### Checking for inconsistencies in raw files
-# MAGIC We want to check for inconsistencies to raise with NSC if need be before any converter functions get applied 
+# MAGIC We want to check for inconsistencies to raise with NSC if need be before any converter functions get applied
 
 # COMMAND ----------
 
