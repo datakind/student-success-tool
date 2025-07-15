@@ -19,7 +19,7 @@ def register_evaluation_sections(card, registry):
     evaluation_sections = [f"{card.format.header_level(4)}Evaluation Metrics by Student Group\n"]
     group_eval_artifacts = utils.list_paths_in_directory(run_id=card.run_id, directory="group_metrics")
 
-    def resolve_student_group_label(card, group_key: str) -> str:
+    def resolve_student_group_label(card: t.Any, group_key: str) -> str:
         """Convert internal group name to user-friendly alias if available."""
         try:
             aliases = card.cfg.student_group_aliases
