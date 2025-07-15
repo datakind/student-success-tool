@@ -8,7 +8,6 @@
 # MAGIC
 # MAGIC - [Data science product components (Confluence doc)](https://datakind.atlassian.net/wiki/spaces/TT/pages/237862913/Data+science+product+components+the+modeling+process)
 # MAGIC - [Databricks runtimes release notes](https://docs.databricks.com/en/release-notes/runtime/index.html)
-# MAGIC
 
 # COMMAND ----------
 
@@ -24,7 +23,10 @@
 # %pip install "student-success-tool==0.3.8"
 # %pip install "pandas==1.5.3"
 # %pip install "scikit-learn==1.3.0"
-# %restart_python
+
+# COMMAND ----------
+
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -34,9 +36,7 @@ import logging
 from databricks.connect import DatabricksSession
 
 from student_success_tool import dataio, configs, modeling
-
-# TODO for Vish: implement CustomModelCard
-# from student_success_tool.reporting.model_card.pdp import PDPModelCard
+from student_success_tool.reporting.model_card.custom import CustomModelCard
 
 # COMMAND ----------
 
@@ -68,10 +68,11 @@ os.environ["MLFLOW_ENABLE_ARTIFACTS_PROGRESS_BAR"] = "false"
 
 # COMMAND ----------
 
-# project configuration stored as a config file in TOML format
-cfg = dataio.read_config(
-    "./config-TEMPLATE.toml", schema=configs.custom.CustomProjectConfig
-)
+# project configuration should be stored in a config file in TOML format
+# it'll start out with just basic info: institution_id, institution_name
+# but as each step of the pipeline gets built, more parameters will be moved
+# from hard-coded notebook variables to shareable, persistent config fields
+cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig)
 cfg
 
 # COMMAND ----------
@@ -98,3 +99,35 @@ modeling.registration.register_mlflow_model(
     registry_uri="databricks-uc",
     mlflow_client=client,
 )
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC # generate model card
+
+# COMMAND ----------
+
+# Initialize card
+card = CustomModelCard(
+    config=cfg, catalog=catalog, model_name=model_name, mlflow_client=client
+)
+
+# COMMAND ----------
+
+# Build context and download artifacts
+card.build()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Edit model card markdown file as you see fit before exporting as a PDF
+# MAGIC - A markdown should now exist in your local directory. Feel free to edit directly in DB's text editor before running the cell below.
+# MAGIC - You don't need to refresh the browser or restart your cluster etc, the model card function will re-read the markdown below before exporting as a PDF
+# MAGIC - You can access the PDF via ML artifacts in your registered model, as you will not be able to view the PDF locally in DB workspace.
+# MAGIC
+
+# COMMAND ----------
+
+# Reload & publish
+card.reload_card()
+card.export_to_pdf()
