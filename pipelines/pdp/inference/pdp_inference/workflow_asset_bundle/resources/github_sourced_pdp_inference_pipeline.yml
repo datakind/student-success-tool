@@ -49,7 +49,7 @@ resources:
               - --course_dataset_validated_path
               - "{{tasks.data_ingestion.values.course_dataset_validated_path}}"
               - --toml_file_path
-              - "/Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/configuration_files/{{job.parameters.databricks_institution_name}}_{{job.parameters.model_name}}_configuration_file.toml"
+              - "/Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/inference_inputs/config.toml"
               - --custom_schemas_path
               - "{{job.parameters.custom_schemas_path}}"
           job_cluster_key: pdp-inference-pipeline-cluster
@@ -73,7 +73,7 @@ resources:
               - --input_table_path
               - "{{tasks.data_preprocessing.values.processed_dataset_path}}"
               - --input_schema_path
-              - /Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/configuration_files/schema.pbtxt # TODO(samroon2): Update once finalized.
+              - /Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/inference_inputs/schema.pbtxt # TODO(samroon2): Update once finalized.
               - --output_artifact_path
               - "{{tasks.data_ingestion.values.job_root_dir}}"
               - --environment
@@ -97,7 +97,7 @@ resources:
               - --input_table_path
               - "{{tasks.data_preprocessing.values.processed_dataset_path}}"
               - --input_schema_path
-              - /Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/configuration_files/schema.pbtxt # TODO(samroon2): Update once finalized.
+              - /Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/inference_inputs/schema.pbtxt # TODO(samroon2): Update once finalized.
               - --output_artifact_path
               - "{{tasks.data_ingestion.values.job_root_dir}}"
               - --environment
@@ -135,7 +135,7 @@ resources:
               - --DK_CC_EMAIL
               - "{{job.parameters.DK_CC_EMAIL}}"
               - --modeling_table_path
-              - "{{job.parameters.DB_workspace}}.{{job.parameters.databricks_institution_name}}_gold.modeling_table"
+              - "{{job.parameters.DB_workspace}}.{{job.parameters.databricks_institution_name}}_silver.{{job.parameters.databricks_institution_name}}_pdp_modeling_ar_deid"
               - --custom_schemas_path
               - "{{job.parameters.custom_schemas_path}}"
           job_cluster_key: pdp-inference-pipeline-cluster
@@ -212,19 +212,19 @@ resources:
         enabled: true
       parameters:
         - name: cohort_file_name
-          default: kentucky_state_uni_pdp_ar_deid_20241029000400.csv 
+          default: AO1600pdp_AO1600_AR_DEIDENTIFIED_STUDYID_20250522120554.csv
         - name: course_file_name
-          default: kentucky_state_uni_pdp_course_ar_deid_20241029000414_dedup.csv
+          default: AO1600pdp_AO1600_COURSE_LEVEL_AR_DEIDENTIFIED_STUDYID_20250522120554.csv
         - name: databricks_institution_name
-          default: kentucky_state_uni
+          default: midway_uni
         - name: db_run_id
           default: "{{job.run_id}}"
         - name: DB_workspace
           default: ${var.DB_workspace}
         - name: gcp_bucket_name
-          default: dev_6782b2f451f84c17ae6e14e918432b65
+          default: databricks-2052166062819251-unitycatalog
         - name: model_name
-          default: kentucky_state_uni_retention_end_of_first_year
+          default: midway_uni_graduation_4y_end_of_first_year
         - name: model_type
           default: sklearn
         - name: notification_email

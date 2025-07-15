@@ -26,8 +26,9 @@ import student_success_tool.dataio as dataio
 
 # import student_success_tool.preprocessing.targets.pdp as targets
 from student_success_tool import preprocessing
-from student_success_tool.preprocessing import selection
+from student_success_tool.preprocessing import selection, checkpoints
 from student_success_tool.configs.pdp import PDPProjectConfig
+
 
 # Disable mlflow autologging (due to Databricks issues during feature selection)
 mlflow.autolog(disable=True)
@@ -126,16 +127,7 @@ class DataProcessingTask:
         """
 
         # Read preprocessing features from config
-        min_passing_grade = self.cfg.preprocessing.features.min_passing_grade
-        min_num_credits_full_time = (
-            self.cfg.preprocessing.features.min_num_credits_full_time
-        )
-        course_level_pattern = self.cfg.preprocessing.features.course_level_pattern
-        core_terms = self.cfg.preprocessing.features.core_terms
-        key_course_subject_areas = (
-            self.cfg.preprocessing.features.key_course_subject_areas
-        )
-        key_course_ids = self.cfg.preprocessing.features.key_course_ids
+        checkpoint_type = self.cfg.preprocessing.checkpoint.type_
 
         # Read preprocessing target parameters from config
         student_criteria = self.cfg.preprocessing.selection.student_criteria
@@ -145,23 +137,36 @@ class DataProcessingTask:
         df_student_terms = preprocessing.pdp.make_student_term_dataset(
             df_cohort,
             df_course,
-            min_passing_grade=min_passing_grade,
-            min_num_credits_full_time=min_num_credits_full_time,
-            course_level_pattern=course_level_pattern,
-            core_terms=core_terms,
-            key_course_subject_areas=key_course_subject_areas,
-            key_course_ids=key_course_ids,
+            min_passing_grade=self.cfg.preprocessing.features.min_passing_grade,
+            min_num_credits_full_time=self.cfg.preprocessing.features.min_num_credits_full_time,
+            course_level_pattern=self.cfg.preprocessing.features.course_level_pattern,
+            core_terms=self.cfg.preprocessing.features.core_terms,
+            key_course_subject_areas=self.cfg.preprocessing.features.key_course_subject_areas,
+            key_course_ids=self.cfg.preprocessing.features.key_course_ids,
         )
-        eligible_students = selection.pdp.select_students_by_attributes(
+
+        selected_students = selection.pdp.select_students_by_attributes(
             df_student_terms, student_id_cols=student_id_col, **student_criteria
         )
-        max_term_rank = df_student_terms["term_rank"].max()
+        if checkpoint_type == "nth":
+            logging.info("Checkpoint type: nth")
+            df_ckpt = checkpoints.pdp.nth_student_terms(
+                df_student_terms,
+                n=self.cfg.preprocessing.checkpoint.n,
+                sort_cols=self.cfg.preprocessing.checkpoint.sort_cols,
+                include_cols=self.cfg.preprocessing.checkpoint.include_cols,
+                enrollment_year_col="year_of_enrollment_at_cohort_inst",
+                valid_enrollment_year=1,
+            )
+        elif checkpoint_type == "first_at_num_credits_earned":
+            logging.info("Checkpoint type: first_at_num_credits_earned")
+            df_ckpt = checkpoints.pdp.first_student_terms_at_num_credits_earned(
+                df_student_terms,
+                min_num_credits=self.cfg.preprocessing.checkpoint.min_num_credits,
+            )
 
         df_processed = pd.merge(
-            df_student_terms.loc[df_student_terms["term_rank"].eq(max_term_rank), :],
-            eligible_students,
-            on=student_id_col,
-            how="inner",
+            df_ckpt, pd.Series(selected_students.index), how="inner", on=student_id_col
         )
 
         df_processed = preprocessing.pdp.clean_up_labeled_dataset_cols_and_vals(
@@ -261,7 +266,7 @@ if __name__ == "__main__":
     try:
         sys.path.append(args.custom_schemas_path)
         sys.path.append(
-            f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs"
+            f"/Volumes/staging_sst_01/{args.databricks_institution_name}_gold/gold_volume/inference_inputs"
         )
         schemas = importlib.import_module("schemas")
         # schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
