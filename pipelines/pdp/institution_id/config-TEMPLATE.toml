@@ -30,6 +30,7 @@ framework = "sklearn"
 [preprocessing]
 splits = { train = 0.6, test = 0.2, validate = 0.2 }
 sample_class_weight = "balanced"
+include_pre_cohort_courses = false
 
 [preprocessing.features]
 min_passing_grade = 1.0
