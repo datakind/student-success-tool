@@ -27,7 +27,7 @@ def register_evaluation_sections(card, registry):
                 return str(aliases.get(group_key, card.format.friendly_case(group_key)))
         except Exception:
             pass
-        return card.format.friendly_case(group_key)
+        return str(card.format.friendly_case(group_key))
 
     def make_metric_table(path: str, title: str) -> t.Callable[[], str]:
         def metric_table():
