@@ -292,6 +292,58 @@ dbutils.data.summarize(df_cohort, precise=True)
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ### Checking for inconsistencies in raw files
+# MAGIC We want to check for inconsistencies to raise with NSC if need be before any converter functions get applied 
+
+# COMMAND ----------
+
+df_raw = (
+    pd.merge(
+        df_cohort,
+        df_course,
+        on=cfg.student_id_col,
+        how="outer",
+        suffixes=("_cohort", "_course"),
+        indicator=True,
+    )
+    # HACK: columns overlap on more than just student_guid
+    # let's rename/drop a relevant few for convenience
+    .rename(
+        columns={
+            "cohort_cohort": "cohort",
+            "cohort_term_cohort": "cohort_term",
+            "student_age_cohort": "student_age",
+            "race_cohort": "race",
+            "ethnicity_cohort": "ethnicity",
+            "gender_cohort": "gender",
+            "institution_id_cohort": "institution_id",
+        }
+    )
+    .drop(
+        columns=[
+            "cohort_course",
+            "cohort_term_course",
+            "student_age_course",
+            "race_course",
+            "ethnicity_course",
+            "gender_course",
+            "institution_id_course",
+        ]
+    )
+)
+df_raw["_merge"].value_counts()
+
+# COMMAND ----------
+
+# any patterns in mis-joined records?
+df_raw.loc[df_raw["_merge"] != "both", :]
+
+# which students don't appear in both datasets?
+df_raw.loc[df_raw["_merge"] != "both", cfg.student_id_col].unique().tolist()
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ### null values
 
 # COMMAND ----------
