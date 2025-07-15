@@ -2,7 +2,7 @@ import logging
 import typing as t
 import pandas as pd
 import collections
-from ..utils import utils
+from ...utils import utils
 
 LOGGER = logging.getLogger(__name__)
 
