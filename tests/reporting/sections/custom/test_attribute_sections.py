@@ -101,9 +101,13 @@ def test_outcome_section_fallback_on_missing_config(mock_card, caplog):
 
 
 def test_target_population_valid_dict(mock_card):
-    mock_card.cfg.preprocessing.selection.student_criteria_aliases = {
+    mock_card.cfg.preprocessing.selection.student_criteria = {
         "status": "full-time",
         "degree": ["bachelor's", "associate's"],
+    }
+    mock_card.cfg.preprocessing.selection.student_criteria_aliases = {
+        "status": "Enrollment Status",
+        "degree": "Degree Type",
     }
 
     registry = SectionRegistry()
@@ -111,6 +115,8 @@ def test_target_population_valid_dict(mock_card):
     rendered = registry.render_all()
     result = rendered["target_population_section"]
 
+    assert "- Enrollment Status" in result
+    assert "- Degree Type" in result
     assert "- Full-Time" in result
     assert "- Bachelor's" in result
     assert "- Associate's" in result
