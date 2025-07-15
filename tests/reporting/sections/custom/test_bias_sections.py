@@ -35,15 +35,34 @@ def test_bias_groups_section_with_valid_aliases(mock_card, registry):
     assert "- Ethnicity" in result
     assert "- Race" in result
 
-def test_bias_groups_section_with_missing_aliases(mock_card, mock_registry, caplog):
-    # Simulate missing or malformed config
+def test_bias_groups_section_with_aliases_that_need_friendlycase(mock_card):
+    mock_card.cfg.student_group_aliases = {
+        "firstgenflag": "first_generation_status",
+        "disabilityflag": "disability_status"
+    }
+
+    registry = SectionRegistry()
+    custom_bias_sections.register_bias_sections(mock_card, registry)
+
+    rendered = registry.render_all()
+    result = rendered["bias_groups_section"]
+
+    assert "- First Generation Status" in result
+    assert "- Disability Status" in result
+
+def test_bias_groups_section_with_missing_aliases(mock_card, caplog):
+    from student_success_tool.reporting.sections.custom import bias_sections as custom_bias_sections
+    from student_success_tool.reporting.sections.registry import SectionRegistry
+
     mock_card.cfg.student_group_aliases = None
+    mock_card.format.friendly_case.side_effect = lambda x: x.replace("_", " ").title()
 
-    custom_bias_sections.register_bias_sections(mock_card, mock_registry)
+    registry = SectionRegistry()
+    custom_bias_sections.register_bias_sections(mock_card, registry)
 
-    with caplog.at_level(logging.WARNING):
-        result = mock_registry.register.call_args_list[0][0][1]()
+    with caplog.at_level("WARNING"):
+        rendered = registry.render_all()
 
+    result = rendered["bias_groups_section"]
     assert "- Unable to extract student groups" in result
-
     assert any("Failed to extract student groups" in message for message in caplog.messages)

@@ -104,6 +104,9 @@ def test_target_population_empty(mock_card, caplog):
     rendered = registry.render_all()
     result = rendered["target_population_section"]
 
+    with caplog.at_level("WARNING"):
+        result = registry.render_all()["target_population_section"]
+
     assert "No specific student criteria were applied." in result
     assert "No student criteria" in caplog.text
 

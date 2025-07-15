@@ -82,7 +82,7 @@ def register_attribute_sections(card, registry):
             criteria = card.cfg.preprocessing.selection.student_criteria_aliases
 
             if not criteria:
-                LOGGER.info("No student criteria provided in config.")
+                LOGGER.warning("No student criteria provided in config.")
                 return "No specific student criteria were applied."
 
             if not isinstance(criteria, dict):
@@ -131,11 +131,9 @@ def register_attribute_sections(card, registry):
             base_message = "The model makes this prediction when the student has"
             if category == "credit":
                 return f"{base_message} earned {card.cfg.preprocessing.checkpoint.value} credits."
-            elif category == "year" or category == "term" or category == "semester":
-                if value > 1:
-                    return f"{base_message} completed {card.cfg.preprocessing.checkpoint.value} {unit}"
-                else:
-                    return f"{base_message} completed {card.cfg.preprocessing.checkpoint.value} {unit}s"
+            elif category in {"year", "term", "semester"}:
+                unit_label = unit + ("s" if value != 1 else "")
+                return f"{base_message} completed {value} {unit_label}"
         except (AttributeError, TypeError, KeyError) as e:
             LOGGER.warning(f"[checkpoint_section] Failed to generate checkpoint description: {e}")
-            return "Unable to retrieve model checkpoint information"    
+            return "Unable to retrieve model checkpoint information"
