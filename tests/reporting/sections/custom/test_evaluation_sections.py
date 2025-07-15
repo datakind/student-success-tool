@@ -56,6 +56,7 @@ def test_register_evaluation_sections_with_aliases(
     rendered = registry.render_all()
 
     assert "Gender Identity Bias Metrics" in rendered["evaluation_by_group_section"]
+    assert "Race/Ethnicity Bias Metrics" in rendered["evaluation_by_group_section"]
     assert "| Accuracy | 0.95 |" in rendered["evaluation_by_group_section"]
 
 
@@ -82,7 +83,7 @@ def test_register_evaluation_sections_fallback_to_friendly_case(
     custom_evaluation_sections.register_evaluation_sections(mock_card_without_aliases, registry)
     rendered = registry.render_all()
 
-    assert "Race/Ethnicity Bias Metrics" in rendered["evaluation_by_group_section"]
+    assert "Race Demo Bias Metrics" in rendered["evaluation_by_group_section"]
     assert "| Precision | 0.81 |" in rendered["evaluation_by_group_section"]
 
 
