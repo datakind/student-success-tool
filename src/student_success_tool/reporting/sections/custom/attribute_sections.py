@@ -83,7 +83,8 @@ def register_attribute_sections(card, registry):
         Produce a section for the target population.
         """
         try:
-            criteria = card.cfg.preprocessing.selection.student_criteria_aliases
+            criteria = card.cfg.preprocessing.selection.student_criteria
+            aliases = getattr(card.cfg.preprocessing.selection, "student_criteria_aliases", {})
 
             if not criteria:
                 LOGGER.warning("No student criteria provided in config.")
@@ -91,15 +92,14 @@ def register_attribute_sections(card, registry):
 
             if not isinstance(criteria, dict):
                 LOGGER.warning(
-                    f"Expected 'student_criteria_aliases' to be a dict but got {type(criteria).__name__}."
+                    f"Expected 'student_criteria' to be a dict but got {type(criteria).__name__}."
                 )
                 return "Student criteria should be provided as a dictionary."
 
             lines = []
             for k, v in criteria.items():
-                lines.append(
-                    f"{card.format.indent_level(2)}- {card.format.friendly_case(k)}"
-                )
+                label = aliases.get(k, card.format.friendly_case(k))
+                lines.append(f"{card.format.indent_level(2)}- {label}")
 
                 if isinstance(v, list):
                     for item in v:
