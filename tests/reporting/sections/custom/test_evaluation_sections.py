@@ -45,12 +45,9 @@ def test_register_evaluation_sections_with_aliases(
     df = pd.DataFrame({"Metric": ["Accuracy", "Recall"], "Value": [0.95, 0.88]})
     df.to_csv(csv_path, index=False)
 
-    mock_list_paths.side_effect = [
-        [
-            "group_metrics/bias_test_gender_metrics.csv",
-            "group_metrics/perf_test_gender_metrics.csv",
-        ],
-        [],
+    mock_list_paths.return_value = [
+        "group_metrics/bias_test_gender_metrics.csv",
+        "group_metrics/perf_test_gender_metrics.csv",
     ]
     mock_download.return_value = str(csv_path)
 
@@ -75,12 +72,9 @@ def test_register_evaluation_sections_fallback_to_friendly_case(
     df = pd.DataFrame({"Metric": ["Precision", "F1"], "Value": [0.81, 0.78]})
     df.to_csv(csv_path, index=False)
 
-    mock_list_paths.side_effect = [
-        [
-            "group_metrics/bias_test_race_demo_metrics.csv",
-            "group_metrics/perf_test_race_demo_metrics.csv",
-        ],
-        [],
+    mock_list_paths.return_value = [
+        "group_metrics/bias_test_race_demo_metrics.csv",
+        "group_metrics/perf_test_race_demo_metrics.csv",
     ]
     mock_download.return_value = str(csv_path)
 
@@ -101,12 +95,9 @@ def test_register_evaluation_sections_fallback_to_friendly_case(
 def test_register_evaluation_sections_handles_download_failure(
     mock_download, mock_list_paths, mock_card_with_aliases
 ):
-    mock_list_paths.side_effect = [
-        [
-            "group_metrics/bias_test_gender_metrics.csv",
-            "group_metrics/perf_test_gender_metrics.csv",
-        ],
-        [],
+    mock_list_paths.return_value = [
+        "group_metrics/bias_test_gender_metrics.csv",
+        "group_metrics/perf_test_gender_metrics.csv",
     ]
     mock_download.side_effect = Exception("Failed to download")
 
