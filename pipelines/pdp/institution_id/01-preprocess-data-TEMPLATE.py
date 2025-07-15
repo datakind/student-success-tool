@@ -135,7 +135,7 @@ df_student_terms.columns.tolist()
 # MAGIC %md
 # MAGIC ### Handling Pre-Cohort Courses
 # MAGIC
-# MAGIC Please rememeber to check with your schools during the data assessment call how they would like pre-cohort course records to be handled. 
+# MAGIC Please rememeber to check with your schools during the data assessment call how they would like pre-cohort course records to be handled.
 # MAGIC
 
 # COMMAND ----------
