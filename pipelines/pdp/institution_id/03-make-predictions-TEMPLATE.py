@@ -26,7 +26,7 @@
 # we need to manually install a certain version of pandas and scikit-learn in order
 # for our models to load and run properly.
 
-# %pip install "student-success-tool==0.3.4"
+# %pip install "student-success-tool==0.3.8"
 # %pip install "pandas==1.5.3"
 # %pip install "scikit-learn==1.3.0"
 
@@ -283,3 +283,51 @@ with mlflow.start_run() as run:
         automl_run_id=cfg.model.run_id,
         modeling_dataset_name=cfg.datasets.silver.modeling.table_path,
     )
+
+# COMMAND ----------
+
+shap_feature_importance = inference.generate_ranked_feature_table(
+    features=features, shap_values=df_shap_values[model_feature_names].to_numpy()
+)
+if shap_feature_importance is not None and features_table is not None:
+    shap_feature_importance[
+        ["readable_feature_name", "short_feature_desc", "long_feature_desc"]
+    ] = shap_feature_importance["Feature Name"].apply(
+        lambda feature: pd.Series(
+            inference._get_mapped_feature_name(feature, features_table, metadata=True)
+        )
+    )
+    shap_feature_importance.columns = shap_feature_importance.columns.str.replace(
+        " ", "_"
+    ).str.lower()
+shap_feature_importance
+
+
+# COMMAND ----------
+
+# save sample advisor output dataset
+dataio.write.to_delta_table(
+    shap_feature_importance,
+    f"staging_sst_01.{cfg.institution_id}_silver.training_{cfg.model.run_id}_shap_feature_importance",
+    spark_session=spark,
+)
+
+# COMMAND ----------
+
+support_score_distribution = inference.support_score_distribution_table(
+    df_serving=features,
+    unique_ids=unique_ids,
+    pred_probs=pred_probs,
+    shap_values=df_shap_values[model_feature_names],
+    inference_params=cfg.inference.dict(),
+)
+support_score_distribution
+
+# COMMAND ----------
+
+# save sample advisor output dataset
+dataio.write.to_delta_table(
+    support_score_distribution,
+    f"staging_sst_01.{cfg.institution_id}_silver.training_{cfg.model.run_id}_support_overview",
+    spark_session=spark,
+)

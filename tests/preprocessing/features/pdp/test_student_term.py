@@ -91,8 +91,8 @@ def test_sum_dummy_cols_by_group(df, grp_cols, agg_cols, exp):
                         "23-24 SPRING",
                     ],
                     "num_courses_course_type_CC|CD": [0, 3, 1, 0],
-                    "num_courses_course_level_0": [0, 0, 0, 0],
-                    "num_courses_course_level_1": [2, 1, 1, 1],
+                    "num_courses_course_id_eng_101": [0, 0, 0, 1],
+                    "num_courses_course_subject_area_51": [2, 1, 1, 1],
                 }
             ),
             ["student_guid", "term_id"],
@@ -105,9 +105,8 @@ def test_sum_dummy_cols_by_group(df, grp_cols, agg_cols, exp):
                         "23-24 FALL",
                         "23-24 SPRING",
                     ],
-                    "took_course_course_type_CC|CD": [False, True, True, False],
-                    "took_course_course_level_0": [False, False, False, False],
-                    "took_course_course_level_1": [True, True, True, True],
+                    "took_course_id_eng_101": [False, False, False, True],
+                    "took_course_subject_area_51": [True, True, True, True],
                 }
             ),
         ),
@@ -272,34 +271,39 @@ def test_year_of_enrollment_at_cohort_inst(df, ccol, tcol, exp):
                 {
                     "year_of_enrollment_at_cohort_inst": [1, 2, 3, 4],
                     "first_year_to_certificate_at_cohort_inst": [
-                        pd.NA,
-                        pd.NA,
-                        pd.NA,
-                        pd.NA,
-                    ],
-                    "first_year_to_associates_at_cohort_inst": [
-                        pd.NA,
-                        pd.NA,
-                        pd.NA,
-                        pd.NA,
-                    ],
-                    "first_year_to_associates_or_certificate_at_cohort_inst": [
-                        pd.NA,
-                        1,
                         2,
-                        4,
+                        pd.NA,
+                        2,
+                        2,
                     ],
-                    "first_year_to_bachelors_at_cohort_inst": [pd.NA, 3, pd.NA, 6],
+                    "years_to_latest_certificate_at_cohort_inst": [
+                        3,
+                        3,
+                        pd.NA,
+                        3,
+                    ],
+                    "first_year_to_certificate_at_other_inst": [
+                        2,
+                        pd.NA,
+                        2,
+                        2,
+                    ],
+                    "years_to_latest_certificate_at_other_inst": [
+                        3,
+                        3,
+                        pd.NA,
+                        3,
+                    ],
                 },
                 dtype="Int8",
             ),
             "cohort",
-            pd.Series([False, True, True, False], dtype="boolean"),
+            pd.Series([False, False, True, True], dtype="boolean"),
         ),
     ],
 )
-def test_student_has_prior_degree(df, inst, exp):
-    obs = student_term.student_has_prior_degree(df, inst=inst)
+def test_student_earned_certificate(df, inst, exp):
+    obs = student_term.student_earned_certificate(df, inst=inst)
     assert isinstance(obs, pd.Series) and not obs.empty
     assert pd.testing.assert_series_equal(obs, exp) is None
 

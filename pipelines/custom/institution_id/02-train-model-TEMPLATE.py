@@ -1,8 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # SST Train and Evaluate Model: [SCHOOL]
+# MAGIC # SST Train and Evaluate Model
 # MAGIC
-# MAGIC Third step in the process of transforming raw (PDP) data into actionable, data-driven insights for advisors: load a prepared modeling dataset, configure experiment tracking framework, then train and evaluate a predictive model.
+# MAGIC Third step in the process of transforming raw data into actionable, data-driven insights for advisors: load a prepared modeling dataset, configure experiment tracking framework, then train and evaluate a predictive model.
 # MAGIC
 # MAGIC ### References
 # MAGIC
@@ -10,7 +10,6 @@
 # MAGIC - [Databricks Classification with AutoML](https://docs.databricks.com/en/machine-learning/automl/classification.html)
 # MAGIC - [Databricks AutoML Python API reference](https://docs.databricks.com/en/machine-learning/automl/automl-api-reference.html)
 # MAGIC - [Databricks runtimes release notes](https://docs.databricks.com/en/release-notes/runtime/index.html)
-# MAGIC - TODO: [SCHOOL] website
 
 # COMMAND ----------
 
@@ -28,20 +27,16 @@
 # we need to manually install a certain version of pandas and scikit-learn in order
 # for our models to load and run properly.
 
-# %pip install "student-success-tool==0.3.4"
+# %pip install "student-success-tool==0.3.8"
 # %pip install "pandas==1.5.3"
 # %pip install "scikit-learn==1.3.0"
-
-# COMMAND ----------
-
-# MAGIC %restart_python
+# %restart_python
 
 # COMMAND ----------
 
 import logging
 
 import mlflow
-import sklearn.metrics
 from databricks.connect import DatabricksSession
 
 from student_success_tool import configs, dataio, modeling, utils
@@ -67,8 +62,10 @@ job_run_id = utils.databricks.get_db_widget_param("job_run_id", default="interac
 
 # COMMAND ----------
 
-# project configuration should be stored in a config file in TOML format
-cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig)
+# project configuration stored as a config file in TOML format
+cfg = dataio.read_config(
+    "./config-TEMPLATE.toml", schema=configs.custom.CustomProjectConfig
+)
 cfg
 
 # COMMAND ----------
@@ -79,7 +76,7 @@ cfg
 # COMMAND ----------
 
 df = dataio.read.from_delta_table(
-    cfg.datasets.silver.preprocessed.table_path,
+    cfg.datasets.silver["preprocessed"].table_path,
     spark_session=spark,
 )
 df.head()
@@ -140,7 +137,7 @@ df = df.loc[:, df_selected.columns]
 
 # save modeling dataset with all splits
 dataio.write.to_delta_table(
-    df, cfg.datasets.silver.modeling.table_path, spark_session=spark
+    df, cfg.datasets.silver["modeling"].table_path, spark_session=spark
 )
 
 # COMMAND ----------
@@ -212,16 +209,24 @@ else:
 # COMMAND ----------
 
 # Get top runs from experiment for evaluation
-top_run_ids = modeling.evaluation.get_top_run_ids(
+# Adjust optimization metrics & topn_runs_included as needed
+top_runs = modeling.evaluation.get_top_runs(
     experiment_id,
-    cfg.modeling.training.primary_metric,
-    cfg.modeling.evaluation.topn_runs_included,
+    optimization_metrics=[
+        "test_recall_score",
+        "val_recall_score",
+        "test_roc_auc",
+        "val_roc_auc",
+        "test_log_loss",
+        "val_log_loss",
+    ],
+    topn_runs_included=cfg.modeling.evaluation.topn_runs_included,
 )
-logging.info("top run ids = %s", top_run_ids)
+logging.info("top run ids = %s", top_runs)
 
 # COMMAND ----------
 
-for run_id in top_run_ids:
+for run_id in top_runs.values():
     with mlflow.start_run(run_id=run_id) as run:
         logging.info(
             "Run %s: Starting performance evaluation%s",
@@ -257,28 +262,3 @@ for run_id in top_run_ids:
             )
         logging.info("Run %s: Completed", run_id)
 mlflow.end_run()
-
-# COMMAND ----------
-
-# Optional: Evaluate permutation importance for top model
-# NOTE: This can be used for model diagnostics. It is NOT used
-# in our standard evaluation process and not pulled into model cards.
-model = mlflow.sklearn.load_model(f"runs:/{top_run_ids[0]}/model")
-result = modeling.evaluation.compute_feature_permutation_importance(
-    model,
-    df_features,
-    df[cfg.target_col],
-    scoring=sklearn.metrics.make_scorer(
-        sklearn.metrics.log_loss, greater_is_better=False
-    ),
-    sample_weight=df[cfg.sample_weight_col],
-    random_state=cfg.random_state,
-)
-ax = modeling.evaluation.plot_features_permutation_importance(
-    result, feature_cols=df_features.columns
-)
-fig = ax.get_figure()
-fig.tight_layout()
-# save plot via mlflow into experiment artifacts folder
-with mlflow.start_run(run_id=run_id) as run:
-    mlflow.log_figure(fig, "test_features_permutation_importance.png")
