@@ -87,33 +87,87 @@ class DummyDatasetsConfig:
         }
 
 
-class DummyCustomConfig:
-    def __init__(self):
-        self.institution_id = "custom_inst_id"
-        self.institution_name = "Custom Institution"
-        self.student_id_col = "student_id"
-        self.target_col = "target"
-        self.split_col = "split"
-        self.sample_weight_col = "sample_weight"
-        self.pred_col = "pred"
-        self.pred_prob_col = "pred_prob"
-        self.pos_label = True
-        self.random_state = 12345
-
-        self.student_group_cols = ["firstgenflag", "gender"]
-        self.student_group_aliases = {
+def make_custom_project_config():
+    return CustomProjectConfig(
+        institution_id="custom_inst_id",
+        institution_name="Custom Institution",
+        student_id_col="student_id",
+        target_col="target",
+        split_col="split",
+        sample_weight_col="sample_weight",
+        pred_col="pred",
+        pred_prob_col="pred_prob",
+        pos_label=True,
+        random_state=12345,
+        student_group_cols=["firstgenflag", "gender"],
+        student_group_aliases={
             "firstgenflag": "First-Generation Status",
             "gender": "Gender"
+        },
+        preprocessing={
+            "target": {
+                "category": "graduation",
+                "unit": "pct_completion",
+                "value": 150,
+                "params": {
+                    "intensity_time_limits": {
+                        "FULL-TIME": [3.0, "year"],
+                        "PART-TIME": [6.0, "year"]
+                    }
+                }
+            },
+            "checkpoint": {
+                "unit": "credit",
+                "value": 30,
+                "params": {
+                    "min_num_credits": 30.0,
+                    "num_credits_col": "cumulative_credits_earned"
+                }
+            },
+            "selection": {
+                "student_criteria_aliases": {
+                    "enrollment_type": "Enrollment Type",
+                    "credential_type_sought_year_1": "Type of Credential Sought in Year 1"
+                }
+            },
+            "features": {
+                "min_passing_grade": 1.0,
+                "min_num_credits_full_time": 12,
+                "course_level_pattern": "abc",
+                "key_course_subject_areas": ["24"],
+                "key_course_ids": ["ENGL101"]
+            }
+        },
+        modeling={
+            "feature_selection": {
+                "collinear_threshold": 10.0,
+                "low_variance_threshold": 0.0,
+                "incomplete_threshold": 0.5,
+            },
+            "training": {
+                "primary_metric": "log_loss",
+                "timeout_minutes": 10,
+            }
+        },
+        datasets={
+            "bronze": {
+                "raw_cohort": {"train_file_path": "dummy.csv"},
+                "raw_course": {"train_file_path": "dummy.csv"},
+            },
+            "silver": {
+                "modeling": {"train_table_path": "dummy"},
+                "model_features": {"predict_table_path": "dummy"},
+            },
+            "gold": {
+                "advisor_output": {"predict_table_path": "dummy"},
+            },
         }
-
-        self.modeling = DummyModelingConfig()
-        self.preprocessing = DummyPreprocessingConfig()
-        self.datasets = DummyDatasetsConfig()
+    )
 
 
 @pytest.fixture
 def dummy_custom_config():
-    return DummyCustomConfig()
+    return make_custom_project_config()
 
 
 @patch("student_success_tool.reporting.sections.registry.SectionRegistry.render_all")
