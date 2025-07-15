@@ -3,6 +3,8 @@ import pandas as pd
 import re
 from unittest.mock import patch
 from student_success_tool.reporting.model_card.base import ModelCard
+from student_success_tool.reporting.model_card.custom import CustomModelCard
+
 from student_success_tool.configs.custom import CustomProjectConfig
 
 
@@ -114,6 +116,7 @@ def dummy_custom_config():
     return DummyCustomConfig()
 
 
+@pytest.mark.parametrize("card_class", [CustomModelCard])
 @patch("student_success_tool.reporting.sections.registry.SectionRegistry.render_all")
 @patch("student_success_tool.reporting.model_card.base.ModelCard.collect_metadata")
 @patch("student_success_tool.reporting.model_card.base.ModelCard.load_model")
@@ -127,7 +130,7 @@ def test_custom_school_model_card_template_placeholders_filled(
     mock_render_all,
     dummy_custom_config,
 ):
-    card = ModelCard(config=dummy_custom_config, catalog="demo", model_name="custom_model")
+    card = CustomModelCard(config=dummy_custom_config, catalog="demo", model_name="custom_model")
 
     mock_load_model.side_effect = lambda: (
         setattr(card, "run_id", "dummy_run_id")
