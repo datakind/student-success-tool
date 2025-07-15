@@ -71,14 +71,14 @@ def register_evaluation_sections(card, registry):
         if csv_path.startswith("group_metrics/bias_test_") and csv_path.endswith(
             ".csv"
         ):
-            group = csv_path.removeprefix("group_metrics/bias_test_").removesuffix(
+            group = csv_path.replace("group_metrics/bias_test_").replace(
                 "_metrics.csv"
             )
             group_parts[group]["bias"] = csv_path
         elif csv_path.startswith("group_metrics/perf_test_") and csv_path.endswith(
             ".csv"
         ):
-            group = csv_path.removeprefix("group_metrics/perf_test_").removesuffix(
+            group = csv_path.replace("group_metrics/perf_test_").replace(
                 "_metrics.csv"
             )
             group_parts[group]["perf"] = csv_path

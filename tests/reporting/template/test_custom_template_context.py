@@ -30,7 +30,7 @@ class DummyTargetConfig:
         self.params = {
             "intensity_time_limits": {
                 "FULL-TIME": [3.0, "year"],
-                "PART-TIME": [6.0, "year"],
+                "PART-TIME": [6.0, "year"]
             }
         }
 
@@ -41,7 +41,7 @@ class DummyCheckpointConfig:
         self.value = 30
         self.params = {
             "min_num_credits": 30.0,
-            "num_credits_col": "cumulative_credits_earned",
+            "num_credits_col": "cumulative_credits_earned"
         }
 
 
@@ -49,7 +49,7 @@ class DummySelectionConfig:
     def __init__(self):
         self.student_criteria_aliases = {
             "enrollment_type": "Enrollment Type",
-            "credential_type_sought_year_1": "Type of Credential Sought in Year 1",
+            "credential_type_sought_year_1": "Type of Credential Sought in Year 1"
         }
 
 
@@ -100,7 +100,7 @@ def make_custom_project_config():
         student_group_cols=["firstgenflag", "gender"],
         student_group_aliases={
             "firstgenflag": "First-Generation Status",
-            "gender": "Gender",
+            "gender": "Gender"
         },
         preprocessing={
             "target": {
@@ -110,22 +110,22 @@ def make_custom_project_config():
                 "params": {
                     "intensity_time_limits": {
                         "FULL-TIME": [3.0, "year"],
-                        "PART-TIME": [6.0, "year"],
+                        "PART-TIME": [6.0, "year"]
                     }
-                },
+                }
             },
             "checkpoint": {
                 "unit": "credit",
                 "value": 30,
                 "params": {
                     "min_num_credits": 30.0,
-                    "num_credits_col": "cumulative_credits_earned",
-                },
+                    "num_credits_col": "cumulative_credits_earned"
+                }
             },
             "selection": {
                 "student_criteria_aliases": {
                     "enrollment_type": "Enrollment Type",
-                    "credential_type_sought_year_1": "Type of Credential Sought in Year 1",
+                    "credential_type_sought_year_1": "Type of Credential Sought in Year 1"
                 }
             },
             "features": {
@@ -133,8 +133,8 @@ def make_custom_project_config():
                 "min_num_credits_full_time": 12,
                 "course_level_pattern": "abc",
                 "key_course_subject_areas": ["24"],
-                "key_course_ids": ["ENGL101"],
-            },
+                "key_course_ids": ["ENGL101"]
+            }
         },
         modeling={
             "feature_selection": {
@@ -145,7 +145,7 @@ def make_custom_project_config():
             "training": {
                 "primary_metric": "log_loss",
                 "timeout_minutes": 10,
-            },
+            }
         },
         datasets={
             "bronze": {
@@ -159,7 +159,7 @@ def make_custom_project_config():
             "gold": {
                 "advisor_output": {"predict_table_path": "dummy"},
             },
-        },
+        }
     )
 
 
@@ -169,16 +169,10 @@ def dummy_custom_config():
 
 
 @patch("student_success_tool.reporting.sections.registry.SectionRegistry.render_all")
-@patch(
-    "student_success_tool.reporting.model_card.custom.CustomModelCard.collect_metadata"
-)
+@patch("student_success_tool.reporting.model_card.custom.CustomModelCard.collect_metadata")
 @patch("student_success_tool.reporting.model_card.custom.CustomModelCard.load_model")
-@patch(
-    "student_success_tool.reporting.model_card.custom.CustomModelCard.extract_training_data"
-)
-@patch(
-    "student_success_tool.reporting.model_card.custom.CustomModelCard.find_model_version"
-)
+@patch("student_success_tool.reporting.model_card.custom.CustomModelCard.extract_training_data")
+@patch("student_success_tool.reporting.model_card.custom.CustomModelCard.find_model_version")
 def test_custom_school_model_card_template_placeholders_filled(
     mock_find_version,
     mock_extract_data,
@@ -187,9 +181,7 @@ def test_custom_school_model_card_template_placeholders_filled(
     mock_render_all,
     dummy_custom_config,
 ):
-    card = CustomModelCard(
-        config=dummy_custom_config, catalog="demo", model_name="custom_model"
-    )
+    card = CustomModelCard(config=dummy_custom_config, catalog="demo", model_name="custom_model")
 
     mock_load_model.side_effect = lambda: (
         setattr(card, "run_id", "dummy_run_id")
@@ -199,23 +191,21 @@ def test_custom_school_model_card_template_placeholders_filled(
         or setattr(card, "modeling_data", pd.DataFrame({"student_id": []}))
     )
 
-    mock_collect_metadata.side_effect = lambda: card.context.update(
-        {
-            "model_version": "42",
-            "artifact_path": "custom/path",
-            "training_dataset_size": 200,
-            "number_of_features": 25,
-            "feature_importances_by_shap_plot": "![shap](shap.png)",
-            "test_confusion_matrix": "confusion_matrix.png",
-            "test_roc_curve": "roc_curve.png",
-            "test_calibration_curve": "calibration_curve.png",
-            "test_histogram": "histogram.png",
-            "model_comparison_plot": "comparison.png",
-            "collinearity_threshold": 10.0,
-            "low_variance_threshold": 0.0,
-            "incomplete_threshold": 0.5,
-        }
-    )
+    mock_collect_metadata.side_effect = lambda: card.context.update({
+        "model_version": "42",
+        "artifact_path": "custom/path",
+        "training_dataset_size": 200,
+        "number_of_features": 25,
+        "feature_importances_by_shap_plot": "![shap](shap.png)",
+        "test_confusion_matrix": "confusion_matrix.png",
+        "test_roc_curve": "roc_curve.png",
+        "test_calibration_curve": "calibration_curve.png",
+        "test_histogram": "histogram.png",
+        "model_comparison_plot": "comparison.png",
+        "collinearity_threshold": 10.0,
+        "low_variance_threshold": 0.0,
+        "incomplete_threshold": 0.5,
+    })
 
     mock_render_all.return_value = {
         "primary_metric_section": "Primary metric content",
