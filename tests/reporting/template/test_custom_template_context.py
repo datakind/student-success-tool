@@ -5,81 +5,129 @@ from unittest.mock import patch
 from student_success_tool.reporting.model_card.base import ModelCard
 from student_success_tool.configs.custom import CustomProjectConfig
 
-@pytest.fixture
-def custom_config():
-    return CustomProjectConfig(
-        institution_id="custom_inst_id",
-        institution_name="Custom Institution Name",
-        student_id_col="student_id",
-        target_col="target",
-        split_col="split",
-        sample_weight_col="sample_weight",
-        student_group_cols=["firstgenflag", "agegroup", "gender", "ethnicity", "disabilityflag"],
-        pred_col="pred",
-        pred_prob_col="pred_prob",
-        pos_label=True,
-        random_state=12345,
-        student_group_aliases={
-            "firstgenflag": "First-Generation Status",
-            "agegroup": "Age",
-            "gender": "Gender",
-            "ethnicity": "Ethnicity",
-            "disabilityflag": "Disability Status",
-        },
-        preprocessing={
-            "target": {
-                "category": "graduation",
-                "unit": "pct_completion",
-                "value": 150,
-                "params": {
-                    "intensity_time_limits": {
-                        "FULL-TIME": [3.0, "year"],
-                        "PART-TIME": [6.0, "year"]
-                    }
-                }
-            },
-            "checkpoint": {
-                "unit": "credit",
-                "value": 30,
-                "params": {
-                    "min_num_credits": 30.0,
-                    "num_credits_col": "cumulative_credits_earned"
-                }
-            },
-            "selection": {
-                "student_criteria_aliases": {
-                    "enrollment_type": "Enrollment Type",
-                    "credential_type_sought_year_1": "Type of Credential Sought in Year 1"
-                }
-            }
-        },
-        modeling={
-            "feature_selection": {
-                "incomplete_threshold": 0.5,
-                "low_variance_threshold": 0.0,
-                "collinear_threshold": 10.0
-            },
-            "training": {
-                "primary_metric": "log_loss",
-                "timeout_minutes": 10
+
+class DummyTrainingConfig:
+    def __init__(self):
+        self.primary_metric = "log_loss"
+        self.timeout_minutes = 10
+
+
+class DummyModelingConfig:
+    def __init__(self):
+        self.feature_selection = {
+            "collinear_threshold": 10.0,
+            "low_variance_threshold": 0.0,
+            "incomplete_threshold": 0.5,
+        }
+        self.training = DummyTrainingConfig()
+
+
+class DummyTargetConfig:
+    def __init__(self):
+        self.category = "graduation"
+        self.unit = "pct_completion"
+        self.value = 150
+        self.params = {
+            "intensity_time_limits": {
+                "FULL-TIME": [3.0, "year"],
+                "PART-TIME": [6.0, "year"]
             }
         }
-    )
+
+
+class DummyCheckpointConfig:
+    def __init__(self):
+        self.unit = "credit"
+        self.value = 30
+        self.params = {
+            "min_num_credits": 30.0,
+            "num_credits_col": "cumulative_credits_earned"
+        }
+
+
+class DummySelectionConfig:
+    def __init__(self):
+        self.student_criteria_aliases = {
+            "enrollment_type": "Enrollment Type",
+            "credential_type_sought_year_1": "Type of Credential Sought in Year 1"
+        }
+
+
+class DummyFeaturesConfig:
+    def __init__(self):
+        self.min_passing_grade = 1.0
+        self.min_num_credits_full_time = 12
+        self.course_level_pattern = "abc"
+        self.key_course_subject_areas = ["24"]
+        self.key_course_ids = ["ENGL101"]
+
+
+class DummyPreprocessingConfig:
+    def __init__(self):
+        self.selection = DummySelectionConfig()
+        self.checkpoint = DummyCheckpointConfig()
+        self.target = DummyTargetConfig()
+        self.features = DummyFeaturesConfig()
+
+
+class DummyDatasetsConfig:
+    def __init__(self):
+        self.bronze = {
+            "raw_cohort": {"train_file_path": "dummy.csv"},
+            "raw_course": {"train_file_path": "dummy.csv"},
+        }
+        self.silver = {
+            "modeling": {"train_table_path": "dummy"},
+            "model_features": {"predict_table_path": "dummy"},
+        }
+        self.gold = {
+            "advisor_output": {"predict_table_path": "dummy"},
+        }
+
+
+class DummyCustomConfig:
+    def __init__(self):
+        self.institution_id = "custom_inst_id"
+        self.institution_name = "Custom Institution"
+        self.student_id_col = "student_id"
+        self.target_col = "target"
+        self.split_col = "split"
+        self.sample_weight_col = "sample_weight"
+        self.pred_col = "pred"
+        self.pred_prob_col = "pred_prob"
+        self.pos_label = True
+        self.random_state = 12345
+
+        self.student_group_cols = ["firstgenflag", "gender"]
+        self.student_group_aliases = {
+            "firstgenflag": "First-Generation Status",
+            "gender": "Gender"
+        }
+
+        self.modeling = DummyModelingConfig()
+        self.preprocessing = DummyPreprocessingConfig()
+        self.datasets = DummyDatasetsConfig()
+
+
+@pytest.fixture
+def dummy_custom_config():
+    return DummyCustomConfig()
+
 
 @patch("student_success_tool.reporting.sections.registry.SectionRegistry.render_all")
 @patch("student_success_tool.reporting.model_card.base.ModelCard.collect_metadata")
 @patch("student_success_tool.reporting.model_card.base.ModelCard.load_model")
 @patch("student_success_tool.reporting.model_card.base.ModelCard.extract_training_data")
 @patch("student_success_tool.reporting.model_card.base.ModelCard.find_model_version")
-def test_custom_school_model_card_context_population(
+def test_custom_school_model_card_template_placeholders_filled(
     mock_find_version,
     mock_extract_data,
     mock_load_model,
     mock_collect_metadata,
     mock_render_all,
-    custom_config,
+    dummy_custom_config,
 ):
-    card = ModelCard(config=custom_config, catalog="demo", model_name="custom_model")
+    card = ModelCard(config=dummy_custom_config, catalog="demo", model_name="custom_model")
 
     mock_load_model.side_effect = lambda: (
         setattr(card, "run_id", "dummy_run_id")
@@ -113,7 +161,7 @@ def test_custom_school_model_card_context_population(
         "evaluation_by_group_section": "Group eval",
         "logo": "logo.png",
         "target_population_section": "Target pop details",
-        "institution_name": "Custom Institution Name",
+        "institution_name": "Custom Institution",
         "sample_weight_section": "Sample weighting",
         "data_split_table": "Split details",
         "bias_groups_section": "Bias groups",
