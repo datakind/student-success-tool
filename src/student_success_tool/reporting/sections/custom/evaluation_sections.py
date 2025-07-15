@@ -71,17 +71,18 @@ def register_evaluation_sections(card, registry):
         if csv_path.startswith("group_metrics/bias_test_") and csv_path.endswith(
             ".csv"
         ):
-            group = csv_path.replace("group_metrics/bias_test_").replace(
-                "_metrics.csv"
+            group_name = csv_path.replace("group_metrics/bias_test_", "").replace(
+                "_metrics.csv", ""
             )
-            group_parts[group]["bias"] = csv_path
-        elif csv_path.startswith("group_metrics/perf_test_") and csv_path.endswith(
+            group_parts[group_name]["bias"] = csv_path
+
+        if csv_path.startswith("group_metrics/perf_test_") and csv_path.endswith(
             ".csv"
         ):
-            group = csv_path.replace("group_metrics/perf_test_").replace(
-                "_metrics.csv"
+            group_name = csv_path.replace("group_metrics/perf_test_", "").replace(
+                "_metrics.csv", ""
             )
-            group_parts[group]["perf"] = csv_path
+            group_parts[group_name]["perf"] = csv_path
 
     # Register group-level evaluation tables
     for group, parts in group_parts.items():
