@@ -54,7 +54,9 @@ def test_register_evaluation_sections_with_aliases(
     mock_download.return_value = str(csv_path)
 
     registry = SectionRegistry()
-    custom_evaluation_sections.register_evaluation_sections(mock_card_with_aliases, registry)
+    custom_evaluation_sections.register_evaluation_sections(
+        mock_card_with_aliases, registry
+    )
     rendered = registry.render_all()
 
     assert "Gender Identity Bias Metrics" in rendered["evaluation_by_group_section"]
@@ -82,7 +84,9 @@ def test_register_evaluation_sections_fallback_to_friendly_case(
     mock_download.return_value = str(csv_path)
 
     registry = SectionRegistry()
-    custom_evaluation_sections.register_evaluation_sections(mock_card_without_aliases, registry)
+    custom_evaluation_sections.register_evaluation_sections(
+        mock_card_without_aliases, registry
+    )
     rendered = registry.render_all()
 
     assert "Race Demo Bias Metrics" in rendered["evaluation_by_group_section"]
@@ -105,7 +109,9 @@ def test_register_evaluation_sections_handles_download_failure(
     mock_download.side_effect = Exception("Failed to download")
 
     registry = SectionRegistry()
-    custom_evaluation_sections.register_evaluation_sections(mock_card_with_aliases, registry)
+    custom_evaluation_sections.register_evaluation_sections(
+        mock_card_with_aliases, registry
+    )
     rendered = registry.render_all()
 
     assert "Could not load data." in rendered["evaluation_by_group_section"]
