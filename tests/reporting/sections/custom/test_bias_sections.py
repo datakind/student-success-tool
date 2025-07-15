@@ -4,15 +4,16 @@ from student_success_tool.reporting.sections.registry import SectionRegistry
 from student_success_tool.reporting.sections.custom import (
     bias_sections as custom_bias_sections,
 )
-from student_success_tool.reporting.utils.formatting import friendly_case
+from student_success_tool.reporting.utils.formatting import Formatting
 import logging
 
 
 @pytest.fixture
 def mock_card():
     card = MagicMock()
-    card.format.indent_level.side_effect = lambda level: "  " * level
-    card.format.friendly_case.side_effect = friendly_case  # ✅ Use real function
+    formatter = Formatting()
+    card.format.indent_level.side_effect = formatter.indent_level
+    card.format.friendly_case.side_effect = formatter.friendly_case
     return card
 
 @pytest.fixture
