@@ -2,7 +2,7 @@ name: inference-integration-deployment
 
 on:
 # dev or main here to work out
-  pull-request:
+  pull_request:
     branches:
       - develop
 
