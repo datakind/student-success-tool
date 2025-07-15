@@ -84,7 +84,9 @@ def register_attribute_sections(card, registry):
         """
         try:
             criteria = card.cfg.preprocessing.selection.student_criteria
-            aliases = getattr(card.cfg.preprocessing.selection, "student_criteria_aliases", {})
+            aliases = getattr(
+                card.cfg.preprocessing.selection, "student_criteria_aliases", {}
+            )
 
             if not criteria:
                 LOGGER.warning("No student criteria provided in config.")
