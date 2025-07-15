@@ -20,7 +20,6 @@ from typing import List, Optional
 import sys
 import importlib
 
-import functools as ft
 import mlflow
 import numpy as np
 import pandas as pd

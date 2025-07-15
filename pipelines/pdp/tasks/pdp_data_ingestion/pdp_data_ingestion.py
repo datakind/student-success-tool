@@ -20,7 +20,6 @@ from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 from google.cloud import storage
 
-import student_success_tool
 from student_success_tool.dataio import schemas
 import student_success_tool.dataio as dataio
 import importlib
