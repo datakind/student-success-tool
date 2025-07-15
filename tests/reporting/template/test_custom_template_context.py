@@ -116,7 +116,6 @@ def dummy_custom_config():
     return DummyCustomConfig()
 
 
-@pytest.mark.parametrize("card_class", [CustomModelCard])
 @patch("student_success_tool.reporting.sections.registry.SectionRegistry.render_all")
 @patch("student_success_tool.reporting.model_card.base.ModelCard.collect_metadata")
 @patch("student_success_tool.reporting.model_card.base.ModelCard.load_model")
