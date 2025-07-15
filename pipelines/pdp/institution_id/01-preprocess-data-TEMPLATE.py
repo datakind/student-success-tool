@@ -141,9 +141,10 @@ df_student_terms.columns.tolist()
 # COMMAND ----------
 
 # drop pre-cohort course records (ONLY IF REQUESTED BY SCHOOL)
-# df_student_terms = df_student_terms[
-#     df_student_terms["term_is_pre_cohort"] == False
-# ]
+# if cfg.preprocessing.include_pre_cohort_courses == False:  
+#   df_student_terms = df_student_terms[
+#       df_student_terms["term_is_pre_cohort"] == False
+#   ]
 
 # COMMAND ----------
 
