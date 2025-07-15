@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 0.3.9 (2025-07)
+- Add pre-cohort courses to config (PR 258)
+
 ## 0.3.8 (2025-07)
 - Patching up gold volume path due to Azure/GCP naming differences, keeping GCP version (PR 249)
 
