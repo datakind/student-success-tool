@@ -48,6 +48,8 @@ def test_register_evaluation_sections_with_aliases(
     mock_list_paths.return_value = [
         "group_metrics/bias_test_gender_metrics.csv",
         "group_metrics/perf_test_gender_metrics.csv",
+        "group_metrics/bias_test_race_demo_metrics.csv",
+        "group_metrics/perf_test_race_demo_metrics.csv",
     ]
     mock_download.return_value = str(csv_path)
 
