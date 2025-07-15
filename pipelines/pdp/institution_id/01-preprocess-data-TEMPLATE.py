@@ -141,6 +141,7 @@ df_student_terms.columns.tolist()
 # COMMAND ----------
 
 # We usually drop pre-cohort course records; If school requests otherwise, please set include_pre_cohort_courses in your config to TRUE, re-load the config, THEN run this cell!
+
 if cfg.preprocessing.include_pre_cohort_courses == False:
     df_student_terms = df_student_terms[
         df_student_terms["term_is_pre_cohort"] == False
