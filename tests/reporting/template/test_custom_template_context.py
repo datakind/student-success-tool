@@ -3,11 +3,11 @@ import pandas as pd
 import re
 from unittest.mock import patch
 from student_success_tool.reporting.model_card.base import ModelCard
-from student_success_tool.configs.custom import CustomProjectConfig  # assuming you have this
+from student_success_tool.configs.custom import CustomProjectConfig
 
 @pytest.fixture
 def custom_config():
-    return CustomSchoolConfig(
+    return CustomProjectConfig(
         institution_id="custom_inst_id",
         institution_name="Custom Institution Name",
         student_id_col="student_id",
