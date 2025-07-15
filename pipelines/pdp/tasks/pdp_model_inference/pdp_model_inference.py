@@ -228,7 +228,9 @@ class ModelInferenceTask:
                 .fillna(train_mode)
                 .loc[:, model_feature_names]
             )
-            logging.info(f"Object dtype columns: {df_ref.select_dtypes(include=['object']).columns.tolist()}")
+            logging.info(
+                f"Object dtype columns: {df_ref.select_dtypes(include=['object']).columns.tolist()}"
+            )
 
             ref_dtypes = df_ref.dtypes.apply(lambda dt: dt.name).to_dict()
 
@@ -253,10 +255,10 @@ class ModelInferenceTask:
                     pd.DataFrame(x, columns=model_feature_names).astype(ref_dtypes),
                     model=model,
                     feature_names=model_feature_names,
-                    pos_label=self.cfg.pos_label
+                    pos_label=self.cfg.pos_label,
                 ),
                 df_ref.astype(ref_dtypes),
-                link="identity"
+                link="identity",
             )
 
             # explainer = shap.explainers.KernelExplainer(
@@ -332,8 +334,8 @@ class ModelInferenceTask:
                 pred_probs,
                 shap_values,
                 inference_params=inference_params,
-                features_table=features_table,   
-                model_feature_names= model_feature_names,
+                features_table=features_table,
+                model_feature_names=model_feature_names,
             )
 
             return result
@@ -399,7 +401,9 @@ class ModelInferenceTask:
 
     def run(self):
         """Executes the model inference pipeline."""
-        df_processed = dataio.from_delta_table(self.args.processed_dataset_path, spark_session=self.spark_session)
+        df_processed = dataio.from_delta_table(
+            self.args.processed_dataset_path, spark_session=self.spark_session
+        )
         df_processed = df_processed[:30]
         unique_ids = df_processed[self.cfg.student_id_col]
 
@@ -431,9 +435,11 @@ class ModelInferenceTask:
 
         if shap_values is not None:  # Proceed only if SHAP values were calculated
             logging.info(f"now cfg.model.run_id = {self.cfg.model.run_id}")
-            logging.info(f"now cfg.model.experiment_id = {self.cfg.model.experiment_id}")
+            logging.info(
+                f"now cfg.model.experiment_id = {self.cfg.model.experiment_id}"
+            )
             with mlflow.start_run(run_id=self.cfg.model.run_id):
-                #full_model_name = f"{self.args.DB_workspace}.{self.args.databricks_institution_name}_gold.{self.args.model_name}"
+                # full_model_name = f"{self.args.DB_workspace}.{self.args.databricks_institution_name}_gold.{self.args.model_name}"
                 # --- SHAP Summary Plot ---
                 shap_fig = plot_shap_beeswarm(shap_values)
 
@@ -441,7 +447,7 @@ class ModelInferenceTask:
                 inference_features_with_most_impact = self.top_n_features(
                     df_processed[model_feature_names], unique_ids, shap_values.values
                 )
-                #print or log the inference_features_with_most_impact
+                # print or log the inference_features_with_most_impact
                 logging.info(
                     "Inference features with most impact:\n%s",
                     inference_features_with_most_impact,
@@ -452,27 +458,25 @@ class ModelInferenceTask:
                 )
                 # # support_overview TABLE
                 support_overview_table = self.support_score_distribution(
-                    df_processed[model_feature_names], unique_ids, df_predicted, shap_values, model_feature_names
+                    df_processed[model_feature_names],
+                    unique_ids,
+                    df_predicted,
+                    shap_values,
+                    model_feature_names,
                 )
-                if (
-                    inference_features_with_most_impact is None
-                ):
+                if inference_features_with_most_impact is None:
                     msg = "Inference features with most impact is empty: cannot write inference summary tables."
                     logging.error(msg)
                     raise Exception(msg)
-                if (
-                    shap_feature_importance is None
-                ):
+                if shap_feature_importance is None:
                     msg = "Shap Feature Importance is empty: cannot write inference summary tables."
                     logging.error(msg)
                     raise Exception(msg)
-                if (
-                    support_overview_table is None
-                ):
+                if support_overview_table is None:
                     msg = "Support overview table is empty: cannot write inference summary tables."
                     logging.error(msg)
                     raise Exception(msg)
-                #if (
+                # if (
                 #     inference_features_with_most_impact is None
                 #     or shap_feature_importance is None
                 #     or support_overview_table is None
@@ -496,7 +500,11 @@ class ModelInferenceTask:
 
                 # Shap Result Table
                 shap_results = self.get_top_features_for_display(
-                    df_processed[model_feature_names], unique_ids, df_predicted, shap_values, model_feature_names
+                    df_processed[model_feature_names],
+                    unique_ids,
+                    df_predicted,
+                    shap_values,
+                    model_feature_names,
                 )
 
                 # --- Save Results to ext/ folder in Gold volume. ---
@@ -512,11 +520,13 @@ class ModelInferenceTask:
 
                     # Write the DataFrame to CSV in the specified volume
                     spark_df = self.spark_session.createDataFrame(shap_results)
-                    spark_df.coalesce(1).write.format("csv").option("header", "true").mode(
-                        "overwrite"
-                    ).save(result_path + "inference_output")
+                    spark_df.coalesce(1).write.format("csv").option(
+                        "header", "true"
+                    ).mode("overwrite").save(result_path + "inference_output")
                     # Write the SHAP chart png to the volume
-                    shap_fig.savefig(result_path + "shap_chart.png", bbox_inches="tight")
+                    shap_fig.savefig(
+                        result_path + "shap_chart.png", bbox_inches="tight"
+                    )
                 else:
                     logging.error(
                         "Empty Shap results, cannot create the SHAP chart and table"

@@ -132,7 +132,7 @@ class DataProcessingTask:
         # Read preprocessing target parameters from config
         student_criteria = self.cfg.preprocessing.selection.student_criteria
         student_id_col = self.cfg.student_id_col
-        
+
         # Create student-term dataset
         df_student_terms = preprocessing.pdp.make_student_term_dataset(
             df_cohort,
@@ -149,20 +149,20 @@ class DataProcessingTask:
             df_student_terms, student_id_cols=student_id_col, **student_criteria
         )
         if checkpoint_type == "nth":
-            logging.info('Checkpoint type: nth')
+            logging.info("Checkpoint type: nth")
             df_ckpt = checkpoints.pdp.nth_student_terms(
                 df_student_terms,
-                n=self.cfg.preprocessing.checkpoint.n, 
+                n=self.cfg.preprocessing.checkpoint.n,
                 sort_cols=self.cfg.preprocessing.checkpoint.sort_cols,
                 include_cols=self.cfg.preprocessing.checkpoint.include_cols,
                 enrollment_year_col="year_of_enrollment_at_cohort_inst",
-                valid_enrollment_year=1
+                valid_enrollment_year=1,
             )
         elif checkpoint_type == "first_at_num_credits_earned":
-            logging.info('Checkpoint type: first_at_num_credits_earned')
+            logging.info("Checkpoint type: first_at_num_credits_earned")
             df_ckpt = checkpoints.pdp.first_student_terms_at_num_credits_earned(
                 df_student_terms,
-                min_num_credits = self.cfg.preprocessing.checkpoint.min_num_credits,
+                min_num_credits=self.cfg.preprocessing.checkpoint.min_num_credits,
             )
 
         df_processed = pd.merge(

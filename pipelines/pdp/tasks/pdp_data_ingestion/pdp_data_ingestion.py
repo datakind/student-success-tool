@@ -20,7 +20,7 @@ from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 from google.cloud import storage
 
-import student_success_tool 
+import student_success_tool
 from student_success_tool.dataio import schemas
 import student_success_tool.dataio as dataio
 import importlib
@@ -297,7 +297,12 @@ if __name__ == "__main__":
     sys.path.append(
         f"/Volumes/staging_sst_01/{args.databricks_institution_name}_gold/gold_volume/inference_inputs"
     )
-    logging.info("Files in the inference inputs path: %s", os.listdir(f"/Volumes/staging_sst_01/{args.databricks_institution_name}_gold/gold_volume/inference_inputs"))
+    logging.info(
+        "Files in the inference inputs path: %s",
+        os.listdir(
+            f"/Volumes/staging_sst_01/{args.databricks_institution_name}_gold/gold_volume/inference_inputs"
+        ),
+    )
     try:
         converter_func = importlib.import_module("dataio")
         cohort_converter_func = converter_func.converter_func_cohort
@@ -311,13 +316,18 @@ if __name__ == "__main__":
         logging.info("Running task with custom course converter func")
     except Exception:
         course_converter_func = None
-        logging.info("Running task default course converter func") 
+        logging.info("Running task default course converter func")
     try:
         schemas = importlib.import_module("schemas")
         logging.info("Running task with custom schema")
     except Exception:
         from student_success_tool.dataio.schemas import pdp as schemas
+
         logging.info("Running task with default schema")
 
-    task = DataIngestionTask(args, cohort_converter_func=cohort_converter_func, course_converter_func=course_converter_func)
+    task = DataIngestionTask(
+        args,
+        cohort_converter_func=cohort_converter_func,
+        course_converter_func=course_converter_func,
+    )
     task.run()
