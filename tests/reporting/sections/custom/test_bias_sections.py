@@ -15,9 +15,11 @@ def mock_card():
     card.format.friendly_case.side_effect = formatter.friendly_case
     return card
 
+
 @pytest.fixture
 def registry():
     return SectionRegistry()
+
 
 def test_bias_groups_section_with_valid_aliases(mock_card, registry):
     mock_card.cfg.student_group_aliases = {
@@ -33,16 +35,20 @@ def test_bias_groups_section_with_valid_aliases(mock_card, registry):
     result = rendered["bias_groups_section"]
     print(result)
 
-    assert "- Our assessment for FNR Parity was conducted across the following student groups." in result
+    assert (
+        "- Our assessment for FNR Parity was conducted across the following student groups."
+        in result
+    )
     assert "- First-Generation Status" in result
     assert "- Gender" in result
     assert "- Ethnicity" in result
     assert "- Race" in result
 
+
 def test_bias_groups_section_with_aliases_that_need_friendlycase(mock_card):
     mock_card.cfg.student_group_aliases = {
         "firstgenflag": "first_generation_status",
-        "disabilityflag": "disability_status"
+        "disabilityflag": "disability_status",
     }
 
     registry = SectionRegistry()
@@ -55,8 +61,11 @@ def test_bias_groups_section_with_aliases_that_need_friendlycase(mock_card):
     assert "- First Generation Status" in result
     assert "- Disability Status" in result
 
+
 def test_bias_groups_section_with_missing_aliases(mock_card, caplog):
-    from student_success_tool.reporting.sections.custom import bias_sections as custom_bias_sections
+    from student_success_tool.reporting.sections.custom import (
+        bias_sections as custom_bias_sections,
+    )
     from student_success_tool.reporting.sections.registry import SectionRegistry
 
     mock_card.cfg.student_group_aliases = None
@@ -70,4 +79,6 @@ def test_bias_groups_section_with_missing_aliases(mock_card, caplog):
 
     result = rendered["bias_groups_section"]
     assert "- Unable to extract student groups" in result
-    assert any("Failed to extract student groups" in message for message in caplog.messages)
+    assert any(
+        "Failed to extract student groups" in message for message in caplog.messages
+    )

@@ -52,7 +52,9 @@ def register_attribute_sections(card, registry):
 
                 # Customize phrasing based on unit
                 if unit == "credit":
-                    timeframe_phrase = f"in achieving {unit_str} required for graduation"
+                    timeframe_phrase = (
+                        f"in achieving {unit_str} required for graduation"
+                    )
                 elif unit == "year":
                     timeframe_phrase = f"within {unit_str}"
                 elif unit in {"term", "semester"}:
@@ -70,7 +72,9 @@ def register_attribute_sections(card, registry):
             return description
 
         except (AttributeError, TypeError, KeyError) as e:
-            LOGGER.warning(f"[outcome_section] Failed to generate outcome description: {e}")
+            LOGGER.warning(
+                f"[outcome_section] Failed to generate outcome description: {e}"
+            )
             return "Unable to retrieve model outcome information"
 
     @registry.register("target_population_section")
@@ -114,9 +118,11 @@ def register_attribute_sections(card, registry):
             return description
 
         except Exception:
-            LOGGER.error("Unable to retrieve student criteria configuration in config", exc_info=True)
+            LOGGER.error(
+                "Unable to retrieve student criteria configuration in config",
+                exc_info=True,
+            )
             return f"{card.format.indent_level(1)}- Student criteria configuration was unavailable."
-
 
     @registry.register("checkpoint_section")
     def checkpoint():
@@ -135,5 +141,7 @@ def register_attribute_sections(card, registry):
                 unit_label = unit + ("s" if value != 1 else "")
                 return f"{base_message} completed {value} {unit_label}"
         except (AttributeError, TypeError, KeyError) as e:
-            LOGGER.warning(f"[checkpoint_section] Failed to generate checkpoint description: {e}")
+            LOGGER.warning(
+                f"[checkpoint_section] Failed to generate checkpoint description: {e}"
+            )
             return "Unable to retrieve model checkpoint information"

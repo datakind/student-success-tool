@@ -14,10 +14,16 @@ def register_evaluation_sections(card, registry):
     mlflow artifact.
     """
     performance_section = [f"{card.format.header_level(4)}Model Performance\n"]
-    split_artifacts = utils.list_paths_in_directory(run_id=card.run_id, directory="metrics")
+    split_artifacts = utils.list_paths_in_directory(
+        run_id=card.run_id, directory="metrics"
+    )
 
-    evaluation_sections = [f"{card.format.header_level(4)}Evaluation Metrics by Student Group\n"]
-    group_eval_artifacts = utils.list_paths_in_directory(run_id=card.run_id, directory="group_metrics")
+    evaluation_sections = [
+        f"{card.format.header_level(4)}Evaluation Metrics by Student Group\n"
+    ]
+    group_eval_artifacts = utils.list_paths_in_directory(
+        run_id=card.run_id, directory="group_metrics"
+    )
 
     def resolve_student_group_label(card: t.Any, group_key: str) -> str:
         """Convert internal group name to user-friendly alias if available."""
@@ -51,7 +57,9 @@ def register_evaluation_sections(card, registry):
                 )
 
             except Exception as e:
-                LOGGER.warning(f"Could not load evaluation metrics for {title}: {str(e)}")
+                LOGGER.warning(
+                    f"Could not load evaluation metrics for {title}: {str(e)}"
+                )
                 return f"{card.format.bold(f'{title} Metrics')}\n\nCould not load data."
 
         return metric_table
@@ -60,11 +68,19 @@ def register_evaluation_sections(card, registry):
     group_parts = collections.defaultdict(dict)
 
     for csv_path in group_eval_artifacts:
-        if csv_path.startswith("group_metrics/bias_test_") and csv_path.endswith(".csv"):
-            group = csv_path.removeprefix("group_metrics/bias_test_").removesuffix("_metrics.csv")
+        if csv_path.startswith("group_metrics/bias_test_") and csv_path.endswith(
+            ".csv"
+        ):
+            group = csv_path.removeprefix("group_metrics/bias_test_").removesuffix(
+                "_metrics.csv"
+            )
             group_parts[group]["bias"] = csv_path
-        elif csv_path.startswith("group_metrics/perf_test_") and csv_path.endswith(".csv"):
-            group = csv_path.removeprefix("group_metrics/perf_test_").removesuffix("_metrics.csv")
+        elif csv_path.startswith("group_metrics/perf_test_") and csv_path.endswith(
+            ".csv"
+        ):
+            group = csv_path.removeprefix("group_metrics/perf_test_").removesuffix(
+                "_metrics.csv"
+            )
             group_parts[group]["perf"] = csv_path
 
     # Register group-level evaluation tables

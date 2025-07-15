@@ -32,21 +32,42 @@ def test_development_note_without_version(mock_card):
     custom_attribute_sections.register_attribute_sections(mock_card, registry)
     rendered = registry.render_all()
     result = rendered["development_note_section"]
-    
+
     assert "Model Version" not in result
     assert "Developed by DataKind" in result
+
 
 @pytest.mark.parametrize(
     "category,unit,value,expected_snippet",
     [
-        ("retention", None, None, "non-retention into the student's second academic year"),
+        (
+            "retention",
+            None,
+            None,
+            "non-retention into the student's second academic year",
+        ),
         ("graduation", "year", 2, "not graduating on time within 2 years"),
-        ("graduation", "credit", 30, "not graduating on time in achieving 30 credits required for graduation"),
+        (
+            "graduation",
+            "credit",
+            30,
+            "not graduating on time in achieving 30 credits required for graduation",
+        ),
         ("graduation", "term", 1, "not graduating on time within 1 term"),
         ("graduation", "semester", 3, "not graduating on time within 3 semesters"),
-        ("graduation", "pct_completion", 85, "not graduating on time at 85% completion"),
-        ("graduation", "custom_metric", 5, "not graduating on time within 5 custom_metric"),  # fallback
-    ]
+        (
+            "graduation",
+            "pct_completion",
+            85,
+            "not graduating on time at 85% completion",
+        ),
+        (
+            "graduation",
+            "custom_metric",
+            5,
+            "not graduating on time within 5 custom_metric",
+        ),  # fallback
+    ],
 )
 def test_outcome_section_variants(mock_card, category, unit, value, expected_snippet):
     mock_card.cfg.preprocessing.target.category = category
@@ -74,12 +95,15 @@ def test_outcome_section_fallback_on_missing_config(mock_card, caplog):
         rendered = registry.render_all()
         result = rendered["outcome_section"]
         assert "Unable to retrieve model outcome information" in result
-        assert any("Failed to generate outcome description" in msg for msg in caplog.messages)
+        assert any(
+            "Failed to generate outcome description" in msg for msg in caplog.messages
+        )
+
 
 def test_target_population_valid_dict(mock_card):
     mock_card.cfg.preprocessing.selection.student_criteria_aliases = {
         "status": "full-time",
-        "degree": ["bachelor's", "associate's"]
+        "degree": ["bachelor's", "associate's"],
     }
 
     registry = SectionRegistry()
@@ -90,6 +114,7 @@ def test_target_population_valid_dict(mock_card):
     assert "- Full-Time" in result
     assert "- Bachelor's" in result
     assert "- Associate's" in result
+
 
 def test_target_population_empty(mock_card, caplog):
     mock_card.cfg.preprocessing.selection.student_criteria_aliases = {}
@@ -105,8 +130,12 @@ def test_target_population_empty(mock_card, caplog):
     assert "No specific student criteria were applied." in result
     assert "No student criteria" in caplog.text
 
+
 def test_target_population_non_dict(mock_card):
-    mock_card.cfg.preprocessing.selection.student_criteria_aliases = ["status", "degree"]
+    mock_card.cfg.preprocessing.selection.student_criteria_aliases = [
+        "status",
+        "degree",
+    ]
 
     registry = SectionRegistry()
     custom_attribute_sections.register_attribute_sections(mock_card, registry)
@@ -123,7 +152,7 @@ def test_target_population_non_dict(mock_card):
         ("year", "year", 2, "completed 2 years"),
         ("term", "term", 1, "completed 1 term"),
         ("semester", "semester", 3, "completed 3 semesters"),
-    ]
+    ],
 )
 def test_checkpoint_valid_variants(mock_card, category, unit, value, expected_snippet):
     mock_card.cfg.preprocessing.checkpoint.category = category
@@ -137,6 +166,7 @@ def test_checkpoint_valid_variants(mock_card, category, unit, value, expected_sn
 
     assert expected_snippet in result
 
+
 def test_checkpoint_section_missing_config(mock_card, caplog):
     # Simulate exception due to missing checkpoint
     del mock_card.cfg.preprocessing.checkpoint
@@ -149,4 +179,3 @@ def test_checkpoint_section_missing_config(mock_card, caplog):
         result = rendered["checkpoint_section"]
         assert "Unable to retrieve model checkpoint information" in result
         assert "Failed to generate checkpoint description" in caplog.text
-
