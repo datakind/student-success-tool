@@ -133,6 +133,20 @@ df_student_terms.columns.tolist()
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ### Handling Pre-Cohort Courses
+# MAGIC
+# MAGIC Please rememeber to check with your schools during the data assessment call how they would like pre-cohort course records to be handled. 
+
+# COMMAND ----------
+
+# drop pre-cohort course records (ONLY IF REQUESTED BY SCHOOL)
+# df_student_terms = df_student_terms[
+#     df_student_terms["term_is_pre_cohort"] == False
+# ]
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC # select students and compute targets
 
 # COMMAND ----------
