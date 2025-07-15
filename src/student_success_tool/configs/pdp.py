@@ -159,6 +159,12 @@ class PreprocessingConfig(pyd.BaseModel):
             ),
         )
     )
+    include_pre_cohort_courses: bool = pyd.Field(
+        default=False,
+        description=(
+            "Whether to include course records that occurred before the student's cohort term. Usually, we do end up excluding these so the default will always be False unless set otherwise."
+        ),
+    )
 
     @pyd.field_validator("splits", mode="after")
     @classmethod
