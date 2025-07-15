@@ -140,11 +140,14 @@ df_student_terms.columns.tolist()
 
 # COMMAND ----------
 
-# drop pre-cohort course records (ONLY IF REQUESTED BY SCHOOL)
-# if cfg.preprocessing.include_pre_cohort_courses == False:
-#   df_student_terms = df_student_terms[
-#       df_student_terms["term_is_pre_cohort"] == False
-#   ]
+# We usually drop pre-cohort course records; If school requests otherwise, please set include_pre_cohort_courses in your config to TRUE, re-load the config, THEN run this cell!
+if cfg.preprocessing.include_pre_cohort_courses == False:
+    df_student_terms = df_student_terms[
+        df_student_terms["term_is_pre_cohort"] == False
+    ]
+
+# sanity check; should be 0 True 
+df_student_terms["term_is_pre_cohort"].value_counts(dropna=False)
 
 # COMMAND ----------
 
