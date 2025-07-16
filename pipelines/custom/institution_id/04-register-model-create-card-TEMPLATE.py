@@ -23,10 +23,7 @@
 # %pip install "student-success-tool==0.3.8"
 # %pip install "pandas==1.5.3"
 # %pip install "scikit-learn==1.3.0"
-
-# COMMAND ----------
-
-# MAGIC %restart_python
+# %restart_python
 
 # COMMAND ----------
 
