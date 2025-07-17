@@ -97,7 +97,6 @@ def log_h2o_experiment(
     valid,
     test,
     threshold=0.5,
-    prefix="h2o_automl",
     use_timestamp=True,
     institution_id=None,
     target_name=None,
