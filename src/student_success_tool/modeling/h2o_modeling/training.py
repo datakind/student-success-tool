@@ -54,6 +54,7 @@ def run_h2o_automl_classification(
     timeout_minutes = kwargs.pop("timeout_minutes", 5)
     max_models = kwargs.pop("max_models", 100)
     exclude_cols = kwargs.pop("exclude_cols", [])
+    split_col = kwargs.pop("split_col", "split")
 
     if student_id_col and student_id_col not in exclude_cols:
         exclude_cols.append(student_id_col)
@@ -66,13 +67,13 @@ def run_h2o_automl_classification(
     h2o_df = h2o.H2OFrame(df)
     h2o_df = correct_h2o_dtypes(h2o_df, df)
 
-    if "split" not in h2o_df.columns:
+    if split_col not in h2o_df.columns:
         raise ValueError("Input data must contain a 'split' column with values ['train', 'validate', 'test'].")
 
     h2o_df[target_col] = h2o_df[target_col].asfactor()
-    train = h2o_df[h2o_df["split"] == "train"]
-    valid = h2o_df[h2o_df["split"] == "validate"]
-    test = h2o_df[h2o_df["split"] == "test"]
+    train = h2o_df[h2o_df[split_col] == "train"]
+    valid = h2o_df[h2o_df[split_col] == "validate"]
+    test = h2o_df[h2o_df[split_col] == "test"]
 
     features = [col for col in df.columns if col not in exclude_cols + [target_col]]
 
@@ -205,3 +206,29 @@ def set_or_create_experiment(workspace_path, institution_id, target_name, checkp
         return experiment_id
     except Exception as e:
         raise RuntimeError(f"Failed to create or set MLflow experiment: {e}")
+
+
+def correct_h2o_types(h2o_df, original_df):
+    """
+    Ensure that any columns that were categorical in original_df
+    remain as enum in h2o_df, even if H2O inferred them as int or real.
+    
+    Args:
+        h2o_df: H2OFrame created from original_df
+        original_df: Original pandas DataFrame with dtype info
+    
+    Returns:
+        h2o_df with corrected enum columns
+    """
+    for col in original_df.columns:
+        if col not in h2o_df.columns:
+            continue
+
+        is_cat = pd.api.types.is_categorical_dtype(original_df[col]) or original_df[col].dtype == object
+
+        h2o_type = h2o_df.types.get(col)
+        if is_cat and h2o_type not in ("enum", "string"):
+            # Convert to enum only if it was inferred as numeric
+            h2o_df[col] = h2o_df[col].asfactor()
+    
+    return h2o_df
