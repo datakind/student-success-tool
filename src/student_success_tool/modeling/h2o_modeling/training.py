@@ -208,7 +208,7 @@ def set_or_create_experiment(workspace_path, institution_id, target_name, checkp
         raise RuntimeError(f"Failed to create or set MLflow experiment: {e}")
 
 
-def correct_h2o_types(h2o_df, original_df):
+def correct_h2o_dtypes(h2o_df, original_df):
     """
     Ensure that any columns that were categorical in original_df
     remain as enum in h2o_df, even if H2O inferred them as int or real.
