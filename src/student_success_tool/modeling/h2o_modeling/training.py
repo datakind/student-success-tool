@@ -2,10 +2,7 @@ import logging
 import mlflow
 import pandas as pd
 
-from . import (
-    training_utils,
-    evaluation,
-)
+from . import evaluation
 
 import h2o
 from h2o.automl import H2OAutoML
