@@ -100,7 +100,7 @@ def log_h2o_experiment(
     threshold=0.5,
     use_timestamp=True,
     institution_id=None,
-    target_col="target"
+    target_col="target",
     target_name=None,
     checkpoint_name=None,
     workspace_path=None,
