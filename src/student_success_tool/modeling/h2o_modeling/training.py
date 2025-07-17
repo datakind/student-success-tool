@@ -181,7 +181,7 @@ def set_or_create_experiment(workspace_path, institution_id, target_name, checkp
         institution_id,
         target_name,
         checkpoint_name,
-        prefix,
+        "h20_automl",
         timestamp
     ]
     experiment_name = "/".join([
