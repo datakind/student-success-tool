@@ -118,7 +118,6 @@ def log_h2o_experiment(
         institution_id,
         target_name,
         checkpoint_name,
-        prefix=prefix,
         use_timestamp=use_timestamp,
         client=client,
     )
