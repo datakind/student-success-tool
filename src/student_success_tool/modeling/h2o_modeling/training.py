@@ -59,9 +59,6 @@ def run_h2o_automl_classification(
     if student_id_col and student_id_col not in exclude_cols:
         exclude_cols.append(student_id_col)
 
-    LOGGER.info(f"Starting H2O cluster...")
-    h2o.init()
-
     # Convert to H2OFrame and correct types
     # NOTE: H2O sometimes doesn't infer types correctly, so we need to manually check them here using our pandas DF.
     h2o_df = h2o.H2OFrame(df)
