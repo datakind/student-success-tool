@@ -19,7 +19,7 @@ def run_h2o_automl_classification(
     job_run_id: str,
     student_id_col: str,
     **kwargs: object,
-) -> H2OAutoML:
+) -> tuple[H2OAutoML, h2o.H2OFrame, h2o.H2OFrame, h2o.H2OFrame]:
     """
     Runs H2O AutoML for classification tasks and logs the best model to MLflow.
 
@@ -88,7 +88,7 @@ def run_h2o_automl_classification(
 
     LOGGER.info(f"Best model: {aml.leader.model_id}")
 
-    return aml
+    return aml, train, valid, test
 
 
 def log_h2o_experiment(
