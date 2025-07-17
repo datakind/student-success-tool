@@ -87,7 +87,6 @@ def run_h2o_automl_classification(
     aml.train(x=features, y=target_col, training_frame=train, validation_frame=valid, leaderboard_frame=test)
 
     LOGGER.info(f"Best model: {aml.leader.model_id}")
-    run_id = log_h2o_model(aml.leader, train_features=h2o_df.drop(target_col))
 
     return aml
 
