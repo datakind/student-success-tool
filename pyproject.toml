@@ -28,6 +28,7 @@ dependencies = [
     "pydyf~=0.8.0",
     "markdown~=3.5",
     "types-markdown~=3.8",
+    "h2o>=3.44,<3.46",
 ]
 
 [project.urls]

@@ -1,5 +1,5 @@
 version = 1
-revision = 1
+revision = 2
 requires-python = ">=3.10, <3.13"
 resolution-markers = [
     "python_full_version < '3.11' and sys_platform != 'win32'",
@@ -960,6 +960,16 @@ sdist = { url = "https://files.pythonhosted.org/packages/f5/38/3af3d3633a34a3316
 wheels = [
     { url = "https://files.pythonhosted.org/packages/95/04/ff642e65ad6b90db43e668d70ffb6736436c7ce41fcc549f4e9472234127/h11-0.14.0-py3-none-any.whl", hash = "sha256:e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761", size = 58259, upload-time = "2022-09-25T15:39:59.68Z" },
 ]
+
+[[package]]
+name = "h2o"
+version = "3.44.0.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+    { name = "tabulate" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/10/fe/fee69dab2ef122ef84ff47090e5c76a7e88d1c14fa66a620bcb7a2885a26/h2o-3.44.0.3.tar.gz", hash = "sha256:7c18807ba68f59108fdd1f03f1c87d524eaf5682d17b2cada683654a0f6f192d", size = 265200099, upload-time = "2023-12-20T19:10:56.866Z" }
 
 [[package]]
 name = "html5lib"
@@ -2870,13 +2880,14 @@ wheels = [
 
 [[package]]
 name = "student-success-tool"
-version = "0.3.6"
+version = "0.3.9"
 source = { editable = "." }
 dependencies = [
     { name = "databricks-connect" },
     { name = "databricks-sdk" },
     { name = "faker" },
     { name = "google-cloud-storage" },
+    { name = "h2o" },
     { name = "ipywidgets" },
     { name = "markdown" },
     { name = "matplotlib" },
@@ -2913,6 +2924,7 @@ requires-dist = [
     { name = "databricks-sdk", specifier = "~=0.38.0" },
     { name = "faker", specifier = ">=20.1" },
     { name = "google-cloud-storage", specifier = "~=2.17" },
+    { name = "h2o", specifier = ">=3.44,<3.46" },
     { name = "ipywidgets", specifier = "~=8.1" },
     { name = "markdown", specifier = "~=3.5" },
     { name = "matplotlib", specifier = "~=3.7" },
@@ -2941,6 +2953,15 @@ dev = [
     { name = "mypy", specifier = "~=1.11" },
     { name = "pytest", specifier = "~=8.3" },
     { name = "ruff", specifier = "~=0.9" },
+]
+
+[[package]]
+name = "tabulate"
+version = "0.9.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ec/fe/802052aecb21e3797b8f7902564ab6ea0d60ff8ca23952079064155d1ae1/tabulate-0.9.0.tar.gz", hash = "sha256:0095b12bf5966de529c0feb1fa08671671b3368eec77d7ef7ab114be2c068b3c", size = 81090, upload-time = "2022-10-06T17:21:48.54Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/40/44/4a5f08c96eb108af5cb50b41f76142f0afa346dfa99d5296fe7202a11854/tabulate-0.9.0-py3-none-any.whl", hash = "sha256:024ca478df22e9340661486f85298cff5f6dcdba14f3813e8830015b9ed1948f", size = 35252, upload-time = "2022-10-06T17:21:44.262Z" },
 ]
 
 [[package]]
