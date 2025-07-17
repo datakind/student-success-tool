@@ -178,9 +178,9 @@ def set_or_create_experiment(workspace_path, institution_id, target_name, checkp
     timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S") if use_timestamp else ""
 
     name_parts = [
-        cfg.institution_id,
-        cfg.preprocessing.target.name,
-        cfg.preprocessing.checkpoint.name,
+        institution_id,
+        target_name,
+        checkpoint_name,
         prefix,
         timestamp
     ]
