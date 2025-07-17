@@ -100,6 +100,7 @@ def log_h2o_experiment(
     threshold=0.5,
     use_timestamp=True,
     institution_id=None,
+    target_col="target"
     target_name=None,
     checkpoint_name=None,
     workspace_path=None,
@@ -147,7 +148,7 @@ def log_h2o_experiment(
 
                 # Generate & log classification plots
                 for split_name, frame in zip(["train", "val", "test"], [train, valid, test]):
-                    y_true = frame[target_name].as_data_frame().values.flatten()
+                    y_true = frame[target_col].as_data_frame().values.flatten()
                     y_proba = model.predict(frame)["p1"].as_data_frame().values.flatten()
                     y_pred = (y_proba >= threshold).astype(int)
 
