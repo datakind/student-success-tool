@@ -148,9 +148,10 @@ def log_h2o_experiment(
 
                 # Generate & log classification plots
                 for split_name, frame in zip(["train", "val", "test"], [train, valid, test]):
-                    y_true = frame[target_col].as_data_frame().values.flatten()
-                    y_proba = model.predict(frame)["p1"].as_data_frame().values.flatten()
-                    y_pred = (y_proba >= threshold).astype(int)
+                    preds = model.predict(frame)
+                    positive_class_label = preds.col_names[-1]
+                    y_proba = preds[positive_class_label].as_data_frame().values.flatten()
+                    y_pred = (y_proba >= 0.5).astype(int)
 
                     generate_all_classification_plots(y_true, y_pred, y_proba, prefix=split_name)
 

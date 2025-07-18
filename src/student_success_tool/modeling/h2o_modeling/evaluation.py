@@ -111,10 +111,10 @@ def generate_all_classification_plots(y_true, y_pred, y_proba, prefix="test"):
         prefix: Prefix for plot file names (e.g., "train", "test", "val")
     """
     plot_fns = {
-        "confusion_matrix": generate_confusion_matrix_plot,
-        "roc_curve": generate_roc_curve_plot,
-        "precision_recall": generate_precision_recall_curve_plot,
-        "lift_curve": generate_lift_curve_plot,
+        "confusion_matrix": create_confusion_matrix_plot,
+        "roc_curve": create_roc_curve_plot,
+        "precision_recall": create_precision_recall_curve_plot,
+        "lift_curve": create_lift_curve_plot,
     }
 
     for name, plot_fn in plot_fns.items():
