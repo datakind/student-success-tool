@@ -4,7 +4,7 @@ import pandas as pd
 import datetime
 import os
 
-from . import evaluation
+from . import evaluation_h2o as evaluation
 
 import h2o
 from h2o.automl import H2OAutoML

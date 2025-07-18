@@ -6,4 +6,6 @@ from . import (
     registration,
     training,
     utils,
+    training_h2o,
+    evaluation_h2o,
 )
