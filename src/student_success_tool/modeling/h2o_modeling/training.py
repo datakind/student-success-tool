@@ -153,7 +153,7 @@ def log_h2o_experiment(
                     y_proba = preds[positive_class_label].as_data_frame().values.flatten()
                     y_pred = (y_proba >= 0.5).astype(int)
 
-                    generate_all_classification_plots(y_true, y_pred, y_proba, prefix=split_name)
+                    evaluation.generate_all_classification_plots(y_true, y_pred, y_proba, prefix=split_name)
 
                 # Save model
                 local_model_dir = f"/tmp/h2o_models/{model_id}"
