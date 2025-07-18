@@ -18,7 +18,6 @@ def run_h2o_automl_classification(
     target_col: str,
     primary_metric: str,
     institution_id: str,
-    job_run_id: str,
     student_id_col: str,
     **kwargs: object,
 ) -> tuple[H2OAutoML, h2o.H2OFrame, h2o.H2OFrame, h2o.H2OFrame]:
@@ -30,7 +29,6 @@ def run_h2o_automl_classification(
         target_col: Name of the target column.
         primary_metric: Used to sort models; supports "logloss", "AUC", "AUCPR", etc.
         institution_id: Institution ID for experiment naming.
-        job_run_id: Job run ID to track lineage.
         student_id_col: Column name identifying students, excluded from training.
         **kwargs: Optional settings including timeout_minutes, max_models, etc.
 
