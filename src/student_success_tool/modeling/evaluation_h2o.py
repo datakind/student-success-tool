@@ -59,22 +59,27 @@ def compute_lift(y_true, y_scores, n_bins=10):
 
 ############
 ## PLOTS! ##
-############ d
+############
 
 def create_confusion_matrix_plot(y_true, y_pred) -> plt.Figure:
-    # Normalize the confusion matrix
+    # Normalize confusion matrix by true labels
     cm = confusion_matrix(y_true, y_pred, normalize='true')
 
-    # Plot with blue-white colormap
     fig, ax = plt.subplots()
     disp = ConfusionMatrixDisplay(confusion_matrix=cm)
     disp.plot(ax=ax, cmap='Blues', colorbar=False)
 
-    # Format text annotations as percentages
+    # Remove default annotations
+    for txt in ax.texts:
+        txt.set_visible(False)
+
+    # Dynamic contrast-aware text overlay
     for i in range(cm.shape[0]):
         for j in range(cm.shape[1]):
-            value = f"{cm[i, j]:.2f}"
-            ax.text(j, i, value, ha='center', va='center', color='black')
+            value = cm[i, j]
+            # Use white text on dark blue, black on light blue
+            text_color = "white" if value < 0.5 else "black"
+            ax.text(j, i, f"{value:.2f}", ha="center", va="center", color=text_color, fontsize=12, fontweight='bold')
 
     ax.set_title("Normalized Confusion Matrix")
     plt.tight_layout()
