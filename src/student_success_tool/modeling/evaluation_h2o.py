@@ -24,6 +24,8 @@ from sklearn.metrics import (
 import h2o
 import shap
 
+LOGGER = logging.getLOGGER(__name__)
+
 
 # --- Metric evaluation ---
 def get_metrics_near_threshold_all_splits(model, train, valid, test, threshold=0.5):
@@ -222,10 +224,10 @@ def create_color_hint_features(original_df: pd.DataFrame, grouped_df: pd.DataFra
 
         if is_categorical:
             gray_features[col] = "category"
-            logger.debug(f"{col}: classified as categorical (dtype={dtype})")
+            LOGGER.debug(f"{col}: classified as categorical (dtype={dtype})")
         else:
             gray_features[col] = grouped_df[col]
-            logger.debug(f"{col}: classified as numeric (dtype={dtype})")
+            LOGGER.debug(f"{col}: classified as numeric (dtype={dtype})")
 
     return gray_features
 
