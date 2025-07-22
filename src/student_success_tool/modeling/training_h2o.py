@@ -1,6 +1,8 @@
 import logging
 import mlflow
 import pandas as pd
+from pandas.api.types import is_categorical_dtype, is_object_dtype, is_string_dtype
+
 import datetime
 import os
 
