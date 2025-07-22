@@ -2,6 +2,7 @@ import os
 import tempfile
 import mlflow
 import h2o
+from h2o.model.model_base import ModelBase
 from mlflow.artifacts import download_artifacts
 
 def download_model_artifact(run_id: str, artifact_subdir: str = "model") -> str:
@@ -22,7 +23,7 @@ def download_model_artifact(run_id: str, artifact_subdir: str = "model") -> str:
     return artifact_path  # already includes artifact_subdir
 
 
-def load_h2o_model(run_id: str, artifact_path: str = "model") -> h2o.H2OEstimator:
+def load_h2o_model(run_id: str, artifact_path: str = "model") -> ModelBase:
     """
     Initializes H2O, downloads the model from MLflow, and loads it.
     Basically a wrapper for H2O's `h2o.load_model` function.
