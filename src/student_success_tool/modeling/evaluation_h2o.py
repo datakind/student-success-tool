@@ -18,7 +18,9 @@ from sklearn.metrics import (
     RocCurveDisplay,
     precision_recall_curve,
     PrecisionRecallDisplay,
-    auc
+    auc,
+    roc_auc_score,
+    average_precision_score,
 )
 
 import h2o
@@ -79,10 +81,13 @@ def create_confusion_matrix_plot(y_true, y_pred) -> plt.Figure:
     plt.close(fig)
     return fig
 
+
 def create_roc_curve_plot(y_true, y_proba) -> plt.Figure:
     fpr, tpr, _ = roc_curve(y_true, y_proba)
+    auc_score = roc_auc_score(y_true, y_proba)
+
     fig, ax = plt.subplots()
-    ax.plot(fpr, tpr, label="ROC Curve")
+    ax.plot(fpr, tpr, label=f"ROC Curve (AUC = {auc_score:.2f})")
     ax.plot([0, 1], [0, 1], linestyle="--", color="gray")
     ax.set_title("ROC Curve")
     ax.set_xlabel("False Positive Rate")
@@ -94,14 +99,17 @@ def create_roc_curve_plot(y_true, y_proba) -> plt.Figure:
 
 def create_precision_recall_curve_plot(y_true, y_proba) -> plt.Figure:
     precision, recall, _ = precision_recall_curve(y_true, y_proba)
+    ap_score = average_precision_score(y_true, y_proba)
+
     fig, ax = plt.subplots()
-    ax.plot(recall, precision, label="Precision-Recall Curve")
+    ax.plot(recall, precision, label=f"Precision-Recall (AP = {ap_score:.2f})")
     ax.set_title("Precision-Recall Curve")
     ax.set_xlabel("Recall")
     ax.set_ylabel("Precision")
     ax.legend()
     plt.close(fig)
     return fig
+
 
 
 def create_calibration_curve_plot(y_true, y_proba, n_bins=10) -> plt.Figure:
