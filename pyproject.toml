@@ -29,6 +29,7 @@ dependencies = [
     "markdown~=3.5",
     "types-markdown~=3.8",
     "h2o>=3.44,<3.46",
+    "polars~=0.20",
 ]
 
 [project.urls]
