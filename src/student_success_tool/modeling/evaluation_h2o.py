@@ -50,13 +50,6 @@ def get_metrics_near_threshold_all_splits(model, train, valid, test, threshold=0
     }
 
 
-def compute_lift(y_true, y_scores, n_bins=10):
-    df = pd.DataFrame({'y_true': y_true, 'y_score': y_scores})
-    df = df.sort_values('y_score', ascending=False)
-    df['bin'] = pd.cut(df['y_score'], bins=n_bins)
-    lift = df.groupby('bin')['y_true'].mean() / df['y_true'].mean()
-    return lift
-
 ############
 ## PLOTS! ##
 ############
@@ -78,8 +71,8 @@ def create_confusion_matrix_plot(y_true, y_pred) -> plt.Figure:
         for j in range(cm.shape[1]):
             value = cm[i, j]
             # Use white text on dark blue, black on light blue
-            text_color = "white" if value < 0.5 else "black"
-            ax.text(j, i, f"{value:.2f}", ha="center", va="center", color=text_color, fontsize=12, fontweight='bold')
+            text_color = "black" if value < 0.5 else "white"
+            ax.text(j, i, f"{value:.2f}", ha="center", va="center", color=text_color)
 
     ax.set_title("Normalized Confusion Matrix")
     plt.tight_layout()
@@ -111,18 +104,23 @@ def create_precision_recall_curve_plot(y_true, y_proba) -> plt.Figure:
     return fig
 
 
-def create_lift_curve_plot(y_true, y_proba, n_bins=10) -> plt.Figure:
-    df = pd.DataFrame({"y_true": y_true, "y_proba": y_proba})
-    df["bin"] = pd.qcut(df["y_proba"], q=n_bins, duplicates='drop')
-    lift = df.groupby("bin")["y_true"].mean()
-    baseline = df["y_true"].mean()
+def create_calibration_curve_plot(y_true, y_proba, n_bins=10) -> plt.Figure:
+    # Compute calibration curve
+    prob_true, prob_pred = calibration_curve(
+        y_true, y_proba, n_bins=n_bins, strategy='quantile'
+    )
 
+    # Create the plot
     fig, ax = plt.subplots()
-    ax.plot(np.arange(1, len(lift) + 1), lift / baseline, marker="o", label="Lift")
-    ax.axhline(y=1, color="gray", linestyle="--")
-    ax.set_title("Lift Curve")
-    ax.set_xlabel("Bin (by predicted probability)")
-    ax.set_ylabel("Lift over baseline")
+    ax.plot(prob_pred, prob_true, marker="o", label="Model Calibration")
+    ax.plot([0, 1], [0, 1], linestyle="--", color="gray", label="Perfect Calibration")
+
+    # Labels and legend
+    ax.set_title("Calibration Curve")
+    ax.set_xlabel("Mean Predicted Probability")
+    ax.set_ylabel("Fraction of Positives")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
     ax.legend()
     plt.close(fig)
     return fig
@@ -142,7 +140,7 @@ def generate_all_classification_plots(y_true, y_pred, y_proba, prefix="test"):
         "confusion_matrix": (create_confusion_matrix_plot, y_pred),
         "roc_curve": (create_roc_curve_plot, y_proba),
         "precision_recall": (create_precision_recall_curve_plot, y_proba),
-        "lift_curve": (create_lift_curve_plot, y_proba),
+        "calibration_curve": (create_calibration_curve_plot, y_proba),
     }
 
     for name, (plot_fn, values) in plot_fns.items():
