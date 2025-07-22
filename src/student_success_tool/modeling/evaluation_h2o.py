@@ -59,15 +59,27 @@ def compute_lift(y_true, y_scores, n_bins=10):
 
 ############
 ## PLOTS! ##
-############
+############ d
 
 def create_confusion_matrix_plot(y_true, y_pred) -> plt.Figure:
-    cm = confusion_matrix(y_true, y_pred)
+    # Normalize the confusion matrix
+    cm = confusion_matrix(y_true, y_pred, normalize='true')
+
+    # Plot with blue-white colormap
     fig, ax = plt.subplots()
-    ConfusionMatrixDisplay(confusion_matrix=cm).plot(ax=ax)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+    disp.plot(ax=ax, cmap='Blues', colorbar=False)
+
+    # Format text annotations as percentages
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            value = f"{cm[i, j]:.2f}"
+            ax.text(j, i, value, ha='center', va='center', color='black')
+
+    ax.set_title("Normalized Confusion Matrix")
+    plt.tight_layout()
     plt.close(fig)
     return fig
-
 
 def create_roc_curve_plot(y_true, y_proba) -> plt.Figure:
     fpr, tpr, _ = roc_curve(y_true, y_proba)
