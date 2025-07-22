@@ -22,6 +22,8 @@ from sklearn.metrics import (
     roc_auc_score,
     average_precision_score,
 )
+from sklearn.calibration import calibration_curve
+
 
 import h2o
 import shap
