@@ -24,7 +24,7 @@ from sklearn.metrics import (
 import h2o
 import shap
 
-LOGGER = logging.getLOGGER(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 # --- Metric evaluation ---
