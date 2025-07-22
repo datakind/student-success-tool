@@ -139,14 +139,14 @@ def generate_all_classification_plots(y_true, y_pred, y_proba, prefix="test"):
         prefix: Prefix for plot file names (e.g., "train", "test", "val")
     """
     plot_fns = {
-        "confusion_matrix": create_confusion_matrix_plot,
-        "roc_curve": create_roc_curve_plot,
-        "precision_recall": create_precision_recall_curve_plot,
-        "lift_curve": create_lift_curve_plot,
+        "confusion_matrix": (create_confusion_matrix_plot, y_pred),
+        "roc_curve": (create_roc_curve_plot, y_proba),
+        "precision_recall": (create_precision_recall_curve_plot, y_proba),
+        "lift_curve": (create_lift_curve_plot, y_proba),
     }
 
-    for name, plot_fn in plot_fns.items():
-        fig = plot_fn(y_true, y_proba if "proba" in plot_fn.__name__ else y_pred)
+    for name, (plot_fn, values) in plot_fns.items():
+        fig = plot_fn(y_true, values)
         mlflow.log_figure(fig, f"{prefix}_{name}.png")
 
 
