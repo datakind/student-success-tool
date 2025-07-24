@@ -41,7 +41,7 @@
 import logging
 
 import mlflow
-import sklearn.metrics
+# import sklearn.metrics
 from databricks.connect import DatabricksSession
 
 from student_success_tool import configs, dataio, modeling, utils
