@@ -205,7 +205,7 @@ resources:
       git_source:
         git_url: https://github.com/datakind/student-success-tool
         git_provider: gitHub
-        git_branch: develop
+        git_branch: inference-testing-v039
       tags:
         dev: kayla_wilding
       queue:
