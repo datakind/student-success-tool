@@ -6,7 +6,7 @@ resources:
       tasks:
         - task_key: data_ingestion
           spark_python_task:
-            python_file: pipelines/tasks/pdp_data_ingestion/pdp_data_ingestion.py
+            python_file: pipelines/pdp/tasks/pdp_data_ingestion/pdp_data_ingestion.py
             source: GIT
             parameters:
               - --cohort_file_name
@@ -33,7 +33,7 @@ resources:
           depends_on:
             - task_key: data_ingestion
           spark_python_task:
-            python_file: pipelines/tasks/pdp_data_preprocessing/pdp_data_preprocessing.py
+            python_file: pipelines/pdp/tasks/pdp_data_preprocessing/pdp_data_preprocessing.py
             source: GIT
             parameters:
               - --databricks_institution_name
@@ -67,7 +67,7 @@ resources:
           depends_on:
             - task_key: data_preprocessing
           spark_python_task:
-            python_file: pipelines/tasks/data_validation/data_validation_task.py
+            python_file: pipelines/pdp/tasks/data_validation/data_validation_task.py
             source: GIT
             parameters:
               - --input_table_path
@@ -91,7 +91,7 @@ resources:
           depends_on:
             - task_key: data_preprocessing
           spark_python_task:
-            python_file: pipelines/tasks/data_validation/data_validation_task.py
+            python_file: pipelines/pdp/tasks/data_validation/data_validation_task.py
             source: GIT
             parameters:
               - --input_table_path
@@ -111,7 +111,7 @@ resources:
           depends_on:
             - task_key: data_validation
           spark_python_task:
-            python_file: pipelines/tasks/pdp_model_inference/pdp_model_inference.py
+            python_file: pipelines/pdp/tasks/pdp_model_inference/pdp_model_inference.py
             source: GIT
             parameters:
               - --databricks_institution_name
@@ -164,7 +164,7 @@ resources:
           depends_on:
             - task_key: inference
           spark_python_task: 
-            python_file: pipelines/tasks/pdp_inference_output_publish/pdp_inference_output_publish.py
+            python_file: pipelines/pdp/tasks/pdp_inference_output_publish/pdp_inference_output_publish.py
             source: GIT
             parameters:
               - --DB_workspace

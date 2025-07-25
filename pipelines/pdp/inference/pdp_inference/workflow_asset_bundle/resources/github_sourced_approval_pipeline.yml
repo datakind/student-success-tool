@@ -9,7 +9,7 @@ resources:
       tasks:
         - task_key: notify_and_publish_results
           spark_python_task:
-            python_file: pipelines/tasks/approve_output/approve_output_task.py
+            python_file: pipelines/pdp/tasks/approve_output/approve_output_task.py
             source: GIT
             parameters:
               - --institution_name
