@@ -82,7 +82,6 @@ class ModelInferenceTask:
 
     def load_mlflow_model(self):
         """Loads the MLflow model."""
-        # model_uri = f"runs:/{self.cfg.model.run_id}/model"
         client = MlflowClient(registry_uri="databricks-uc")
         full_model_name = f"{self.args.DB_workspace}.{self.args.databricks_institution_name}_gold.{self.args.model_name}"
 
@@ -233,22 +232,6 @@ class ModelInferenceTask:
 
             ref_dtypes = df_ref.dtypes.apply(lambda dt: dt.name).to_dict()
 
-            # for col in df_ref.columns:
-            #     unique_types = df_ref[col].map(type).unique()
-            #     if len(unique_types) > 1:
-            #         logging.info(f"Column '{col}' has mixed types: {unique_types}")
-
-            # explainer = shap.explainers.KernelExplainer(
-            #     lambda x: inference.predict_probs(
-            #         pd.DataFrame(x, columns=model_feature_names).astype(ref_dtypes),
-            #         model=model,
-            #         feature_names=model_feature_names,
-            #         pos_label=self.cfg.pos_label
-            #     ),
-            #     df_ref.astype(ref_dtypes),
-            #     link="identity"
-            # )
-
             explainer = shap.explainers.KernelExplainer(
                 lambda x: self.predict_proba(
                     pd.DataFrame(x, columns=model_feature_names).astype(ref_dtypes),
@@ -260,23 +243,12 @@ class ModelInferenceTask:
                 link="identity",
             )
 
-            # explainer = shap.explainers.KernelExplainer(
-            #     ft.partial(
-            #         self.predict_proba,  # Use the static method
-            #         model=model,
-            #         feature_names=model_feature_names,
-            #         pos_label=self.cfg.pos_label,
-            #     ),
-            #     df_ref,
-            #     link="identity",
-            # )
-
             shap_values_explanation = self.parallel_explanations(
                 model=model,
                 df_features=df_processed[model_feature_names],
                 explainer=explainer,
                 model_feature_names=model_feature_names,
-                n_jobs=1,
+                n_jobs=-1,
             )
 
             return shap_values_explanation
@@ -475,15 +447,6 @@ class ModelInferenceTask:
                     msg = "Support overview table is empty: cannot write inference summary tables."
                     logging.error(msg)
                     raise Exception(msg)
-                # if (
-                #     inference_features_with_most_impact is None
-                #     or shap_feature_importance is None
-                #     or support_overview_table is None
-                # ):
-                #     msg = "One or more inference outputs are empty: cannot write inference summary tables."
-                #     logging.error(msg)
-                #     raise Exception(msg)
-
                 self.write_data_to_delta(
                     inference_features_with_most_impact,
                     f"inference_{self.cfg.model.run_id}_features_with_most_impact",
