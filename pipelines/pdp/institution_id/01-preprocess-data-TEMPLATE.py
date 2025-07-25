@@ -24,7 +24,7 @@
 
 # install dependencies, of which most/all should come through our 1st-party SST package
 
-# %pip install "student-success-tool == 0.3.8"
+# %pip install "student-success-tool == 0.3.9"
 
 # COMMAND ----------
 
@@ -129,6 +129,24 @@ df_student_terms
 
 # take a peek at featurized columns -- it's a lot
 df_student_terms.columns.tolist()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Handling Pre-Cohort Courses
+# MAGIC
+# MAGIC Please rememeber to check with your schools during the data assessment call how they would like pre-cohort course records to be handled.
+# MAGIC
+
+# COMMAND ----------
+
+# We usually drop pre-cohort course records; If school requests otherwise, please set include_pre_cohort_courses in your config to TRUE, re-load the config, THEN run this cell!
+
+if not cfg.preprocessing.include_pre_cohort_courses:
+    df_student_terms = df_student_terms[df_student_terms["term_is_pre_cohort"] == False]
+
+# sanity check; should be 0 True
+df_student_terms["term_is_pre_cohort"].value_counts(dropna=False)
 
 # COMMAND ----------
 
