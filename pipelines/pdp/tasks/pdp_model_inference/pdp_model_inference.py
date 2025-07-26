@@ -248,7 +248,7 @@ class ModelInferenceTask:
                 df_features=df_processed[model_feature_names],
                 explainer=explainer,
                 model_feature_names=model_feature_names,
-                n_jobs=-1,
+                n_jobs=1,
             )
 
             return shap_values_explanation
