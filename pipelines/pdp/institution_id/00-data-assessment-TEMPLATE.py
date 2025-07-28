@@ -300,7 +300,7 @@ df_raw = (
     pd.merge(
         df_cohort_raw,
         df_course_raw,
-        on=cfg.student_id_col,
+        on="study_id",
         how="outer",
         suffixes=("_cohort", "_course"),
         indicator=True,
