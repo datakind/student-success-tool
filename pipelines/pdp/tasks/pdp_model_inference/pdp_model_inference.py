@@ -432,7 +432,6 @@ class ModelInferenceTask:
                     unique_ids,
                     df_predicted,
                     shap_values,
-                    model_feature_names,
                 )
                 if inference_features_with_most_impact is None:
                     msg = "Inference features with most impact is empty: cannot write inference summary tables."
