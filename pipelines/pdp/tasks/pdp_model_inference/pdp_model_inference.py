@@ -20,7 +20,6 @@ from typing import List, Optional
 import sys
 import importlib
 
-import functools as ft
 import mlflow
 import numpy as np
 import pandas as pd
@@ -36,6 +35,7 @@ from student_success_tool.modeling import inference
 from student_success_tool.configs.pdp import PDPProjectConfig
 from student_success_tool.modeling.evaluation import plot_shap_beeswarm
 from student_success_tool.utils import emails
+from mlflow.tracking import MlflowClient
 
 # Disable mlflow autologging (prevents conflicts in Databricks environments)
 mlflow.autolog(disable=True)
@@ -82,7 +82,15 @@ class ModelInferenceTask:
 
     def load_mlflow_model(self):
         """Loads the MLflow model."""
-        model_uri = f"runs:/{self.cfg.model.run_id}/model"
+        client = MlflowClient(registry_uri="databricks-uc")
+        full_model_name = f"{self.args.DB_workspace}.{self.args.databricks_institution_name}_gold.{self.args.model_name}"
+
+        # List all versions of the model
+        all_versions = client.search_model_versions(f"name='{full_model_name}'")
+
+        # Sort by version number and create uri for latest model
+        latest_version = max(all_versions, key=lambda v: int(v.version))
+        model_uri = f"models:/{full_model_name}/{latest_version.version}"
 
         try:
             load_model_func = {
@@ -108,15 +116,6 @@ class ModelInferenceTask:
             ]
         except AttributeError:
             model_feature_names = model.metadata.get_input_schema().input_names()
-        # HACH needs to be removed - just need to add these in until re-training
-        #'FULL-TIME' for first half, 'PART-TIME' for second half
-        midpoint = len(df) // 2
-        df["enrollment_intensity_first_term"] = ["FULL-TIME"] * midpoint + [
-            "PART-TIME"
-        ] * (len(df) - midpoint)
-        df["pell_status_first_year"] = ["YES"] * midpoint + ["NO"] * (
-            len(df) - midpoint
-        )
         df_serving = df[model_feature_names]
         df_predicted = df_serving.copy()
         df_predicted["predicted_label"] = model.predict(df_serving)
@@ -126,7 +125,7 @@ class ModelInferenceTask:
     def write_data_to_delta(self, df: pd.DataFrame, table_name_suffix: str):
         """Writes a DataFrame to a Delta Lake table."""
         write_schema = f"{self.args.databricks_institution_name}_silver"
-        table_path = f"{self.args.DB_workspace}.{write_schema}.{self.args.db_run_id}_{table_name_suffix}"
+        table_path = f"{self.args.DB_workspace}.{write_schema}.{table_name_suffix}"
 
         try:
             dataio.to_delta_table(df, table_path, spark_session=self.spark_session)
@@ -213,14 +212,7 @@ class ModelInferenceTask:
         try:
             # --- SHAP Values Calculation ---
             # TODO: Consider saving the explainer during training.
-            shap_ref_data_size = 200  # Consider getting from config.
-
-            # experiment_id = self.cfg.models[
-            #     "graduation"
-            # ].experiment_id  # Consider refactoring this
-            # df_train = modeling.evaluation.extract_training_data_from_model(
-            #     experiment_id
-            # )
+            shap_ref_data_size = 100  # Consider getting from config.
 
             df_train = dataio.from_delta_table(
                 self.args.modeling_table_path, spark_session=self.spark_session
@@ -234,15 +226,20 @@ class ModelInferenceTask:
                 .fillna(train_mode)
                 .loc[:, model_feature_names]
             )
+            logging.info(
+                f"Object dtype columns: {df_ref.select_dtypes(include=['object']).columns.tolist()}"
+            )
+
+            ref_dtypes = df_ref.dtypes.apply(lambda dt: dt.name).to_dict()
 
             explainer = shap.explainers.KernelExplainer(
-                ft.partial(
-                    self.predict_proba,  # Use the static method
+                lambda x: self.predict_proba(
+                    pd.DataFrame(x, columns=model_feature_names).astype(ref_dtypes),
                     model=model,
                     feature_names=model_feature_names,
                     pos_label=self.cfg.pos_label,
                 ),
-                df_ref,
+                df_ref.astype(ref_dtypes),
                 link="identity",
             )
 
@@ -260,14 +257,16 @@ class ModelInferenceTask:
             raise
 
     def top_n_features(
+        self,
         features: pd.DataFrame,
         unique_ids: pd.Series,
         shap_values: npt.NDArray[np.float64],
-        n: int = 10,
+        n: int = 5,
     ) -> pd.DataFrame:
+        features_table = dataio.read_features_table("assets/pdp/features_table.toml")
         try:
             top_n_shap_features = inference.top_shap_features(
-                features, unique_ids, shap_values, n
+                features, unique_ids, shap_values, n, features_table=features_table
             )
             return top_n_shap_features
 
@@ -276,7 +275,7 @@ class ModelInferenceTask:
             return None
 
     def support_score_distribution(
-        self, df_serving, unique_ids, df_predicted, shap_values
+        self, df_serving, unique_ids, df_predicted, shap_values, model_feature_names
     ):
         """
         Selects top features to display and store
@@ -288,7 +287,7 @@ class ModelInferenceTask:
             return None
 
         # --- Load features table ---
-        # TODO: Might re-add if requirements change --> features_table = dataio.read_features_table("assets/pdp/features_table.toml")
+        features_table = dataio.read_features_table("assets/pdp/features_table.toml")
 
         # --- Inference Parameters ---
         inference_params = {
@@ -301,11 +300,13 @@ class ModelInferenceTask:
 
         try:
             result = inference.support_score_distribution_table(
-                df_serving=df_serving,
-                unique_ids=unique_ids,
-                pred_probs=pred_probs,
-                shap_values=shap_values.values,
+                df_serving,
+                unique_ids,
+                pred_probs,
+                shap_values,
                 inference_params=inference_params,
+                features_table=features_table,
+                model_feature_names=model_feature_names,
             )
 
             return result
@@ -323,31 +324,15 @@ class ModelInferenceTask:
                 "Spark session not initialized. Cannot post process shap values."
             )
             return None
-        # TODO: Might re-add if requirements change -->
         features_table = dataio.read_features_table("assets/pdp/features_table.toml")
         shap_feature_importance = inference.generate_ranked_feature_table(
-            df_serving,
-            shap_values.values,
+            df_serving, shap_values.values, features_table
         )
-
-        if shap_feature_importance is not None and features_table is not None:
-            shap_feature_importance[
-                ["readable_feature_name", "short_feature_desc", "long_feature_desc"]
-            ] = shap_feature_importance["Feature Name"].apply(
-                lambda feature: pd.Series(
-                    inference._get_mapped_feature_name(
-                        feature, features_table, metadata=True
-                    )
-                )
-            )
-            shap_feature_importance.columns = (
-                shap_feature_importance.columns.str.replace(" ", "_").str.lower()
-            )
 
         return shap_feature_importance
 
     def get_top_features_for_display(
-        self, df_serving, unique_ids, df_predicted, shap_values
+        self, df_serving, unique_ids, df_predicted, shap_values, model_feature_names
     ):
         """
         Selects top features to display and store
@@ -390,6 +375,7 @@ class ModelInferenceTask:
         df_processed = dataio.from_delta_table(
             self.args.processed_dataset_path, spark_session=self.spark_session
         )
+        df_processed = df_processed[:30]
         unique_ids = df_processed[self.cfg.student_id_col]
 
         model = self.load_mlflow_model()
@@ -419,85 +405,97 @@ class ModelInferenceTask:
         )
 
         if shap_values is not None:  # Proceed only if SHAP values were calculated
-            # --- SHAP Summary Plot ---
-            shap_fig = plot_shap_beeswarm(shap_values)
+            logging.info(f"now cfg.model.run_id = {self.cfg.model.run_id}")
+            logging.info(
+                f"now cfg.model.experiment_id = {self.cfg.model.experiment_id}"
+            )
+            with mlflow.start_run(run_id=self.cfg.model.run_id):
+                # full_model_name = f"{self.args.DB_workspace}.{self.args.databricks_institution_name}_gold.{self.args.model_name}"
+                # --- SHAP Summary Plot ---
+                shap_fig = plot_shap_beeswarm(shap_values)
 
-            # Inference_features_with_most_impact TABLE
-            inference_features_with_most_impact = self.top_n_features(
-                df_processed[model_feature_names], unique_ids, shap_values.values
-            )
-            support_scores = pd.DataFrame(
-                {
-                    "student_id": unique_ids.values,  # From the original df_test
-                    "support_score": df_predicted["predicted_prob"].values,
-                }
-            )
-            inference_features_with_most_impact = (
-                inference_features_with_most_impact.merge(
-                    support_scores, on="student_id", how="left"
+                # Inference_features_with_most_impact TABLE
+                inference_features_with_most_impact = self.top_n_features(
+                    df_processed[model_feature_names], unique_ids, shap_values.values
                 )
-            )
-
-            # shap_feature_importance TABLE
-            shap_feature_importance = self.inference_shap_feature_importance(
-                df_processed, shap_values
-            )
-            # support_overview TABLE
-            support_overview_table = self.support_score_distribution_table(
-                df_processed, unique_ids, df_predicted, shap_values, model_feature_names
-            )
-            if (
-                inference_features_with_most_impact is None
-                or shap_feature_importance is None
-                or support_overview_table is None
-            ):
-                msg = "One or more inference outputs are empty: cannot write inference summary tables."
-                logging.error(msg)
-                raise Exception(msg)
-
-            self.write_data_to_delta(
-                inference_features_with_most_impact,
-                f"inference_{self.cfg.model.run_id}_features_with_most_impact",
-            )
-            self.write_data_to_delta(
-                shap_feature_importance,
-                "inference_{self.cfg.model.run_id}_shap_feature_importance",
-            )
-            self.write_data_to_delta(
-                support_overview_table,
-                "inference_{self.cfg.model.run_id}_support_overview",
-            )
-
-            # Shap Result Table
-            shap_results = self.get_top_features_for_display(
-                df_processed, unique_ids, df_predicted, shap_values, model_feature_names
-            )
-
-            # --- Save Results to ext/ folder in Gold volume. ---
-            if shap_results is not None:
-                # Specify the folder for the output files to be stored.
-                result_path = f"{self.args.job_root_dir}/ext/"
-                os.makedirs(result_path, exist_ok=True)
-                print("result_path:", result_path)
-
-                # TODO What is the proper name for the table with the results?
-                # Write the DataFrame to Unity Catalog table
-                self.write_data_to_delta(shap_results, "inference_output")
-
-                # Write the DataFrame to CSV in the specified volume
-                spark_df = self.spark_session.createDataFrame(shap_results)
-                spark_df.coalesce(1).write.format("csv").option("header", "true").mode(
-                    "overwrite"
-                ).save(result_path + "inference_output")
-                # Write the SHAP chart png to the volume
-                shap_fig.savefig(result_path + "shap_chart.png", bbox_inches="tight")
-            else:
-                logging.error(
-                    "Empty Shap results, cannot create the SHAP chart and table"
+                # print or log the inference_features_with_most_impact
+                logging.info(
+                    "Inference features with most impact:\n%s",
+                    inference_features_with_most_impact,
                 )
-                raise Exception(
-                    "Empty Shap results, cannot create the SHAP chart and table"
+                # shap_feature_importance TABLE
+                shap_feature_importance = self.inference_shap_feature_importance(
+                    df_processed[model_feature_names], shap_values
                 )
+                # # support_overview TABLE
+                support_overview_table = self.support_score_distribution(
+                    df_processed[model_feature_names],
+                    unique_ids,
+                    df_predicted,
+                    shap_values,
+                    model_feature_names,
+                )
+                if inference_features_with_most_impact is None:
+                    msg = "Inference features with most impact is empty: cannot write inference summary tables."
+                    logging.error(msg)
+                    raise Exception(msg)
+                if shap_feature_importance is None:
+                    msg = "Shap Feature Importance is empty: cannot write inference summary tables."
+                    logging.error(msg)
+                    raise Exception(msg)
+                if support_overview_table is None:
+                    msg = "Support overview table is empty: cannot write inference summary tables."
+                    logging.error(msg)
+                    raise Exception(msg)
+                self.write_data_to_delta(
+                    inference_features_with_most_impact,
+                    f"inference_{self.cfg.model.run_id}_features_with_most_impact",
+                )
+                self.write_data_to_delta(
+                    shap_feature_importance,
+                    f"inference_{self.cfg.model.run_id}_shap_feature_importance",
+                )
+                self.write_data_to_delta(
+                    support_overview_table,
+                    f"inference_{self.cfg.model.run_id}_support_overview",
+                )
+
+                # Shap Result Table
+                shap_results = self.get_top_features_for_display(
+                    df_processed[model_feature_names],
+                    unique_ids,
+                    df_predicted,
+                    shap_values,
+                    model_feature_names,
+                )
+
+                # --- Save Results to ext/ folder in Gold volume. ---
+                if shap_results is not None:
+                    # Specify the folder for the output files to be stored.
+                    result_path = f"{self.args.job_root_dir}/ext/"
+                    os.makedirs(result_path, exist_ok=True)
+                    print("result_path:", result_path)
+
+                    # TODO What is the proper name for the table with the results?
+                    # Write the DataFrame to Unity Catalog table
+                    self.write_data_to_delta(shap_results, "inference_output")
+
+                    # Write the DataFrame to CSV in the specified volume
+                    spark_df = self.spark_session.createDataFrame(shap_results)
+                    spark_df.coalesce(1).write.format("csv").option(
+                        "header", "true"
+                    ).mode("overwrite").save(result_path + "inference_output")
+                    # Write the SHAP chart png to the volume
+                    shap_fig.savefig(
+                        result_path + "shap_chart.png", bbox_inches="tight"
+                    )
+                else:
+                    logging.error(
+                        "Empty Shap results, cannot create the SHAP chart and table"
+                    )
+                    raise Exception(
+                        "Empty Shap results, cannot create the SHAP chart and table"
+                    )
 
 
 def parse_arguments() -> argparse.Namespace:
