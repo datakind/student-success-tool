@@ -298,8 +298,8 @@ dbutils.data.summarize(df_cohort, precise=True)
 
 df_raw = (
     pd.merge(
-        df_cohort,
-        df_course,
+        df_cohort_raw,
+        df_course_raw,
         on=cfg.student_id_col,
         how="outer",
         suffixes=("_cohort", "_course"),
