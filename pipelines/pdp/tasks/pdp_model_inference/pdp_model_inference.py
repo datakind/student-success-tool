@@ -275,7 +275,7 @@ class ModelInferenceTask:
             return None
 
     def support_score_distribution(
-        self, df_serving, unique_ids, df_predicted, shap_values, model_feature_names
+        self, df_serving, unique_ids, df_predicted, shap_values
     ):
         """
         Selects top features to display and store
@@ -306,7 +306,6 @@ class ModelInferenceTask:
                 shap_values,
                 inference_params=inference_params,
                 features_table=features_table,
-                model_feature_names=model_feature_names,
             )
 
             return result
