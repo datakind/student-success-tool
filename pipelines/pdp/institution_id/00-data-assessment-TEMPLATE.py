@@ -338,7 +338,7 @@ df_raw["_merge"].value_counts()
 df_raw.loc[df_raw["_merge"] != "both", :]
 
 # which students don't appear in both datasets?
-df_raw.loc[df_raw["_merge"] != "both", cfg.student_id_col].unique().tolist()
+df_raw.loc[df_raw["_merge"] != "both", "study_id"].unique().tolist()
 
 # COMMAND ----------
 
