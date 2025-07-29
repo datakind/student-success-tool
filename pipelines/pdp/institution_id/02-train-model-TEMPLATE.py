@@ -39,9 +39,7 @@
 # COMMAND ----------
 
 import logging
-
 import mlflow
-import sklearn.metrics
 from databricks.connect import DatabricksSession
 
 from student_success_tool import configs, dataio, modeling, utils
@@ -142,6 +140,29 @@ df = df.loc[:, df_selected.columns]
 dataio.write.to_delta_table(
     df, cfg.datasets.silver.modeling.table_path, spark_session=spark
 )
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Variable Correlations
+
+# COMMAND ----------
+
+non_feature_cols = (
+    [cfg.student_id_col]
+    + (cfg.student_group_cols or [])
+    + ([cfg.split_col] if cfg.split_col else [])
+    + ([cfg.sample_weight_col] if cfg.sample_weight_col else [])
+)
+
+df_corrs = df.copy()
+
+target_corrs = df_corrs.drop(columns=non_feature_cols + [cfg.target_col]).corrwith(
+    df_preprocessed[cfg.target_col], method="spearman", numeric_only=True
+)
+print(target_corrs.sort_values(ascending=False).head(10))
+print("...")
+print(target_corrs.sort_values(ascending=False, na_position="first").tail(10))
 
 # COMMAND ----------
 
@@ -265,28 +286,3 @@ for run_id in top_runs.values():
             )
         logging.info("Run %s: Completed", run_id)
 mlflow.end_run()
-
-# COMMAND ----------
-
-# Optional: Evaluate permutation importance for top model
-# NOTE: This can be used for model diagnostics. It is NOT used
-# in our standard evaluation process and not pulled into model cards.
-model = mlflow.sklearn.load_model(f"runs:/{top_run_ids[0]}/model")
-result = modeling.evaluation.compute_feature_permutation_importance(
-    model,
-    df_features,
-    df[cfg.target_col],
-    scoring=sklearn.metrics.make_scorer(
-        sklearn.metrics.log_loss, greater_is_better=False
-    ),
-    sample_weight=df[cfg.sample_weight_col],
-    random_state=cfg.random_state,
-)
-ax = modeling.evaluation.plot_features_permutation_importance(
-    result, feature_cols=df_features.columns
-)
-fig = ax.get_figure()
-fig.tight_layout()
-# save plot via mlflow into experiment artifacts folder
-with mlflow.start_run(run_id=run_id) as run:
-    mlflow.log_figure(fig, "test_features_permutation_importance.png")

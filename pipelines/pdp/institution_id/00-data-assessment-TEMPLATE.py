@@ -38,7 +38,6 @@ import sys
 
 import matplotlib.pyplot as plt
 import missingno as msno
-import numpy as np
 import pandas as pd
 import seaborn as sb
 from databricks.connect import DatabricksSession
@@ -299,9 +298,9 @@ dbutils.data.summarize(df_cohort, precise=True)
 
 df_raw = (
     pd.merge(
-        df_cohort,
-        df_course,
-        on=cfg.student_id_col,
+        df_cohort_raw,
+        df_course_raw,
+        on="study_id",
         how="outer",
         suffixes=("_cohort", "_course"),
         indicator=True,
@@ -339,7 +338,7 @@ df_raw["_merge"].value_counts()
 df_raw.loc[df_raw["_merge"] != "both", :]
 
 # which students don't appear in both datasets?
-df_raw.loc[df_raw["_merge"] != "both", cfg.student_id_col].unique().tolist()
+df_raw.loc[df_raw["_merge"] != "both", "study_id"].unique().tolist()
 
 # COMMAND ----------
 
@@ -933,78 +932,6 @@ jg.set_axis_labels("Number of Credits Attempted", "Number of Credits Earned")
 
 # MAGIC %md
 # MAGIC And so on, and so forth.
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### takeaways / questions
-# MAGIC
-# MAGIC - ...
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## variable associations
-
-# COMMAND ----------
-
-df_assoc_course = eda.compute_pairwise_associations(
-    df_course,
-    exclude_cols=[
-        cfg.student_id_col,
-        "institution_id",
-        "student_age",
-        "gender",
-        "race",
-        "ethnicity",
-    ],
-)
-df_assoc_course
-
-# COMMAND ----------
-
-fig, ax = plt.subplots(figsize=(10, 10))
-sb.heatmap(
-    df_assoc_course.astype(np.float32),
-    xticklabels=df_assoc_course.columns,
-    yticklabels=df_assoc_course.columns,
-    vmin=0.0,
-    vmax=1.0,
-    ax=ax,
-)
-_ = ax.set_xticklabels(
-    ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor"
-)
-
-# COMMAND ----------
-
-df_assoc_cohort = eda.compute_pairwise_associations(
-    df_cohort,
-    exclude_cols=[
-        cfg.student_id_col,
-        "institution_id",
-        "student_age",
-        "gender",
-        "race",
-        "ethnicity",
-    ],
-)
-df_assoc_course
-
-# COMMAND ----------
-
-fig, ax = plt.subplots(figsize=(10, 10))
-sb.heatmap(
-    df_assoc_cohort.astype(np.float32),
-    xticklabels=df_assoc_cohort.columns,
-    yticklabels=df_assoc_cohort.columns,
-    vmin=0.0,
-    vmax=1.0,
-    ax=ax,
-)
-_ = ax.set_xticklabels(
-    ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor"
-)
 
 # COMMAND ----------
 
