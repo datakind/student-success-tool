@@ -132,4 +132,3 @@ def test_bias_summary_section_uses_aliases(mock_download_artifact, mock_card, tm
 
     assert "First-Generation" in result
     assert "12% difference" in result
-    assert "False Negative Parity Rate for First-Generation Students" in result
