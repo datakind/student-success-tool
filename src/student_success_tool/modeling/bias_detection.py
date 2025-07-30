@@ -378,8 +378,8 @@ def aggregate_bias_scores(
         - bias_score_sum: sum of weighted per-flag scores
         - bias_score_mean: normalized by num_valid_comparisons
         - bias_score_max: max single flag score (raw)
-        - num_bias_flags: total number of bias flags, includes only low, medium, and high  
-        - num_valid_comparisons: total valid bias comparisons, excludes any 
+        - num_bias_flags: total number of bias flags, includes only low, medium, and high
+        - num_valid_comparisons: total valid bias comparisons, excludes any
           insufficient data flags
     """
     # Filter flags to relevant split
@@ -397,15 +397,15 @@ def aggregate_bias_scores(
 
     # Compute denominator = all flags except insufficient data flag
     num_valid_comparisons = sum(
-        count for flag, count in flag_counts.items()
-        if flag != "⚪ INSUFFICIENT DATA"
+        count for flag, count in flag_counts.items() if flag != "⚪ INSUFFICIENT DATA"
     )
 
     # Final metrics
     total_score = round(sum(weighted_scores), 4)
     mean_score = (
         round(total_score / num_valid_comparisons, 4)
-        if num_valid_comparisons > 0 else 0.0
+        if num_valid_comparisons > 0
+        else 0.0
     )
     max_score = round(max(raw_scores), 4) if raw_scores else 0.0
 

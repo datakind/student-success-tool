@@ -3,6 +3,7 @@ import mlflow.tracking
 import numpy as np
 import pandas as pd
 import pytest
+from collections import Counter
 
 from student_success_tool.modeling import bias_detection
 
@@ -270,3 +271,122 @@ def test_flag_bias(fnr_data, expected_sg1, expected_sg2, expected_flag):
     assert flag["flag"] == expected_flag
 
     monkeypatch.undo()
+
+
+@pytest.mark.parametrize(
+    "flag,expected_score",
+    [
+        # High FNR diff and low p-value → high score
+        ({"fnr_percentage_difference": 0.8, "p_value": 0.01}, 0.6 * 0.8 + 0.4 * 0.99),
+        # Low FNR diff and high p-value → low score
+        ({"fnr_percentage_difference": 0.1, "p_value": 0.9}, 0.6 * 0.1 + 0.4 * 0.1),
+        # Negative FNR diff → clipped to 0
+        ({"fnr_percentage_difference": -0.5, "p_value": 0.5}, 0.6 * 0.0 + 0.4 * 0.5),
+        # p-value > 1 → clipped to 1
+        ({"fnr_percentage_difference": 0.3, "p_value": 1.5}, 0.6 * 0.3 + 0.4 * 0.0),
+        # Missing p-value → defaults to 1.0
+        ({"fnr_percentage_difference": 0.5}, 0.6 * 0.5 + 0.4 * 0.0),
+    ],
+)
+def test_compute_bias_score(flag, expected_score):
+    result = bias_detection.compute_bias_score(flag)
+    assert abs(result - round(expected_score, 4)) < 1e-5
+
+
+def test_aggregate_bias_scores_basic_case():
+    flags = [
+        {
+            "split_name": "test",
+            "flag": "🔴 HIGH BIAS",
+            "fnr_percentage_difference": 0.6,
+            "p_value": 0.01,
+        },
+        {
+            "split_name": "test",
+            "flag": "🟠 MODERATE BIAS",
+            "fnr_percentage_difference": 0.4,
+            "p_value": 0.02,
+        },
+        {
+            "split_name": "test",
+            "flag": "🟡 LOW BIAS",
+            "fnr_percentage_difference": 0.2,
+            "p_value": 0.09,
+        },
+        {
+            "split_name": "test",
+            "flag": "⚪ INSUFFICIENT DATA",
+            "fnr_percentage_difference": 0.5,
+            "p_value": 0.5,
+        },
+        {
+            "split_name": "val",
+            "flag": "🔴 HIGH BIAS",
+            "fnr_percentage_difference": 0.9,
+            "p_value": 0.01,
+        },
+    ]
+
+    result = bias_detection.aggregate_bias_scores(flags, split="test")
+
+    # Raw scores for test split
+    scores = [
+        bias_detection.compute_bias_score(flags[0])
+        * bias_detection.FLAG_WEIGHTS["🔴 HIGH BIAS"],
+        bias_detection.compute_bias_score(flags[1])
+        * bias_detection.FLAG_WEIGHTS["🟠 MODERATE BIAS"],
+        bias_detection.compute_bias_score(flags[2])
+        * bias_detection.FLAG_WEIGHTS["🟡 LOW BIAS"],
+    ]
+    raw = [bias_detection.compute_bias_score(f) for f in flags[:3]]
+
+    expected = {
+        "bias_score_sum": round(sum(scores), 4),
+        "bias_score_mean": round(
+            sum(scores) / 4, 4
+        ),  # 4 valid comparisons (excluding "⚪")
+        "bias_score_max": round(max(raw), 4),
+        "num_bias_flags": 3,
+        "num_valid_comparisons": 4,
+    }
+
+    assert result == expected
+
+
+def test_aggregate_bias_scores_all_insufficient():
+    flags = [
+        {
+            "split_name": "test",
+            "flag": "⚪ INSUFFICIENT DATA",
+            "fnr_percentage_difference": 0.3,
+            "p_value": 0.5,
+        },
+        {
+            "split_name": "test",
+            "flag": "⚪ INSUFFICIENT DATA",
+            "fnr_percentage_difference": 0.2,
+            "p_value": 0.4,
+        },
+    ]
+    result = bias_detection.aggregate_bias_scores(flags, split="test")
+
+    expected = {
+        "bias_score_sum": 0.0,
+        "bias_score_mean": 0.0,
+        "bias_score_max": 0.0,
+        "num_bias_flags": 0,
+        "num_valid_comparisons": 0,
+    }
+
+    assert result == expected
+
+
+def test_aggregate_bias_scores_empty_input():
+    result = bias_detection.aggregate_bias_scores([], split="test")
+    assert result == {
+        "bias_score_sum": 0.0,
+        "bias_score_mean": 0.0,
+        "bias_score_max": 0.0,
+        "num_bias_flags": 0,
+        "num_valid_comparisons": 0,
+    }
