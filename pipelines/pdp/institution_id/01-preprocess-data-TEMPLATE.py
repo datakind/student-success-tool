@@ -111,6 +111,38 @@ df_cohort.head()
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ### Handling Pre-Cohort Courses
+# MAGIC
+# MAGIC Please rememeber to check with your schools during the data assessment call how they would like pre-cohort course records to be handled.
+# MAGIC
+
+# COMMAND ----------
+
+# We usually drop pre-cohort course records; If school requests otherwise, please set include_pre_cohort_courses in your config to TRUE, re-load the config, THEN run this cell!
+
+if not cfg.preprocessing.include_pre_cohort_courses:
+    # Drop existing cohort columns in df_course if present
+    df_course = df_course.drop(columns=["cohort", "cohort_term"], errors="ignore")
+
+    # Now merge safely
+    df_course_merged = df_course.merge(
+        df_cohort[[cfg.student_id_col, "cohort", "cohort_term"]],
+        on=cfg.student_id_col,
+        how="left"
+    )
+
+    # Filter to remove pre-cohort records
+    df_course = df_course_merged[
+        (df_course_merged["academic_year"] > df_course_merged["cohort"]) |
+        (
+            (df_course_merged["academic_year"] == df_course_merged["cohort"]) &
+            (df_course_merged["academic_term"] >= df_course_merged["cohort_term"])
+        )
+    ]
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC # featurize data
 
 # COMMAND ----------
@@ -131,19 +163,6 @@ df_student_terms
 df_student_terms.columns.tolist()
 
 # COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Handling Pre-Cohort Courses
-# MAGIC
-# MAGIC Please rememeber to check with your schools during the data assessment call how they would like pre-cohort course records to be handled.
-# MAGIC
-
-# COMMAND ----------
-
-# We usually drop pre-cohort course records; If school requests otherwise, please set include_pre_cohort_courses in your config to TRUE, re-load the config, THEN run this cell!
-
-if not cfg.preprocessing.include_pre_cohort_courses:
-    df_student_terms = df_student_terms[df_student_terms["term_is_pre_cohort"] == False]
 
 # sanity check; should be 0 True
 df_student_terms["term_is_pre_cohort"].value_counts(dropna=False)
