@@ -601,14 +601,21 @@ _ = ax.set(xlabel="Number of Students")
 # COMMAND ----------
 
 num_cohorts = df_cohort_filtered["cohort"].nunique()
-first_cohort, last_cohort = df_cohort_filtered["cohort"].min(), df_cohort_filtered["cohort"].max()
+first_cohort, last_cohort = (
+    df_cohort_filtered["cohort"].min(),
+    df_cohort_filtered["cohort"].max(),
+)
 print(f"{num_cohorts} cohorts ({first_cohort} through {last_cohort})")
 
 # COMMAND ----------
 
-print(df_cohort_filtered["cohort_term"].value_counts(normalize=True, dropna=False), end="\n\n")
 print(
-    df_cohort_filtered["enrollment_type"].value_counts(normalize=True, dropna=False), end="\n\n"
+    df_cohort_filtered["cohort_term"].value_counts(normalize=True, dropna=False),
+    end="\n\n",
+)
+print(
+    df_cohort_filtered["enrollment_type"].value_counts(normalize=True, dropna=False),
+    end="\n\n",
 )
 print(
     df_cohort_filtered["enrollment_intensity_first_term"].value_counts(
@@ -773,13 +780,15 @@ first_ayear, last_ayear = (
 )
 print(f"{num_ayears} academic years ({first_ayear} through {last_ayear})")
 
-# adding percent breakdown of academic terms 
+# adding percent breakdown of academic terms
 df_course_filtered["academic_term"].value_counts(dropna=False, normalize=True)
 
 # COMMAND ----------
 
 num_courses = (
-    df_course_filtered["course_prefix"].str.cat(df_course["course_number"], sep=" ").nunique()
+    df_course_filtered["course_prefix"]
+    .str.cat(df_course["course_number"], sep=" ")
+    .nunique()
 )
 num_subjects = df_course_filtered["course_cip"].nunique()
 print(f"{num_courses} distinct courses, {num_subjects} distinct subjects")
@@ -863,7 +872,9 @@ _ = ax.set(xlabel="Number of Students")
 
 # student gender by age
 ax = sb.histplot(
-    df_cohort_filtered[(df_cohort_filtered["gender"] == "F") | (df_cohort_filtered["gender"] == "M")],
+    df_cohort_filtered[
+        (df_cohort_filtered["gender"] == "F") | (df_cohort_filtered["gender"] == "M")
+    ],
     y="gender",
     hue="student_age",
     multiple="stack",
