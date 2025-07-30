@@ -193,7 +193,7 @@ class ModelCard(t.Generic[C]):
         def as_percent(val: float | int) -> str:
             val = float(val) * 100
             return str(int(val) if val.is_integer() else round(val, 2))
-        
+
         feature_count = len(
             self.model.named_steps["column_selector"].get_params()["cols"]
         )
