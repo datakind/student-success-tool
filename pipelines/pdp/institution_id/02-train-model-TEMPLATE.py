@@ -66,7 +66,7 @@ job_run_id = utils.databricks.get_db_widget_param("job_run_id", default="interac
 # COMMAND ----------
 
 # project configuration should be stored in a config file in TOML format
-cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig)
+cfg = dataio.read_config("./config.toml", schema=configs.pdp.PDPProjectConfig)
 cfg
 
 # COMMAND ----------

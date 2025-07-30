@@ -562,6 +562,19 @@ df_cohort_filtered
 
 # COMMAND ----------
 
+# how many students lost?
+print(df_cohort.shape)
+df_cohort_filtered.shape
+
+# COMMAND ----------
+
+print(df_cohort_filtered["enrollment_type"].value_counts(dropna=False))
+
+# if no re-admit students, just drop this category altogether
+# df_cohort_filtered["enrollment_type"] = df_cohort_filtered["enrollment_type"].cat.remove_categories("RE-ADMIT")
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## plots and stats
 
@@ -628,6 +641,21 @@ ax.legend(loc="lower left", title="Enrollment Type")
 
 # COMMAND ----------
 
+# First year GPA by cohort and enrollment intensity
+# to remove error bars, errorbar=None
+ax = sb.barplot(
+    df_cohort_filtered.sort_values(by="cohort").astype({"gpa_group_year_1": "Float32"}),
+    x="cohort",
+    y="gpa_group_year_1",
+    estimator="mean",
+    hue="enrollment_intensity_first_term",
+    edgecolor="white",
+)
+ax.set(ylabel="Avg. GPA (Year 1)")
+ax.legend(loc="lower left", title="Enrollment Intensity")
+
+# COMMAND ----------
+
 # First year GPA by cohort and credential type sought
 # to remove error bars, errorbar=None
 ax = sb.barplot(
@@ -640,6 +668,11 @@ ax = sb.barplot(
 )
 ax.set(ylabel="Avg. GPA (Year 1)")
 ax.legend(loc="lower left", title="Enrollment Intensity")
+
+# COMMAND ----------
+
+# credential types by cohort 
+df_cohort_filtered[["cohort", "credential_type_sought_year_1"]].value_counts(dropna=False).sort_index()
 
 # COMMAND ----------
 
@@ -686,28 +719,31 @@ df_pct_creds_by_yr.groupby("year_of_enrollment")[
 # COMMAND ----------
 
 # Plot mean or median, based on above
-(
-    sb.barplot(
-        df_pct_creds_by_yr,
-        x="year_of_enrollment",
-        y="pct_credits_earned",
-        estimator="mean",
-        edgecolor="white",
-        errorbar=None,
-    ).set(xlabel="Year of Enrollment", ylabel="Avg. % Credits Earned")
+# Create the barplot and capture the Axes object
+ax = sb.barplot(
+    data=df_pct_creds_by_yr,
+    x="year_of_enrollment",
+    y="pct_credits_earned",
+    estimator="mean",
+    edgecolor="white",
+    errorbar=None,
 )
+
+# Set axis labels
+ax.set(xlabel="Year of Enrollment", ylabel="Avg. % Credits Earned")
 
 # Add percent labels on top of each bar
 for bar in ax.patches:
     height = bar.get_height()
     ax.annotate(
-        f"{height:.1f}%",
+        f"{height:.1f}%",  
         (bar.get_x() + bar.get_width() / 2, height),
-        ha="center",
-        va="bottom",
-        fontsize=10,
+        ha='center',
+        va='bottom',
+        fontsize=10
     )
 
+# Finalize layout
 plt.tight_layout()
 plt.show()
 
