@@ -671,8 +671,10 @@ ax.legend(loc="lower left", title="Enrollment Intensity")
 
 # COMMAND ----------
 
-# credential types by cohort 
-df_cohort_filtered[["cohort", "credential_type_sought_year_1"]].value_counts(dropna=False).sort_index()
+# credential types by cohort
+df_cohort_filtered[["cohort", "credential_type_sought_year_1"]].value_counts(
+    dropna=False
+).sort_index()
 
 # COMMAND ----------
 
@@ -736,11 +738,11 @@ ax.set(xlabel="Year of Enrollment", ylabel="Avg. % Credits Earned")
 for bar in ax.patches:
     height = bar.get_height()
     ax.annotate(
-        f"{height:.1f}%",  
+        f"{height:.1f}%",
         (bar.get_x() + bar.get_width() / 2, height),
-        ha='center',
-        va='bottom',
-        fontsize=10
+        ha="center",
+        va="bottom",
+        fontsize=10,
     )
 
 # Finalize layout
