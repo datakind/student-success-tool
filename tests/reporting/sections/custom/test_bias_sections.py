@@ -92,6 +92,7 @@ def test_bias_groups_section_with_missing_aliases(mock_card, caplog):
 # TEST: bias_summary_section uses aliases in header
 # ─────────────────────────────────────────────────────────────────────────────
 
+@patch("student_success_tool.reporting.utils.utils.download_artifact")
 def test_bias_summary_section_uses_aliases(mock_card, tmp_path):
     import pandas as pd
     from student_success_tool.reporting.utils import utils
