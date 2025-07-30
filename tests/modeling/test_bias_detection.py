@@ -3,7 +3,6 @@ import mlflow.tracking
 import numpy as np
 import pandas as pd
 import pytest
-from collections import Counter
 
 from student_success_tool.modeling import bias_detection
 
