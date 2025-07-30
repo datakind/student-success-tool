@@ -100,9 +100,7 @@ raw_course_file_path = cfg.datasets.bronze.raw_course.file_path
 
 # read without any schema validation, so we can look at the data "raw"
 df_course_raw = dataio.pdp.read_raw_course_data(
-    file_path=raw_course_file_path, 
-    schema=None, 
-    dttm_format="%Y%m%d.0"
+    file_path=raw_course_file_path, schema=None, dttm_format="%Y%m%d.0"
 )
 df_course_raw.head()
 
@@ -206,8 +204,7 @@ raw_cohort_file_path = cfg.datasets.bronze.raw_cohort.file_path
 
 # read without any schema validation, so we can look at the data "raw"
 df_cohort_raw = dataio.pdp.read_raw_cohort_data(
-    file_path=raw_cohort_file_path, 
-    schema=None
+    file_path=raw_cohort_file_path, schema=None
 )
 df_cohort_raw.head()
 
@@ -215,8 +212,7 @@ df_cohort_raw.head()
 
 # try to read data while validating with the "base" PDP schema
 df_cohort = dataio.pdp.read_raw_cohort_data(
-    file_path=raw_cohort_file_path, 
-    schema=dataio.schemas.pdp.RawPDPCohortDataSchema
+    file_path=raw_cohort_file_path, schema=dataio.schemas.pdp.RawPDPCohortDataSchema
 )
 df_cohort
 
