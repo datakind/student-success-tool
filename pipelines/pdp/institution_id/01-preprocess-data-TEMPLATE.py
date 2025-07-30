@@ -128,15 +128,15 @@ if not cfg.preprocessing.include_pre_cohort_courses:
     df_course_merged = df_course.merge(
         df_cohort[[cfg.student_id_col, "cohort", "cohort_term"]],
         on=cfg.student_id_col,
-        how="left"
+        how="left",
     )
 
     # Filter to remove pre-cohort records
     df_course = df_course_merged[
-        (df_course_merged["academic_year"] > df_course_merged["cohort"]) |
-        (
-            (df_course_merged["academic_year"] == df_course_merged["cohort"]) &
-            (df_course_merged["academic_term"] >= df_course_merged["cohort_term"])
+        (df_course_merged["academic_year"] > df_course_merged["cohort"])
+        | (
+            (df_course_merged["academic_year"] == df_course_merged["cohort"])
+            & (df_course_merged["academic_term"] >= df_course_merged["cohort_term"])
         )
     ]
 
