@@ -99,7 +99,7 @@ def test_bias_summary_section_uses_aliases(mock_download_artifact, mock_card, tm
 
     # Setup alias
     mock_card.cfg.student_group_aliases = {
-        "firstgenflag": "First-Generation Students",
+        "firstgenflag": "First-Generation",
     }
 
     mock_card.format.friendly_case.side_effect = lambda x: x.replace("_", " ").title()
@@ -130,6 +130,6 @@ def test_bias_summary_section_uses_aliases(mock_download_artifact, mock_card, tm
     rendered = registry.render_all()
     result = rendered["bias_summary_section"]
 
-    assert "First-Generation Students" in result
+    assert "First-Generation" in result
     assert "12% difference" in result
     assert "False Negative Parity Rate for First-Generation Students" in result
