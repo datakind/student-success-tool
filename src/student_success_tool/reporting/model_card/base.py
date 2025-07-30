@@ -198,7 +198,7 @@ class ModelCard(t.Generic[C]):
             "number_of_features": str(feature_count),
             "collinearity_threshold": str(fs_cfg.collinear_threshold),
             "low_variance_threshold": str(fs_cfg.low_variance_threshold),
-            "incomplete_threshold": str(fs_cfg.incomplete_threshold),
+            "incomplete_threshold": str(int(fs_cfg.incomplete_threshold)*100),
         }
 
     def get_model_plots(self) -> dict[str, str]:
