@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 
 from .. import bias_sections as base_bias_sections
-from ..utils import utils
+from ...utils import utils
 
 LOGGER = logging.getLogger(__name__)
 
