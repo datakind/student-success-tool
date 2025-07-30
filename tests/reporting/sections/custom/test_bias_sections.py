@@ -25,8 +25,8 @@ def test_bias_groups_section_with_valid_aliases(mock_card, registry):
     mock_card.cfg.student_group_aliases = {
         "firstgenflag": "First-Generation Status",
         "gender": "Gender",
-        "ethnic": "Ethnicity",
-        "race_demo": "Race",
+        "ethnicity_ipeds": "Ethnicity",
+        "demo_race": "Race",
     }
 
     custom_bias_sections.register_bias_sections(mock_card, registry)
