@@ -31,6 +31,7 @@ def registry():
 # TESTS: bias_groups_section
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def test_bias_groups_section_with_valid_aliases(mock_card, registry):
     mock_card.cfg.student_group_aliases = {
         "firstgenflag": "First-Generation Status",
@@ -93,6 +94,7 @@ def test_bias_groups_section_with_missing_aliases(mock_card, caplog):
 # TEST: bias_summary_section uses aliases in header
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 @patch("student_success_tool.reporting.utils.utils.download_artifact")
 def test_bias_summary_section_uses_aliases(mock_download_artifact, mock_card, tmp_path):
     import pandas as pd
@@ -107,13 +109,15 @@ def test_bias_summary_section_uses_aliases(mock_download_artifact, mock_card, tm
     mock_card.run_id = "run123"
 
     # Write test CSV
-    df = pd.DataFrame({
-        "group": ["firstgenflag"],
-        "split_name": ["test"],
-        "subgroups": ["yes vs no"],
-        "fnr_percentage_difference": [0.12],
-        "type": ["p < 0.05, 95% CI [0.05, 0.19]"]
-    })
+    df = pd.DataFrame(
+        {
+            "group": ["firstgenflag"],
+            "split_name": ["test"],
+            "subgroups": ["yes vs no"],
+            "fnr_percentage_difference": [0.12],
+            "type": ["p < 0.05, 95% CI [0.05, 0.19]"],
+        }
+    )
     bias_path = tmp_path / "bias_flags"
     bias_path.mkdir()
     df.to_csv(bias_path / "high_bias_flags.csv", index=False)

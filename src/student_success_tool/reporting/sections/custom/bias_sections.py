@@ -18,7 +18,9 @@ def resolve_student_group_label(card, group_key):
             return card.format.friendly_case(group_key)
         return alias_dict.get(group_key, card.format.friendly_case(group_key))
     except Exception as e:
-        LOGGER.warning(f"[resolve_student_group_label] Error resolving alias for '{group_key}': {e}")
+        LOGGER.warning(
+            f"[resolve_student_group_label] Error resolving alias for '{group_key}': {e}"
+        )
         return card.format.friendly_case(group_key)
 
 
@@ -40,7 +42,9 @@ def register_bias_sections(card, registry):
 
         sg1 = card.format.bold(card.format.italic(subgroup_1))
         sg2 = card.format.bold(card.format.italic(subgroup_2))
-        percent_higher = card.format.bold(f"{int(round(float(diff) * 100))}% difference")
+        percent_higher = card.format.bold(
+            f"{int(round(float(diff) * 100))}% difference"
+        )
 
         return (
             f"- {sg1} students have a {percent_higher} in False Negative Rate (FNR) than {sg2} students. "
@@ -124,7 +128,9 @@ def register_bias_sections(card, registry):
 
         try:
             alias_dict = card.cfg.student_group_aliases
-            assert isinstance(alias_dict, dict), "student_group_aliases must be a dictionary"
+            assert isinstance(alias_dict, dict), (
+                "student_group_aliases must be a dictionary"
+            )
 
             group_labels = list(alias_dict.values())
             nested = [
@@ -134,8 +140,12 @@ def register_bias_sections(card, registry):
             return intro + "".join(nested)
 
         except (AttributeError, AssertionError, TypeError) as e:
-            LOGGER.warning(f"[bias_groups_section] Failed to extract student groups: {e}")
-            fallback = f"{card.format.indent_level(2)}- Unable to extract student groups\n"
+            LOGGER.warning(
+                f"[bias_groups_section] Failed to extract student groups: {e}"
+            )
+            fallback = (
+                f"{card.format.indent_level(2)}- Unable to extract student groups\n"
+            )
             return intro + fallback
 
     @registry.register("bias_summary_section")
@@ -147,7 +157,11 @@ def register_bias_sections(card, registry):
             LOGGER.warning(
                 "No disparities found or bias evaluation artifacts missing. Skipping bias summary section."
             )
-            return card.format.italic("No statistically significant disparities were found on test dataset across groups.")
+            return card.format.italic(
+                "No statistically significant disparities were found on test dataset across groups."
+            )
 
-        section_header = f"{card.format.header_level(4)}Disparities by Student Group\n\n"
+        section_header = (
+            f"{card.format.header_level(4)}Disparities by Student Group\n\n"
+        )
         return section_header + "\n\n".join(all_blocks)
