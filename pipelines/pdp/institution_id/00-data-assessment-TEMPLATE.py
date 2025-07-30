@@ -774,6 +774,9 @@ first_ayear, last_ayear = (
 )
 print(f"{num_ayears} academic years ({first_ayear} through {last_ayear})")
 
+# adding percent breakdown of academic terms 
+df_course_filtered["academic_term"].value_counts(dropna=False, normalize=True)
+
 # COMMAND ----------
 
 num_courses = (
