@@ -806,11 +806,11 @@ sb.move_legend(ax, loc="upper right", bbox_to_anchor=(1, 1))
 
 # COMMAND ----------
 
-# grades by delivery method 
+# grades by delivery method
 print(df_course_filtered["grade"].value_counts(dropna=False).sort_index())
 
 # Map letter grades A and F to numeric; ignores P, I, W
-# confirm this with school! 
+# confirm this with school!
 df_numeric_grades = df_course_filtered.copy()
 letter_to_num = {"A": 4.0, "F": 0.00}
 df_numeric_grades["grade_converted"] = pd.to_numeric(
@@ -818,12 +818,14 @@ df_numeric_grades["grade_converted"] = pd.to_numeric(
 ).fillna(df_numeric_grades["grade"].map(letter_to_num))
 
 # Keep only rows where 'grade' is numeric
-df_numeric_grades = df_numeric_grades [
+df_numeric_grades = df_numeric_grades[
     pd.to_numeric(df_numeric_grades["grade_converted"], errors="coerce").notna()
 ]
 
 # Ensure float dtype for plotting
-df_numeric_grades["grade_converted"] = df_numeric_grades["grade_converted"].astype(float)
+df_numeric_grades["grade_converted"] = df_numeric_grades["grade_converted"].astype(
+    float
+)
 
 print(df_numeric_grades["grade_converted"].value_counts(dropna=False).sort_index())
 
@@ -833,8 +835,8 @@ ax = sb.histplot(
     hue="delivery_method",
     multiple="stack",
     binwidth=1,
-    binrange=(0, 5),            
-    edgecolor="white"
+    binrange=(0, 5),
+    edgecolor="white",
 )
 
 ax.set(xlabel="Course grade", ylabel="Number of course enrollments")
