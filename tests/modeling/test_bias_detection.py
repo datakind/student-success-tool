@@ -319,7 +319,7 @@ def test_generate_bias_flag(
             "GroupB",
             "🔴 HIGH BIAS",
         ),
-        # Case 2: FNR diff > 0.1, but p > 0.01 → LOW BIAS
+        # Case 2: FNR diff > 0.1, but p > 0.01 -> LOW BIAS
         (
             [
                 {
@@ -345,7 +345,7 @@ def test_generate_bias_flag(
             "GroupB",
             "🟡 LOW BIAS",
         ),
-        # Case 3: FNR diff > 0.1, but p > 0.1 → NO BIAS
+        # Case 3: FNR diff > 0.1, but p > 0.1 -> NO BIAS
         (
             [
                 {
@@ -376,7 +376,7 @@ def test_generate_bias_flag(
 def test_flag_bias(fnr_data, expected_sg1, expected_sg2, expected_flag):
     def mock_z_test_fnr_difference(fnr1, fnr2, n1, n2):
         if fnr1 == 0.30:
-            return 0.005  # Case 1 → High bias (p ≤ 0.01)
+            return 0.005  # Case 1 -> High bias (p ≤ 0.01)
         elif fnr1 == 0.25 and fnr2 == 0.10:
             # Return different p-values based on test case
             return 0.03 if expected_flag == "🟡 LOW BIAS" else 0.15
