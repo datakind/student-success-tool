@@ -43,3 +43,27 @@ def read_features_table(file_path: str) -> dict[str, dict[str, str]]:
     features_table = read.from_toml_file(str(fpath))
     LOGGER.info("loaded features table from '%s'", fpath)
     return features_table  # type: ignore
+
+
+def write_config(
+    project_config: type[S],
+    config_path: str,
+) -> None:
+    """
+    Serialize and write a Pydantic-based ProjectConfig to a TOML file.
+
+    This function uses the `model_dump(mode="toml")` method of the Pydantic model
+    to convert the configuration into TOML format, and writes it to the specified file path.
+
+    Args:
+        project_config: A subclass instance of a Pydantic `BaseModel` representing
+                        the full project configuration.
+        config_path: Path to the TOML file where the configuration should be saved.
+    """
+    try:
+        path = pathlib.Path(config_path)
+        toml_str = project_config.model_dump(mode="toml")
+        path.write_text(toml_str)
+        LOGGER.info(f"Wrote updated config to {config_path}")
+    except OSError as e:
+        raise OSError(f"Failed to write config to {config_path}: {e}")

@@ -5,9 +5,13 @@ import numpy as np
 import pandas as pd
 import sklearn.utils
 
+import pydantic as pyd
+
 LOGGER = logging.getLogger(__name__)
 
 _DEFAULT_SPLIT_LABEL_FRACS = {"train": 0.6, "test": 0.2, "validate": 0.2}
+
+S = t.TypeVar("S", bound=pyd.BaseModel)
 
 
 def compute_dataset_splits(
@@ -74,3 +78,31 @@ def compute_sample_weights(
         dtype="float32",
         name="sample_weight",
     )
+
+
+def update_config_with_selected_model(
+    project_config: type[S],
+    run_id: str,
+    experiment_id: str,
+) -> S:
+    """
+    Update the model.run_id and model.experiment_id fields in the ProjectConfig object.
+
+    If the model section or its fields are missing, this function will skip updating
+    and return the original config unchanged.
+
+    Args:
+        project_config: The current ProjectConfig object.
+        run_id: The selected MLflow run ID.
+        experiment_id: The associated MLflow experiment ID.
+
+    Returns:
+        The updated ProjectConfig (or original if update not possible).
+    """
+    try:
+        project_config.model.run_id = run_id
+        project_config.model.experiment_id = experiment_id
+        LOGGER.info("Updated config with selected model run and experiment ID.")
+    except AttributeError:
+        LOGGER.error("Failed to update config due to missing model.run_id or model.experiment_id.")
+    return project_config

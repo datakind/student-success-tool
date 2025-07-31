@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+from pydantic import BaseModel
 
 from student_success_tool.modeling import utils
 
@@ -81,3 +82,26 @@ def test_compute_sample_weights(df, target_col, class_weight, exp):
     assert isinstance(obs, pd.Series)
     assert len(obs) == len(df)
     assert pd.testing.assert_series_equal(obs, exp, rtol=0.01) is None
+
+# --- Sample config classes ---
+
+class ModelConfig(BaseModel):
+    run_id: str | None = None
+    experiment_id: str | None = None
+
+class ProjectConfig(BaseModel):
+    model: ModelConfig
+
+
+def test_update_config_with_selected_model_success():
+    config = ProjectConfig(model=ModelConfig(run_id=None, experiment_id=None))
+    updated = utils.update_config_with_selected_model(config, "123ABC", "456XYZ")
+
+    assert updated.model.run_id == "123ABC"
+    assert updated.model.experiment_id == "456XYZ"
+
+
+def test_update_config_with_selected_model_missing_model():
+    broken_config = object()  # has no attributes
+    updated = utils.update_config_with_selected_model(broken_config, "123ABC", "456XYZ")
+    assert updated is broken_config
