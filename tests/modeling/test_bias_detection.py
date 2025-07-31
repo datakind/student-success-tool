@@ -319,16 +319,16 @@ def test_aggregate_bias_scores_basic_case():
             "p_value": 0.5,
         },
         {
-            "split_name": "val",
-            "flag": "🔴 HIGH BIAS",
-            "fnr_percentage_difference": 0.9,
-            "p_value": 0.01,
-        },
-        {
             "split_name": "test",
             "flag": "🟢 NO BIAS",
             "fnr_percentage_difference": 0.06,
             "p_value": 0.1,
+        },
+        {
+            "split_name": "val",
+            "flag": "🔴 HIGH BIAS",
+            "fnr_percentage_difference": 0.9,
+            "p_value": 0.01,
         },
     ]
     # ok 
