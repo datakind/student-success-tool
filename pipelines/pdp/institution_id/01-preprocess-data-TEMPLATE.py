@@ -121,24 +121,7 @@ df_cohort.head()
 # We usually drop pre-cohort course records; If school requests otherwise, please set include_pre_cohort_courses in your config to TRUE, re-load the config, THEN run this cell!
 
 if not cfg.preprocessing.include_pre_cohort_courses:
-    # Drop existing cohort columns in df_course if present
-    df_course = df_course.drop(columns=["cohort", "cohort_term"], errors="ignore")
-
-    # Now merge safely
-    df_course_merged = df_course.merge(
-        df_cohort[[cfg.student_id_col, "cohort", "cohort_term"]],
-        on=cfg.student_id_col,
-        how="left",
-    )
-
-    # Filter to remove pre-cohort records
-    df_course = df_course_merged[
-        (df_course_merged["academic_year"] > df_course_merged["cohort"])
-        | (
-            (df_course_merged["academic_year"] == df_course_merged["cohort"])
-            & (df_course_merged["academic_term"] >= df_course_merged["cohort_term"])
-        )
-    ]
+    df_course = preprocessing.pdp.remove_pre_cohort_courses(df_course, df_cohort)
 
 # COMMAND ----------
 
