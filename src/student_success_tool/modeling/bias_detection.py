@@ -358,14 +358,15 @@ def flag_bias(
 def compute_bias_score(flag: dict) -> float:
     """
     Compute raw bias score bounded between [0, 1] from FNR diff and p-value.
-    We choose 0.6 for FNR difference weight and 0.4 for p-value since we
-    slightly favor than the magnitude of the bias than statistical significance, though
-    this was a design choice and 50/50 is a fair option as well.
+    We chose 0.8 for FNR difference weight and 0.2 for p-value since we
+    favor the magnitude of the bias more than statistical significance. P-value
+    still dominates since it's usually less than 0.1, while FNR difference 
+    is usually less than 0.5, so we need to weigh FNR disparity more.
     """
     fnr_diff = min(max(flag["fnr_percentage_difference"], 0.0), 1.0)
     p_value = flag.get("p_value", 1.0)
     confidence = 1 - min(max(p_value, 0.0), 1.0)
-    return float(round(0.6 * fnr_diff + 0.4 * confidence, 4))
+    return float(round(0.8 * fnr_diff + 0.2 * confidence, 4))
 
 
 def aggregate_bias_scores(
@@ -373,10 +374,10 @@ def aggregate_bias_scores(
     split: str = "test",
 ) -> t.Dict[str, float]:
     """
-    Aggregate model-level bias scores based on score from each flag, while accounting
-    for valid subgroup comparisons. We utilize flag weights to weigh our scores to ensure
-    that multiple "low" bias flags do not easily surpass one "high" bias flag in aggregated score.
-    With our weights as is, 10 "low" bias flags would equal 2 "medium" bias flags or 1 "high" bias flag.
+    Create model bias score by aggregating bias flag scores, while accounting
+    for valid subgroup comparisons. We utilize flag weights to ensure that multiple "low" bias 
+    flags do not easily surpass one "high" bias flag in an aggregated score. With our weights as is,
+    10 "low" bias flags would equal 2 "medium" bias flags or 1 "high" bias flag.
     These weights can be adjusted (and should be revisited), as well.
 
     Once we sum all of our bias flag scores, we then normalize using the number of valid
@@ -384,7 +385,7 @@ def aggregate_bias_scores(
     excluding "insufficient data" flags.
 
     This normalization is performed for the following reasons:
-        (1) Our mean bias score for a model will be theoretically bounded between 0 and 1
+        (1) Our mean bias score for a model will be theoretically bounded between 0 and 1.
         (2) We appropriately account for "no bias" flags in determining overall model bias
         (3) We properly account for sample size differences. Otherwise, a model with more bias flags
         and more valid comparisons will always have a higher score than a model with few flags &
