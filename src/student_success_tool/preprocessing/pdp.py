@@ -462,7 +462,7 @@ def infer_num_terms_in_year(s: pd.Series) -> int:
         )
 
 
-def remove_pre_cohort_courses(df_course: pd.DataFrame, df_cohort: pd.DataFrame) -> pd.DataFrame:
+def remove_pre_cohort_courses(df_course: pd.DataFrame, df_cohort: pd.DataFrame, student_id_col: str) -> pd.DataFrame:
     """
     Removes any course records that occur before a student's cohort start term.
 
@@ -479,14 +479,15 @@ def remove_pre_cohort_courses(df_course: pd.DataFrame, df_cohort: pd.DataFrame) 
     Args:
         df_course
         df_cohort
+        student_id_col
     
     Returns:
         pd.DataFrame: Filtered DataFrame excluding pre-cohort course records.
     """
     df_course = df_course.drop(columns=["cohort", "cohort_term"], errors="ignore")
     df_course_merged = df_course.merge(
-        df_cohort[[cfg.student_id_col, "cohort", "cohort_term"]],
-        on=cfg.student_id_col,
+        df_cohort[[student_id_col, "cohort", "cohort_term"]],
+        on=student_id_col,
         how="left",
     )
     df_course = df_course_merged[

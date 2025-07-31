@@ -121,7 +121,7 @@ df_cohort.head()
 # We usually drop pre-cohort course records; If school requests otherwise, please set include_pre_cohort_courses in your config to TRUE, re-load the config, THEN run this cell!
 
 if not cfg.preprocessing.include_pre_cohort_courses:
-    df_course = preprocessing.pdp.remove_pre_cohort_courses(df_course, df_cohort)
+    df_course = preprocessing.pdp.remove_pre_cohort_courses(df_course, df_cohort, cfg.student_id_col)
 
 # COMMAND ----------
 
