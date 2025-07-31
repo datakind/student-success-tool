@@ -293,7 +293,7 @@ def test_generate_bias_flag(
 @pytest.mark.parametrize(
     "fnr_data, expected_sg1, expected_sg2, expected_flag",
     [
-        # Case where the ordering should be respected (greater FNR first)
+        # Case 1: Valid HIGH BIAS (diff > 0.15 and p ≤ 0.01)
         (
             [
                 {
@@ -319,14 +319,71 @@ def test_generate_bias_flag(
             "GroupB",
             "🔴 HIGH BIAS",
         ),
+        # Case 2: FNR diff > 0.1, but p > 0.01 → LOW BIAS
+        (
+            [
+                {
+                    "group": "Race",
+                    "subgroup": "GroupA",
+                    "fnr": 0.25,
+                    "size": 100,
+                    "ci": (0.20, 0.30),
+                    "number_of_positive_samples": 20,
+                    "split_name": "validation",
+                },
+                {
+                    "group": "Race",
+                    "subgroup": "GroupB",
+                    "fnr": 0.10,
+                    "size": 100,
+                    "ci": (0.08, 0.12),
+                    "number_of_positive_samples": 20,
+                    "split_name": "validation",
+                },
+            ],
+            "GroupA",
+            "GroupB",
+            "🟡 LOW BIAS",
+        ),
+        # Case 3: FNR diff > 0.1, but p > 0.1 → NO BIAS
+        (
+            [
+                {
+                    "group": "Race",
+                    "subgroup": "GroupA",
+                    "fnr": 0.25,
+                    "size": 100,
+                    "ci": (0.20, 0.30),
+                    "number_of_positive_samples": 20,
+                    "split_name": "validation",
+                },
+                {
+                    "group": "Race",
+                    "subgroup": "GroupB",
+                    "fnr": 0.10,
+                    "size": 100,
+                    "ci": (0.08, 0.12),
+                    "number_of_positive_samples": 20,
+                    "split_name": "validation",
+                },
+            ],
+            "GroupA",
+            "GroupB",
+            "🟢 NO BIAS",
+        ),
     ],
 )
 def test_flag_bias(fnr_data, expected_sg1, expected_sg2, expected_flag):
     def mock_z_test_fnr_difference(fnr1, fnr2, n1, n2):
-        return 0.005  # Significant p-value to trigger flagging
+        if fnr1 == 0.30:
+            return 0.005  # Case 1 → High bias (p ≤ 0.01)
+        elif fnr1 == 0.25 and fnr2 == 0.10:
+            # Return different p-values based on test case
+            return 0.03 if expected_flag == "🟡 LOW BIAS" else 0.15
+        return 0.5
 
     def mock_check_ci_overlap(ci1, ci2):
-        return False  # Non-overlapping
+        return False  # Assume no overlap in all test cases
 
     def mock_generate_bias_flag(
         group, sg1, sg2, fnr_diff, reason, split_name, flag, p_value
