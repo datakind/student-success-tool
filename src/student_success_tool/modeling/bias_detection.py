@@ -358,7 +358,7 @@ def flag_bias(
 def compute_bias_score(flag: dict) -> float:
     """
     Compute raw bias score bounded between [0, 1] from FNR diff and p-value.
-    We choose 0.6 for FNR difference weight and 0.4 for p-value since we 
+    We choose 0.6 for FNR difference weight and 0.4 for p-value since we
     slightly favor than the magnitude of the bias than statistical significance, though
     this was a design choice and 50/50 is a fair option as well.
     """
@@ -381,10 +381,10 @@ def aggregate_bias_scores(
 
     Once we sum all of our bias flag scores, we then normalize using the number of valid
     comparisons, which includes "no bias", "low", "medium", and "high" bias flags, intentionally
-    excluding "insufficient data" flags. 
-    
+    excluding "insufficient data" flags.
+
     This normalization is performed for the following reasons:
-        (1) Our mean bias score for a model will be theoretically bounded between 0 and 1 
+        (1) Our mean bias score for a model will be theoretically bounded between 0 and 1
         (2) We appropriately account for "no bias" flags in determining overall model bias
         (3) We properly account for sample size differences. Otherwise, a model with more bias flags
         and more valid comparisons will always have a higher score than a model with few flags &
