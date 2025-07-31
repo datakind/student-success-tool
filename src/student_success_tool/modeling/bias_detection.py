@@ -562,6 +562,7 @@ def generate_bias_flag(
         ),
         "split_name": split_name,
         "flag": flag,
+        "p_value": p_value,
     }
     return flag_entry
 
