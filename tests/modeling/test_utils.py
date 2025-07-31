@@ -1,5 +1,8 @@
 import pandas as pd
 import pytest
+import pathlib
+import tomlkit
+
 from pydantic import BaseModel
 
 from student_success_tool.modeling import utils
@@ -87,24 +90,24 @@ def test_compute_sample_weights(df, target_col, class_weight, exp):
 # --- Sample config classes ---
 
 
-class ModelConfig(BaseModel):
-    run_id: str | None = None
-    experiment_id: str | None = None
+def test_update_run_metadata_in_toml(tmp_path):
+    # Create a dummy TOML config
+    config_path = tmp_path / "config.toml"
+    original_doc = tomlkit.document()
+    original_doc["institution_id"] = "TEST_INST"
+    original_doc["model"] = tomlkit.table()
+    original_doc["model"]["framework"] = "sklearn"
 
+    config_path.write_text(tomlkit.dumps(original_doc))
 
-class ProjectConfig(BaseModel):
-    model: ModelConfig
+    # Update with new values
+    run_id = "new_run_123"
+    experiment_id = "exp_456"
+    utils.update_run_metadata_in_toml(str(config_path), run_id, experiment_id)
 
-
-def test_update_config_with_selected_model_success():
-    config = ProjectConfig(model=ModelConfig(run_id=None, experiment_id=None))
-    updated = utils.update_config_with_selected_model(config, "123ABC", "456XYZ")
-
-    assert updated.model.run_id == "123ABC"
-    assert updated.model.experiment_id == "456XYZ"
-
-
-def test_update_config_with_selected_model_missing_model():
-    broken_config = object()  # has no attributes
-    updated = utils.update_config_with_selected_model(broken_config, "123ABC", "456XYZ")
-    assert updated is broken_config
+    # Re-read and validate
+    updated = tomlkit.parse(config_path.read_text())
+    assert updated["model"]["run_id"] == run_id
+    assert updated["model"]["experiment_id"] == experiment_id
+    assert updated["model"]["framework"] == "sklearn"  # Existing field preserved
+    assert updated["institution_id"] == "TEST_INST"  # Other sections untouched

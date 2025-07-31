@@ -1,7 +1,6 @@
 import logging
 import pathlib
 import typing as t
-import tomlkit
 
 import pydantic as pyd
 
@@ -44,33 +43,3 @@ def read_features_table(file_path: str) -> dict[str, dict[str, str]]:
     features_table = read.from_toml_file(str(fpath))
     LOGGER.info("loaded features table from '%s'", fpath)
     return features_table  # type: ignore
-
-
-def write_config(
-    project_config: type[S],
-    config_path: str,
-) -> None:
-    """
-    Write Pydantic config to TOML using tomlkit (preserves formatting if reading existing files).
-
-    Args:
-        project_config: A subclass instance of a Pydantic `BaseModel` representing the config.
-        config_path: File path to write the TOML configuration.
-    """
-    try:
-        path = pathlib.Path(config_path)
-        data = project_config.model_dump(mode="toml", exclude_none=True)
-        doc = tomlkit.document()
-
-        for section, section_data in data.items():
-            if isinstance(section_data, dict):
-                doc[section] = tomlkit.table()
-                for key, value in section_data.items():
-                    doc[section][key] = value
-            else:
-                doc[section] = section_data
-
-        path.write_text(tomlkit.dumps(doc))
-        LOGGER.info(f"Wrote updated config to {config_path}")
-    except OSError as e:
-        raise OSError(f"Failed to write config to {config_path}: {e}")

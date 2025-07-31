@@ -1,5 +1,7 @@
 import logging
 import typing as t
+import pathlib
+import tomlkit
 
 import numpy as np
 import pandas as pd
@@ -80,31 +82,38 @@ def compute_sample_weights(
     )
 
 
-def update_config_with_selected_model(
-    project_config: type[S],
-    run_id: str,
-    experiment_id: str,
-) -> S:
+def update_run_metadata_in_toml(
+    config_path: str, run_id: str, experiment_id: str
+) -> None:
     """
-    Update the model.run_id and model.experiment_id fields in the ProjectConfig object.
-
-    If the model section or its fields are missing, this function will skip updating
-    and return the original config unchanged.
+    Update the 'model.run_id' and 'model.experiment_id' fields in a TOML config file,
+    preserving the original formatting and structure using tomlkit.
 
     Args:
-        project_config: The current ProjectConfig object.
-        run_id: The selected MLflow run ID.
-        experiment_id: The associated MLflow experiment ID.
-
-    Returns:
-        The updated ProjectConfig (or original if update not possible).
+        config_path: Path to the TOML config file.
+        run_id: The run ID to set.
+        experiment_id: The experiment ID to set.
     """
+    path = pathlib.Path(config_path)
+
     try:
-        project_config.model.run_id = run_id
-        project_config.model.experiment_id = experiment_id
-        LOGGER.info("Updated config with selected model run and experiment ID.")
-    except AttributeError:
-        LOGGER.error(
-            "Failed to update config due to missing model.run_id or model.experiment_id."
+        doc = tomlkit.parse(path.read_text())
+
+        if "model" not in doc:
+            doc["model"] = tomlkit.table()
+
+        doc["model"]["run_id"] = run_id
+        doc["model"]["experiment_id"] = experiment_id
+
+        path.write_text(tomlkit.dumps(doc))
+
+        LOGGER.info(
+            f"Updated TOML config at %s with run_id=%s and experiment_id=%s",
+            config_path,
+            run_id,
+            experiment_id,
         )
-    return project_config
+
+    except Exception as e:
+        LOGGER.error(f"Failed to update TOML config at {config_path}: {e}")
+        raise
