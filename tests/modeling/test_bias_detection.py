@@ -324,6 +324,12 @@ def test_aggregate_bias_scores_basic_case():
             "fnr_percentage_difference": 0.9,
             "p_value": 0.01,
         },
+        {
+            "split_name": "test",
+            "flag": "🟢 NO BIAS",
+            "fnr_percentage_difference": 0.06,
+            "p_value": 0.1,
+        },
     ]
 
     result = bias_detection.aggregate_bias_scores(flags, split="test")
@@ -343,7 +349,7 @@ def test_aggregate_bias_scores_basic_case():
         "bias_score_sum": round(sum(scores), 4),
         "bias_score_mean": round(
             sum(scores) / 4, 4
-        ),  # 4 valid comparisons (excluding "⚪")
+        ),  # 4 valid comparisons for test (excluding "⚪")
         "bias_score_max": round(max(raw), 4),
         "num_bias_flags": 3,
         "num_valid_comparisons": 4,

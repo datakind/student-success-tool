@@ -378,9 +378,9 @@ def aggregate_bias_scores(
         - bias_score_sum: sum of weighted per-flag scores
         - bias_score_mean: normalized by num_valid_comparisons
         - bias_score_max: max single flag score (raw)
-        - num_bias_flags: total number of bias flags, includes only low, medium, and high
-        - num_valid_comparisons: total valid bias comparisons, excludes any
-          insufficient data flags
+        - num_bias_flags: total number of bias flags, includes only "low", "medium", and "high"
+        - num_valid_comparisons: total valid bias comparisons  with "no bias" flags included,
+          but excludes any insufficient data flags
     """
     # Filter flags to relevant split
     split_flags = [f for f in flags if f["split_name"] == split]
@@ -389,13 +389,14 @@ def aggregate_bias_scores(
     flag_counts = Counter(f["flag"] for f in split_flags)
 
     # Compute numerator (weighted score sum)
-    valid_flags = [f for f in split_flags if f["flag"] in FLAG_WEIGHTS]
+    weighted_flags = [f for f in split_flags if f["flag"] in FLAG_WEIGHTS]
     weighted_scores = [
-        compute_bias_score(f) * FLAG_WEIGHTS[f["flag"]] for f in valid_flags
+        compute_bias_score(f) * FLAG_WEIGHTS[f["flag"]] for f in weighted_flags
     ]
-    raw_scores = [compute_bias_score(f) for f in valid_flags]
+    raw_scores = [compute_bias_score(f) for f in weighted_flags]
 
-    # Compute denominator = all flags except insufficient data flag
+    # Compute denominator = all flags (no bias, low, medium high)
+    # excludes insufficient data flag
     num_valid_comparisons = sum(
         count for flag, count in flag_counts.items() if flag != "⚪ INSUFFICIENT DATA"
     )
@@ -413,7 +414,7 @@ def aggregate_bias_scores(
         "bias_score_sum": total_score,
         "bias_score_mean": mean_score,
         "bias_score_max": max_score,
-        "num_bias_flags": len(valid_flags),
+        "num_bias_flags": len(weighted_flags),
         "num_valid_comparisons": num_valid_comparisons,
     }
 
