@@ -48,26 +48,40 @@ def mock_helpers(monkeypatch):
         lambda y_true, y_pred: (0.5, 0.4, 0.6, sum(y_true)),
     )
 
+
 @pytest.fixture
 def mock_df_pred():
-    return pd.DataFrame({
-        "split": ["test"] * 6,
-        "Gender": ["Male", "Female", "Female", "Male", "Male", "Female"],
-        "target": [1, 1, 0, 0, 1, 0],
-        "pred": [1, 0, 0, 0, 1, 1],
-        "pred_prob": [0.9, 0.3, 0.2, 0.4, 0.8, 0.7],
-    })
+    return pd.DataFrame(
+        {
+            "split": ["test"] * 6,
+            "Gender": ["Male", "Female", "Female", "Male", "Male", "Female"],
+            "target": [1, 1, 0, 0, 1, 0],
+            "pred": [1, 0, 0, 0, 1, 1],
+            "pred_prob": [0.9, 0.3, 0.2, 0.4, 0.8, 0.7],
+        }
+    )
 
 
 def test_evaluate_bias_basic(mock_df_pred):
-    with patch("student_success_tool.modeling.bias_detection.mlflow"), \
-         patch("student_success_tool.modeling.bias_detection.plot_fnr_group"), \
-         patch("student_success_tool.modeling.bias_detection.flag_bias") as mock_flag_bias, \
-         patch("student_success_tool.modeling.bias_detection.log_bias_scores_to_mlflow") as mock_log_scores, \
-         patch("student_success_tool.modeling.bias_detection.log_group_metrics_to_mlflow") as mock_log_group, \
-         patch("student_success_tool.modeling.bias_detection.log_subgroup_metrics_to_mlflow") as mock_log_subgroup, \
-         patch("student_success_tool.modeling.bias_detection.log_bias_flags_to_mlflow") as mock_log_flags:
-
+    with (
+        patch("student_success_tool.modeling.bias_detection.mlflow"),
+        patch("student_success_tool.modeling.bias_detection.plot_fnr_group"),
+        patch(
+            "student_success_tool.modeling.bias_detection.flag_bias"
+        ) as mock_flag_bias,
+        patch(
+            "student_success_tool.modeling.bias_detection.log_bias_scores_to_mlflow"
+        ) as mock_log_scores,
+        patch(
+            "student_success_tool.modeling.bias_detection.log_group_metrics_to_mlflow"
+        ) as mock_log_group,
+        patch(
+            "student_success_tool.modeling.bias_detection.log_subgroup_metrics_to_mlflow"
+        ) as mock_log_subgroup,
+        patch(
+            "student_success_tool.modeling.bias_detection.log_bias_flags_to_mlflow"
+        ) as mock_log_flags,
+    ):
         mock_flag_bias.return_value = [
             {
                 "group": "Gender",
