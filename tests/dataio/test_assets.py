@@ -92,7 +92,8 @@ class MinimalProjectConfig(pyd.BaseModel):
 
 def test_write_config_success(tmp_path):
     # Given
-    config = MinimalProjectConfig(model={"run_id": "abc123", "experiment_id": "xyz789"})
+    model = ModelConfig(run_id="abc123", experiment_id="xyz789")
+    config = MinimalProjectConfig(model=model)
     file_path = tmp_path / "test_config.toml"
 
     # When
@@ -105,16 +106,15 @@ def test_write_config_success(tmp_path):
     assert 'experiment_id = "xyz789"' in contents
 
 
-def test_write_config_failure(monkeypatch):
-    # Given
-    config = MinimalProjectConfig(model={"run_id": "abc123"})
-    fake_path = "/invalid/path/config.toml"
+def test_write_config_failure(monkeypatch, tmp_path):
+    model = ModelConfig(run_id="abc123", experiment_id="xyz789")
+    config = MinimalProjectConfig(model=model)
+    fake_path = tmp_path / "fake_config.toml"
 
     def raise_os_error(*args, **kwargs):
         raise OSError("Mocked write failure")
 
     monkeypatch.setattr(pathlib.Path, "write_text", raise_os_error)
 
-    # Then
     with pytest.raises(OSError, match="Failed to write config"):
-        dataio.write_config(config, fake_path)
+        dataio.write_config(config, str(fake_path))
