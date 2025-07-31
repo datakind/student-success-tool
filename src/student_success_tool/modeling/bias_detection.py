@@ -34,8 +34,8 @@ FLAG_NAMES = {
 
 # Define flag weights for scoring bias
 FLAG_WEIGHTS = {
-    "🟡 LOW BIAS": 0.1,
-    "🟠 MODERATE BIAS": 0.5,
+    "🟡 LOW BIAS": 0.25,
+    "🟠 MODERATE BIAS": 0.75,
     "🔴 HIGH BIAS": 1.0,
     # Exclude 🟢 and ⚪
 }
@@ -355,39 +355,26 @@ def flag_bias(
     return bias_flags
 
 
-def compute_bias_score(flag: dict) -> float:
-    """
-    Compute raw bias score bounded between [0, 1] from FNR diff and p-value.
-    We chose 0.8 for FNR difference weight and 0.2 for p-value since we
-    favor the magnitude of the bias more than statistical significance. P-value
-    still dominates since it's usually less than 0.1, while FNR difference 
-    is usually less than 0.5, so we need to weigh FNR disparity more.
-    """
-    fnr_diff = min(max(flag["fnr_percentage_difference"], 0.0), 1.0)
-    p_value = flag.get("p_value", 1.0)
-    confidence = 1 - min(max(p_value, 0.0), 1.0)
-    return float(round(0.8 * fnr_diff + 0.2 * confidence, 4))
-
-
 def aggregate_bias_scores(
     flags: t.List[dict],
     split: str = "test",
 ) -> t.Dict[str, float]:
     """
     Create model bias score by aggregating bias flag scores, while accounting
-    for valid subgroup comparisons. We utilize flag weights to ensure that multiple "low" bias 
-    flags do not easily surpass one "high" bias flag in an aggregated score. With our weights as is,
-    10 "low" bias flags would equal 2 "medium" bias flags or 1 "high" bias flag.
-    These weights can be adjusted (and should be revisited), as well.
+    for valid subgroup comparisons. A bias score for a flag is simply its FNR magnitude.
 
-    Once we sum all of our bias flag scores, we then normalize using the number of valid
-    comparisons, which includes "no bias", "low", "medium", and "high" bias flags, intentionally
+    We also use flag weights to ensure we're accounting for statistical significance, which is baked
+    into each flag (e.g. low has a p-value less than 0.1; medium or high has p-values less than 0.01).
+    This design captures both magnitude and statistical strength of disparities.
+
+    Once we sum all of our weighted bias flag scores, we then normalize using the number of valid
+    comparisons, which is the sum of all "no bias", "low", "medium", and "high" bias flags, while
     excluding "insufficient data" flags.
 
     This normalization is performed for the following reasons:
         (1) Our mean bias score for a model will be theoretically bounded between 0 and 1.
-        (2) We appropriately account for "no bias" flags in determining overall model bias
-        (3) We properly account for sample size differences. Otherwise, a model with more bias flags
+        (2) We appropriately include "no bias" flags in determining overall model bias
+        (3) We account for sample size differences. Otherwise, a model with more bias flags
         and more valid comparisons will always have a higher score than a model with few flags &
         comparisons.
 
@@ -407,13 +394,13 @@ def aggregate_bias_scores(
     flag_counts = Counter(f["flag"] for f in split_flags)
 
     # Compute numerator (weighted score sum)
-    weighted_flags = [f for f in split_flags if f["flag"] in FLAG_WEIGHTS]
+    included_flags = [f for f in split_flags if f["flag"] in FLAG_WEIGHTS]
     weighted_scores = [
-        compute_bias_score(f) * FLAG_WEIGHTS[f["flag"]] for f in weighted_flags
+        f["fnr_percentage_difference"] * FLAG_WEIGHTS[f["flag"]] for f in included_flags
     ]
-    raw_scores = [compute_bias_score(f) for f in weighted_flags]
+    raw_scores = [f["fnr_percentage_difference"] for f in included_flags]
 
-    # Compute denominator = all flags (no bias, low, medium high)
+    # Compute denominator = all flags (no bias, low, medium, high)
     # excludes insufficient data flag
     num_valid_comparisons = sum(
         count for flag, count in flag_counts.items() if flag != "⚪ INSUFFICIENT DATA"
