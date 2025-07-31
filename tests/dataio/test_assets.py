@@ -87,6 +87,7 @@ class ModelConfig(pyd.BaseModel):
 
 
 class MinimalProjectConfig(pyd.BaseModel):
+    institution_id: str = "my_school"
     model: ModelConfig
 
 

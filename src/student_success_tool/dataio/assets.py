@@ -63,9 +63,12 @@ def write_config(
         doc = tomlkit.document()
 
         for section, section_data in data.items():
-            doc[section] = tomlkit.table()
-            for key, value in section_data.items():
-                doc[section][key] = value
+            if isinstance(section_data, dict):
+                doc[section] = tomlkit.table()
+                for key, value in section_data.items():
+                    doc[section][key] = value
+            else:
+                doc[section] = section_data
 
         path.write_text(tomlkit.dumps(doc))
         LOGGER.info(f"Wrote updated config to {config_path}")
