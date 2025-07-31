@@ -32,7 +32,7 @@
             - Threshold Applied: Removed features with variance less than {low_variance_threshold}.
             - Explanation: Features with very low variance do not vary much across observations, meaning they carry little predictive signal. For example, features with variance below 0.01 are often considered near-constant.
         - Missing Data Threshold
-            - Threshold Applied: Removed features with more than {incomplete_threshold}% missing values.
+            - Threshold Applied: Removed features with {incomplete_threshold}% or more missing values.
             - Explanation: Features with a high percentage of missing values may introduce noise or require extensive imputation.
     - After our feature selection processes, {number_of_features} actionable, relevant, and non-redundant features were retained for modeling.
 - **Target Population**

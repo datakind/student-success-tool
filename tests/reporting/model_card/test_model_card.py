@@ -93,6 +93,8 @@ def test_get_feature_metadata_success(mock_config, mock_client):
     metadata = card.get_feature_metadata()
     assert metadata["number_of_features"] == "3"
     assert metadata["collinearity_threshold"] == "0.9"
+    assert metadata["low_variance_threshold"] == "0.01"
+    assert metadata["incomplete_threshold"] == "5"
 
 
 @patch("student_success_tool.reporting.model_card.base.utils.download_static_asset")
