@@ -65,7 +65,9 @@ def mock_df_pred():
 def test_evaluate_bias_basic(mock_df_pred):
     with (
         patch("student_success_tool.modeling.bias_detection.mlflow"),
-        patch("student_success_tool.modeling.bias_detection.plot_fnr_group"),
+        patch(
+            "student_success_tool.modeling.bias_detection.plot_fnr_group"
+        ) as mock_plot_fnr,
         patch(
             "student_success_tool.modeling.bias_detection.flag_bias"
         ) as mock_flag_bias,
@@ -131,7 +133,9 @@ def test_evaluate_bias_basic(mock_df_pred):
         assert "bias_score_sum" in bias_score_summary
         assert "bias_score_mean" in bias_score_summary
         assert bias_score_summary["bias_score_mean"] > 0
-        assert bias_score_summary["num_valid_comparisons"] == 2  # 1 moderate + 1 no bias
+        assert (
+            bias_score_summary["num_valid_comparisons"] == 2
+        )  # 1 moderate + 1 no bias
         assert bias_score_summary["num_bias_flags"] == 1  # only 1 moderate flag
 
 
