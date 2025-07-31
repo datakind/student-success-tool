@@ -81,8 +81,13 @@ def test_read_features_table(tmpdir, toml_content, expected_output, expect_excep
             assert features_table == expected_output
 
 
+class ModelConfig(pyd.BaseModel):
+    run_id: str
+    experiment_id: str
+
+
 class MinimalProjectConfig(pyd.BaseModel):
-    model: dict
+    model: ModelConfig
 
 
 def test_write_config_success(tmp_path):
