@@ -228,6 +228,7 @@ def test_z_test_fnr_difference(fnr1, fnr2, denom1, denom2, expected_p):
                 "type": "non-overlapping confidence intervals with a p-value of 0.005",
                 "split_name": "train",
                 "flag": "🔴 HIGH BIAS",
+                "p_value": 0.005,
             },
         ),
     ],
