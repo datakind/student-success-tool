@@ -114,12 +114,25 @@ def test_evaluate_bias_basic(mock_df_pred):
             sample_weight_col="",
         )
 
-        # Assertions
+        # -- Validate --
         assert mock_flag_bias.called
         assert mock_log_group.called
         assert mock_log_subgroup.called
         assert mock_log_scores.called
         assert mock_log_flags.called
+
+        # Validate plotting
+        mock_plot_fnr.assert_called_once()
+
+        # -- Bias score checks --
+        args, kwargs = mock_log_scores.call_args
+        bias_score_summary = args[0]  # the first positional argument is the scores dict
+
+        assert "bias_score_sum" in bias_score_summary
+        assert "bias_score_mean" in bias_score_summary
+        assert bias_score_summary["bias_score_mean"] > 0
+        assert bias_score_summary["num_valid_comparisons"] == 2  # 1 moderate + 1 no bias
+        assert bias_score_summary["num_bias_flags"] == 1  # only 1 moderate flag
 
 
 def test_compute_group_bias_metrics(mock_helpers):
