@@ -1,3 +1,4 @@
+import os
 import logging
 import typing as t
 import pathlib
@@ -117,7 +118,7 @@ def update_run_metadata_in_toml(
             experiment_id,
         )
 
-        # Optional: re-read to confirm
+        # Debugging... re-read to confirm
         confirmed = tomlkit.parse(path.read_text())
         LOGGER.debug("Confirmed run_id = %s", confirmed["model"].get("run_id"))
         LOGGER.debug("Confirmed experiment_id = %s", confirmed["model"].get("experiment_id"))
