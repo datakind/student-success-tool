@@ -83,11 +83,14 @@ def test_compute_sample_weights(df, target_col, class_weight, exp):
     assert len(obs) == len(df)
     assert pd.testing.assert_series_equal(obs, exp, rtol=0.01) is None
 
+
 # --- Sample config classes ---
+
 
 class ModelConfig(BaseModel):
     run_id: str | None = None
     experiment_id: str | None = None
+
 
 class ProjectConfig(BaseModel):
     model: ModelConfig

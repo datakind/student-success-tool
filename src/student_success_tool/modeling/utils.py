@@ -104,5 +104,7 @@ def update_config_with_selected_model(
         project_config.model.experiment_id = experiment_id
         LOGGER.info("Updated config with selected model run and experiment ID.")
     except AttributeError:
-        LOGGER.error("Failed to update config due to missing model.run_id or model.experiment_id.")
+        LOGGER.error(
+            "Failed to update config due to missing model.run_id or model.experiment_id."
+        )
     return project_config
