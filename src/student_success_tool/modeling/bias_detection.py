@@ -419,7 +419,7 @@ def aggregate_bias_scores(
         "bias_score_sum": total_score,
         "bias_score_mean": mean_score,
         "bias_score_max": max_score,
-        "num_bias_flags": len(weighted_flags),
+        "num_bias_flags": len(included_flags),
         "num_valid_comparisons": num_valid_comparisons,
     }
 
