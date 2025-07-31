@@ -3,6 +3,8 @@ import logging
 import typing as t
 import pathlib
 import tomlkit
+from tomlkit.items import Table
+
 
 import numpy as np
 import pandas as pd
@@ -103,8 +105,9 @@ def update_run_metadata_in_toml(
         if "model" not in doc:
             doc["model"] = tomlkit.table()
 
-        doc["model"]["run_id"] = run_id
-        doc["model"]["experiment_id"] = experiment_id
+        model_table = t.cast(Table, doc["model"])
+        model_table["run_id"] = run_id
+        model_table["experiment_id"] = experiment_id
 
         path.write_text(tomlkit.dumps(doc))
 
@@ -117,8 +120,11 @@ def update_run_metadata_in_toml(
 
         # Re-read to confirm
         confirmed = tomlkit.parse(path.read_text())
-        LOGGER.info("Confirmed run_id = %s", confirmed["model"].get("run_id"))
-        LOGGER.info("Confirmed experiment_id = %s", confirmed["model"].get("experiment_id"))
+        confirmed_model = t.cast(Table, confirmed["model"])
+        LOGGER.info("Confirmed run_id = %s", confirmed_model.get("run_id"))
+        LOGGER.info(
+            "Confirmed experiment_id = %s", confirmed_model.get("experiment_id")
+        )
 
     except Exception as e:
         LOGGER.error("Failed to update TOML config at %s: %s", path, e)
