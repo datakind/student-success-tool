@@ -119,3 +119,27 @@ def test_write_config_failure(monkeypatch, tmp_path):
 
     with pytest.raises(OSError, match="Failed to write config"):
         dataio.write_config(config, str(fake_path))
+
+
+def test_write_config_excludes_none_fields(tmp_path):
+    # Given: A Pydantic config with some optional fields set to None
+    class ModelConfig(pyd.BaseModel):
+        run_id: str
+        experiment_id: str | None = None  # Optional and unset
+
+    class MinimalProjectConfig(pyd.BaseModel):
+        model: ModelConfig
+
+    model = ModelConfig(run_id="abc123")  # No experiment_id provided
+    config = MinimalProjectConfig(model=model)
+    file_path = tmp_path / "test_config.toml"
+
+    # When: write_config is called
+    dataio.write_config(config, str(file_path))
+
+    # Then: File exists and does not contain the None field
+    assert file_path.exists()
+    contents = file_path.read_text()
+
+    assert 'run_id = "abc123"' in contents
+    assert "experiment_id" not in contents  # Confirm excluded

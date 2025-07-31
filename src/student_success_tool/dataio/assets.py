@@ -59,7 +59,7 @@ def write_config(
     """
     try:
         path = pathlib.Path(config_path)
-        data = project_config.model_dump(mode="toml")
+        data = project_config.model_dump(mode="toml", exclude_none=True)
         doc = tomlkit.document()
 
         for section, section_data in data.items():
