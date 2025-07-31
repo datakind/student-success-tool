@@ -358,11 +358,14 @@ def flag_bias(
 def compute_bias_score(flag: dict) -> float:
     """
     Compute raw bias score bounded between [0, 1] from FNR diff and p-value.
+    We choose 0.6 for FNR difference weight and 0.4 for p-value since we 
+    slightly favor than the magnitude of the bias than statistical significance, though
+    this was a design choice and 50/50 is a fair option as well.
     """
     fnr_diff = min(max(flag["fnr_percentage_difference"], 0.0), 1.0)
     p_value = flag.get("p_value", 1.0)
     confidence = 1 - min(max(p_value, 0.0), 1.0)
-    return round(0.6 * fnr_diff + 0.4 * confidence, 4)
+    return float(round(0.6 * fnr_diff + 0.4 * confidence, 4))
 
 
 def aggregate_bias_scores(
@@ -370,8 +373,22 @@ def aggregate_bias_scores(
     split: str = "test",
 ) -> t.Dict[str, float]:
     """
-    Aggregate model-level bias scores based on score from each flag and accounting
-    for valid subgroup comparisons.
+    Aggregate model-level bias scores based on score from each flag, while accounting
+    for valid subgroup comparisons. We utilize flag weights to weigh our scores to ensure
+    that multiple "low" bias flags do not easily surpass one "high" bias flag in aggregated score.
+    With our weights as is, 10 "low" bias flags would equal 2 "medium" bias flags or 1 "high" bias flag.
+    These weights can be adjusted (and should be revisited), as well.
+
+    Once we sum all of our bias flag scores, we then normalize using the number of valid
+    comparisons, which includes "no bias", "low", "medium", and "high" bias flags, intentionally
+    excluding "insufficient data" flags. 
+    
+    This normalization is performed for the following reasons:
+        (1) Our mean bias score for a model will be theoretically bounded between 0 and 1 
+        (2) We appropriately account for "no bias" flags in determining overall model bias
+        (3) We properly account for sample size differences. Otherwise, a model with more bias flags
+        and more valid comparisons will always have a higher score than a model with few flags &
+        comparisons.
 
     Returns:
         Dictionary with:
@@ -380,7 +397,7 @@ def aggregate_bias_scores(
         - bias_score_max: max single flag score (raw)
         - num_bias_flags: total number of bias flags, includes only "low", "medium", and "high"
         - num_valid_comparisons: total valid bias comparisons  with "no bias" flags included,
-          but excludes any insufficient data flags
+          but excludes any "insufficient data" flags
     """
     # Filter flags to relevant split
     split_flags = [f for f in flags if f["split_name"] == split]
@@ -610,9 +627,9 @@ def log_bias_scores_to_mlflow(scores: dict, split: str = "test") -> None:
 
     # Log summary as CSV artifact
     df = pd.DataFrame([scores])
-    path = Path(f"/tmp/{split}_bias_scores.csv")
-    df.to_csv(path, index=False)
-    mlflow.log_artifact(str(path), artifact_path=f"bias_scores/{split}_bias_scores")
+    bias_score_tmp_path = f"/tmp/{split}_bias_scores.csv"
+    df.to_csv(bias_score_tmp_path, index=False)
+    mlflow.log_artifact(bias_score_tmp_path, artifact_path="bias_scores")
 
 
 def log_subgroup_metrics_to_mlflow(
