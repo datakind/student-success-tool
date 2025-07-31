@@ -3,6 +3,7 @@ import mlflow.tracking
 import numpy as np
 import pandas as pd
 import pytest
+from unittest.mock import patch, MagicMock
 
 from student_success_tool.modeling import bias_detection
 
@@ -46,6 +47,65 @@ def mock_helpers(monkeypatch):
         "calculate_fnr_and_ci",
         lambda y_true, y_pred: (0.5, 0.4, 0.6, sum(y_true)),
     )
+
+@pytest.fixture
+def mock_df_pred():
+    return pd.DataFrame({
+        "split": ["test"] * 6,
+        "Gender": ["Male", "Female", "Female", "Male", "Male", "Female"],
+        "target": [1, 1, 0, 0, 1, 0],
+        "pred": [1, 0, 0, 0, 1, 1],
+        "pred_prob": [0.9, 0.3, 0.2, 0.4, 0.8, 0.7],
+    })
+
+
+def test_evaluate_bias_basic(mock_df_pred):
+    with patch("student_success_tool.modeling.bias_detection.mlflow"), \
+         patch("student_success_tool.modeling.bias_detection.plot_fnr_group"), \
+         patch("student_success_tool.modeling.bias_detection.flag_bias") as mock_flag_bias, \
+         patch("student_success_tool.modeling.bias_detection.log_bias_scores_to_mlflow") as mock_log_scores, \
+         patch("student_success_tool.modeling.bias_detection.log_group_metrics_to_mlflow") as mock_log_group, \
+         patch("student_success_tool.modeling.bias_detection.log_subgroup_metrics_to_mlflow") as mock_log_subgroup, \
+         patch("student_success_tool.modeling.bias_detection.log_bias_flags_to_mlflow") as mock_log_flags:
+
+        mock_flag_bias.return_value = [
+            {
+                "group": "Gender",
+                "subgroups": "Female vs Male",
+                "flag": "🟠 MODERATE BIAS",
+                "fnr_percentage_difference": 0.12,
+                "type": "non-overlapping confidence intervals",
+                "split_name": "test",
+                "p_value": 0.005,
+            },
+            {
+                "group": "Gender",
+                "subgroups": "Male vs Female",
+                "flag": "🟢 NO BIAS",
+                "fnr_percentage_difference": 0.02,
+                "type": "no significant difference",
+                "split_name": "test",
+                "p_value": 0.6,
+            },
+        ]
+
+        # Run
+        bias_detection.evaluate_bias(
+            df_pred=mock_df_pred,
+            student_group_cols=["Gender"],
+            pos_label=1,
+            target_col="target",
+            pred_col="pred",
+            pred_prob_col="pred_prob",
+            sample_weight_col="",
+        )
+
+        # Assertions
+        assert mock_flag_bias.called
+        assert mock_log_group.called
+        assert mock_log_subgroup.called
+        assert mock_log_scores.called
+        assert mock_log_flags.called
 
 
 def test_compute_group_bias_metrics(mock_helpers):
