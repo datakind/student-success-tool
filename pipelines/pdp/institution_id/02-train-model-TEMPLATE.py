@@ -158,7 +158,7 @@ non_feature_cols = (
 df_corrs = df.copy()
 
 target_corrs = df_corrs.drop(columns=non_feature_cols + [cfg.target_col]).corrwith(
-    df_preprocessed[cfg.target_col], method="spearman", numeric_only=True
+    df_corrs[cfg.target_col], method="spearman", numeric_only=True
 )
 print(target_corrs.sort_values(ascending=False).head(10))
 print("...")
