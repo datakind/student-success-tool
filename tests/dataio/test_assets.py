@@ -1,5 +1,4 @@
 import os
-import pathlib
 from contextlib import nullcontext as does_not_raise
 
 import pydantic as pyd

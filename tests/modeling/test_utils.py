@@ -1,9 +1,6 @@
 import pandas as pd
 import pytest
-import pathlib
 import tomlkit
-
-from pydantic import BaseModel
 
 from student_success_tool.modeling import utils
 
