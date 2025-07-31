@@ -94,9 +94,12 @@ def update_run_metadata_in_toml(
         run_id: The run ID to set.
         experiment_id: The experiment ID to set.
     """
-    path = pathlib.Path(config_path)
+    path = pathlib.Path(config_path).resolve()  # Absolute path
 
     try:
+        LOGGER.info("Current working directory: %s", os.getcwd())
+        LOGGER.info("Resolved config path: %s", path)
+
         doc = tomlkit.parse(path.read_text())
 
         if "model" not in doc:
@@ -108,12 +111,17 @@ def update_run_metadata_in_toml(
         path.write_text(tomlkit.dumps(doc))
 
         LOGGER.info(
-            f"Updated TOML config at %s with run_id=%s and experiment_id=%s",
-            config_path,
+            "Updated TOML config at %s with run_id=%s and experiment_id=%s",
+            path,
             run_id,
             experiment_id,
         )
 
+        # Optional: re-read to confirm
+        confirmed = tomlkit.parse(path.read_text())
+        LOGGER.debug("Confirmed run_id = %s", confirmed["model"].get("run_id"))
+        LOGGER.debug("Confirmed experiment_id = %s", confirmed["model"].get("experiment_id"))
+
     except Exception as e:
-        LOGGER.error(f"Failed to update TOML config at {config_path}: {e}")
+        LOGGER.error("Failed to update TOML config at %s: %s", path, e)
         raise
