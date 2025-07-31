@@ -462,16 +462,18 @@ def infer_num_terms_in_year(s: pd.Series) -> int:
         )
 
 
-def remove_pre_cohort_courses(df_course: pd.DataFrame, df_cohort: pd.DataFrame, student_id_col: str) -> pd.DataFrame:
+def remove_pre_cohort_courses(
+    df_course: pd.DataFrame, df_cohort: pd.DataFrame, student_id_col: str
+) -> pd.DataFrame:
     """
     Removes any course records that occur before a student's cohort start term.
 
-    This ensures that any pre-cohort course records are excluded before generating any features 
-    in our `student_term_df`. These records can otherwise introduce inconsistencies in 
-    cumulative features. For example, in retention models, we observed mismatches 
-    between `cumulative_credits_earned` and `number_of_credits_earned` when using the 
-    first cohort term as the checkpoint because pre-cohort courses were 
-    still included in the data when generating these features. To avoid this, we drop all records that occurred 
+    This ensures that any pre-cohort course records are excluded before generating any features
+    in our `student_term_df`. These records can otherwise introduce inconsistencies in
+    cumulative features. For example, in retention models, we observed mismatches
+    between `cumulative_credits_earned` and `number_of_credits_earned` when using the
+    first cohort term as the checkpoint because pre-cohort courses were
+    still included in the data when generating these features. To avoid this, we drop all records that occurred
     prior to the student's official cohort start term before feature generation.
 
     Please rememeber to check with your respective schools during the data assessment call how they would like pre-cohort course records to be handled and if this function needs to be called or not.
@@ -480,7 +482,7 @@ def remove_pre_cohort_courses(df_course: pd.DataFrame, df_cohort: pd.DataFrame, 
         df_course
         df_cohort
         student_id_col
-    
+
     Returns:
         pd.DataFrame: Filtered DataFrame excluding pre-cohort course records.
     """
@@ -497,4 +499,4 @@ def remove_pre_cohort_courses(df_course: pd.DataFrame, df_cohort: pd.DataFrame, 
             & (df_course_merged["academic_term"] >= df_course_merged["cohort_term"])
         )
     ]
-    return df_course 
+    return df_course
