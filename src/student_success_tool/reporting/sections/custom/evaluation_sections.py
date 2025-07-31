@@ -30,6 +30,8 @@ def register_evaluation_sections(card, registry):
         try:
             aliases = card.cfg.student_group_aliases
             if isinstance(aliases, dict):
+                if group_key not in aliases.keys():
+                    LOGGER.warning("Not able to resolve group name for {group_key}.")
                 return str(aliases.get(group_key, card.format.friendly_case(group_key)))
         except Exception:
             pass
