@@ -1,10 +1,14 @@
+import os
+import datetime
+import contextlib
+import sys
 import logging
+import typing as t
+
 import mlflow
+from mlflow.tracking import MlflowClient
 import pandas as pd
 from pandas.api.types import is_categorical_dtype, is_object_dtype, is_string_dtype
-
-import datetime
-import os
 
 from . import evaluation_h2o as evaluation
 
@@ -94,22 +98,37 @@ def run_h2o_automl_classification(
 
 
 def log_h2o_experiment(
-    aml,
-    train,
-    valid,
-    test,
-    threshold=0.5,
-    use_timestamp=True,
-    institution_id=None,
-    target_col="target",
-    target_name=None,
-    checkpoint_name=None,
-    workspace_path=None,
-    client=None,
+    aml: H2OAutoML,
+    *,
+    train: h2o.H2OFrame,
+    valid: h2o.H2OFrame,
+    test: h2o.H2OFrame,
+    institution_id: str,
+    target_col: str,
+    target_name: str,
+    checkpoint_name: str,
+    workspace_path: str,
+    client: t.Optional[MLflowClient] = None,
 ):
-    if not isinstance(threshold, float) or not (0.0 <= threshold <= 1.0):
-        raise ValueError(f"threshold must be a float in [0.0, 1.0], got {threshold}")
+    """
+    Logs evaluation metrics, plots, and model artifacts for all models in an H2O AutoML leaderboard to MLflow.
 
+    Args:
+        aml: Trained H2OAutoML object.
+        train: H2OFrame containing the training split.
+        valid: H2OFrame containing the validation split.
+        test: H2OFrame containing the test split.
+        institution_id: Institution identifier, used to namespace the MLflow experiment.
+        target_col: Column name of target (used for plotting and label extraction).
+        target_name: Name of the target of the model from the config.
+        checkpoint_name: Name of the checkpoint of the model from the config.
+        workspace_path: Path prefix for experiment naming within MLflow.
+        client: Optional MLflowClient instance. If not provided, one will be created.
+
+    Returns:
+        experiment_id (str): The MLflow experiment ID used for logging.
+        results_df (pd.DataFrame): DataFrame with metrics and MLflow run IDs for all successfully logged models.
+    """
     LOGGER.info("Logging experiment to MLflow with classification plots...")
 
     if client is None:
@@ -120,7 +139,6 @@ def log_h2o_experiment(
         institution_id,
         target_name,
         checkpoint_name,
-        use_timestamp=use_timestamp,
         client=client,
     )
 
@@ -132,22 +150,60 @@ def log_h2o_experiment(
         LOGGER.warning("No models found in leaderboard.")
         return experiment_id, pd.DataFrame()
 
-    for model_id in top_model_ids:
-        try:
-            model = h2o.get_model(model_id)
-            LOGGER.info(f"Evaluating model {model_id}...")
+    for idx, model_id in enumerate(top_model_ids):
+        # Log every 10 models
+        if idx % 10 == 0:
+            LOGGER.info(f"Evaluating model {idx + 1}/{len(top_model_ids)}: {model_id}")
 
+        # Setting threshold to 0.5 due to binary classification
+        metrics = evaluate_and_log_model(aml, model_id, train, valid, test, 0.5, client)
+
+        if metrics:
+            results.append(metrics)
+
+    results_df = pd.DataFrame(results)
+    LOGGER.info(f"Logged {len(results_df)} model runs to MLflow.")
+
+    return experiment_id, results_df
+
+
+def evaluate_and_log_model(
+    aml: H2OAutoML,
+    model_id: str,
+    train: H2OFrame,
+    valid: H2OFrame,
+    test: H2OFrame,
+    threshold: float = 0.5,
+    client: MlflowClient,
+) -> dict | None:
+    """
+    Evaluates a single H2O model at a given threshold and logs metrics, plots, and artifacts to MLflow.
+
+    Args:
+        model_id (str): The H2O model ID to evaluate and log.
+        aml: H2OAutoML object containing the leaderboard and trained models.
+        train: H2OFrame with training data.
+        valid: H2OFrame with validation data.
+        test: H2OFrame with test data.
+        threshold (float): Threshold to apply for binary classification metrics.
+        client (MlflowClient): Initialized MLflow client used for logging.
+
+    Returns:
+        dict: Dictionary of evaluation metrics including `mlflow_run_id`, or `None` if evaluation fails.
+    """
+    try:
+        model = h2o.get_model(model_id)
+
+        with contextlib.redirect_stdout(sys.__stdout__), contextlib.redirect_stderr(sys.__stderr__):
             metrics = evaluation.get_metrics_near_threshold_all_splits(model, train, valid, test, threshold=threshold)
 
             with mlflow.start_run(run_name=f"h2o_eval_{model_id}"):
                 run_id = mlflow.active_run().info.run_id
 
-                # Log metrics
                 for k, v in metrics.items():
                     if k != "model_id":
                         mlflow.log_metric(k, v)
 
-                # Generate & log classification plots
                 for split_name, frame in zip(["train", "val", "test"], [train, valid, test]):
                     y_true = frame["target"].as_data_frame().values.flatten()
                     preds = model.predict(frame)
@@ -157,29 +213,43 @@ def log_h2o_experiment(
 
                     evaluation.generate_all_classification_plots(y_true, y_pred, y_proba, prefix=split_name)
 
-                # Save model
                 local_model_dir = f"/tmp/h2o_models/{model_id}"
                 os.makedirs(local_model_dir, exist_ok=True)
                 h2o.save_model(model, path=local_model_dir, force=True)
                 mlflow.log_artifacts(local_model_dir, artifact_path="model")
 
-            metrics["mlflow_run_id"] = run_id
-            results.append(metrics)
+        metrics["mlflow_run_id"] = run_id
+        return metrics
 
-        except Exception as e:
-            LOGGER.exception(f"Failed to log model {model_id}: {e}")
-
-    results_df = pd.DataFrame(results)
-    LOGGER.info(f"Logged {len(results_df)} model runs to MLflow.")
-
-    return experiment_id, results_df
+    except Exception as e:
+        LOGGER.exception(f"Failed to log model {model_id}: {e}")
+        return None
 
 
-def set_or_create_experiment(workspace_path, institution_id, target_name, checkpoint_name, use_timestamp=True, client=None):
+def set_or_create_experiment(
+    workspace_path: str,
+    institution_id: str,
+    target_name: str,
+    checkpoint_name: str,
+    client: t.Optional[MlflowClient] = None,
+) -> str:
+    """
+    Creates or retrieves a structured MLflow experiment and sets it as the active experiment.
+
+    Args:
+        workspace_path: Base MLflow workspace path.
+        institution_id: Institution or tenant identifier used for experiment naming.
+        target_name: Name of the target variable.
+        checkpoint_name: Name of the modeling checkpoint.
+        client: MLflow client. A new one is created if not provided.
+
+    Returns:
+        MLflow experiment ID (created or retrieved).
+    """
     if client is None:
         client = MlflowClient()
 
-    timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S") if use_timestamp else ""
+    timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
 
     name_parts = [
         institution_id,
@@ -207,7 +277,7 @@ def set_or_create_experiment(workspace_path, institution_id, target_name, checkp
         raise RuntimeError(f"Failed to create or set MLflow experiment: {e}")
 
 
-def correct_h2o_dtypes(h2o_df, original_df, force_enum_cols=None, dry_run=False, cardinality_threshold=100):
+def correct_h2o_dtypes(h2o_df, original_df, force_enum_cols=None, cardinality_threshold=100):
     """
     Correct H2OFrame dtypes based on original pandas DataFrame, targeting cases where
     originally non-numeric columns were inferred as numeric by H2O.
@@ -216,7 +286,6 @@ def correct_h2o_dtypes(h2o_df, original_df, force_enum_cols=None, dry_run=False,
         h2o_df: H2OFrame created from original_df
         original_df: Original pandas DataFrame with dtype info
         force_enum_cols: Optional list of column names to forcibly convert to enum
-        dry_run: If True, do not modify h2o_df; just report proposed changes
         cardinality_threshold: Max unique values to allow for enum conversion
     
     Returns:
@@ -258,12 +327,9 @@ def correct_h2o_dtypes(h2o_df, original_df, force_enum_cols=None, dry_run=False,
                 continue
 
             LOGGER.info(
-                f"{'Proposing' if dry_run else 'Converting'} '{col}' to enum "
+                f"Proposing '{col}' to enum "
                 f"(originally {orig_dtype}, inferred as {h2o_type})."
             )
-
-            if not dry_run:
-                h2o_df[col] = h2o_df[col].asfactor()
 
             converted_columns.append(col)
 

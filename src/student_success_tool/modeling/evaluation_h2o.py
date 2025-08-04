@@ -1,4 +1,5 @@
 import logging
+import typing as t
 import os
 import re
 import mlflow
@@ -167,24 +168,33 @@ def get_h2o_used_features(model):
     return feature_names
 
 
-def compute_h2o_shap_contributions(model, h2o_frame, drop_bias=True):
+def compute_h2o_shap_contributions(
+    model: H2OModel,
+    h2o_frame: H2OFrame,
+    background_data: t.Optional[H2OFrame] = None,
+    drop_bias: bool = True
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Computes SHAP-like contribution values from an H2O model.
 
     Args:
         model: Trained H2O model
         h2o_frame: H2OFrame for which to compute contributions
+        background_data: Optional H2OFrame to use as the background reference for SHAP values
         drop_bias: Whether to exclude the 'BiasTerm' column
 
     Returns:
-        contribs_df (pd.DataFrame): SHAP contributions aligned with input features
-        input_df (pd.DataFrame): Input feature values used
+        contribs_df: SHAP contributions aligned with input features
+        input_df: Input feature values used
     """
     used_features = get_h2o_used_features(model)
     hf_subset = h2o_frame[used_features]
 
-    # Get contributions
-    contribs_hf = model.predict_contributions(hf_subset)
+    if background_data is not None:
+        background_data = background_data[used_features]
+        contribs_hf = model.predict_contributions(hf_subset, background_data=background_data)
+    else:
+        contribs_hf = model.predict_contributions(hf_subset)
 
     contribs_df = contribs_hf.as_data_frame(use_pandas=True)
     input_df = hf_subset.as_data_frame(use_pandas=True)
@@ -279,6 +289,14 @@ def group_feature_values_by_feature(input_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def plot_grouped_shap(contribs_df: pd.DataFrame, input_df: pd.DataFrame, original_df: pd.DataFrame):
+    """
+    Plot grouped shap values based on contributions dataframe (shap values), input dataframe, which
+    contain the one-hot encoding columns, and the original dataframe, which was the data used for training. This
+    dataframe is used purely for color hint and dtypes.
+
+    The output of this will be a global shap plot for each feature in the model ranked top to bottom
+    in terms of importance.
+    """
     grouped_shap = group_shap_by_feature(contribs_df)
     grouped_inputs = group_feature_values_by_feature(input_df)
     color_hint = create_color_hint_features(original_df, grouped_inputs)
