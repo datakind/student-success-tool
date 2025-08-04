@@ -97,7 +97,13 @@ def test_log_h2o_experiment_logs_metrics(mock_eval_log):
     assert len(results_df) == 1
     assert "accuracy" in results_df.columns
     mock_eval_log.assert_called_once_with(
-        mock_aml, "model1", ANY, ANY, ANY, 0.5, client_mock
+        aml=mock_aml,
+        model_id="model1",
+        train=ANY,
+        valid=ANY,
+        test=ANY,
+        threshold=0.5,
+        client=client_mock,
     )
 
 
@@ -132,6 +138,7 @@ def test_evaluate_and_log_model_success(
 
     assert isinstance(result, dict)
     assert "mlflow_run_id" in result
+    mock_save_model.assert_called_once()
 
 
 @patch("student_success_tool.modeling.training_h2o.mlflow.set_experiment")

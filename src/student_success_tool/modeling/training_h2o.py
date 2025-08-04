@@ -176,7 +176,15 @@ def log_h2o_experiment(
             LOGGER.info(f"Evaluating model {idx + 1}/{len(top_model_ids)}: {model_id}")
 
         # Setting threshold to 0.5 due to binary classification
-        metrics = evaluate_and_log_model(aml, model_id, train, valid, test, 0.5, client)
+        metrics = evaluate_and_log_model(
+            aml=aml,
+            model_id=model_id,
+            train=train,
+            valid=valid,
+            test=test,
+            threshold=0.5,
+            client=client,
+        )
 
         if metrics:
             results.append(metrics)
@@ -189,6 +197,7 @@ def log_h2o_experiment(
 
 def evaluate_and_log_model(
     aml: H2OAutoML,
+    *,
     model_id: str,
     train: h2o.H2OFrame,
     valid: h2o.H2OFrame,
