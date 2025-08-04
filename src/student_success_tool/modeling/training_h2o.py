@@ -224,8 +224,9 @@ def evaluate_and_log_model(
         model = h2o.get_model(model_id)
 
         with (
-            contextlib.redirect_stdout(sys.__stdout__),
-            contextlib.redirect_stderr(sys.__stderr__),
+            open(os.devnull, "w") as fnull,
+            contextlib.redirect_stdout(fnull),
+            contextlib.redirect_stderr(fnull),
         ):
             metrics = evaluation.get_metrics_near_threshold_all_splits(
                 model, train, valid, test, threshold=threshold
