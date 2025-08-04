@@ -233,15 +233,13 @@ else:
 # COMMAND ----------
 
 # Get top runs from experiment for evaluation
-# Adjust optimization metrics & topn_runs_included as needed
 top_runs = modeling.evaluation.get_top_runs(
     experiment_id,
     optimization_metrics=[
         "test_recall_score",
-        "val_recall_score",
         "test_roc_auc",
-        "val_roc_auc",
         "test_log_loss",
+        "test_f1_score", 
         "val_log_loss",
     ],
     topn_runs_included=cfg.modeling.evaluation.topn_runs_included,
@@ -300,6 +298,7 @@ selected_runs = modeling.evaluation.get_top_runs(
     optimization_metrics=[
         "test_recall_score",
         "test_roc_auc",
+        "test_log_loss",
         "test_bias_score_mean",
     ],
     topn_runs_included=cfg.modeling.evaluation.topn_runs_included,
