@@ -174,6 +174,8 @@ def log_h2o_experiment(
         LOGGER.warning("No models found in leaderboard.")
         return experiment_id, pd.DataFrame()
 
+    num_models = len(top_model_ids)
+
     for idx, model_id in enumerate(top_model_ids):
         # Log first, every 10, & last model
         model_num = idx + 1
