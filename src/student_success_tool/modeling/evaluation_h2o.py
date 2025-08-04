@@ -174,7 +174,7 @@ def compute_h2o_shap_contributions(
     h2o_frame: h2o.H2OFrame,
     background_data: t.Optional[h2o.H2OFrame] = None,
     drop_bias: bool = True
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+) -> t.Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Computes SHAP-like contribution values from an H2O model.
 
