@@ -1,3 +1,6 @@
+import mlflow
+from mlflow.tracking import MlflowClient
+
 import os
 import datetime
 import contextlib
@@ -5,8 +8,6 @@ import sys
 import logging
 import typing as t
 
-import mlflow
-from mlflow.tracking import MlflowClient
 import pandas as pd
 from pandas.api.types import is_categorical_dtype, is_object_dtype, is_string_dtype
 
@@ -50,10 +51,19 @@ def run_h2o_automl_classification(
     if target_col not in df.columns:
         raise ValueError(f"target_col '{target_col}' not found in input DataFrame.")
 
-    VALID_H2O_METRICS = {"auc", "logloss", "mean_per_class_error", "rmse", "mae", "aucpr"}
+    VALID_H2O_METRICS = {
+        "auc",
+        "logloss",
+        "mean_per_class_error",
+        "rmse",
+        "mae",
+        "aucpr",
+    }
     primary_metric = primary_metric.lower()
     if primary_metric not in VALID_H2O_METRICS:
-        raise ValueError(f"Invalid primary_metric '{primary_metric}'. Must be one of {VALID_H2O_METRICS}")
+        raise ValueError(
+            f"Invalid primary_metric '{primary_metric}'. Must be one of {VALID_H2O_METRICS}"
+        )
 
     # Set defaults and pop kwargs
     seed = kwargs.pop("seed", 42)
@@ -71,7 +81,9 @@ def run_h2o_automl_classification(
     h2o_df = correct_h2o_dtypes(h2o_df, df)
 
     if split_col not in h2o_df.columns:
-        raise ValueError("Input data must contain a 'split' column with values ['train', 'validate', 'test'].")
+        raise ValueError(
+            "Input data must contain a 'split' column with values ['train', 'validate', 'test']."
+        )
 
     h2o_df[target_col] = h2o_df[target_col].asfactor()
     train = h2o_df[h2o_df[split_col] == "train"]
@@ -80,7 +92,9 @@ def run_h2o_automl_classification(
 
     features = [col for col in df.columns if col not in exclude_cols + [target_col]]
 
-    LOGGER.info(f"Running H2O AutoML for target '{target_col}' with {len(features)} features...")
+    LOGGER.info(
+        f"Running H2O AutoML for target '{target_col}' with {len(features)} features..."
+    )
 
     aml = H2OAutoML(
         max_runtime_secs=timeout_minutes * 60,
@@ -90,7 +104,13 @@ def run_h2o_automl_classification(
         verbosity="info",
         include_algos=["XGBoost", "GBM", "GLM"],
     )
-    aml.train(x=features, y=target_col, training_frame=train, validation_frame=valid, leaderboard_frame=test)
+    aml.train(
+        x=features,
+        y=target_col,
+        training_frame=train,
+        validation_frame=valid,
+        leaderboard_frame=test,
+    )
 
     LOGGER.info(f"Best model: {aml.leader.model_id}")
 
@@ -108,7 +128,7 @@ def log_h2o_experiment(
     target_name: str,
     checkpoint_name: str,
     workspace_path: str,
-    client: t.Optional[MLflowClient] = None,
+    client: t.Optional["MLflowClient"] = None,
 ):
     """
     Logs evaluation metrics, plots, and model artifacts for all models in an H2O AutoML leaderboard to MLflow.
@@ -170,10 +190,10 @@ def log_h2o_experiment(
 def evaluate_and_log_model(
     aml: H2OAutoML,
     model_id: str,
-    train: H2OFrame,
-    valid: H2OFrame,
-    test: H2OFrame,
-    client: MlflowClient,
+    train: h2o.H2OFrame,
+    valid: h2o.H2OFrame,
+    test: h2o.H2OFrame,
+    client: "MLflowClient",
     threshold: float = 0.5,
 ) -> dict | None:
     """
@@ -194,8 +214,13 @@ def evaluate_and_log_model(
     try:
         model = h2o.get_model(model_id)
 
-        with contextlib.redirect_stdout(sys.__stdout__), contextlib.redirect_stderr(sys.__stderr__):
-            metrics = evaluation.get_metrics_near_threshold_all_splits(model, train, valid, test, threshold=threshold)
+        with (
+            contextlib.redirect_stdout(sys.__stdout__),
+            contextlib.redirect_stderr(sys.__stderr__),
+        ):
+            metrics = evaluation.get_metrics_near_threshold_all_splits(
+                model, train, valid, test, threshold=threshold
+            )
 
             with mlflow.start_run(run_name=f"h2o_eval_{model_id}"):
                 run_id = mlflow.active_run().info.run_id
@@ -204,14 +229,20 @@ def evaluate_and_log_model(
                     if k != "model_id":
                         mlflow.log_metric(k, v)
 
-                for split_name, frame in zip(["train", "val", "test"], [train, valid, test]):
+                for split_name, frame in zip(
+                    ["train", "val", "test"], [train, valid, test]
+                ):
                     y_true = frame["target"].as_data_frame().values.flatten()
                     preds = model.predict(frame)
                     positive_class_label = preds.col_names[-1]
-                    y_proba = preds[positive_class_label].as_data_frame().values.flatten()
+                    y_proba = (
+                        preds[positive_class_label].as_data_frame().values.flatten()
+                    )
                     y_pred = (y_proba >= 0.5).astype(int)
 
-                    evaluation.generate_all_classification_plots(y_true, y_pred, y_proba, prefix=split_name)
+                    evaluation.generate_all_classification_plots(
+                        y_true, y_pred, y_proba, prefix=split_name
+                    )
 
                 local_model_dir = f"/tmp/h2o_models/{model_id}"
                 os.makedirs(local_model_dir, exist_ok=True)
@@ -231,7 +262,7 @@ def set_or_create_experiment(
     institution_id: str,
     target_name: str,
     checkpoint_name: str,
-    client: t.Optional[MlflowClient] = None,
+    client: t.Optional["MlflowClient"] = None,
 ) -> str:
     """
     Creates or retrieves a structured MLflow experiment and sets it as the active experiment.
@@ -251,18 +282,14 @@ def set_or_create_experiment(
 
     timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
 
-    name_parts = [
-        institution_id,
-        target_name,
-        checkpoint_name,
-        "h20_automl",
-        timestamp
-    ]
-    experiment_name = "/".join([
-        workspace_path.rstrip("/"),
-        "h2o_automl",
-        "_".join([part for part in name_parts if part]),
-    ])
+    name_parts = [institution_id, target_name, checkpoint_name, "h20_automl", timestamp]
+    experiment_name = "/".join(
+        [
+            workspace_path.rstrip("/"),
+            "h2o_automl",
+            "_".join([part for part in name_parts if part]),
+        ]
+    )
 
     try:
         experiment = client.get_experiment_by_name(experiment_name)
@@ -277,17 +304,22 @@ def set_or_create_experiment(
         raise RuntimeError(f"Failed to create or set MLflow experiment: {e}")
 
 
-def correct_h2o_dtypes(h2o_df, original_df, force_enum_cols=None, cardinality_threshold=100):
+def correct_h2o_dtypes(
+    h2o_df: h2o.H2OFrame,
+    original_df: pd.DataFrame,
+    force_enum_cols: t.Optional[t.List[str]] = None,
+    cardinality_threshold: int = 100,
+):
     """
     Correct H2OFrame dtypes based on original pandas DataFrame, targeting cases where
     originally non-numeric columns were inferred as numeric by H2O.
-    
+
     Args:
         h2o_df: H2OFrame created from original_df
         original_df: Original pandas DataFrame with dtype info
         force_enum_cols: Optional list of column names to forcibly convert to enum
         cardinality_threshold: Max unique values to allow for enum conversion
-    
+
     Returns:
         h2o_df (possibly modified), and a list of column names proposed or actually converted
     """
@@ -304,9 +336,9 @@ def correct_h2o_dtypes(h2o_df, original_df, force_enum_cols=None, cardinality_th
         orig_dtype = original_df[col].dtype
         h2o_type = h2o_df.types.get(col)
         is_non_numeric = (
-            is_categorical_dtype(original_df[col]) or
-            is_object_dtype(original_df[col]) or
-            is_string_dtype(original_df[col])
+            is_categorical_dtype(original_df[col])
+            or is_object_dtype(original_df[col])
+            or is_string_dtype(original_df[col])
         )
         h2o_is_numeric = h2o_type in ("int", "real")
         nunique = original_df[col].nunique(dropna=True)
@@ -333,5 +365,7 @@ def correct_h2o_dtypes(h2o_df, original_df, force_enum_cols=None, cardinality_th
 
             converted_columns.append(col)
 
-    LOGGER.info(f"H2O dtype correction complete. {len(converted_columns)} column(s) affected.")
+    LOGGER.info(
+        f"H2O dtype correction complete. {len(converted_columns)} column(s) affected."
+    )
     return h2o_df

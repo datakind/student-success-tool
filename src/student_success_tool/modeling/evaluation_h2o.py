@@ -37,15 +37,17 @@ LOGGER = logging.getLogger(__name__)
 def get_metrics_near_threshold_all_splits(model, train, valid, test, threshold=0.5):
     def _metrics(perf, label):
         thresh_df = perf.thresholds_and_metric_scores().as_data_frame()
-        closest = thresh_df.iloc[(thresh_df['threshold'] - threshold).abs().argsort()[:1]]
+        closest = thresh_df.iloc[
+            (thresh_df["threshold"] - threshold).abs().argsort()[:1]
+        ]
         return {
-            f"{label}_threshold": closest['threshold'].values[0],
-            f"{label}_precision": closest['precision'].values[0],
-            f"{label}_recall": closest['recall'].values[0],
-            f"{label}_accuracy": closest['accuracy'].values[0],
-            f"{label}_f1": closest['f1'].values[0],
+            f"{label}_threshold": closest["threshold"].values[0],
+            f"{label}_precision": closest["precision"].values[0],
+            f"{label}_recall": closest["recall"].values[0],
+            f"{label}_accuracy": closest["accuracy"].values[0],
+            f"{label}_f1": closest["f1"].values[0],
             f"{label}_roc_auc": perf.auc(),
-            f"{label}_log_loss": perf.logloss()
+            f"{label}_log_loss": perf.logloss(),
         }
 
     return {
@@ -60,13 +62,14 @@ def get_metrics_near_threshold_all_splits(model, train, valid, test, threshold=0
 ## PLOTS! ##
 ############
 
+
 def create_confusion_matrix_plot(y_true, y_pred) -> plt.Figure:
     # Normalize confusion matrix by true labels
-    cm = confusion_matrix(y_true, y_pred, normalize='true')
+    cm = confusion_matrix(y_true, y_pred, normalize="true")
 
     fig, ax = plt.subplots()
     disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-    disp.plot(ax=ax, cmap='Blues', colorbar=False)
+    disp.plot(ax=ax, cmap="Blues", colorbar=False)
 
     # Remove default annotations
     for txt in ax.texts:
@@ -115,11 +118,10 @@ def create_precision_recall_curve_plot(y_true, y_proba) -> plt.Figure:
     return fig
 
 
-
 def create_calibration_curve_plot(y_true, y_proba, n_bins=10) -> plt.Figure:
     # Compute calibration curve
     prob_true, prob_pred = calibration_curve(
-        y_true, y_proba, n_bins=n_bins, strategy='quantile'
+        y_true, y_proba, n_bins=n_bins, strategy="quantile"
     )
 
     # Create the plot
@@ -165,7 +167,7 @@ def get_h2o_used_features(model):
     Extracts the actual feature names used by the H2O model (excluding dropped/constant columns).
     """
     # The last name is usually the response/target variable
-    feature_names = model._model_json['output']['names'][:-1]
+    feature_names = model._model_json["output"]["names"][:-1]
     return feature_names
 
 
@@ -173,7 +175,7 @@ def compute_h2o_shap_contributions(
     model: H2OEstimator,
     h2o_frame: h2o.H2OFrame,
     background_data: t.Optional[h2o.H2OFrame] = None,
-    drop_bias: bool = True
+    drop_bias: bool = True,
 ) -> t.Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Computes SHAP-like contribution values from an H2O model.
@@ -193,7 +195,9 @@ def compute_h2o_shap_contributions(
 
     if background_data is not None:
         background_data = background_data[used_features]
-        contribs_hf = model.predict_contributions(hf_subset, background_data=background_data)
+        contribs_hf = model.predict_contributions(
+            hf_subset, background_data=background_data
+        )
     else:
         contribs_hf = model.predict_contributions(hf_subset)
 
@@ -233,7 +237,9 @@ def group_shap_by_feature(contribs_df: pd.DataFrame) -> pd.DataFrame:
     return grouped_df
 
 
-def create_color_hint_features(original_df: pd.DataFrame, grouped_df: pd.DataFrame) -> pd.DataFrame:
+def create_color_hint_features(
+    original_df: pd.DataFrame, grouped_df: pd.DataFrame
+) -> pd.DataFrame:
     """
     Classifies each feature in the grouped input DataFrame as categorical or numeric,
     based on the original DataFrame's dtypes. Used for SHAP color hinting.
@@ -251,9 +257,10 @@ def create_color_hint_features(original_df: pd.DataFrame, grouped_df: pd.DataFra
         if col in original_df.columns:
             dtype = original_df[col].dtype
             is_categorical = (
-                (is_object_dtype(dtype) or isinstance(dtype, pd.CategoricalDtype) or is_string_dtype(dtype))
-                and not is_bool_dtype(dtype)
-            )
+                is_object_dtype(dtype)
+                or isinstance(dtype, pd.CategoricalDtype)
+                or is_string_dtype(dtype)
+            ) and not is_bool_dtype(dtype)
         else:
             dtype = None
             is_categorical = False
@@ -289,7 +296,9 @@ def group_feature_values_by_feature(input_df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(grouped_data)
 
 
-def plot_grouped_shap(contribs_df: pd.DataFrame, input_df: pd.DataFrame, original_df: pd.DataFrame):
+def plot_grouped_shap(
+    contribs_df: pd.DataFrame, input_df: pd.DataFrame, original_df: pd.DataFrame
+):
     """
     Plot grouped shap values based on contributions dataframe (shap values), input dataframe, which
     contain the one-hot encoding columns, and the original dataframe, which was the data used for training. This
@@ -303,7 +312,5 @@ def plot_grouped_shap(contribs_df: pd.DataFrame, input_df: pd.DataFrame, origina
     color_hint = create_color_hint_features(original_df, grouped_inputs)
 
     shap.summary_plot(
-        grouped_shap.values,
-        features=color_hint,
-        feature_names=grouped_shap.columns
+        grouped_shap.values, features=color_hint, feature_names=grouped_shap.columns
     )

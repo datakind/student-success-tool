@@ -33,12 +33,14 @@ def load_h2o_model(run_id: str, artifact_path: str = "model"):
         h2o.init()
 
     with tempfile.TemporaryDirectory() as tmp_dir:
-        local_model_dir = download_artifacts(run_id=run_id, artifact_path=artifact_path, dst_path=tmp_dir)
+        local_model_dir = download_artifacts(
+            run_id=run_id, artifact_path=artifact_path, dst_path=tmp_dir
+        )
 
         # Find the actual model file inside the directory
         files = os.listdir(local_model_dir)
         if not files:
             raise FileNotFoundError(f"No model file found in {local_model_dir}")
-        
+
         model_path = os.path.join(local_model_dir, files[0])
         return h2o.load_model(model_path)
