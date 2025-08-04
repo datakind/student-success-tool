@@ -27,7 +27,7 @@ from sklearn.calibration import calibration_curve
 
 
 import h2o
-from h2o.automl import H2OAutoML
+from h2o.model.model_base import H2OModel
 import shap
 
 LOGGER = logging.getLogger(__name__)
@@ -171,8 +171,8 @@ def get_h2o_used_features(model):
 
 def compute_h2o_shap_contributions(
     model: H2OModel,
-    h2o_frame: H2OFrame,
-    background_data: t.Optional[H2OFrame] = None,
+    h2o_frame: h2o.H2OFrame,
+    background_data: t.Optional[h2o.H2OFrame] = None,
     drop_bias: bool = True
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
@@ -180,8 +180,8 @@ def compute_h2o_shap_contributions(
 
     Args:
         model: Trained H2O model
-        h2o_frame: H2OFrame for which to compute contributions
-        background_data: Optional H2OFrame to use as the background reference for SHAP values
+        h2o_frame: h2o.H2OFrame for which to compute contributions
+        background_data: Optional h2o.H2OFrame to use as the background reference for SHAP values
         drop_bias: Whether to exclude the 'BiasTerm' column
 
     Returns:
