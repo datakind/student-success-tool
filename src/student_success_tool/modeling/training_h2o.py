@@ -173,8 +173,8 @@ def evaluate_and_log_model(
     train: H2OFrame,
     valid: H2OFrame,
     test: H2OFrame,
-    threshold: float = 0.5,
     client: MlflowClient,
+    threshold: float = 0.5,
 ) -> dict | None:
     """
     Evaluates a single H2O model at a given threshold and logs metrics, plots, and artifacts to MLflow.
