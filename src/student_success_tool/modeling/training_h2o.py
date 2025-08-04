@@ -99,10 +99,8 @@ def run_h2o_automl_classification(
 
     aml = H2OAutoML(
         max_runtime_secs=timeout_minutes * 60,
-        max_models=200,
         sort_metric=primary_metric,
         stopping_metric=primary_metric,
-        stopping_rounds=5,
         seed=seed,
         verbosity="info",
         include_algos=["XGBoost", "GBM", "GLM", "DRF"],
