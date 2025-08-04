@@ -71,6 +71,7 @@ def run_h2o_automl_classification(
     max_models = kwargs.pop("max_models", 100)
     exclude_cols = kwargs.pop("exclude_cols", [])
     split_col = kwargs.pop("split_col", "split")
+    sample_weights_col = kwargs.pop("sample_weights_col", None)
 
     if student_id_col and student_id_col not in exclude_cols:
         exclude_cols.append(student_id_col)
@@ -100,6 +101,7 @@ def run_h2o_automl_classification(
         max_runtime_secs=timeout_minutes * 60,
         max_models=max_models,
         sort_metric=primary_metric,
+        stopping_metric=primary_metric,
         seed=seed,
         verbosity="info",
         include_algos=["XGBoost", "GBM", "GLM"],
@@ -110,6 +112,7 @@ def run_h2o_automl_classification(
         training_frame=train,
         validation_frame=valid,
         leaderboard_frame=test,
+        weights_column=sample_weights_col,
     )
 
     LOGGER.info(f"Best model: {aml.leader.model_id}")
