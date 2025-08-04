@@ -27,6 +27,7 @@ from sklearn.calibration import calibration_curve
 
 
 import h2o
+from h2o.automl import H2OAutoML
 import shap
 
 LOGGER = logging.getLogger(__name__)
