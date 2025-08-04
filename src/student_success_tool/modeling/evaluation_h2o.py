@@ -1,10 +1,8 @@
 import logging
 import typing as t
-import os
 import re
 import mlflow
 
-import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from pandas.api.types import (
@@ -16,10 +14,7 @@ from sklearn.metrics import (
     confusion_matrix,
     ConfusionMatrixDisplay,
     roc_curve,
-    RocCurveDisplay,
     precision_recall_curve,
-    PrecisionRecallDisplay,
-    auc,
     roc_auc_score,
     average_precision_score,
 )

@@ -4,7 +4,6 @@ from mlflow.tracking import MlflowClient
 import os
 import datetime
 import contextlib
-import sys
 import logging
 import typing as t
 
@@ -179,7 +178,9 @@ def log_h2o_experiment(
         model_num = idx + 1
 
         if model_num == 1 or model_num % 10 == 0 or model_num == num_models:
-            LOGGER.info(f"Evaluating model {model_num}/{len(top_model_ids)}: {model_id}")
+            LOGGER.info(
+                f"Evaluating model {model_num}/{len(top_model_ids)}: {model_id}"
+            )
 
         # Setting threshold to 0.5 due to binary classification
         metrics = evaluate_and_log_model(

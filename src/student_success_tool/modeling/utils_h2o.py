@@ -2,7 +2,6 @@ import os
 import tempfile
 import mlflow
 import h2o
-from h2o.model.model_base import ModelBase
 from mlflow.artifacts import download_artifacts
 
 

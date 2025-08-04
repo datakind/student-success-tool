@@ -2,7 +2,6 @@ import pytest
 import pandas as pd
 import numpy as np
 from unittest.mock import patch, ANY, MagicMock
-from mlflow.tracking import MlflowClient
 from student_success_tool.modeling import training_h2o
 
 

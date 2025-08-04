@@ -1,6 +1,4 @@
-import pytest
 import pandas as pd
-import numpy as np
 from unittest.mock import patch, MagicMock
 from student_success_tool.modeling import evaluation_h2o
 
