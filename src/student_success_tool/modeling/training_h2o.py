@@ -102,9 +102,10 @@ def run_h2o_automl_classification(
         max_models=max_models,
         sort_metric=primary_metric,
         stopping_metric=primary_metric,
+        stopping_rounds=5,
         seed=seed,
         verbosity="info",
-        include_algos=["XGBoost", "GBM", "GLM"],
+        include_algos=["XGBoost", "GBM", "GLM", "DRF"],
     )
     aml.train(
         x=features,
