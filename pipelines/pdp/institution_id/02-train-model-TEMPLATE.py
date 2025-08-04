@@ -239,7 +239,7 @@ top_runs = modeling.evaluation.get_top_runs(
         "test_recall_score",
         "test_roc_auc",
         "test_log_loss",
-        "test_f1_score", 
+        "test_f1_score",
         "val_log_loss",
     ],
     topn_runs_included=cfg.modeling.evaluation.topn_runs_included,
