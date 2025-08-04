@@ -175,9 +175,11 @@ def log_h2o_experiment(
         return experiment_id, pd.DataFrame()
 
     for idx, model_id in enumerate(top_model_ids):
-        # Log every 10 models
-        if idx % 10 == 0:
-            LOGGER.info(f"Evaluating model {idx + 1}/{len(top_model_ids)}: {model_id}")
+        # Log first, every 10, & last model
+        model_num = idx + 1
+
+        if model_num == 1 or model_num % 10 == 0 or model_num == num_models:
+            LOGGER.info(f"Evaluating model {model_num}/{len(top_model_ids)}: {model_id}")
 
         # Setting threshold to 0.5 due to binary classification
         metrics = evaluate_and_log_model(
