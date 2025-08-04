@@ -27,7 +27,7 @@ from sklearn.calibration import calibration_curve
 
 
 import h2o
-from h2o.model.model_base import H2OModel
+from h2o.estimators.estimator_base import H2OEstimator
 import shap
 
 LOGGER = logging.getLogger(__name__)
@@ -170,7 +170,7 @@ def get_h2o_used_features(model):
 
 
 def compute_h2o_shap_contributions(
-    model: H2OModel,
+    model: H2OEstimator,
     h2o_frame: h2o.H2OFrame,
     background_data: t.Optional[h2o.H2OFrame] = None,
     drop_bias: bool = True
