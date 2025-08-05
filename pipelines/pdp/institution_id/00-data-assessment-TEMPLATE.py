@@ -38,7 +38,6 @@ import sys
 
 import matplotlib.pyplot as plt
 import missingno as msno
-import numpy as np
 import pandas as pd
 import seaborn as sb
 from databricks.connect import DatabricksSession
@@ -217,6 +216,9 @@ df_cohort = dataio.pdp.read_raw_cohort_data(
 )
 df_cohort
 
+# if u need the converter function for the wrong names (Mesh is working on a fix but just incase)
+# converter_func=dataio.converters.pdp.raw_cohort.rename_mangled_column_names
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -299,9 +301,9 @@ dbutils.data.summarize(df_cohort, precise=True)
 
 df_raw = (
     pd.merge(
-        df_cohort,
-        df_course,
-        on=cfg.student_id_col,
+        df_cohort_raw,
+        df_course_raw,
+        on="study_id",
         how="outer",
         suffixes=("_cohort", "_course"),
         indicator=True,
@@ -339,7 +341,7 @@ df_raw["_merge"].value_counts()
 df_raw.loc[df_raw["_merge"] != "both", :]
 
 # which students don't appear in both datasets?
-df_raw.loc[df_raw["_merge"] != "both", cfg.student_id_col].unique().tolist()
+df_raw.loc[df_raw["_merge"] != "both", "study_id"].unique().tolist()
 
 # COMMAND ----------
 
@@ -563,6 +565,19 @@ df_cohort_filtered
 
 # COMMAND ----------
 
+# how many students lost?
+print(df_cohort.shape)
+df_cohort_filtered.shape
+
+# COMMAND ----------
+
+print(df_cohort_filtered["enrollment_type"].value_counts(dropna=False))
+
+# if no re-admit students, just drop this category altogether
+# df_cohort_filtered["enrollment_type"] = df_cohort_filtered["enrollment_type"].cat.remove_categories("RE-ADMIT")
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## plots and stats
 
@@ -573,8 +588,13 @@ df_cohort_filtered
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Cohort File
+
+# COMMAND ----------
+
 ax = sb.histplot(
-    df_cohort.sort_values("cohort"),
+    df_cohort_filtered.sort_values("cohort"),
     y="cohort",
     hue="cohort_term",
     multiple="stack",
@@ -585,24 +605,31 @@ _ = ax.set(xlabel="Number of Students")
 
 # COMMAND ----------
 
-num_cohorts = df_cohort["cohort"].nunique()
-first_cohort, last_cohort = df_cohort["cohort"].min(), df_cohort["cohort"].max()
+num_cohorts = df_cohort_filtered["cohort"].nunique()
+first_cohort, last_cohort = (
+    df_cohort_filtered["cohort"].min(),
+    df_cohort_filtered["cohort"].max(),
+)
 print(f"{num_cohorts} cohorts ({first_cohort} through {last_cohort})")
 
 # COMMAND ----------
 
-print(df_cohort["cohort_term"].value_counts(normalize=True, dropna=False), end="\n\n")
 print(
-    df_cohort["enrollment_type"].value_counts(normalize=True, dropna=False), end="\n\n"
+    df_cohort_filtered["cohort_term"].value_counts(normalize=True, dropna=False),
+    end="\n\n",
 )
 print(
-    df_cohort["enrollment_intensity_first_term"].value_counts(
+    df_cohort_filtered["enrollment_type"].value_counts(normalize=True, dropna=False),
+    end="\n\n",
+)
+print(
+    df_cohort_filtered["enrollment_intensity_first_term"].value_counts(
         normalize=True, dropna=False
     ),
     end="\n\n",
 )
 print(
-    df_cohort["credential_type_sought_year_1"].value_counts(
+    df_cohort_filtered["credential_type_sought_year_1"].value_counts(
         normalize=True, dropna=False
     ),
     end="\n\n",
@@ -610,7 +637,7 @@ print(
 
 # COMMAND ----------
 
-df_cohort["gpa_group_year_1"].describe()
+df_cohort_filtered["gpa_group_year_1"].describe()
 
 # COMMAND ----------
 
@@ -629,6 +656,21 @@ ax.legend(loc="lower left", title="Enrollment Type")
 
 # COMMAND ----------
 
+# First year GPA by cohort and enrollment intensity
+# to remove error bars, errorbar=None
+ax = sb.barplot(
+    df_cohort_filtered.sort_values(by="cohort").astype({"gpa_group_year_1": "Float32"}),
+    x="cohort",
+    y="gpa_group_year_1",
+    estimator="mean",
+    hue="enrollment_intensity_first_term",
+    edgecolor="white",
+)
+ax.set(ylabel="Avg. GPA (Year 1)")
+ax.legend(loc="lower left", title="Enrollment Intensity")
+
+# COMMAND ----------
+
 # First year GPA by cohort and credential type sought
 # to remove error bars, errorbar=None
 ax = sb.barplot(
@@ -641,6 +683,13 @@ ax = sb.barplot(
 )
 ax.set(ylabel="Avg. GPA (Year 1)")
 ax.legend(loc="lower left", title="Enrollment Intensity")
+
+# COMMAND ----------
+
+# credential types by cohort
+df_cohort_filtered[["cohort", "credential_type_sought_year_1"]].value_counts(
+    dropna=False
+).sort_index()
 
 # COMMAND ----------
 
@@ -687,16 +736,18 @@ df_pct_creds_by_yr.groupby("year_of_enrollment")[
 # COMMAND ----------
 
 # Plot mean or median, based on above
-(
-    sb.barplot(
-        df_pct_creds_by_yr,
-        x="year_of_enrollment",
-        y="pct_credits_earned",
-        estimator="mean",
-        edgecolor="white",
-        errorbar=None,
-    ).set(xlabel="Year of Enrollment", ylabel="Avg. % Credits Earned")
+# Create the barplot and capture the Axes object
+ax = sb.barplot(
+    data=df_pct_creds_by_yr,
+    x="year_of_enrollment",
+    y="pct_credits_earned",
+    estimator="mean",
+    edgecolor="white",
+    errorbar=None,
 )
+
+# Set axis labels
+ax.set(xlabel="Year of Enrollment", ylabel="Avg. % Credits Earned")
 
 # Add percent labels on top of each bar
 for bar in ax.patches:
@@ -709,14 +760,19 @@ for bar in ax.patches:
         fontsize=10,
     )
 
+# Finalize layout
 plt.tight_layout()
 plt.show()
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Course File
+
+# COMMAND ----------
+
 ax = sb.histplot(
-    df_course.sort_values(by="academic_year"),
-    # df_course_filtered.sort_values(by="academic_year"),
+    df_course_filtered.sort_values(by="academic_year"),
     y="academic_year",
     hue="academic_term",
     multiple="stack",
@@ -727,20 +783,103 @@ _ = ax.set(xlabel="Number of Course Enrollments")
 
 # COMMAND ----------
 
-num_ayears = df_course["academic_year"].nunique()
+# course enrollments by enrollment intensity
+
+ax = sb.histplot(
+    pd.merge(
+        df_course_filtered.groupby(cfg.student_id_col)
+        .size()
+        .rename("num_courses_enrolled")
+        .reset_index(drop=False),
+        df_cohort_filtered[[cfg.student_id_col, "enrollment_intensity_first_term"]],
+        on=cfg.student_id_col,
+        how="inner",
+    ),
+    x="num_courses_enrolled",
+    hue="enrollment_intensity_first_term",
+    multiple="stack",
+    binwidth=5,
+    edgecolor="white",
+)
+ax.set(xlabel="Number of courses enrolled (total)", ylabel="Number of students")
+sb.move_legend(ax, loc="upper right", bbox_to_anchor=(1, 1))
+
+# COMMAND ----------
+
+# grades by delivery method
+print(df_course_filtered["grade"].value_counts(dropna=False).sort_index())
+
+# Map letter grades A and F to numeric; ignores P, I, W
+# confirm this with school!
+df_numeric_grades = df_course_filtered.copy()
+letter_to_num = {"A": 4.0, "F": 0.00}
+df_numeric_grades["grade_converted"] = pd.to_numeric(
+    df_numeric_grades["grade"], errors="coerce"
+).fillna(df_numeric_grades["grade"].map(letter_to_num))
+
+# Keep only rows where 'grade' is numeric
+df_numeric_grades = df_numeric_grades[
+    pd.to_numeric(df_numeric_grades["grade_converted"], errors="coerce").notna()
+]
+
+# Ensure float dtype for plotting
+df_numeric_grades["grade_converted"] = df_numeric_grades["grade_converted"].astype(
+    float
+)
+
+print(df_numeric_grades["grade_converted"].value_counts(dropna=False).sort_index())
+
+ax = sb.histplot(
+    df_numeric_grades,
+    x="grade_converted",
+    hue="delivery_method",
+    multiple="stack",
+    binwidth=1,
+    binrange=(0, 5),
+    edgecolor="white",
+)
+
+ax.set(xlabel="Course grade", ylabel="Number of course enrollments")
+plt.title("Course Grades by Delivery Method")
+plt.show()
+
+# COMMAND ----------
+
+num_ayears = df_course_filtered["academic_year"].nunique()
 first_ayear, last_ayear = (
-    df_course["academic_year"].min(),
-    df_course["academic_year"].max(),
+    df_course_filtered["academic_year"].min(),
+    df_course_filtered["academic_year"].max(),
 )
 print(f"{num_ayears} academic years ({first_ayear} through {last_ayear})")
+
+# adding percent breakdown of academic terms
+df_course_filtered["academic_term"].value_counts(dropna=False, normalize=True)
 
 # COMMAND ----------
 
 num_courses = (
-    df_course["course_prefix"].str.cat(df_course["course_number"], sep=" ").nunique()
+    df_course_filtered["course_prefix"]
+    .str.cat(df_course["course_number"], sep=" ")
+    .nunique()
 )
-num_subjects = df_course["course_cip"].nunique()
+num_subjects = df_course_filtered["course_cip"].nunique()
 print(f"{num_courses} distinct courses, {num_subjects} distinct subjects")
+
+# COMMAND ----------
+
+jg = sb.jointplot(
+    df_course_filtered.groupby(cfg.student_id_col).agg(
+        {"number_of_credits_attempted": "sum", "number_of_credits_earned": "sum"}
+    ),
+    x="number_of_credits_attempted",
+    y="number_of_credits_earned",
+    kind="hex",
+    joint_kws={"bins": "log"},
+    marginal_kws={"edgecolor": "white"},
+    ratio=4,
+)
+jg.refline(y=120.0)  # or whichever num credits earned is a relavent benchmark
+jg.set_axis_labels("Number of Credits Attempted", "Number of Credits Earned")
 
 # COMMAND ----------
 
@@ -752,7 +891,7 @@ print(f"{num_courses} distinct courses, {num_subjects} distinct subjects")
 # enrollment type by enrollment intensity
 
 ax = sb.histplot(
-    df_cohort,
+    df_cohort_filtered,
     y="enrollment_type",
     hue="enrollment_intensity_first_term",
     multiple="stack",
@@ -766,7 +905,7 @@ _ = ax.set(xlabel="Number of Students")
 
 # same as plot above, only in cross-tab form
 100 * eda.compute_crosstabs(
-    df_cohort,
+    df_cohort_filtered,
     "enrollment_type",
     "enrollment_intensity_first_term",
     normalize=True,
@@ -778,7 +917,7 @@ _ = ax.set(xlabel="Number of Students")
 
 (
     sb.histplot(
-        df_cohort,
+        df_cohort_filtered,
         y="enrollment_type",
         hue="credential_type_sought_year_1",
         multiple="stack",
@@ -792,7 +931,7 @@ _ = ax.set(xlabel="Number of Students")
 # student age by enrollment intensity
 
 ax = sb.histplot(
-    df_cohort,
+    df_cohort_filtered,
     y="enrollment_intensity_first_term",
     hue="student_age",
     multiple="stack",
@@ -807,7 +946,7 @@ _ = ax.set(xlabel="Number of Students")
 # student age by gender
 
 ax = sb.histplot(
-    df_cohort,
+    df_cohort_filtered,
     y="gender",
     hue="student_age",
     multiple="stack",
@@ -821,7 +960,9 @@ _ = ax.set(xlabel="Number of Students")
 
 # student gender by age
 ax = sb.histplot(
-    df_cohort[(df_cohort["gender"] == "F") | (df_cohort["gender"] == "M")],
+    df_cohort_filtered[
+        (df_cohort_filtered["gender"] == "F") | (df_cohort_filtered["gender"] == "M")
+    ],
     y="gender",
     hue="student_age",
     multiple="stack",
@@ -836,7 +977,7 @@ _ = ax.set(xlabel="Number of Students")
 # race by pell status
 (
     sb.histplot(
-        df_cohort,
+        df_cohort_filtered,
         y="race",
         hue="pell_status_first_year",
         multiple="stack",
@@ -852,7 +993,7 @@ _ = ax.set(xlabel="Number of Students")
 
 # COMMAND ----------
 
-df_cohort[["race", "pell_status_first_year"]].groupby("race").value_counts(
+df_cohort_filtered[["race", "pell_status_first_year"]].groupby("race").value_counts(
     normalize=True, dropna=False
 ).sort_index() * 100
 
@@ -861,7 +1002,7 @@ df_cohort[["race", "pell_status_first_year"]].groupby("race").value_counts(
 # first gen
 (
     sb.histplot(
-        df_cohort,
+        df_cohort_filtered,
         y="first_gen",
         multiple="stack",
         shrink=0.75,
@@ -874,7 +1015,7 @@ df_cohort[["race", "pell_status_first_year"]].groupby("race").value_counts(
 # race by first_gen
 (
     sb.histplot(
-        df_cohort,
+        df_cohort_filtered,
         y="race",
         hue="first_gen",
         multiple="stack",
@@ -890,121 +1031,8 @@ df_cohort[["race", "pell_status_first_year"]].groupby("race").value_counts(
 
 # COMMAND ----------
 
-ax = sb.histplot(
-    pd.merge(
-        df_course.groupby(cfg.student_id_col)
-        # df_course_filtered.groupby(cfg.student_id_col)
-        .size()
-        .rename("num_courses_enrolled")
-        .reset_index(drop=False),
-        df_cohort[[cfg.student_id_col, "enrollment_intensity_first_term"]],
-        on=cfg.student_id_col,
-        how="inner",
-    ),
-    x="num_courses_enrolled",
-    hue="enrollment_intensity_first_term",
-    multiple="stack",
-    binwidth=5,
-    edgecolor="white",
-)
-ax.set(xlabel="Number of courses enrolled (total)", ylabel="Number of students")
-sb.move_legend(ax, loc="upper right", bbox_to_anchor=(1, 1))
-
-# COMMAND ----------
-
-jg = sb.jointplot(
-    df_course.groupby(cfg.student_id_col).agg(
-        {"number_of_credits_attempted": "sum", "number_of_credits_earned": "sum"}
-    ),
-    # df_course_filtered.groupby(cfg.student_id_col).agg(
-    #     {"number_of_credits_attempted": "sum", "number_of_credits_earned": "sum"}
-    # ),
-    x="number_of_credits_attempted",
-    y="number_of_credits_earned",
-    kind="hex",
-    joint_kws={"bins": "log"},
-    marginal_kws={"edgecolor": "white"},
-    ratio=4,
-)
-jg.refline(y=120.0)  # or whichever num credits earned is a relavent benchmark
-jg.set_axis_labels("Number of Credits Attempted", "Number of Credits Earned")
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC And so on, and so forth.
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### takeaways / questions
-# MAGIC
-# MAGIC - ...
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## variable associations
-
-# COMMAND ----------
-
-df_assoc_course = eda.compute_pairwise_associations(
-    df_course,
-    exclude_cols=[
-        cfg.student_id_col,
-        "institution_id",
-        "student_age",
-        "gender",
-        "race",
-        "ethnicity",
-    ],
-)
-df_assoc_course
-
-# COMMAND ----------
-
-fig, ax = plt.subplots(figsize=(10, 10))
-sb.heatmap(
-    df_assoc_course.astype(np.float32),
-    xticklabels=df_assoc_course.columns,
-    yticklabels=df_assoc_course.columns,
-    vmin=0.0,
-    vmax=1.0,
-    ax=ax,
-)
-_ = ax.set_xticklabels(
-    ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor"
-)
-
-# COMMAND ----------
-
-df_assoc_cohort = eda.compute_pairwise_associations(
-    df_cohort,
-    exclude_cols=[
-        cfg.student_id_col,
-        "institution_id",
-        "student_age",
-        "gender",
-        "race",
-        "ethnicity",
-    ],
-)
-df_assoc_course
-
-# COMMAND ----------
-
-fig, ax = plt.subplots(figsize=(10, 10))
-sb.heatmap(
-    df_assoc_cohort.astype(np.float32),
-    xticklabels=df_assoc_cohort.columns,
-    yticklabels=df_assoc_cohort.columns,
-    vmin=0.0,
-    vmax=1.0,
-    ax=ax,
-)
-_ = ax.set_xticklabels(
-    ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor"
-)
 
 # COMMAND ----------
 

@@ -20,6 +20,7 @@ from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 from google.cloud import storage
 
+from student_success_tool.dataio import schemas
 import student_success_tool.dataio as dataio
 import importlib
 
@@ -227,14 +228,10 @@ class DataIngestionTask:
         Executes the data ingestion task.
         """
         raw_files_path = f"{self.args.job_root_dir}/raw_files/"
-        # os.makedirs(raw_files_path, exist_ok=True)
         print("raw_files_path:", raw_files_path)
         dbutils.fs.mkdirs(raw_files_path)
 
-        # fpath_course, fpath_cohort = self.download_data_from_gcs(raw_files_path)
-        # Hack to get around gcp permissions right now
-        fpath_course = f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs/{self.args.course_file_name}"
-        fpath_cohort = f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs/{self.args.cohort_file_name}"
+        fpath_course, fpath_cohort = self.download_data_from_gcs(raw_files_path)
         df_course, df_cohort = self.read_and_validate_data(fpath_course, fpath_cohort)
 
         course_dataset_validated_path, cohort_dataset_validated_path = (
@@ -295,33 +292,40 @@ def parse_arguments() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_arguments()
-    sys.path.append(args.custom_schemas_path)
     sys.path.append(
-        f"/Volumes/staging_sst_01/{args.databricks_institution_name}_bronze/bronze_volume/inference_inputs"
+        f"/Volumes/staging_sst_01/{args.databricks_institution_name}_gold/gold_volume/inference_inputs"
+    )
+    logging.info(
+        "Files in the inference inputs path: %s",
+        os.listdir(
+            f"/Volumes/staging_sst_01/{args.databricks_institution_name}_gold/gold_volume/inference_inputs"
+        ),
     )
     try:
-        print("Listdir1", os.listdir("/Workspace/Users"))
-        # converter_func = importlib.import_module(f"{args.databricks_institution_name}.dataio")
+        converter_func = importlib.import_module("dataio")
+        cohort_converter_func = converter_func.converter_func_cohort
+        logging.info("Running task with custom cohort converter func")
+    except Exception:
+        cohort_converter_func = None
+        logging.info("Running task with default cohort converter func")
+    try:
         converter_func = importlib.import_module("dataio")
         course_converter_func = converter_func.converter_func_course
-        cohort_converter_func = converter_func.converter_func_cohort
-        logging.info("Running task with custom converter func")
-    except ModuleNotFoundError:
-        print("Running task without custom converter func")
+        logging.info("Running task with custom course converter func")
+    except Exception:
         course_converter_func = None
-        cohort_converter_func = None
-        logging.info("Running task without custom converter func")
+        logging.info("Running task default course converter func")
     try:
-        print("sys.path:", sys.path)
-        # schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
         schemas = importlib.import_module("schemas")
         logging.info("Running task with custom schema")
     except Exception:
-        print("Running task with default schema")
-        print("Exception", Exception)
         from student_success_tool.dataio.schemas import pdp as schemas
 
         logging.info("Running task with default schema")
 
-    task = DataIngestionTask(args)
+    task = DataIngestionTask(
+        args,
+        cohort_converter_func=cohort_converter_func,
+        course_converter_func=course_converter_func,
+    )
     task.run()
