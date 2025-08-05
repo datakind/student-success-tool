@@ -105,9 +105,10 @@ class H2OImputerWrapper:
                 )
                 assert isinstance(value, (int, float, str, bool)), f"{col} has non-scalar value: {value} (type: {type(value)})"
 
-                h2o_frame[col] = h2o_frame[col].ifelse(
-                    h2o_frame[col].isna(), value, h2o_frame[col]
+                h2o_frame[col] = h2o_frame[col].isna().ifelse(
+                    value, h2o_frame[col]
                 )
+
             except Exception as e:
                 LOGGER.warning(f"Failed to impute '{col}' with '{strategy}' and '{value}'  (type: {type(value)}): {e}")
         return h2o_frame
