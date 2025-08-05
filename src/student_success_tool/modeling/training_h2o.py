@@ -163,9 +163,19 @@ def log_h2o_experiment(
         client=client,
     )
 
-    results = []
+    # Save leaderboard to CSV and log to MLflow
     leaderboard_df = aml.leaderboard.as_data_frame()
-    top_model_ids = leaderboard_df["model_id"].tolist()
+    leaderboard_path = "h2o_leaderboard.csv"
+    leaderboard_df.to_csv(leaderboard_path, index=False)
+    mlflow.log_artifact(leaderboard_path)
+
+    # Log metadata for model card
+    mlflow.log_metric("num_models_trained", len(leaderboard_df))
+    mlflow.log_param("best_model_id", aml.leader.model_id)
+
+    # Limiting # of models that we're logging to save some time
+    MAX_MODELS_TO_LOG = 50
+    top_model_ids = leaderboard_df["model_id"].tolist()[:MAX_MODELS_TO_LOG]
 
     if not top_model_ids:
         LOGGER.warning("No models found in leaderboard.")
