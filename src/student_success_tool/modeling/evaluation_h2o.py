@@ -1,7 +1,10 @@
 import logging
 import typing as t
 import re
+
+import os
 import mlflow
+import contextlib
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -23,6 +26,7 @@ from sklearn.calibration import calibration_curve
 
 
 import h2o
+from h2o.automl import H2OAutoML
 from h2o.estimators.estimator_base import H2OEstimator
 import shap
 
@@ -60,92 +64,6 @@ def get_metrics_near_threshold_all_splits(
     }
 
 
-############
-## PLOTS! ##
-############
-
-
-def create_confusion_matrix_plot(y_true: np.ndarray, y_pred: np.ndarray) -> plt.Figure:
-    # Normalize confusion matrix by true labels
-    cm = confusion_matrix(y_true, y_pred, normalize="true")
-
-    fig, ax = plt.subplots()
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-    disp.plot(ax=ax, cmap="Blues", colorbar=False)
-
-    # Remove default annotations
-    for txt in ax.texts:
-        txt.set_visible(False)
-
-    # Dynamic contrast-aware text overlay
-    for i in range(cm.shape[0]):
-        for j in range(cm.shape[1]):
-            value = cm[i, j]
-            # Use white text on dark blue, black on light blue
-            text_color = "black" if value < 0.5 else "white"
-            ax.text(j, i, f"{value:.2f}", ha="center", va="center", color=text_color)
-
-    ax.set_title("Normalized Confusion Matrix")
-    plt.tight_layout()
-    plt.close(fig)
-    return fig
-
-
-def create_roc_curve_plot(y_true: np.ndarray, y_proba: np.ndarray) -> plt.Figure:
-    fpr, tpr, _ = roc_curve(y_true, y_proba)
-    auc_score = roc_auc_score(y_true, y_proba)
-
-    fig, ax = plt.subplots()
-    ax.plot(fpr, tpr, label=f"ROC Curve (AUC = {auc_score:.2f})")
-    ax.plot([0, 1], [0, 1], linestyle="--", color="gray")
-    ax.set_title("ROC Curve")
-    ax.set_xlabel("False Positive Rate")
-    ax.set_ylabel("True Positive Rate")
-    ax.legend()
-    plt.close(fig)
-    return fig
-
-
-def create_precision_recall_curve_plot(
-    y_true: np.ndarray, y_proba: np.ndarray
-) -> plt.Figure:
-    precision, recall, _ = precision_recall_curve(y_true, y_proba)
-    ap_score = average_precision_score(y_true, y_proba)
-
-    fig, ax = plt.subplots()
-    ax.plot(recall, precision, label=f"Precision-Recall (AP = {ap_score:.2f})")
-    ax.set_title("Precision-Recall Curve")
-    ax.set_xlabel("Recall")
-    ax.set_ylabel("Precision")
-    ax.legend()
-    plt.close(fig)
-    return fig
-
-
-def create_calibration_curve_plot(
-    y_true: np.ndarray, y_proba: np.ndarray, n_bins: int = 10
-) -> plt.Figure:
-    # Compute calibration curve
-    prob_true, prob_pred = calibration_curve(
-        y_true, y_proba, n_bins=n_bins, strategy="quantile"
-    )
-
-    # Create the plot
-    fig, ax = plt.subplots()
-    ax.plot(prob_pred, prob_true, marker="o", label="Model Calibration")
-    ax.plot([0, 1], [0, 1], linestyle="--", color="gray", label="Perfect Calibration")
-
-    # Labels and legend
-    ax.set_title("Calibration Curve")
-    ax.set_xlabel("Mean Predicted Probability")
-    ax.set_ylabel("Fraction of Positives")
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
-    ax.legend()
-    plt.close(fig)
-    return fig
-
-
 def generate_all_classification_plots(
     y_true: np.ndarray, y_pred: np.ndarray, y_proba: np.ndarray, prefix: str = "test"
 ) -> None:
@@ -168,6 +86,81 @@ def generate_all_classification_plots(
     for name, (plot_fn, values) in plot_fns.items():
         fig = plot_fn(y_true, values)
         mlflow.log_figure(fig, f"{prefix}_{name}.png")
+
+
+def evaluate_and_log_model(
+    aml: H2OAutoML,
+    *,
+    model_id: str,
+    train: h2o.H2OFrame,
+    valid: h2o.H2OFrame,
+    test: h2o.H2OFrame,
+    client: "MLflowClient",
+    threshold: float = 0.5,
+) -> dict | None:
+    """
+    Evaluates a single H2O model at a given threshold and logs metrics, plots, and artifacts to MLflow.
+
+    Args:
+        model_id (str): The H2O model ID to evaluate and log.
+        aml: H2OAutoML object containing the leaderboard and trained models.
+        train: H2OFrame with training data.
+        valid: H2OFrame with validation data.
+        test: H2OFrame with test data.
+        threshold (float): Threshold to apply for binary classification metrics.
+        client (MlflowClient): Initialized MLflow client used for logging.
+
+    Returns:
+        dict: Dictionary of evaluation metrics including `mlflow_run_id`, or `None` if evaluation fails.
+    """
+    try:
+        model = h2o.get_model(model_id)
+
+        with (
+            open(os.devnull, "w") as fnull,
+            contextlib.redirect_stdout(fnull),
+            contextlib.redirect_stderr(fnull),
+        ):
+            metrics = get_metrics_near_threshold_all_splits(
+                model, train, valid, test, threshold=threshold
+            )
+
+            if mlflow.active_run():
+                mlflow.end_run()
+
+            with mlflow.start_run(run_name=f"h2o_eval_{model_id}"):
+                run_id = mlflow.active_run().info.run_id
+
+                for k, v in metrics.items():
+                    if k != "model_id":
+                        mlflow.log_metric(k, v)
+
+                for split_name, frame in zip(
+                    ["train", "val", "test"], [train, valid, test]
+                ):
+                    y_true = frame["target"].as_data_frame().values.flatten()
+                    preds = model.predict(frame)
+                    positive_class_label = preds.col_names[-1]
+                    y_proba = (
+                        preds[positive_class_label].as_data_frame().values.flatten()
+                    )
+                    y_pred = (y_proba >= 0.5).astype(int)
+
+                    generate_all_classification_plots(
+                        y_true, y_pred, y_proba, prefix=split_name
+                    )
+
+                local_model_dir = f"/tmp/h2o_models/{model_id}"
+                os.makedirs(local_model_dir, exist_ok=True)
+                h2o.save_model(model, path=local_model_dir, force=True)
+                mlflow.log_artifacts(local_model_dir, artifact_path="model")
+
+        metrics["mlflow_run_id"] = run_id
+        return metrics
+
+    except Exception as e:
+        LOGGER.exception(f"Failed to log model {model_id}: {e}")
+        return None
 
 
 def get_h2o_used_features(model: H2OEstimator) -> t.List[str]:
@@ -322,3 +315,89 @@ def plot_grouped_shap(
     shap.summary_plot(
         grouped_shap.values, features=color_hint, feature_names=grouped_shap.columns
     )
+
+
+############
+## PLOTS! ##
+############
+
+
+def create_confusion_matrix_plot(y_true: np.ndarray, y_pred: np.ndarray) -> plt.Figure:
+    # Normalize confusion matrix by true labels
+    cm = confusion_matrix(y_true, y_pred, normalize="true")
+
+    fig, ax = plt.subplots()
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+    disp.plot(ax=ax, cmap="Blues", colorbar=False)
+
+    # Remove default annotations
+    for txt in ax.texts:
+        txt.set_visible(False)
+
+    # Dynamic contrast-aware text overlay
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            value = cm[i, j]
+            # Use white text on dark blue, black on light blue
+            text_color = "black" if value < 0.5 else "white"
+            ax.text(j, i, f"{value:.2f}", ha="center", va="center", color=text_color)
+
+    ax.set_title("Normalized Confusion Matrix")
+    plt.tight_layout()
+    plt.close(fig)
+    return fig
+
+
+def create_roc_curve_plot(y_true: np.ndarray, y_proba: np.ndarray) -> plt.Figure:
+    fpr, tpr, _ = roc_curve(y_true, y_proba)
+    auc_score = roc_auc_score(y_true, y_proba)
+
+    fig, ax = plt.subplots()
+    ax.plot(fpr, tpr, label=f"ROC Curve (AUC = {auc_score:.2f})")
+    ax.plot([0, 1], [0, 1], linestyle="--", color="gray")
+    ax.set_title("ROC Curve")
+    ax.set_xlabel("False Positive Rate")
+    ax.set_ylabel("True Positive Rate")
+    ax.legend()
+    plt.close(fig)
+    return fig
+
+
+def create_precision_recall_curve_plot(
+    y_true: np.ndarray, y_proba: np.ndarray
+) -> plt.Figure:
+    precision, recall, _ = precision_recall_curve(y_true, y_proba)
+    ap_score = average_precision_score(y_true, y_proba)
+
+    fig, ax = plt.subplots()
+    ax.plot(recall, precision, label=f"Precision-Recall (AP = {ap_score:.2f})")
+    ax.set_title("Precision-Recall Curve")
+    ax.set_xlabel("Recall")
+    ax.set_ylabel("Precision")
+    ax.legend()
+    plt.close(fig)
+    return fig
+
+
+def create_calibration_curve_plot(
+    y_true: np.ndarray, y_proba: np.ndarray, n_bins: int = 10
+) -> plt.Figure:
+    # Compute calibration curve
+    prob_true, prob_pred = calibration_curve(
+        y_true, y_proba, n_bins=n_bins, strategy="quantile"
+    )
+
+    # Create the plot
+    fig, ax = plt.subplots()
+    ax.plot(prob_pred, prob_true, marker="o", label="Model Calibration")
+    ax.plot([0, 1], [0, 1], linestyle="--", color="gray", label="Perfect Calibration")
+
+    # Labels and legend
+    ax.set_title("Calibration Curve")
+    ax.set_xlabel("Mean Predicted Probability")
+    ax.set_ylabel("Fraction of Positives")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.legend()
+    plt.close(fig)
+    return fig
