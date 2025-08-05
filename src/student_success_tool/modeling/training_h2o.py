@@ -9,6 +9,7 @@ import h2o
 from h2o.automl import H2OAutoML
 
 from . import utils_h2o as utils
+from . import imputation_h2o as imputation
 
 LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ def run_h2o_automl_classification(
     student_id_col: str,
     client: t.Optional["MLflowClient"] = None,
     **kwargs: object,
-) -> tuple[H2OAutoML, h2o.H2OFrame, h2o.H2OFrame, h2o.H2OFrame]:
+) -> tuple[str, H2OAutoML, h2o.H2OFrame, h2o.H2OFrame, h2o.H2OFrame]:
     """
     Runs H2O AutoML for classification tasks and logs the best model to MLflow.
 
@@ -91,6 +92,15 @@ def run_h2o_automl_classification(
     if student_id_col and student_id_col not in exclude_cols:
         exclude_cols.append(student_id_col)
 
+    # create experiment to log imputation
+    experiment_id = utils.set_or_create_experiment(
+        workspace_path,
+        institution_id,
+        target_name,
+        checkpoint_name,
+        client=client,
+    )
+
     # Convert to H2OFrame and correct types
     # NOTE: H2O sometimes doesn't infer types correctly, so we need to manually check them here using our pandas DF.
     h2o_df = h2o.H2OFrame(df)
@@ -138,10 +148,11 @@ def run_h2o_automl_classification(
         target_name=target_name,
         checkpoint_name=checkpoint_name,
         workspace_path=workspace_path,
+        experiment_id=experiment_id,
         client=client,
     )
 
-    return aml, train, valid, test
+    return experiment_id, aml, train, valid, test
 
 
 def correct_h2o_dtypes(

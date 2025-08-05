@@ -71,6 +71,7 @@ def log_h2o_experiment(
     target_name: str,
     checkpoint_name: str,
     workspace_path: str,
+    experiment_id: str,
     client: t.Optional["MLflowClient"] = None,
 ) -> tuple[str, pd.DataFrame]:
     """
@@ -86,6 +87,7 @@ def log_h2o_experiment(
         target_name: Name of the target of the model from the config.
         checkpoint_name: Name of the checkpoint of the model from the config.
         workspace_path: Path prefix for experiment naming within MLflow.
+        experiment_id: ID of experiment set during training call
         client: Optional MLflowClient instance. If not provided, one will be created.
 
     Returns:
@@ -93,14 +95,6 @@ def log_h2o_experiment(
         results_df (pd.DataFrame): DataFrame with metrics and MLflow run IDs for all successfully logged models.
     """
     LOGGER.info("Logging experiment to MLflow with classification plots...")
-
-    experiment_id = set_or_create_experiment(
-        workspace_path,
-        institution_id,
-        target_name,
-        checkpoint_name,
-        client=client,
-    )
 
     leaderboard_df = aml.leaderboard.as_data_frame()
 
@@ -148,7 +142,7 @@ def log_h2o_experiment(
     results_df = pd.DataFrame(results)
     LOGGER.info(f"Logged {len(results_df)} model runs to MLflow.")
 
-    return experiment_id, results_df
+    return results_df
 
 
 def log_h2o_experiment_summary(

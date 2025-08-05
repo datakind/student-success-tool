@@ -1,7 +1,5 @@
 import unittest.mock as mock
-
 import pandas as pd
-
 
 from student_success_tool.modeling import utils_h2o
 
@@ -22,11 +20,6 @@ def test_log_h2o_experiment_logs_metrics(
     )
     mock_aml.leader.model_id = "model1"
 
-    client_mock = mock.MagicMock()
-    experiment_mock = mock.MagicMock()
-    experiment_mock.experiment_id = "exp123"
-    client_mock.get_experiment_by_name.return_value = experiment_mock
-
     # Evaluation mock
     mock_eval_log.return_value = {"accuracy": 0.9, "model_id": "model1"}
 
@@ -34,7 +27,7 @@ def test_log_h2o_experiment_logs_metrics(
     mock_active_run.return_value.info.run_id = "parent-run-id"
     mock_start_run.return_value.__enter__.return_value.info.run_id = "parent-run-id"
 
-    experiment_id, results_df = utils_h2o.log_h2o_experiment(
+    results_df = utils_h2o.log_h2o_experiment(
         aml=mock_aml,
         train=mock.MagicMock(),
         valid=mock.MagicMock(),
@@ -44,13 +37,14 @@ def test_log_h2o_experiment_logs_metrics(
         target_name="Outcome",
         checkpoint_name="CP",
         workspace_path="/workspace",
-        client=client_mock,
+        experiment_id="exp123",
+        client=mock.MagicMock(),
     )
 
-    assert experiment_id == "exp123"
     assert not results_df.empty
     assert "accuracy" in results_df.columns
     assert results_df["model_id"].iloc[0] == "model1"
+
 
 
 @mock.patch("student_success_tool.modeling.utils_h2o.mlflow.set_experiment")
