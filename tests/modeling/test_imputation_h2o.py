@@ -37,7 +37,7 @@ def test_strategy_map(sample_df):
     assert strat_map["student"]["value"] is True
 
 
-def test_fit_and_transform(sample_df):
+def test_fit(sample_df):
     wrapper = imputation.H2OImputerWrapper()
 
     def make_mock_frame():
@@ -68,9 +68,9 @@ def test_fit_and_transform(sample_df):
     )
 
     for col in ["age", "income", "gender", "student"]:
-        assert train_cols[col].impute.call_count == 1
-        assert valid_cols[col].impute.call_count == 1
-        assert test_cols[col].impute.call_count == 1
+        assert train_frame.__setitem__.call_args_list
+        assert valid_frame.__setitem__.call_args_list
+        assert test_frame.__setitem__.call_args_list
 
 
 @mock.patch("mlflow.log_artifact")

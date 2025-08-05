@@ -17,7 +17,7 @@ LOGGER = logging.getLogger(__name__)
 
 class H2OImputerWrapper:
     """
-    A wrapper for column-wise imputation using H2OFrame.impute(),
+    A wrapper for column-wise imputation using
     with skew-aware strategy assignment and MLflow logging.
 
     Supports:
@@ -103,7 +103,9 @@ class H2OImputerWrapper:
                 LOGGER.debug(
                     f"Imputing column '{col}' using '{strategy}' with value '{value}'"
                 )
-                h2o_frame[col] = h2o_frame[col].impute(method=strategy, value=value)
+                h2o_frame[col] = h2o_frame[col].ifelse(
+                    h2o_frame[col].isna(), value, h2o_frame[col]
+                )
             except Exception as e:
                 LOGGER.warning(f"Failed to impute '{col}' with '{strategy}': {e}")
         return h2o_frame
