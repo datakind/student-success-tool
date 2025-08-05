@@ -130,7 +130,7 @@ def log_h2o_experiment(
     checkpoint_name: str,
     workspace_path: str,
     client: t.Optional["MLflowClient"] = None,
-):
+) -> tuple[str, pd.DataFrame]:
     """
     Logs evaluation metrics, plots, and model artifacts for all models in an H2O AutoML leaderboard to MLflow.
 
@@ -165,9 +165,6 @@ def log_h2o_experiment(
 
     # Save leaderboard to CSV and log to MLflow
     leaderboard_df = aml.leaderboard.as_data_frame()
-    leaderboard_path = "h2o_leaderboard.csv"
-    leaderboard_df.to_csv(leaderboard_path, index=False)
-    mlflow.log_artifact(leaderboard_path)
 
     # Log metadata for model card
     mlflow.log_metric("num_models_trained", len(leaderboard_df))
@@ -181,10 +178,11 @@ def log_h2o_experiment(
         LOGGER.warning("No models found in leaderboard.")
         return experiment_id, pd.DataFrame()
 
+    results = []
     num_models = len(top_model_ids)
 
     for idx, model_id in enumerate(top_model_ids):
-        # Log first, every 10, & last model
+        # Show status update
         model_num = idx + 1
 
         if model_num == 1 or model_num % 10 == 0 or model_num == num_models:

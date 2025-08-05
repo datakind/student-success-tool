@@ -5,6 +5,7 @@ import mlflow
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 from pandas.api.types import (
     is_object_dtype,
     is_string_dtype,
@@ -29,7 +30,13 @@ LOGGER = logging.getLogger(__name__)
 
 
 # --- Metric evaluation ---
-def get_metrics_near_threshold_all_splits(model, train, valid, test, threshold=0.5):
+def get_metrics_near_threshold_all_splits(
+    model: H2OEstimator,
+    train: h2o.H2OFrame,
+    valid: h2o.H2OFrame,
+    test: h2o.H2OFrame,
+    threshold=0.5,
+):
     def _metrics(perf, label):
         thresh_df = perf.thresholds_and_metric_scores().as_data_frame()
         closest = thresh_df.iloc[
@@ -58,7 +65,7 @@ def get_metrics_near_threshold_all_splits(model, train, valid, test, threshold=0
 ############
 
 
-def create_confusion_matrix_plot(y_true, y_pred) -> plt.Figure:
+def create_confusion_matrix_plot(y_true: np.ndarray, y_pred: np.ndarray) -> plt.Figure:
     # Normalize confusion matrix by true labels
     cm = confusion_matrix(y_true, y_pred, normalize="true")
 
@@ -84,7 +91,7 @@ def create_confusion_matrix_plot(y_true, y_pred) -> plt.Figure:
     return fig
 
 
-def create_roc_curve_plot(y_true, y_proba) -> plt.Figure:
+def create_roc_curve_plot(y_true: np.ndarray, y_proba: np.ndarray) -> plt.Figure:
     fpr, tpr, _ = roc_curve(y_true, y_proba)
     auc_score = roc_auc_score(y_true, y_proba)
 
@@ -99,7 +106,9 @@ def create_roc_curve_plot(y_true, y_proba) -> plt.Figure:
     return fig
 
 
-def create_precision_recall_curve_plot(y_true, y_proba) -> plt.Figure:
+def create_precision_recall_curve_plot(
+    y_true: np.ndarray, y_proba: np.ndarray
+) -> plt.Figure:
     precision, recall, _ = precision_recall_curve(y_true, y_proba)
     ap_score = average_precision_score(y_true, y_proba)
 
@@ -113,7 +122,9 @@ def create_precision_recall_curve_plot(y_true, y_proba) -> plt.Figure:
     return fig
 
 
-def create_calibration_curve_plot(y_true, y_proba, n_bins=10) -> plt.Figure:
+def create_calibration_curve_plot(
+    y_true: np.ndarray, y_proba: np.ndarray, n_bins: int = 10
+) -> plt.Figure:
     # Compute calibration curve
     prob_true, prob_pred = calibration_curve(
         y_true, y_proba, n_bins=n_bins, strategy="quantile"
@@ -135,7 +146,9 @@ def create_calibration_curve_plot(y_true, y_proba, n_bins=10) -> plt.Figure:
     return fig
 
 
-def generate_all_classification_plots(y_true, y_pred, y_proba, prefix="test"):
+def generate_all_classification_plots(
+    y_true: np.ndarray, y_pred: np.ndarray, y_proba: np.ndarray, prefix: str = "test"
+):
     """
     Generates and logs classification plots to MLflow as figures.
 
@@ -157,7 +170,7 @@ def generate_all_classification_plots(y_true, y_pred, y_proba, prefix="test"):
         mlflow.log_figure(fig, f"{prefix}_{name}.png")
 
 
-def get_h2o_used_features(model):
+def get_h2o_used_features(model: H2OEstimator):
     """
     Extracts the actual feature names used by the H2O model (excluding dropped/constant columns).
     """
