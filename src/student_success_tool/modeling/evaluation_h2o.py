@@ -35,8 +35,8 @@ def get_metrics_near_threshold_all_splits(
     train: h2o.H2OFrame,
     valid: h2o.H2OFrame,
     test: h2o.H2OFrame,
-    threshold=0.5,
-):
+    threshold: float = 0.5,
+) -> dict[str, float | str]:
     def _metrics(perf, label):
         thresh_df = perf.thresholds_and_metric_scores().as_data_frame()
         closest = thresh_df.iloc[
@@ -148,7 +148,7 @@ def create_calibration_curve_plot(
 
 def generate_all_classification_plots(
     y_true: np.ndarray, y_pred: np.ndarray, y_proba: np.ndarray, prefix: str = "test"
-):
+) -> None:
     """
     Generates and logs classification plots to MLflow as figures.
 
@@ -170,7 +170,7 @@ def generate_all_classification_plots(
         mlflow.log_figure(fig, f"{prefix}_{name}.png")
 
 
-def get_h2o_used_features(model: H2OEstimator):
+def get_h2o_used_features(model: H2OEstimator) -> t.List[str]:
     """
     Extracts the actual feature names used by the H2O model (excluding dropped/constant columns).
     """
@@ -306,7 +306,7 @@ def group_feature_values_by_feature(input_df: pd.DataFrame) -> pd.DataFrame:
 
 def plot_grouped_shap(
     contribs_df: pd.DataFrame, input_df: pd.DataFrame, original_df: pd.DataFrame
-):
+) -> None:
     """
     Plot grouped shap values based on contributions dataframe (shap values), input dataframe, which
     contain the one-hot encoding columns, and the original dataframe, which was the data used for training. This

@@ -23,7 +23,9 @@ def download_model_artifact(run_id: str, artifact_subdir: str = "model") -> str:
     return artifact_path  # already includes artifact_subdir
 
 
-def load_h2o_model(run_id: str, artifact_path: str = "model"):
+def load_h2o_model(
+    run_id: str, artifact_path: str = "model"
+) -> h2o.model.model_base.ModelBase:
     """
     Initializes H2O, downloads the model artifact from MLflow, and loads it.
     Cleans up the temp directory after loading.

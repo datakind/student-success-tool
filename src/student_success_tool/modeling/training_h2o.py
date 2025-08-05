@@ -6,6 +6,7 @@ import datetime
 import contextlib
 import logging
 import typing as t
+import tempfile
 
 import pandas as pd
 from pandas.api.types import is_categorical_dtype, is_object_dtype, is_string_dtype
@@ -163,12 +164,14 @@ def log_h2o_experiment(
         client=client,
     )
 
-    # Save leaderboard to CSV and log to MLflow
     leaderboard_df = aml.leaderboard.as_data_frame()
 
-    # Log metadata for model card
-    mlflow.log_metric("num_models_trained", len(leaderboard_df))
-    mlflow.log_param("best_model_id", aml.leader.model_id)
+    log_h2o_experiment_summary(
+        aml=aml,
+        leaderboard_df=leaderboard_df,
+        train=train,
+        target_col=target_col,
+    )
 
     # Limiting # of models that we're logging to save some time
     MAX_MODELS_TO_LOG = 50
@@ -247,6 +250,9 @@ def evaluate_and_log_model(
                 model, train, valid, test, threshold=threshold
             )
 
+            if mlflow.active_run():
+                mlflow.end_run()
+
             with mlflow.start_run(run_name=f"h2o_eval_{model_id}"):
                 run_id = mlflow.active_run().info.run_id
 
@@ -280,6 +286,70 @@ def evaluate_and_log_model(
     except Exception as e:
         LOGGER.exception(f"Failed to log model {model_id}: {e}")
         return None
+
+
+def log_h2o_experiment_summary(
+    *,
+    aml: H2OAutoML,
+    leaderboard_df: pd.DataFrame,
+    train: h2o.H2OFrame,
+    target_col: str,
+    run_name: str = "h2o_automl_experiment_summary",
+    sample_size: int = 1000,
+) -> None:
+    """
+    Logs summary information about the H2O AutoML experiment to a dedicated MLflow run in
+    the experiment with the leaderboard as a CSV, list of input features, training dataset,
+    target distribution, and the schema (column names and types)
+
+    Args:
+        aml: Trained H2OAutoML object.
+        leaderboard_df (pd.DataFrame): Leaderboard as DataFrame.
+        train (H2OFrame): Training H2OFrame.
+        target_col (str): Name of the target column.
+        run_name (str): Name of the MLflow run. Defaults to "h2o_automl_experiment_summary".
+        sample_size (int): Number of rows to sample from train data. Defaults to 1000.
+    """
+    if mlflow.active_run():
+        mlflow.end_run()
+
+    with mlflow.start_run(run_name=run_name):
+        # Log basic experiment metadata
+        mlflow.log_metric("num_models_trained", len(leaderboard_df))
+        mlflow.log_param("best_model_id", aml.leader.model_id)
+
+        # Create tmp directory for artifacts
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Log leaderboard
+            leaderboard_path = os.path.join(tmpdir, "h2o_leaderboard.csv")
+            leaderboard_df.to_csv(leaderboard_path, index=False)
+            mlflow.log_artifact(leaderboard_path, artifact_path="leaderboard")
+
+            # Log feature list
+            features = [col for col in train.columns if col != target_col]
+            features_path = os.path.join(tmpdir, "train_features.txt")
+            with open(features_path, "w") as f:
+                for feat in features:
+                    f.write(f"{feat}\n")
+            mlflow.log_artifact(features_path, artifact_path="inputs")
+
+            # Log sampled training data
+            train_df = train.as_data_frame(use_pandas=True)
+            train_path = os.path.join(tmpdir, "train.csv")
+            train_df.to_csv(train_path, index=False)
+            mlflow.log_artifact(train_path, artifact_path="inputs")
+
+            # Log target distribution
+            target_dist_df = train[target_col].table().as_data_frame()
+            target_dist_path = os.path.join(tmpdir, "target_distribution.csv")
+            target_dist_df.to_csv(target_dist_path, index=False)
+            mlflow.log_artifact(target_dist_path, artifact_path="inputs")
+
+            # Log schema
+            schema_df = pd.DataFrame(train.types.items(), columns=["column", "dtype"])
+            schema_path = os.path.join(tmpdir, "train_schema.csv")
+            schema_df.to_csv(schema_path, index=False)
+            mlflow.log_artifact(schema_path, artifact_path="inputs")
 
 
 def set_or_create_experiment(
@@ -334,7 +404,7 @@ def correct_h2o_dtypes(
     original_df: pd.DataFrame,
     force_enum_cols: t.Optional[t.List[str]] = None,
     cardinality_threshold: int = 100,
-):
+) -> h2o.H2OFrame:
     """
     Correct H2OFrame dtypes based on original pandas DataFrame, targeting cases where
     originally non-numeric columns were inferred as numeric by H2O.
