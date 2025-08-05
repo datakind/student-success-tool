@@ -109,7 +109,7 @@ class H2OImputerWrapper:
                     h2o_frame[col].isna(), value, h2o_frame[col]
                 )
             except Exception as e:
-                LOGGER.warning(f"Failed to impute '{col}' with '{strategy}' and '{value}': {e}")
+                LOGGER.warning(f"Failed to impute '{col}' with '{strategy}' and '{value}'  (type: {type(value)}): {e}")
         return h2o_frame
 
     def _assign_strategies(self, df: pd.DataFrame) -> dict:
