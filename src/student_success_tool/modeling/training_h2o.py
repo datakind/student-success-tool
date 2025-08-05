@@ -338,7 +338,7 @@ def correct_h2o_dtypes(
         cardinality_threshold: Max unique values to allow for enum conversion
 
     Returns:
-        h2o_df (possibly modified), and a list of column names proposed or actually converted
+        h2o_df (possibly modified)
     """
     force_enum_cols = set(force_enum_cols or [])
     converted_columns = []
@@ -380,9 +380,13 @@ def correct_h2o_dtypes(
                 f"(originally {orig_dtype}, inferred as {h2o_type})."
             )
 
-            converted_columns.append(col)
+            try:
+                h2o_df[col] = h2o_df[col].asfactor()
+                converted_columns.append(col)
+            except Exception as e:
+                LOGGER.warning(f"Failed to convert '{col}' to enum: {e}")
 
     LOGGER.info(
-        f"H2O dtype correction complete. {len(converted_columns)} column(s) affected."
+        f"H2O dtype correction complete. {len(converted_columns)} column(s) affected: {converted_columns}"
     )
     return h2o_df
