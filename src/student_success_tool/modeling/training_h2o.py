@@ -9,7 +9,6 @@ import h2o
 from h2o.automl import H2OAutoML
 
 from . import utils_h2o as utils
-from . import imputation_h2o as imputation
 
 LOGGER = logging.getLogger(__name__)
 

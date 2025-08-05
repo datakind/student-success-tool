@@ -46,7 +46,6 @@ def test_log_h2o_experiment_logs_metrics(
     assert results_df["model_id"].iloc[0] == "model1"
 
 
-
 @mock.patch("student_success_tool.modeling.utils_h2o.mlflow.set_experiment")
 def test_set_or_create_experiment_new(mock_set_experiment):
     mock_client = mock.MagicMock()

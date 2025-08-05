@@ -4,7 +4,6 @@ import tempfile
 import os
 import logging
 import pandas as pd
-from collections import defaultdict
 from pandas.api.types import (
     is_numeric_dtype,
     is_bool_dtype,
@@ -28,7 +27,6 @@ class H2OImputerWrapper:
 
     DEFAULT_SKEW_THRESHOLD = 0.5
     IMPUTATION_MAP_FILENAME = "imputation_map.json"
-
 
     def __init__(self):
         self.strategy_map = {}
@@ -67,7 +65,6 @@ class H2OImputerWrapper:
 
         return train_h2o, valid_h2o, test_h2o
 
-
     def transform(self, h2o_frame: h2o.H2OFrame) -> h2o.H2OFrame:
         """
         Apply stored imputation strategies to a new H2OFrame.
@@ -79,9 +76,10 @@ class H2OImputerWrapper:
             Imputed H2OFrame.
         """
         if not self.strategy_map:
-            raise ValueError("No strategy_map found. Call fit() or load() before transform().")
+            raise ValueError(
+                "No strategy_map found. Call fit() or load() before transform()."
+            )
         return self._apply_imputation(h2o_frame)
-
 
     def log(self, artifact_path: str) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -89,8 +87,9 @@ class H2OImputerWrapper:
             with open(map_path, "w") as f:
                 json.dump(self.strategy_map, f, indent=2)
             mlflow.log_artifact(map_path, artifact_path=artifact_path)
-            LOGGER.info(f"Logged strategy map to MLflow: {artifact_path}/{self.IMPUTATION_MAP_FILENAME}")
-
+            LOGGER.info(
+                f"Logged strategy map to MLflow: {artifact_path}/{self.IMPUTATION_MAP_FILENAME}"
+            )
 
     def _apply_imputation(self, h2o_frame: h2o.H2OFrame) -> h2o.H2OFrame:
         for col, strategy in self.strategy_map.items():
@@ -103,9 +102,10 @@ class H2OImputerWrapper:
                 LOGGER.warning(f"Failed to impute '{col}' with '{strategy}': {e}")
         return h2o_frame
 
-
     @classmethod
-    def load(cls, run_id: str, artifact_path: str = "h2o_imputer") -> "H2OImputerWrapper":
+    def load(
+        cls, run_id: str, artifact_path: str = "h2o_imputer"
+    ) -> "H2OImputerWrapper":
         """
         Load imputation strategy map from MLflow artifacts.
 
@@ -135,7 +135,9 @@ class H2OImputerWrapper:
                 strategy_map[col] = "mode"
             elif is_numeric_dtype(df[col]):
                 skew = skew_vals.get(col, 0)
-                strategy_map[col] = "median" if abs(skew) >= self.DEFAULT_SKEW_THRESHOLD else "mean"
+                strategy_map[col] = (
+                    "median" if abs(skew) >= self.DEFAULT_SKEW_THRESHOLD else "mean"
+                )
             elif is_categorical_dtype(df[col]) or is_object_dtype(df[col]):
                 strategy_map[col] = "mode"
             else:

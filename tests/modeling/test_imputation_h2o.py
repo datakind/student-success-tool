@@ -9,12 +9,14 @@ from student_success_tool.modeling import imputation_h2o as imputation
 
 @pytest.fixture
 def sample_df():
-    return pd.DataFrame({
-        "age": [25, 30, None, 45],
-        "income": [50000, None, 70000, 60000],
-        "gender": ["M", "F", "F", None],
-        "student": [True, False, None, True],
-    })
+    return pd.DataFrame(
+        {
+            "age": [25, 30, None, 45],
+            "income": [50000, None, 70000, 60000],
+            "gender": ["M", "F", "F", None],
+            "student": [True, False, None, True],
+        }
+    )
 
 
 def test_strategy_map(sample_df):

@@ -62,7 +62,6 @@ def test_run_h2o_automl_success(
     assert test == mock_frame
 
 
-
 def test_run_h2o_automl_missing_logging_param(sample_df):
     with pytest.raises(ValueError, match="Missing logging parameters"):
         training_h2o.run_h2o_automl_classification(
