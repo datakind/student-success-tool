@@ -9,6 +9,7 @@ import h2o
 from h2o.automl import H2OAutoML
 
 from . import utils_h2o as utils
+from . import imputation_h2o as imputation
 
 LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +92,7 @@ def run_h2o_automl_classification(
     if student_id_col and student_id_col not in exclude_cols:
         exclude_cols.append(student_id_col)
 
-    # create experiment to log imputation
+    # Create experiment to log imputation
     experiment_id = utils.set_or_create_experiment(
         workspace_path,
         institution_id,
@@ -110,6 +111,15 @@ def run_h2o_automl_classification(
     train = h2o_df[h2o_df[split_col] == "train"]
     valid = h2o_df[h2o_df[split_col] == "validate"]
     test = h2o_df[h2o_df[split_col] == "test"]
+
+    # Impute data using custom wrapper with skew analysis
+    imputer = imputation.H2OImputerWrapper()
+    train, valid, test = imputer.fit(
+        train_df=df[df[split_col] == "train"],
+        train_h2o=train,
+        valid_h2o=valid,
+        test_h2o=test,
+    )
 
     # Define feature list
     features = [col for col in df.columns if col not in exclude_cols + [target_col]]
