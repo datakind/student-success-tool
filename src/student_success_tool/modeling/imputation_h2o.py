@@ -92,15 +92,52 @@ class H2OImputerWrapper:
             )
 
     def _apply_imputation(self, h2o_frame: h2o.H2OFrame) -> h2o.H2OFrame:
-        for col, strategy in self.strategy_map.items():
+        for col, config in self.strategy_map.items():
             if h2o_frame[col].isna().sum() == 0:
                 continue
+
+            strategy = config["strategy"]
+            value = config["value"]
+
             try:
-                LOGGER.debug(f"Imputing column '{col}' using strategy '{strategy}'")
-                h2o_frame[col] = h2o_frame[col].impute(method=strategy)
+                LOGGER.debug(
+                    f"Imputing column '{col}' using '{strategy}' with value '{value}'"
+                )
+                h2o_frame[col] = h2o_frame[col].impute(method=strategy, value=value)
             except Exception as e:
                 LOGGER.warning(f"Failed to impute '{col}' with '{strategy}': {e}")
         return h2o_frame
+
+    def _assign_strategies(self, df: pd.DataFrame) -> dict:
+        skew_vals = df.select_dtypes(include="number").skew()
+        strategy_map = {}
+
+        for col in df.columns:
+            if df[col].isnull().sum() == 0:
+                continue
+
+            if is_bool_dtype(df[col]):
+                strategy = "mode"
+                value = df[col].mode(dropna=True).iloc[0]
+            elif is_numeric_dtype(df[col]):
+                skew = skew_vals.get(col, 0)
+                strategy = (
+                    "median" if abs(skew) >= self.DEFAULT_SKEW_THRESHOLD else "mean"
+                )
+                value = float(
+                    df[col].median() if strategy == "median" else df[col].mean()
+                )
+            elif is_categorical_dtype(df[col]) or is_object_dtype(df[col]):
+                strategy = "mode"
+                value = df[col].mode(dropna=True).iloc[0]
+            else:
+                strategy = "mode"
+                value = df[col].mode(dropna=True).iloc[0]
+
+            strategy_map[col] = {"strategy": strategy, "value": value}
+
+        LOGGER.debug(f"Assigned strategy map: {strategy_map}")
+        return strategy_map
 
     @classmethod
     def load(
@@ -124,23 +161,3 @@ class H2OImputerWrapper:
         with open(local_path) as f:
             instance.strategy_map = json.load(f)
         return instance
-
-    def _assign_strategies(self, df: pd.DataFrame) -> dict:
-        skew_vals = df.select_dtypes(include="number").skew()
-        strategy_map = {}
-        for col in df.columns:
-            if df[col].isnull().sum() == 0:
-                continue
-            if is_bool_dtype(df[col]):
-                strategy_map[col] = "mode"
-            elif is_numeric_dtype(df[col]):
-                skew = skew_vals.get(col, 0)
-                strategy_map[col] = (
-                    "median" if abs(skew) >= self.DEFAULT_SKEW_THRESHOLD else "mean"
-                )
-            elif is_categorical_dtype(df[col]) or is_object_dtype(df[col]):
-                strategy_map[col] = "mode"
-            else:
-                strategy_map[col] = "mode"
-        LOGGER.debug(f"Assigned strategy map: {strategy_map}")
-        return strategy_map

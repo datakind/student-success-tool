@@ -23,10 +23,18 @@ def test_strategy_map(sample_df):
     wrapper = imputation.H2OImputerWrapper()
     strat_map = wrapper._assign_strategies(sample_df)
 
-    assert strat_map["age"] in ["mean", "median"]
-    assert strat_map["income"] in ["mean", "median"]
-    assert strat_map["gender"] == "mode"
-    assert strat_map["student"] == "mode"
+    assert strat_map["age"]["strategy"] in ["mean", "median"]
+    assert strat_map["income"]["strategy"] == "mean"
+    assert strat_map["gender"]["strategy"] == "mode"
+    assert strat_map["student"]["strategy"] == "mode"
+
+    assert isinstance(strat_map["age"]["value"], (int, float))
+    assert isinstance(strat_map["gender"]["value"], str)
+
+    assert strat_map["age"]["value"] == 30.0
+    assert strat_map["income"]["value"] == 60000.0
+    assert strat_map["gender"]["value"] == "F"
+    assert strat_map["student"]["value"] is True
 
 
 def test_fit_and_transform(sample_df):
