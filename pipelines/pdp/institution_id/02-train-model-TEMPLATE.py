@@ -233,15 +233,13 @@ else:
 # COMMAND ----------
 
 # Get top runs from experiment for evaluation
-# Adjust optimization metrics & topn_runs_included as needed
 top_runs = modeling.evaluation.get_top_runs(
     experiment_id,
     optimization_metrics=[
         "test_recall_score",
-        "val_recall_score",
         "test_roc_auc",
-        "val_roc_auc",
         "test_log_loss",
+        "test_f1_score",
         "val_log_loss",
     ],
     topn_runs_included=cfg.modeling.evaluation.topn_runs_included,
@@ -286,3 +284,36 @@ for run_id in top_runs.values():
             )
         logging.info("Run %s: Completed", run_id)
 mlflow.end_run()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC # model selection
+
+# COMMAND ----------
+
+# Rank top runs again after evaluation for model selection
+selected_runs = modeling.evaluation.get_top_runs(
+    experiment_id,
+    optimization_metrics=[
+        "test_recall_score",
+        "test_roc_auc",
+        "test_log_loss",
+        "test_bias_score_mean",
+    ],
+    topn_runs_included=cfg.modeling.evaluation.topn_runs_included,
+)
+logging.info("top run ids for model selection = %s", selected_runs)
+
+# Extract the top run
+top_run_name, top_run_id = next(iter(selected_runs.items()))
+logging.info(f"Selected top run: {top_run_name} & {top_run_id}")
+
+# COMMAND ----------
+
+# Update config with run and experiment ids
+modeling.utils.update_run_metadata_in_toml(
+    config_path="./config.toml",
+    run_id=top_run_id,
+    experiment_id=experiment_id,
+)
