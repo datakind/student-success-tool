@@ -28,7 +28,7 @@
 # we need to manually install a certain version of pandas and scikit-learn in order
 # for our models to load and run properly.
 
-# %pip install "student-success-tool==0.3.9"
+# %pip install "student-success-tool==0.3.10"
 # %pip install "pandas==1.5.3"
 # %pip install "scikit-learn==1.3.0"
 
@@ -39,9 +39,7 @@
 # COMMAND ----------
 
 import logging
-
 import mlflow
-import sklearn.metrics
 from databricks.connect import DatabricksSession
 
 from student_success_tool import configs, dataio, modeling, utils
@@ -68,7 +66,7 @@ job_run_id = utils.databricks.get_db_widget_param("job_run_id", default="interac
 # COMMAND ----------
 
 # project configuration should be stored in a config file in TOML format
-cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig)
+cfg = dataio.read_config("./config.toml", schema=configs.pdp.PDPProjectConfig)
 cfg
 
 # COMMAND ----------
@@ -146,6 +144,29 @@ dataio.write.to_delta_table(
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ### Variable Correlations
+
+# COMMAND ----------
+
+non_feature_cols = (
+    [cfg.student_id_col]
+    + (cfg.student_group_cols or [])
+    + ([cfg.split_col] if cfg.split_col else [])
+    + ([cfg.sample_weight_col] if cfg.sample_weight_col else [])
+)
+
+df_corrs = df.copy()
+
+target_corrs = df_corrs.drop(columns=non_feature_cols + [cfg.target_col]).corrwith(
+    df_corrs[cfg.target_col], method="spearman", numeric_only=True
+)
+print(target_corrs.sort_values(ascending=False).head(10))
+print("...")
+print(target_corrs.sort_values(ascending=False, na_position="first").tail(10))
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC # train model
 
 # COMMAND ----------
@@ -212,15 +233,13 @@ else:
 # COMMAND ----------
 
 # Get top runs from experiment for evaluation
-# Adjust optimization metrics & topn_runs_included as needed
 top_runs = modeling.evaluation.get_top_runs(
     experiment_id,
     optimization_metrics=[
         "test_recall_score",
-        "val_recall_score",
         "test_roc_auc",
-        "val_roc_auc",
         "test_log_loss",
+        "test_f1_score",
         "val_log_loss",
     ],
     topn_runs_included=cfg.modeling.evaluation.topn_runs_included,
@@ -268,25 +287,33 @@ mlflow.end_run()
 
 # COMMAND ----------
 
-# Optional: Evaluate permutation importance for top model
-# NOTE: This can be used for model diagnostics. It is NOT used
-# in our standard evaluation process and not pulled into model cards.
-model = mlflow.sklearn.load_model(f"runs:/{top_run_ids[0]}/model")
-result = modeling.evaluation.compute_feature_permutation_importance(
-    model,
-    df_features,
-    df[cfg.target_col],
-    scoring=sklearn.metrics.make_scorer(
-        sklearn.metrics.log_loss, greater_is_better=False
-    ),
-    sample_weight=df[cfg.sample_weight_col],
-    random_state=cfg.random_state,
+# MAGIC %md
+# MAGIC # model selection
+
+# COMMAND ----------
+
+# Rank top runs again after evaluation for model selection
+selected_runs = modeling.evaluation.get_top_runs(
+    experiment_id,
+    optimization_metrics=[
+        "test_recall_score",
+        "test_roc_auc",
+        "test_log_loss",
+        "test_bias_score_mean",
+    ],
+    topn_runs_included=cfg.modeling.evaluation.topn_runs_included,
 )
-ax = modeling.evaluation.plot_features_permutation_importance(
-    result, feature_cols=df_features.columns
+logging.info("top run ids for model selection = %s", selected_runs)
+
+# Extract the top run
+top_run_name, top_run_id = next(iter(selected_runs.items()))
+logging.info(f"Selected top run: {top_run_name} & {top_run_id}")
+
+# COMMAND ----------
+
+# Update config with run and experiment ids
+modeling.utils.update_run_metadata_in_toml(
+    config_path="./config.toml",
+    run_id=top_run_id,
+    experiment_id=experiment_id,
 )
-fig = ax.get_figure()
-fig.tight_layout()
-# save plot via mlflow into experiment artifacts folder
-with mlflow.start_run(run_id=run_id) as run:
-    mlflow.log_figure(fig, "test_features_permutation_importance.png")

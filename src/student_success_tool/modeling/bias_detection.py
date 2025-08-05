@@ -5,6 +5,7 @@ import matplotlib.figure
 import matplotlib.pyplot as plt
 import mlflow
 import numpy as np
+from collections import Counter
 import pandas as pd
 import scipy.stats as st
 import seaborn as sns
@@ -29,6 +30,14 @@ FLAG_NAMES = {
     "🟡 LOW BIAS": "low_bias",
     "🟠 MODERATE BIAS": "moderate_bias",
     "🔴 HIGH BIAS": "high_bias",
+}
+
+# Define flag weights for scoring bias
+FLAG_WEIGHTS = {
+    "🟡 LOW BIAS": 0.25,
+    "🟠 MODERATE BIAS": 0.75,
+    "🔴 HIGH BIAS": 1.0,
+    # Exclude 🟢 and ⚪
 }
 
 # TODO: eventually we should use the custom_style.mplstyle colors, but currently
@@ -121,6 +130,11 @@ def evaluate_bias(
 
             model_flags.extend(all_flags)
 
+        # Compute and log bias scores to mlflow
+        summary = aggregate_bias_scores(model_flags, split=split_name)
+        log_bias_scores_to_mlflow(summary, split=split_name)
+
+    # Log bias flags to mlflow
     log_bias_flags_to_mlflow(model_flags)
 
 
@@ -341,6 +355,75 @@ def flag_bias(
     return bias_flags
 
 
+def aggregate_bias_scores(
+    flags: t.List[dict],
+    split: str = "test",
+) -> t.Dict[str, float]:
+    """
+    Create model bias score by aggregating bias flag scores, while accounting
+    for valid subgroup comparisons. A bias score for a flag is simply its FNR magnitude.
+
+    We also use flag weights to ensure we're accounting for statistical significance, which is baked
+    into each flag (e.g. low has a p-value less than 0.1; medium or high has p-values less than 0.01).
+    This design captures both magnitude and statistical strength of disparities.
+
+    Once we sum all of our weighted bias flag scores, we then normalize using the number of valid
+    comparisons, which is the sum of all "no bias", "low", "medium", and "high" bias flags, while
+    excluding "insufficient data" flags.
+
+    This normalization is performed for the following reasons:
+        (1) Our mean bias score for a model will be theoretically bounded between 0 and 1.
+        (2) We appropriately include "no bias" flags in determining overall model bias
+        (3) We account for sample size differences. Otherwise, a model with more bias flags
+        and more valid comparisons will always have a higher score than a model with few flags &
+        comparisons.
+
+    Returns:
+        Dictionary with:
+        - bias_score_sum: sum of weighted per-flag scores
+        - bias_score_mean: normalized by num_valid_comparisons
+        - bias_score_max: max single flag score (raw)
+        - num_bias_flags: total number of bias flags, includes only "low", "medium", and "high"
+        - num_valid_comparisons: total valid bias comparisons  with "no bias" flags included,
+          but excludes any "insufficient data" flags
+    """
+    # Filter flags to relevant split
+    split_flags = [f for f in flags if f["split_name"] == split]
+
+    # Count flags by type
+    flag_counts = Counter(f["flag"] for f in split_flags)
+
+    # Compute numerator (weighted score sum)
+    included_flags = [f for f in split_flags if f["flag"] in FLAG_WEIGHTS]
+    weighted_scores = [
+        f["fnr_percentage_difference"] * FLAG_WEIGHTS[f["flag"]] for f in included_flags
+    ]
+    raw_scores = [f["fnr_percentage_difference"] for f in included_flags]
+
+    # Compute denominator = all flags (no bias, low, medium, high)
+    # excludes insufficient data flag
+    num_valid_comparisons = sum(
+        count for flag, count in flag_counts.items() if flag != "⚪ INSUFFICIENT DATA"
+    )
+
+    # Final metrics
+    total_score = round(sum(weighted_scores), 4)
+    mean_score = (
+        round(total_score / num_valid_comparisons, 4)
+        if num_valid_comparisons > 0
+        else 0.0
+    )
+    max_score = round(max(raw_scores), 4) if raw_scores else 0.0
+
+    return {
+        "bias_score_sum": total_score,
+        "bias_score_mean": mean_score,
+        "bias_score_max": max_score,
+        "num_bias_flags": len(included_flags),
+        "num_valid_comparisons": num_valid_comparisons,
+    }
+
+
 def calculate_fnr_and_ci(
     targets: pd.Series,
     preds: pd.Series,
@@ -467,6 +550,7 @@ def generate_bias_flag(
         ),
         "split_name": split_name,
         "flag": flag,
+        "p_value": p_value,
     }
     return flag_entry
 
@@ -516,6 +600,25 @@ def log_group_metrics_to_mlflow(
     metrics_tmp_path = f"/tmp/{split_name}_{group_col}_metrics.csv"
     df_group_metrics.to_csv(metrics_tmp_path, index=False)
     mlflow.log_artifact(local_path=metrics_tmp_path, artifact_path="group_metrics")
+
+
+def log_bias_scores_to_mlflow(scores: dict, split: str = "test") -> None:
+    """
+    Logs bias scores to MLflow as both individual metrics and a summary CSV artifact.
+
+    Args:
+        scores: Dictionary of bias scores and related metadata to log.
+        split: The dataset split associated with the scores (e.g. "test", "val", "train").
+    """
+    # Log individual metrics with split prefix
+    for metric_name, value in scores.items():
+        mlflow.log_metric(f"{split}_{metric_name}", value)
+
+    # Log summary as CSV artifact
+    df = pd.DataFrame([scores])
+    bias_score_tmp_path = f"/tmp/{split}_bias_scores.csv"
+    df.to_csv(bias_score_tmp_path, index=False)
+    mlflow.log_artifact(bias_score_tmp_path, artifact_path="bias_scores")
 
 
 def log_subgroup_metrics_to_mlflow(
