@@ -197,6 +197,19 @@ class H2OImputerWrapper:
         return instance
 
     def _assert_no_missing(self, h2o_frame, name: str = "frame"):
-        missing_cols = [col for col in h2o_frame.columns if h2o_frame[col].isna().sum() > 0]
+        missing_cols = []
+
+        for col in h2o_frame.columns:
+            try:
+                # Force fresh AST materialization for .isna()
+                isna_expr = h2o_frame[col].isna()
+                _ = isna_expr[0]  # triggers evaluation
+
+                if isna_expr.sum() > 0:
+                    missing_cols.append(col)
+            except Exception as e:
+                LOGGER.warning(f"Failed to check missing values for '{col}': {e}")
+                missing_cols.append(col)  # Be conservative
+
         if missing_cols:
             raise ValueError(f"{name} still has missing values in: {missing_cols}")
