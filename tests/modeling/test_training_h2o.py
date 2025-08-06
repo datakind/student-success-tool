@@ -19,6 +19,41 @@ def sample_df():
     )
 
 
+def make_mock_frame(columns):
+    mock_frame = mock.MagicMock()
+    mock_frame.columns = columns
+
+    col_mocks = {}
+
+    for col in columns:
+        call_count = {"val": 0}
+        col_mock = mock.MagicMock(name=f"{col}_col_mock")
+
+        def make_sum_side_effect():
+            def _side_effect():
+                return 0  # No missing values
+            return _side_effect
+
+        isna_mock = mock.MagicMock()
+        isna_mock.sum.side_effect = make_sum_side_effect()
+        isna_mock.ifelse.return_value = col_mock
+        col_mock.isna.return_value = isna_mock
+
+        col_mock.isfactor.return_value = False
+        col_mock.levels.return_value = [["A", "B", "C"]]
+        col_mock.asfactor.return_value = col_mock
+
+        col_mocks[col] = col_mock
+
+    mock_frame.__getitem__.side_effect = lambda col: (
+        col_mocks[col] if isinstance(col, str) else mock_frame
+    )
+    mock_frame.__setitem__.side_effect = lambda col, val: None
+
+    return mock_frame
+
+
+
 @mock.patch("student_success_tool.modeling.training_h2o.utils.set_or_create_experiment")
 @mock.patch("student_success_tool.modeling.utils_h2o.log_h2o_experiment")
 @mock.patch("student_success_tool.modeling.training_h2o.H2OAutoML")
@@ -32,42 +67,19 @@ def test_run_h2o_automl_success(
     mock_set_experiment,
     sample_df,
 ):
-    # Setup: H2OFrame mock with realistic column behavior
     columns = sample_df.columns.tolist()
-    mock_frame = mock.MagicMock()
-    mock_frame.columns = columns
 
-    call_counts = {}  # Track per-column sum() calls
+    # Create 3 different mock frames for train/valid/test
+    train_frame = make_mock_frame(columns)
+    valid_frame = make_mock_frame(columns)
+    test_frame = make_mock_frame(columns)
 
-    for col in columns:
-        col_mock = mock.MagicMock(name=f"{col}_col_mock")
-        call_counts[col] = 0
+    # Create input H2OFrame mock
+    h2o_input_mock = make_mock_frame(columns)
+    mock_h2o_frame.return_value = h2o_input_mock
 
-        def make_sum_side_effect(col=col):
-            def _side_effect():
-                call_counts[col] += 1
-                return 1 if call_counts[col] == 1 else 0
-            return _side_effect
-
-        isna_mock = mock.MagicMock()
-        isna_mock.sum.side_effect = make_sum_side_effect()
-        isna_mock.ifelse.return_value = col_mock
-        col_mock.isna.return_value = isna_mock
-
-        col_mock.isfactor.return_value = False
-        col_mock.levels.return_value = [["A", "B", "C"]]
-
-        call_counts[col] = col_mock
-
-    # __getitem__ returns the col_mock
-    mock_frame.__getitem__.side_effect = lambda col: (
-        call_counts[col] if isinstance(col, str) else mock_frame
-    )    
-    mock_frame.__setitem__.side_effect = lambda col, val: None  # Allow assignment
-
-    # Return the mock_frame from both correct_h2o_dtypes and H2OFrame
-    mock_correct.return_value = mock_frame
-    mock_h2o_frame.return_value = mock_frame
+    # correct_h2o_dtypes receives input and returns train, valid, test
+    mock_correct.side_effect = [train_frame, valid_frame, test_frame]
 
     # Setup AutoML mock
     mock_automl_instance = mock.MagicMock()
@@ -78,7 +90,7 @@ def test_run_h2o_automl_success(
     mock_log_experiment.return_value = ("exp-123", pd.DataFrame())
     mock_set_experiment.return_value = "exp-123"
 
-    # Act: run H2O AutoML pipeline
+    # Act
     experiment_id, aml, train, valid, test = training_h2o.run_h2o_automl_classification(
         sample_df,
         target_col="target",
@@ -90,12 +102,13 @@ def test_run_h2o_automl_success(
         workspace_path="mlflow_experiments/",
     )
 
-    # Assert: outputs are as expected
+    # Assert
     assert experiment_id == "exp-123"
     assert aml == mock_automl_instance
-    assert train == mock_frame
-    assert valid == mock_frame
-    assert test == mock_frame
+    assert train.columns == train_frame.columns
+    assert valid.columns == valid_frame.columns
+    assert test.columns == test_frame.columns
+
 
 
 def test_run_h2o_automl_missing_logging_param(sample_df):

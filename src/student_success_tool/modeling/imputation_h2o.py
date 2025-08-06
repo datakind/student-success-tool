@@ -120,12 +120,12 @@ class H2OImputerWrapper:
                 )
 
                 # Convert to character if value not in factor domain
-                if h2o_frame[col].isfactor():
-                    levels = h2o_frame[col].levels()[0]
-                    if value not in levels:
+                if h2o_frame[col].isfactor()[0]:
+                    levels_list = h2o_frame[col].levels()
+                    if levels_list and value not in levels_list[0]:
                         LOGGER.info(
                             f"Converting '{col}' to character for imputation "
-                            f"(value '{value}' not in levels {levels})"
+                            f"(value '{value}' not in levels {levels_list[0]})"
                         )
                         h2o_frame[col] = h2o_frame[col].ascharacter()
 

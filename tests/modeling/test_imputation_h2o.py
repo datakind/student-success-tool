@@ -54,7 +54,7 @@ def test_fit(mock_assert_no_missing, sample_df):
             col_mock.isna.return_value = isna_mock
 
             # Setup isfactor() -> False (or True for testing factor behavior)
-            col_mock.isfactor.return_value = False
+            col_mock.isfactor.return_value = [False]
 
             # Setup levels() if needed
             col_mock.levels.return_value = [["A", "B", "C"]]
