@@ -27,9 +27,17 @@ def test_fit_and_transform_shapes_and_columns(sample_df):
     result = imputer.transform(sample_df)
 
     assert isinstance(result, pd.DataFrame)
-    assert result.shape == sample_df.shape
-    assert list(result.columns) == list(sample_df.columns)
-    assert (result.index == sample_df.index).all()
+    assert result.shape[0] == sample_df.shape[0]
+
+    original_cols = set(sample_df.columns)
+    result_cols = set(result.columns)
+
+    # All original columns should still be in the result
+    assert original_cols.issubset(result_cols)
+
+    # All extra columns should be missing flags
+    extra_cols = result_cols - original_cols
+    assert all(col.endswith("_missing_flag") for col in extra_cols)
 
 
 def test_transform_raises_if_not_fitted(sample_df):

@@ -14,6 +14,7 @@ import h2o
 from h2o.automl import H2OAutoML
 
 from . import evaluation_h2o as evaluation
+from . import imputation
 
 LOGGER = logging.getLogger(__name__)
 
@@ -72,6 +73,7 @@ def log_h2o_experiment(
     checkpoint_name: str,
     workspace_path: str,
     experiment_id: str,
+    imputer: t.Optional[imputation.SklearnImputerWrapper] = None,
     client: t.Optional["MLflowClient"] = None,
 ) -> tuple[str, pd.DataFrame]:
     """
@@ -133,6 +135,7 @@ def log_h2o_experiment(
             valid=valid,
             test=test,
             threshold=0.5,
+            imputer=imputer,
             client=client,
         )
 

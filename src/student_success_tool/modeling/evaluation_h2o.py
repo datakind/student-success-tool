@@ -1,8 +1,11 @@
 import logging
+import typing as t
 
 import os
 import mlflow
+from mlflow.tracking import MlflowClient
 import contextlib
+
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,8 +20,9 @@ from sklearn.metrics import (
 from sklearn.calibration import calibration_curve
 
 
+from . import imputation
+
 import h2o
-from h2o.automl import H2OAutoML
 from h2o.estimators.estimator_base import H2OEstimator
 
 LOGGER = logging.getLogger(__name__)
@@ -80,33 +84,36 @@ def generate_all_classification_plots(
 
 
 def evaluate_and_log_model(
-    aml: H2OAutoML,
+    aml: h2o.automl.H2OAutoML,
     *,
     model_id: str,
     train: h2o.H2OFrame,
     valid: h2o.H2OFrame,
     test: h2o.H2OFrame,
-    client: "MLflowClient",
+    client: MlflowClient,
     threshold: float = 0.5,
+    imputer: t.Optional[imputation.SklearnImputerWrapper] = None,
+    artifact_path: str = "sklearn_imputer",
 ) -> dict | None:
     """
-    Evaluates a single H2O model at a given threshold and logs metrics, plots, and artifacts to MLflow.
+    Evaluates a single H2O model and logs metrics, plots, and artifacts to MLflow.
 
     Args:
-        model_id (str): The H2O model ID to evaluate and log.
-        aml: H2OAutoML object containing the leaderboard and trained models.
-        train: H2OFrame with training data.
-        valid: H2OFrame with validation data.
-        test: H2OFrame with test data.
-        threshold (float): Threshold to apply for binary classification metrics.
-        client (MlflowClient): Initialized MLflow client used for logging.
+        aml: Trained H2OAutoML object.
+        model_id: The H2O model ID to evaluate.
+        train: H2OFrame for training.
+        valid: H2OFrame for validation.
+        test: H2OFrame for testing.
+        client: Initialized MLflow client.
+        threshold: Classification threshold for binary metrics.
+        imputer: Optional SklearnImputerWrapper used in preprocessing.
+        artifact_path: MLflow artifact path for saving imputer files.
 
     Returns:
-        dict: Dictionary of evaluation metrics including `mlflow_run_id`, or `None` if evaluation fails.
+        dict of metrics with `mlflow_run_id`, or None on failure.
     """
     try:
         model = h2o.get_model(model_id)
-
         with (
             open(os.devnull, "w") as fnull,
             contextlib.redirect_stdout(fnull),
@@ -122,10 +129,12 @@ def evaluate_and_log_model(
             with mlflow.start_run(run_name=f"h2o_eval_{model_id}"):
                 run_id = mlflow.active_run().info.run_id
 
+                # Log Metrics
                 for k, v in metrics.items():
                     if k != "model_id":
                         mlflow.log_metric(k, v)
 
+                # Log Classification Plots
                 for split_name, frame in zip(
                     ["train", "val", "test"], [train, valid, test]
                 ):
@@ -135,22 +144,43 @@ def evaluate_and_log_model(
                     y_proba = (
                         preds[positive_class_label].as_data_frame().values.flatten()
                     )
-                    y_pred = (y_proba >= 0.5).astype(int)
+                    y_pred = (y_proba >= threshold).astype(int)
 
                     generate_all_classification_plots(
                         y_true, y_pred, y_proba, prefix=split_name
                     )
 
+                # Log H2O Model
                 local_model_dir = f"/tmp/h2o_models/{model_id}"
                 os.makedirs(local_model_dir, exist_ok=True)
                 h2o.save_model(model, path=local_model_dir, force=True)
                 mlflow.log_artifacts(local_model_dir, artifact_path="model")
 
-        metrics["mlflow_run_id"] = run_id
-        return metrics
+                # Log Imputer Artifacts
+                if imputer is not None:
+                    try:
+                        imputer.log_pipeline(artifact_path=artifact_path)
+
+                        # Save original dtypes if present
+                        if hasattr(imputer, "original_dtypes"):
+                            with tempfile.NamedTemporaryFile(
+                                "w", suffix=".json", delete=False
+                            ) as f:
+                                json.dump(imputer.original_dtypes, f, indent=2)
+                                dtype_file = f.name
+                            mlflow.log_artifact(dtype_file, artifact_path=artifact_path)
+
+                        LOGGER.info(
+                            f"Logged imputer pipeline and dtypes for run {run_id}."
+                        )
+                    except Exception as e:
+                        LOGGER.warning(f"Failed to log imputer artifacts: {e}")
+
+            metrics["mlflow_run_id"] = run_id
+            return metrics
 
     except Exception as e:
-        LOGGER.exception(f"Failed to log model {model_id}: {e}")
+        LOGGER.exception(f"Failed to evaluate and log model {model_id}: {e}")
         return None
 
 

@@ -21,29 +21,25 @@ LOGGER = logging.getLogger(__name__)
 class SklearnImputerWrapper:
     """
     A leakage-safe imputer using sklearn's SimpleImputer and ColumnTransformer,
-    with skew-aware numeric strategy assignment and MLflow-based artifact logging.
-
-    Automatically saves the fitted pipeline with joblib.
+    with skew-aware numeric strategy assignment, optional missingness flags,
+    and MLflow-based artifact logging.
     """
 
     DEFAULT_SKEW_THRESHOLD = 0.5
     PIPELINE_FILENAME = "imputer_pipeline.joblib"
 
-    def __init__(self):
+    def __init__(self, add_missing_flags: bool = True):
         self.pipeline = None
+        self.original_dtypes = None
+        self.add_missing_flags = add_missing_flags
 
     def fit(self, df: pd.DataFrame, artifact_path: str = "sklearn_imputer") -> Pipeline:
-        """
-        Assigns imputation strategies, builds a pipeline, fits it, and logs via MLflow.
-
-        Args:
-            df: training DataFrame
-            artifact_path: MLflow artifact path to save pipeline
-
-        Returns:
-            Fitted sklearn Pipeline
-        """
         df = df.replace({None: np.nan})
+        self.original_dtypes = df.dtypes.to_dict()
+
+        if self.add_missing_flags:
+            df = self._add_missingness_flags(df)
+
         pipeline = self._build_pipeline(df)
         pipeline.fit(df)
         self.pipeline = pipeline
@@ -56,30 +52,29 @@ class SklearnImputerWrapper:
         if self.pipeline is None:
             raise ValueError("Pipeline not fitted. Call `fit()` first.")
 
-        # Replace None with np.nan so SimpleImputer can handle it
         df = df.replace({None: np.nan})
 
-        # Run pipeline (ColumnTransformer + SimpleImputer)
-        transformed = self.pipeline.transform(df)
+        if self.add_missing_flags:
+            df = self._add_missingness_flags(df)
 
-        # Rebuild DataFrame with original column names
+        transformed = self.pipeline.transform(df)
         result = pd.DataFrame(transformed, columns=df.columns, index=df.index)
 
-        # Try to coerce each column back to numeric if appropriate
+        # Try to restore dtypes using original_dtypes
         for col in result.columns:
-            # Try numeric conversion (e.g., float/int)
             try:
                 result[col] = pd.to_numeric(result[col])
             except (ValueError, TypeError):
                 pass
 
-            # Try bool conversion for columns that were originally boolean
-            if is_bool_dtype(df[col]):
-                uniques = set(result[col].dropna().unique())
-                if uniques.issubset({0, 1, True, False}):
-                    result[col] = result[col].astype(bool)
+            # Restore booleans if originally boolean
+            if self.original_dtypes and col in self.original_dtypes:
+                orig_dtype = self.original_dtypes[col]
+                if is_bool_dtype(orig_dtype):
+                    uniques = set(result[col].dropna().unique())
+                    if uniques.issubset({0, 1, True, False}):
+                        result[col] = result[col].astype(bool)
 
-            #  Log warning if still object but looks numeric
             if result[col].dtype == "object":
                 sample_vals = result[col].dropna().astype(str).head(10)
                 if all(v.replace(".", "", 1).isdigit() for v in sample_vals):
@@ -87,8 +82,19 @@ class SklearnImputerWrapper:
                         f"Column '{col}' is object but contains numeric-looking values after imputation."
                     )
 
-        self.validate(result)  # Check for leftover nulls
+        self.validate(result)
         return result
+
+    def _add_missingness_flags(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Adds a boolean column for each original feature with missing values.
+        """
+        df = df.copy()
+        for col in df.columns:
+            if df[col].isnull().any():
+                flag_col = f"{col}_missing_flag"
+                df[flag_col] = df[col].isnull()
+        return df
 
     def _build_pipeline(self, df: pd.DataFrame) -> Pipeline:
         transformers = []
@@ -136,7 +142,6 @@ class SklearnImputerWrapper:
             )
 
     def validate(self, df: pd.DataFrame, raise_error: bool = True) -> bool:
-        """Checks if any missing values remain after transform."""
         missing = df.isnull().sum()
         missing_cols = missing[missing > 0].index.tolist()
 

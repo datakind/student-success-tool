@@ -130,6 +130,7 @@ def run_h2o_automl_classification(
         checkpoint_name=checkpoint_name,
         workspace_path=workspace_path,
         experiment_id=experiment_id,
+        imputer=imputer,
         client=client,
     )
 
