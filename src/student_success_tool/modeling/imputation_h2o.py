@@ -113,24 +113,9 @@ class H2OImputerWrapper:
                     f"{col} has non-scalar value: {value} (type: {type(value)})"
                 )
 
-                # if h2o_frame[col].isfactor()[0]:
-                #     levels_list = h2o_frame[col].levels()
-                #     if levels_list and value not in levels_list[0]:
-                #         LOGGER.info(
-                #             f"Converting '{col}' to character for imputation "
-                #             f"(value '{value}' not in levels {levels_list[0]})"
-                #         )
-                #         h2o_frame[col] = h2o_frame[col].ascharacter()
-
                 # Refetch AST after any potential conversion
                 if h2o_frame[col].isna().sum() == 0:
                     continue
-
-                # # Coerce value to string if column is string
-                # col_type = h2o_frame.type(col)
-                # if col_type == "string" and not isinstance(value, str):
-                #     LOGGER.info(f"Coercing value for column '{col}' to string: {value}")
-                #     value = str(value)
 
                 isna_col = h2o_frame[col].isna()
                 h2o_frame[col] = isna_col.ifelse(value, h2o_frame[col])
