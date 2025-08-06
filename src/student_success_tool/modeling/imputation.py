@@ -56,12 +56,38 @@ class SklearnImputerWrapper:
         if self.pipeline is None:
             raise ValueError("Pipeline not fitted. Call `fit()` first.")
 
+        # Replace None with np.nan so SimpleImputer can handle it
         df = df.replace({None: np.nan})
-        transformed_array = self.pipeline.transform(df)
-        result = pd.DataFrame(transformed_array, columns=df.columns, index=df.index)
 
-        self.validate(result)
+        # Run pipeline (ColumnTransformer + SimpleImputer)
+        transformed = self.pipeline.transform(df)
 
+        # Rebuild DataFrame with original column names
+        result = pd.DataFrame(transformed, columns=df.columns, index=df.index)
+
+        # Try to coerce each column back to numeric if appropriate
+        for col in result.columns:
+            # Try numeric conversion (e.g., float/int)
+            try:
+                result[col] = pd.to_numeric(result[col])
+            except (ValueError, TypeError):
+                pass
+
+            # Try bool conversion for columns that were originally boolean
+            if is_bool_dtype(df[col]):
+                uniques = set(result[col].dropna().unique())
+                if uniques.issubset({0, 1, True, False}):
+                    result[col] = result[col].astype(bool)
+
+            #  Log warning if still object but looks numeric
+            if result[col].dtype == "object":
+                sample_vals = result[col].dropna().astype(str).head(10)
+                if all(v.replace(".", "", 1).isdigit() for v in sample_vals):
+                    LOGGER.warning(
+                        f"Column '{col}' is object but contains numeric-looking values after imputation."
+                    )
+
+        self.validate(result)  # Check for leftover nulls
         return result
 
     def _build_pipeline(self, df: pd.DataFrame) -> Pipeline:
