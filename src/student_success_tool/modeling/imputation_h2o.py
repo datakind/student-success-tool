@@ -129,8 +129,11 @@ class H2OImputerWrapper:
                         )
                         h2o_frame[col] = h2o_frame[col].ascharacter()
 
-                # Impute using ifelse
-                h2o_frame[col] = h2o_frame[col].isna().ifelse(value, h2o_frame[col])
+                # Recompute isna() to avoid stale factor-type AST
+                isna_col = h2o_frame[col].isna()
+
+                # Impute
+                h2o_frame[col] = isna_col.ifelse(value, h2o_frame[col])
 
             except Exception as e:
                 LOGGER.warning(
