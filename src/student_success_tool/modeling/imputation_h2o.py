@@ -126,11 +126,11 @@ class H2OImputerWrapper:
                 if h2o_frame[col].isna().sum() == 0:
                     continue
 
-                # Coerce value to string if column is string
-                col_type = h2o_frame.type(col)
-                if col_type == "string" and not isinstance(value, str):
-                    LOGGER.info(f"Coercing value for column '{col}' to string: {value}")
-                    value = str(value)
+                # # Coerce value to string if column is string
+                # col_type = h2o_frame.type(col)
+                # if col_type == "string" and not isinstance(value, str):
+                #     LOGGER.info(f"Coercing value for column '{col}' to string: {value}")
+                #     value = str(value)
 
                 isna_col = h2o_frame[col].isna()
                 h2o_frame[col] = isna_col.ifelse(value, h2o_frame[col])
