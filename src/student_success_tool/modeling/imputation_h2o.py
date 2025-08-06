@@ -105,21 +105,14 @@ class H2OImputerWrapper:
 
     def _apply_imputation(self, h2o_frame: h2o.H2OFrame) -> h2o.H2OFrame:
         for col, config in self.strategy_map.items():
-            if h2o_frame[col].isna().sum() == 0:
-                continue
-
             strategy = config["strategy"]
             value = config["value"]
 
             try:
-                LOGGER.debug(
-                    f"Imputing column '{col}' using '{strategy}' with value '{value}'"
-                )
                 assert isinstance(value, (int, float, str, bool)), (
                     f"{col} has non-scalar value: {value} (type: {type(value)})"
                 )
 
-                # Convert to character if value not in factor domain
                 if h2o_frame[col].isfactor()[0]:
                     levels_list = h2o_frame[col].levels()
                     if levels_list and value not in levels_list[0]:
@@ -129,10 +122,17 @@ class H2OImputerWrapper:
                         )
                         h2o_frame[col] = h2o_frame[col].ascharacter()
 
-                # Recompute isna() to avoid stale factor-type AST
-                isna_col = h2o_frame[col].isna()
+                # Refetch AST after any potential conversion
+                if h2o_frame[col].isna().sum() == 0:
+                    continue
 
-                # Impute
+                # Coerce value to string if column is string
+                col_type = h2o_frame.type(col)
+                if col_type == "string" and not isinstance(value, str):
+                    LOGGER.info(f"Coercing value for column '{col}' to string: {value}")
+                    value = str(value)
+
+                isna_col = h2o_frame[col].isna()
                 h2o_frame[col] = isna_col.ifelse(value, h2o_frame[col])
 
             except Exception as e:
