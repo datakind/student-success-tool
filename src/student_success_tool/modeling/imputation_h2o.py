@@ -60,6 +60,12 @@ class H2OImputerWrapper:
         valid_h2o = self._apply_imputation(valid_h2o)
         test_h2o = self._apply_imputation(test_h2o)
 
+        # Ensure no missing values remain
+        self._assert_no_missing(train_h2o, name="train_h2o")
+        self._assert_no_missing(valid_h2o, name="valid_h2o")
+        self._assert_no_missing(test_h2o, name="test_h2o")
+
+
         LOGGER.info("Logging strategy map to MLflow...")
         self.log(artifact_path)
 
@@ -86,7 +92,13 @@ class H2OImputerWrapper:
             map_path = os.path.join(tmpdir, self.IMPUTATION_MAP_FILENAME)
             with open(map_path, "w") as f:
                 json.dump(self.strategy_map, f, indent=2)
-            mlflow.log_artifact(map_path, artifact_path=artifact_path)
+
+            if mlflow.active_run():
+                mlflow.end_run()
+
+            with mlflow.start_run(run_name="h2o_preprocessing"):
+                mlflow.log_artifact(map_path, artifact_path=artifact_path)
+
             LOGGER.info(
                 f"Logged strategy map to MLflow: {artifact_path}/{self.IMPUTATION_MAP_FILENAME}"
             )
@@ -103,15 +115,29 @@ class H2OImputerWrapper:
                 LOGGER.debug(
                     f"Imputing column '{col}' using '{strategy}' with value '{value}'"
                 )
-                assert isinstance(value, (int, float, str, bool)), f"{col} has non-scalar value: {value} (type: {type(value)})"
-
-                h2o_frame[col] = h2o_frame[col].isna().ifelse(
-                    value, h2o_frame[col]
+                assert isinstance(value, (int, float, str, bool)), (
+                    f"{col} has non-scalar value: {value} (type: {type(value)})"
                 )
 
+                # Convert to character if value not in factor domain
+                if h2o_frame[col].isfactor():
+                    levels = h2o_frame[col].levels()[0]
+                    if value not in levels:
+                        LOGGER.info(
+                            f"Converting '{col}' to character for imputation "
+                            f"(value '{value}' not in levels {levels})"
+                        )
+                        h2o_frame[col] = h2o_frame[col].ascharacter()
+
+                # Impute using ifelse
+                h2o_frame[col] = h2o_frame[col].isna().ifelse(value, h2o_frame[col])
+
             except Exception as e:
-                LOGGER.warning(f"Failed to impute '{col}' with '{strategy}' and '{value}'  (type: {type(value)}): {e}")
+                LOGGER.warning(
+                    f"Failed to impute '{col}' with '{strategy}' and '{value}'  (type: {type(value)}): {e}"
+                )
         return h2o_frame
+
 
     def _assign_strategies(self, df: pd.DataFrame) -> dict:
         skew_vals = df.select_dtypes(include="number").skew()
@@ -166,3 +192,8 @@ class H2OImputerWrapper:
         with open(local_path) as f:
             instance.strategy_map = json.load(f)
         return instance
+
+    def _assert_no_missing(self, h2o_frame, name: str = "frame"):
+        missing_cols = [col for col in h2o_frame.columns if h2o_frame[col].isna().sum() > 0]
+        if missing_cols:
+            raise ValueError(f"{name} still has missing values in: {missing_cols}")

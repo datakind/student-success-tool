@@ -37,24 +37,40 @@ def test_strategy_map(sample_df):
     assert strat_map["student"]["value"] is True
 
 
-def test_fit(sample_df):
+@mock.patch("student_success_tool.modeling.imputation_h2o.H2OImputerWrapper._assert_no_missing")
+def test_fit(mock_assert_no_missing, sample_df):
     wrapper = imputation.H2OImputerWrapper()
 
     def make_mock_frame():
         col_mocks = {}
         frame_mock = mock.MagicMock()
-
+        
         for col in ["age", "income", "gender", "student"]:
-            col_mock = mock.Mock()
-            # Now return an int for .sum()
-            col_mock.isna.return_value.sum.return_value = 1
-            col_mock.impute = mock.MagicMock(return_value=col_mock)
+            col_mock = mock.MagicMock(name=f"{col}_col_mock")
+            
+            # Setup isna().sum()
+            isna_mock = mock.MagicMock()
+            isna_mock.sum.return_value = 1
+            col_mock.isna.return_value = isna_mock
+
+            # Setup isfactor() -> False (or True for testing factor behavior)
+            col_mock.isfactor.return_value = False
+
+            # Setup levels() if needed
+            col_mock.levels.return_value = [["A", "B", "C"]]
+
+            # Setup ifelse() to return col_mock (not real logic, just chaining)
+            isna_mock.ifelse.return_value = col_mock
+
             col_mocks[col] = col_mock
 
+        # __getitem__ returns col mock
         frame_mock.__getitem__.side_effect = lambda col: col_mocks[col]
         frame_mock.__setitem__.side_effect = lambda col, val: None
+        frame_mock.columns = list(col_mocks.keys())
 
         return frame_mock, col_mocks
+
 
     train_frame, train_cols = make_mock_frame()
     valid_frame, valid_cols = make_mock_frame()

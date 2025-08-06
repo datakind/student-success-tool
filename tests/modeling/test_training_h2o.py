@@ -32,18 +32,53 @@ def test_run_h2o_automl_success(
     mock_set_experiment,
     sample_df,
 ):
+    # Setup: H2OFrame mock with realistic column behavior
+    columns = sample_df.columns.tolist()
     mock_frame = mock.MagicMock()
-    mock_frame.columns = sample_df.columns.tolist()
-    mock_frame.__getitem__.side_effect = lambda k: mock_frame
+    mock_frame.columns = columns
 
+    call_counts = {}  # Track per-column sum() calls
+
+    for col in columns:
+        col_mock = mock.MagicMock(name=f"{col}_col_mock")
+        call_counts[col] = 0
+
+        def make_sum_side_effect(col=col):
+            def _side_effect():
+                call_counts[col] += 1
+                return 1 if call_counts[col] == 1 else 0
+            return _side_effect
+
+        isna_mock = mock.MagicMock()
+        isna_mock.sum.side_effect = make_sum_side_effect()
+        isna_mock.ifelse.return_value = col_mock
+        col_mock.isna.return_value = isna_mock
+
+        col_mock.isfactor.return_value = False
+        col_mock.levels.return_value = [["A", "B", "C"]]
+
+        call_counts[col] = col_mock
+
+    # __getitem__ returns the col_mock
+    mock_frame.__getitem__.side_effect = lambda col: (
+        call_counts[col] if isinstance(col, str) else mock_frame
+    )    
+    mock_frame.__setitem__.side_effect = lambda col, val: None  # Allow assignment
+
+    # Return the mock_frame from both correct_h2o_dtypes and H2OFrame
     mock_correct.return_value = mock_frame
     mock_h2o_frame.return_value = mock_frame
-    mock_automl_instance = mock.MagicMock()
-    mock_automl.return_value = mock_automl_instance
-    mock_automl_instance.leader.model_id = "dummy_model"
-    mock_log_experiment.return_value = ("exp-123", pd.DataFrame())
-    mock_set_experiment.return_value = "exp-123"  # 👈 return mocked ID here
 
+    # Setup AutoML mock
+    mock_automl_instance = mock.MagicMock()
+    mock_automl_instance.leader.model_id = "dummy_model"
+    mock_automl.return_value = mock_automl_instance
+
+    # Setup MLflow experiment mocks
+    mock_log_experiment.return_value = ("exp-123", pd.DataFrame())
+    mock_set_experiment.return_value = "exp-123"
+
+    # Act: run H2O AutoML pipeline
     experiment_id, aml, train, valid, test = training_h2o.run_h2o_automl_classification(
         sample_df,
         target_col="target",
@@ -55,6 +90,7 @@ def test_run_h2o_automl_success(
         workspace_path="mlflow_experiments/",
     )
 
+    # Assert: outputs are as expected
     assert experiment_id == "exp-123"
     assert aml == mock_automl_instance
     assert train == mock_frame
