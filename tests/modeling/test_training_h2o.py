@@ -32,6 +32,7 @@ def make_mock_frame(columns):
         def make_sum_side_effect():
             def _side_effect():
                 return 0  # No missing values
+
             return _side_effect
 
         isna_mock = mock.MagicMock()
@@ -51,7 +52,6 @@ def make_mock_frame(columns):
     mock_frame.__setitem__.side_effect = lambda col, val: None
 
     return mock_frame
-
 
 
 @mock.patch("student_success_tool.modeling.training_h2o.utils.set_or_create_experiment")
@@ -108,7 +108,6 @@ def test_run_h2o_automl_success(
     assert train.columns == train_frame.columns
     assert valid.columns == valid_frame.columns
     assert test.columns == test_frame.columns
-
 
 
 def test_run_h2o_automl_missing_logging_param(sample_df):

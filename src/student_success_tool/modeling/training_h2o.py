@@ -9,7 +9,7 @@ import h2o
 from h2o.automl import H2OAutoML
 
 from . import utils_h2o as utils
-from . import imputation_h2o as imputation
+from . import imputation
 
 LOGGER = logging.getLogger(__name__)
 
@@ -34,99 +34,70 @@ def run_h2o_automl_classification(
     **kwargs: object,
 ) -> tuple[str, H2OAutoML, h2o.H2OFrame, h2o.H2OFrame, h2o.H2OFrame]:
     """
-    Runs H2O AutoML for classification tasks and logs the best model to MLflow.
-
-    Args:
-        df: Input Pandas DataFrame with features and target.
-        target_col: Name of the target column.
-        primary_metric: Used to sort models; supports "logloss", "AUC", "AUCPR", etc.
-        institution_id: Institution ID for experiment naming.
-        student_id_col: Column name identifying students, excluded from training.
-        **kwargs: Optional settings including timeout_minutes, max_models, etc.
-
-    Returns:
-        Trained H2OAutoML object.
+    Runs H2O AutoML for classification, with sklearn-based imputation (leakage-safe).
     """
-
     if client is None:
         client = MlflowClient()
 
-    # Set defaults and pop kwargs
+    # ── Kwarg defaults and validation ───────────────────────────────────────────
     seed = kwargs.pop("seed", 42)
     timeout_minutes = kwargs.pop("timeout_minutes", 5)
-    max_models = kwargs.pop("max_models", 100)
     exclude_cols = kwargs.pop("exclude_cols", [])
     split_col = kwargs.pop("split_col", "split")
     sample_weights_col = kwargs.pop("sample_weights_col", None)
-    target_name = kwargs.pop("target_name", None)
-    checkpoint_name = kwargs.pop("checkpoint_name", None)
-    workspace_path = kwargs.pop("workspace_path", None)
+    target_name = kwargs.pop("target_name")
+    checkpoint_name = kwargs.pop("checkpoint_name")
+    workspace_path = kwargs.pop("workspace_path")
     primary_metric = primary_metric.lower()
 
-    # Validate inputs
-    if target_col not in df.columns:
-        raise ValueError(f"target_col '{target_col}' not found in input DataFrame.")
+    required = {
+        "target_name": target_name,
+        "checkpoint_name": checkpoint_name,
+        "workspace_path": workspace_path,
+    }
+    missing = [k for k, v in required.items() if not v]
+    if missing:
+        raise ValueError(f"Missing logging parameters: {', '.join(missing)}")
 
+    if target_col not in df.columns:
+        raise ValueError(f"Missing target_col '{target_col}' in DataFrame.")
+    if split_col not in df.columns:
+        raise ValueError(f"Missing split column '{split_col}' in DataFrame.")
     if primary_metric not in VALID_H2O_METRICS:
         raise ValueError(
-            f"Invalid primary_metric '{primary_metric}'. Must be one of {VALID_H2O_METRICS}"
-        )
-
-    missing_params = [
-        name
-        for name, value in {
-            "target_name": target_name,
-            "checkpoint_name": checkpoint_name,
-            "workspace_path": workspace_path,
-        }.items()
-        if not value
-    ]
-    if missing_params:
-        raise ValueError(f"Missing logging parameters: {', '.join(missing_params)}")
-
-    if split_col not in df.columns:
-        raise ValueError(
-            "Input data must contain a 'split' column with values ['train', 'validate', 'test']."
+            f"Invalid metric '{primary_metric}', must be one of {VALID_H2O_METRICS}."
         )
 
     if student_id_col and student_id_col not in exclude_cols:
         exclude_cols.append(student_id_col)
 
-    # Create experiment to log imputation
+    # Set experiment
     experiment_id = utils.set_or_create_experiment(
-        workspace_path,
-        institution_id,
-        target_name,
-        checkpoint_name,
-        client=client,
+        workspace_path, institution_id, target_name, checkpoint_name, client=client
     )
 
-    # Convert to H2OFrame and correct types
-    # NOTE: H2O sometimes doesn't infer types correctly, so we need to manually check them here using our pandas DF.
-    h2o_df = h2o.H2OFrame(df)
-    h2o_df = correct_h2o_dtypes(h2o_df, df)
+    # Fit and apply sklearn imputation
+    LOGGER.info("Running sklearn-based imputation...")
+    imputer = imputation.SklearnImputerWrapper()
+    imputer.fit(df[df[split_col] == "train"])
 
-    # Convert dtype of target_col for h2o training, and create splits
-    h2o_df[target_col] = h2o_df[target_col].asfactor()
-    train = h2o_df[h2o_df[split_col] == "train"]
-    valid = h2o_df[h2o_df[split_col] == "validate"]
-    test = h2o_df[h2o_df[split_col] == "test"]
+    splits = ["train", "validate", "test"]
+    df_splits = {
+        split: imputer.transform(df[df[split_col] == split]) for split in splits
+    }
 
-    # Impute data using custom wrapper with skew analysis
-    imputer = imputation.H2OImputerWrapper()
-    train, valid, test = imputer.fit(
-        train_df=df[df[split_col] == "train"],
-        train_h2o=train,
-        valid_h2o=valid,
-        test_h2o=test,
-    )
+    # Convert to H2OFrames and fix dtypes
+    h2o_splits = {
+        k: correct_h2o_dtypes(h2o.H2OFrame(v), v) for k, v in df_splits.items()
+    }
+    for frame in h2o_splits.values():
+        frame[target_col] = frame[target_col].asfactor()
 
-    # Define feature list
+    train, valid, test = h2o_splits["train"], h2o_splits["validate"], h2o_splits["test"]
+
+    # Run H2O AutoML
     features = [col for col in df.columns if col not in exclude_cols + [target_col]]
-
-    LOGGER.info(
-        f"Running H2O AutoML for target '{target_col}' with {len(features)} features..."
-    )
+    LOGGER.info(f"Running H2O AutoML with {len(features)} features...")
 
     aml = H2OAutoML(
         max_runtime_secs=timeout_minutes * 60,
@@ -147,6 +118,7 @@ def run_h2o_automl_classification(
 
     LOGGER.info(f"Best model: {aml.leader.model_id}")
 
+    # Log experiment
     utils.log_h2o_experiment(
         aml=aml,
         train=train,
