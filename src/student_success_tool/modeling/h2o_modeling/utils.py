@@ -13,7 +13,7 @@ import pandas as pd
 import h2o
 from h2o.automl import H2OAutoML
 
-from . import evaluation_h2o as evaluation
+from . import evaluation
 from . import imputation
 
 LOGGER = logging.getLogger(__name__)

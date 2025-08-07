@@ -3,7 +3,7 @@ import pandas as pd
 import unittest.mock as mock
 
 
-from student_success_tool.modeling import training_h2o
+from student_success_tool.modeling.h2o_modeling import training
 
 
 @pytest.fixture
@@ -54,11 +54,13 @@ def make_mock_frame(columns):
     return mock_frame
 
 
-@mock.patch("student_success_tool.modeling.training_h2o.utils.set_or_create_experiment")
-@mock.patch("student_success_tool.modeling.utils_h2o.log_h2o_experiment")
-@mock.patch("student_success_tool.modeling.training_h2o.H2OAutoML")
-@mock.patch("student_success_tool.modeling.training_h2o.h2o.H2OFrame")
-@mock.patch("student_success_tool.modeling.training_h2o.correct_h2o_dtypes")
+@mock.patch(
+    "student_success_tool.modeling.h2o_modeling.training.utils.set_or_create_experiment"
+)
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.log_h2o_experiment")
+@mock.patch("student_success_tool.modeling.h2o_modeling.training.H2OAutoML")
+@mock.patch("student_success_tool.modeling.h2o_modeling.training.h2o.H2OFrame")
+@mock.patch("student_success_tool.modeling.h2o_modeling.training.correct_h2o_dtypes")
 def test_run_h2o_automl_success(
     mock_correct,
     mock_h2o_frame,
@@ -91,7 +93,7 @@ def test_run_h2o_automl_success(
     mock_set_experiment.return_value = "exp-123"
 
     # Act
-    experiment_id, aml, train, valid, test = training_h2o.run_h2o_automl_classification(
+    experiment_id, aml, train, valid, test = training.run_h2o_automl_classification(
         sample_df,
         target_col="target",
         primary_metric="AUC",
@@ -112,7 +114,7 @@ def test_run_h2o_automl_success(
 
 def test_run_h2o_automl_missing_logging_param(sample_df):
     with pytest.raises(ValueError, match="Missing logging parameters"):
-        training_h2o.run_h2o_automl_classification(
+        training.run_h2o_automl_classification(
             sample_df,
             target_col="target",
             primary_metric="AUC",

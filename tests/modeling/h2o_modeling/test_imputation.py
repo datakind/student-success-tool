@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import pytest
 from unittest import mock
-from student_success_tool.modeling import imputation  # adjust import
+from student_success_tool.modeling.h2o_modeling import imputation
 from sklearn.pipeline import Pipeline
 
 

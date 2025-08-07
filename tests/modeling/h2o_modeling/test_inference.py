@@ -1,6 +1,6 @@
 import pandas as pd
 from unittest import mock
-from student_success_tool.modeling import inference_h2o
+from student_success_tool.modeling.h2o_modeling import inference
 
 
 def test_group_shap_by_feature_basic():
@@ -13,7 +13,7 @@ def test_group_shap_by_feature_basic():
         }
     )
 
-    grouped = inference_h2o.group_feature_matrix(df, drop_bias_term=True)
+    grouped = inference.group_feature_matrix(df, drop_bias_term=True)
     expected = pd.DataFrame(
         {
             "gender": [0.4, 0.6],
@@ -33,7 +33,7 @@ def test_group_feature_values_by_feature():
         }
     )
 
-    grouped = inference_h2o.group_feature_matrix(df)
+    grouped = inference.group_feature_matrix(df)
     expected = pd.DataFrame(
         {
             "ethnicity": [1, 1],
@@ -61,14 +61,14 @@ def test_create_color_hint_features_mixed_types():
         }
     )
 
-    result = inference_h2o.create_color_hint_features(orig_df, grouped_df)
+    result = inference.create_color_hint_features(orig_df, grouped_df)
 
     assert result["gender"].tolist() == ["category", "category"]
     assert result["income"].tolist() == [0.3, 0.7]
     assert result["opted_in"].tolist() == [1, 0]
 
 
-@mock.patch("student_success_tool.modeling.inference_h2o.shap.summary_plot")
+@mock.patch("student_success_tool.modeling.h2o_modeling.inference.shap.summary_plot")
 def test_plot_grouped_shap_calls_summary_plot(mock_summary_plot):
     contribs_df = pd.DataFrame(
         {
@@ -93,14 +93,14 @@ def test_plot_grouped_shap_calls_summary_plot(mock_summary_plot):
         }
     )
 
-    inference_h2o.plot_grouped_shap(
+    inference.plot_grouped_shap(
         contribs_df, input_df, original_df, group_missing_flags=False
     )
 
     mock_summary_plot.assert_called_once()
 
 
-@mock.patch("student_success_tool.modeling.inference_h2o.h2o.H2OFrame")
+@mock.patch("student_success_tool.modeling.h2o_modeling.inference.h2o.H2OFrame")
 def test_compute_h2o_shap_contributions_with_bias_drop(mock_h2o_frame):
     mock_model = mock.MagicMock()
     mock_model.predict_contributions.return_value.as_data_frame.return_value = (
@@ -123,7 +123,7 @@ def test_compute_h2o_shap_contributions_with_bias_drop(mock_h2o_frame):
         }
     )
 
-    contribs, inputs = inference_h2o.compute_h2o_shap_contributions(
+    contribs, inputs = inference.compute_h2o_shap_contributions(
         mock_model, h2o_frame, drop_bias=True
     )
 
@@ -144,7 +144,7 @@ def test_group_missing_flags_aggregated_correctly():
     )
 
     # Expected grouping: 'math_placement' includes both .M/.F and missing_flag
-    grouped_with_flag = inference_h2o.group_feature_matrix(
+    grouped_with_flag = inference.group_feature_matrix(
         df, drop_bias_term=True, group_missing_flags=True
     )
     expected_with_flag = pd.DataFrame(
@@ -156,7 +156,7 @@ def test_group_missing_flags_aggregated_correctly():
     pd.testing.assert_frame_equal(grouped_with_flag, expected_with_flag)
 
     # If grouping is disabled, the missing flag should stay separate
-    grouped_without_flag = inference_h2o.group_feature_matrix(
+    grouped_without_flag = inference.group_feature_matrix(
         df, drop_bias_term=True, group_missing_flags=False
     )
     expected_without_flag = pd.DataFrame(

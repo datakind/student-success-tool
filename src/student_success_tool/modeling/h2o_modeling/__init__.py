@@ -1,9 +1,7 @@
 from . import (
-    bias_detection,
     evaluation,
-    feature_selection,
+    imputation,
     inference,
-    registration,
     training,
     utils,
 )

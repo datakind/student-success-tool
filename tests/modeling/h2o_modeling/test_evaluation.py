@@ -1,19 +1,19 @@
 import numpy as np
 import unittest.mock as mock
 
-from student_success_tool.modeling import evaluation_h2o
+from student_success_tool.modeling.h2o_modeling import evaluation
 
 
 @mock.patch(
-    "student_success_tool.modeling.evaluation_h2o.generate_all_classification_plots"
+    "student_success_tool.modeling.h2o_modeling.evaluation.generate_all_classification_plots"
 )
 @mock.patch(
-    "student_success_tool.modeling.evaluation_h2o.get_metrics_near_threshold_all_splits"
+    "student_success_tool.modeling.h2o_modeling.evaluation.get_metrics_near_threshold_all_splits"
 )
-@mock.patch("student_success_tool.modeling.evaluation_h2o.h2o.save_model")
-@mock.patch("student_success_tool.modeling.evaluation_h2o.mlflow.active_run")
-@mock.patch("student_success_tool.modeling.evaluation_h2o.mlflow.start_run")
-@mock.patch("student_success_tool.modeling.evaluation_h2o.h2o.get_model")
+@mock.patch("student_success_tool.modeling.h2o_modeling.evaluation.h2o.save_model")
+@mock.patch("student_success_tool.modeling.h2o_modeling.evaluation.mlflow.active_run")
+@mock.patch("student_success_tool.modeling.h2o_modeling.evaluation.mlflow.start_run")
+@mock.patch("student_success_tool.modeling.h2o_modeling.evaluation.h2o.get_model")
 def test_evaluate_and_log_model_success(
     mock_get_model,
     mock_start_run,
@@ -38,7 +38,7 @@ def test_evaluate_and_log_model_success(
     mock_active_run.return_value.info.run_id = "run-xyz"
 
     # Call function under test
-    result = evaluation_h2o.evaluate_and_log_model(
+    result = evaluation.evaluate_and_log_model(
         aml=mock.MagicMock(),
         model_id="model1",
         train=mock.MagicMock(),

@@ -1,13 +1,15 @@
 import unittest.mock as mock
 import pandas as pd
 
-from student_success_tool.modeling import utils_h2o
+from student_success_tool.modeling.h2o_modeling import utils
 
 
-@mock.patch("student_success_tool.modeling.utils_h2o.mlflow.log_artifact")
-@mock.patch("student_success_tool.modeling.utils_h2o.mlflow.start_run")
-@mock.patch("student_success_tool.modeling.utils_h2o.mlflow.active_run")
-@mock.patch("student_success_tool.modeling.evaluation_h2o.evaluate_and_log_model")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.log_artifact")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.start_run")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.active_run")
+@mock.patch(
+    "student_success_tool.modeling.h2o_modeling.evaluation.evaluate_and_log_model"
+)
 def test_log_h2o_experiment_logs_metrics(
     mock_eval_log,
     mock_active_run,
@@ -27,7 +29,7 @@ def test_log_h2o_experiment_logs_metrics(
     mock_active_run.return_value.info.run_id = "parent-run-id"
     mock_start_run.return_value.__enter__.return_value.info.run_id = "parent-run-id"
 
-    results_df = utils_h2o.log_h2o_experiment(
+    results_df = utils.log_h2o_experiment(
         aml=mock_aml,
         train=mock.MagicMock(),
         valid=mock.MagicMock(),
@@ -46,35 +48,35 @@ def test_log_h2o_experiment_logs_metrics(
     assert results_df["model_id"].iloc[0] == "model1"
 
 
-@mock.patch("student_success_tool.modeling.utils_h2o.mlflow.set_experiment")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.set_experiment")
 def test_set_or_create_experiment_new(mock_set_experiment):
     mock_client = mock.MagicMock()
     mock_client.get_experiment_by_name.return_value = None
     mock_client.create_experiment.return_value = "exp-123"
 
-    exp_id = utils_h2o.set_or_create_experiment(
+    exp_id = utils.set_or_create_experiment(
         "/workspace", "inst1", "target", "chkpt1", client=mock_client
     )
     assert exp_id == "exp-123"
 
 
-@mock.patch("student_success_tool.modeling.utils_h2o.mlflow.set_experiment")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.set_experiment")
 def test_set_or_create_experiment_existing(mock_set_experiment):
     mock_client = mock.MagicMock()
     mock_client.get_experiment_by_name.return_value = mock.MagicMock(
         experiment_id="exp-456"
     )
 
-    exp_id = utils_h2o.set_or_create_experiment(
+    exp_id = utils.set_or_create_experiment(
         "/workspace", "inst1", "target", "chkpt1", client=mock_client
     )
     assert exp_id == "exp-456"
 
 
-@mock.patch("student_success_tool.modeling.utils_h2o.mlflow.log_artifact")
-@mock.patch("student_success_tool.modeling.utils_h2o.mlflow.log_param")
-@mock.patch("student_success_tool.modeling.utils_h2o.mlflow.log_metric")
-@mock.patch("student_success_tool.modeling.utils_h2o.mlflow.start_run")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.log_artifact")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.log_param")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.log_metric")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.start_run")
 def test_log_h2o_experiment_summary_basic(
     mock_start_run,
     mock_log_metric,
@@ -111,7 +113,7 @@ def test_log_h2o_experiment_summary_basic(
     train_mock.__getitem__.return_value = target_col_mock
 
     # Call the function
-    utils_h2o.log_h2o_experiment_summary(
+    utils.log_h2o_experiment_summary(
         aml=aml_mock,
         leaderboard_df=leaderboard_df,
         train=train_mock,

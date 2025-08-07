@@ -8,7 +8,7 @@ from pandas.api.types import is_categorical_dtype, is_object_dtype, is_string_dt
 import h2o
 from h2o.automl import H2OAutoML
 
-from . import utils_h2o as utils
+from . import utils
 from . import imputation
 
 LOGGER = logging.getLogger(__name__)
