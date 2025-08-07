@@ -52,7 +52,7 @@ def compute_h2o_shap_contributions(
     if background_data is not None:
         background_data = background_data[used_features]
         contribs_hf = model.predict_contributions(
-            hf_subset, background_data=background_data
+            hf_subset, background_frame=background_data
         )
     else:
         contribs_hf = model.predict_contributions(hf_subset)
