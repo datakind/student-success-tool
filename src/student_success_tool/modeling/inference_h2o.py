@@ -2,14 +2,12 @@ import logging
 import typing as t
 import re
 
-
 import pandas as pd
 from pandas.api.types import (
     is_object_dtype,
     is_string_dtype,
     is_bool_dtype,
 )
-
 
 import h2o
 from h2o.estimators.estimator_base import H2OEstimator
@@ -44,7 +42,7 @@ def compute_h2o_shap_contributions(
 
     Returns:
         contribs_df: SHAP contributions aligned with input features
-        input_df: Input feature values used
+        preprocessed_df: Input feature values used
     """
     used_features = get_h2o_used_features(model)
     hf_subset = h2o_frame[used_features]
@@ -58,39 +56,44 @@ def compute_h2o_shap_contributions(
         contribs_hf = model.predict_contributions(hf_subset)
 
     contribs_df = contribs_hf.as_data_frame(use_pandas=True)
-    input_df = hf_subset.as_data_frame(use_pandas=True)
+    preprocessed_df = hf_subset.as_data_frame(use_pandas=True)
 
     if drop_bias and "BiasTerm" in contribs_df.columns:
         contribs_df = contribs_df.drop(columns="BiasTerm")
 
-    return contribs_df, input_df
+    return contribs_df, preprocessed_df
 
 
-def group_shap_by_feature(contribs_df: pd.DataFrame) -> pd.DataFrame:
+def group_feature_matrix(
+    df: pd.DataFrame,
+    drop_bias_term: bool = False,
+    group_missing_flags: bool = False,
+) -> pd.DataFrame:
     """
-    Group SHAP contributions by original feature name by aggregating
-    one-hot encoded components (e.g., 'feature.value') back to 'feature'.
+    Groups one-hot encoded or exploded features into base features by summing.
 
     Args:
-        contribs_df: DataFrame of SHAP contributions, with optional 'BiasTerm'
+        df: DataFrame with SHAP contributions or one-hot encoded features.
+        drop_bias_term: Whether to drop 'BiasTerm' column (only used for SHAP).
+        group_missing_flags: Whether to group *_missing_flag columns with base features.
 
     Returns:
-        grouped_df: DataFrame with SHAP values summed by original feature name
+        grouped_df: DataFrame with values aggregated by base feature name.
     """
-    if "BiasTerm" in contribs_df.columns:
-        contribs_df = contribs_df.drop(columns=["BiasTerm"])
+    if drop_bias_term and "BiasTerm" in df.columns:
+        df = df.drop(columns=["BiasTerm"])
 
     grouped_data = {}
-    for col in contribs_df.columns:
-        # Extract base feature name before the first dot
-        base_col = re.split(r"\.", col, maxsplit=1)[0]
-        if base_col not in grouped_data:
-            grouped_data[base_col] = contribs_df[col].copy()
-        else:
-            grouped_data[base_col] += contribs_df[col]
 
-    grouped_df = pd.DataFrame(grouped_data)
-    return grouped_df
+    for col in df.columns:
+        base_col = get_base_feature_name(col, group_missing_flags)
+
+        if base_col not in grouped_data:
+            grouped_data[base_col] = df[col].copy()
+        else:
+            grouped_data[base_col] += df[col]
+
+    return pd.DataFrame(grouped_data)
 
 
 def create_color_hint_features(
@@ -131,42 +134,50 @@ def create_color_hint_features(
     return gray_features
 
 
-def group_feature_values_by_feature(input_df: pd.DataFrame) -> pd.DataFrame:
+def get_base_feature_name(col: str, group_missing_flags: bool) -> str:
     """
-    Groups one-hot encoded input feature values back to base features
-    by summing over the components (same logic as group_shap_by_feature).
+    Derives the base feature name used for grouping SHAP values or input features.
 
     Args:
-        input_df: pandas DataFrame with one-hot columns
+        col: Column name (possibly one-hot or missing flag)
+        group_missing_flags: Whether to group missing flags with base feature
 
     Returns:
-        grouped_df: pandas DataFrame with grouped input values
+        Base feature name for grouping
     """
-    grouped_data = {}
-    for col in input_df.columns:
-        base_col = re.split(r"\.", col, maxsplit=1)[0]
-        if base_col not in grouped_data:
-            grouped_data[base_col] = input_df[col].copy()
-        else:
-            grouped_data[base_col] += input_df[col]
-    return pd.DataFrame(grouped_data)
+    if group_missing_flags and col.endswith("_missing_flag"):
+        return col.removesuffix("_missing_flag")
+    return re.split(r"\.", col, maxsplit=1)[0]
 
 
 def plot_grouped_shap(
-    contribs_df: pd.DataFrame, input_df: pd.DataFrame, original_df: pd.DataFrame
+    contribs_df: pd.DataFrame,
+    preprocessed_df: pd.DataFrame,
+    original_df: pd.DataFrame,
+    group_missing_flags: bool = False,
 ) -> None:
     """
-    Plot grouped shap values based on contributions dataframe (shap values), input dataframe, which
-    contain the one-hot encoding columns, and the original dataframe, which was the data used for training. This
-    dataframe is used purely for color hint and dtypes.
+    Plot grouped SHAP values as a global summary plot. One-hot encoded features are grouped under their base feature name.
+    Missingness flags are optionally grouped with their base feature based on the `group_missing_flags` flag.
+    A color hint matrix is built from the raw data to improve SHAP summary plot interpretability.
 
-    The output of this will be a global shap plot for each feature in the model ranked top to bottom
-    in terms of importance.
+    Parameters:
+        contribs_df: DataFrame of SHAP contributions (from H2O), including one-hot or exploded categorical features.
+        preprocessed_df: Preprocessed feature matrix (e.g., after imputation and one-hot encoding), matching SHAP columns.
+        original_df: Original raw input DataFrame (before preprocessing), used for inferring data types and color hints.
+        group_missing_flags: Whether to group missingness flag columns (e.g., 'math_placement_missing_flag')
+                             into their corresponding base feature (e.g., 'math_placement') in the SHAP plot.
     """
-    grouped_shap = group_shap_by_feature(contribs_df)
-    grouped_inputs = group_feature_values_by_feature(input_df)
+    grouped_shap = group_feature_matrix(
+        contribs_df, group_missing_flags=group_missing_flags
+    )
+    grouped_inputs = group_feature_matrix(
+        preprocessed_df, group_missing_flags=group_missing_flags
+    )
     color_hint = create_color_hint_features(original_df, grouped_inputs)
 
     shap.summary_plot(
-        grouped_shap.values, features=color_hint, feature_names=grouped_shap.columns
+        grouped_shap.values,
+        features=color_hint,
+        feature_names=grouped_shap.columns,
     )

@@ -39,7 +39,7 @@ def run_h2o_automl_classification(
     if client is None:
         client = MlflowClient()
 
-    # ── Kwarg defaults and validation ───────────────────────────────────────────
+    # Set and validate inputs
     seed = kwargs.pop("seed", 42)
     timeout_minutes = kwargs.pop("timeout_minutes", 5)
     exclude_cols = kwargs.pop("exclude_cols", [])
@@ -103,7 +103,8 @@ def run_h2o_automl_classification(
 
     # Run H2O AutoML
     features = [
-        col for col in df_splits["train"].columns
+        col
+        for col in df_splits["train"].columns
         if col not in exclude_cols + [target_col]
     ]
     LOGGER.info(f"Running H2O AutoML with {len(features)} features...")
