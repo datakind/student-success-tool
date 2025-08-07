@@ -1,5 +1,7 @@
 import logging
 import typing as t
+import tempfile
+import json
 
 import os
 import mlflow
@@ -93,7 +95,6 @@ def evaluate_and_log_model(
     client: MlflowClient,
     threshold: float = 0.5,
     imputer: t.Optional[imputation.SklearnImputerWrapper] = None,
-    artifact_path: str = "sklearn_imputer",
 ) -> dict | None:
     """
     Evaluates a single H2O model and logs metrics, plots, and artifacts to MLflow.
@@ -159,7 +160,7 @@ def evaluate_and_log_model(
                 # Log Imputer Artifacts
                 if imputer is not None:
                     try:
-                        imputer.log_pipeline(artifact_path=artifact_path)
+                        imputer.log_pipeline(artifact_path="sklearn_imputer")
 
                         # Save original dtypes if present
                         if hasattr(imputer, "original_dtypes"):
@@ -168,8 +169,10 @@ def evaluate_and_log_model(
                             ) as f:
                                 json.dump(imputer.original_dtypes, f, indent=2)
                                 dtype_file = f.name
-                            mlflow.log_artifact(dtype_file, artifact_path=artifact_path)
-
+                            mlflow.log_artifact(
+                                dtype_file, artifact_path="original_dtypes"
+                            )
+                            os.remove(dtype_file)
                         LOGGER.info(
                             f"Logged imputer pipeline and dtypes for run {run_id}."
                         )

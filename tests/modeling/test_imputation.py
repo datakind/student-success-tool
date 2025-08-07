@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import pytest
-from unittest.mock import patch
+from unittest import mock
 from student_success_tool.modeling import imputation  # adjust import
 from sklearn.pipeline import Pipeline
 
@@ -61,10 +61,32 @@ def test_pipeline_instance_and_step_names(sample_df):
     assert "imputer" in dict(pipeline.named_steps)
 
 
-@patch("mlflow.active_run", return_value=True)
-@patch("mlflow.start_run")
-@patch("mlflow.log_artifact")
-@patch("mlflow.end_run")
+def test_missing_flags_added_only_for_missing_columns(sample_df):
+    imputer = imputation.SklearnImputerWrapper()
+    imputer.fit(sample_df)
+    result = imputer.transform(sample_df)
+
+    # These columns have missing data
+    expected_flags = {
+        "num_low_skew_missing_flag",
+        "num_high_skew_missing_flag",
+        "bool_col_missing_flag",
+        "cat_col_missing_flag",
+        "text_col_missing_flag",
+    }
+
+    for flag_col in expected_flags:
+        assert flag_col in result.columns
+        assert set(result[flag_col].unique()).issubset({0, 1})
+
+    # This column has no missingness, should not have flag
+    assert "complete_col_missing_flag" not in result.columns
+
+
+@mock.patch("mlflow.active_run")
+@mock.patch("mlflow.start_run")
+@mock.patch("mlflow.log_artifact")
+@mock.patch("mlflow.end_run")
 def test_pipeline_logged_to_mlflow(
     mock_end_run,
     mock_log_artifact,
@@ -73,8 +95,11 @@ def test_pipeline_logged_to_mlflow(
     sample_df,
 ):
     imputer = imputation.SklearnImputerWrapper()
-    imputer.fit(sample_df, artifact_path="test_artifact_path")
+    imputer.fit(sample_df)
 
-    mock_end_run.assert_called_once()
+    # Now call the method that triggers MLflow logging
+    imputer.log_pipeline(artifact_path="test_artifact_path")
+
+    # Assert MLflow behavior
     mock_start_run.assert_called_once()
     mock_log_artifact.assert_called_once()

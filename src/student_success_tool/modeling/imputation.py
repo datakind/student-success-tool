@@ -32,6 +32,7 @@ class SklearnImputerWrapper:
         self.pipeline = None
         self.original_dtypes = None
         self.add_missing_flags = add_missing_flags
+        self.feature_names = None
 
     def fit(self, df: pd.DataFrame, artifact_path: str = "sklearn_imputer") -> Pipeline:
         df = df.replace({None: np.nan})
@@ -43,9 +44,10 @@ class SklearnImputerWrapper:
         pipeline = self._build_pipeline(df)
         pipeline.fit(df)
         self.pipeline = pipeline
+        self.feature_names = self.pipeline.named_steps[
+            "imputer"
+        ].get_feature_names_out()
 
-        LOGGER.info("Saving pipeline to MLflow...")
-        self.log_pipeline(artifact_path)
         return self.pipeline
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -58,16 +60,15 @@ class SklearnImputerWrapper:
             df = self._add_missingness_flags(df)
 
         transformed = self.pipeline.transform(df)
-        result = pd.DataFrame(transformed, columns=df.columns, index=df.index)
+        result = pd.DataFrame(transformed, columns=self.feature_names, index=df.index)
 
-        # Try to restore dtypes using original_dtypes
+        # Restore dtypes
         for col in result.columns:
             try:
                 result[col] = pd.to_numeric(result[col])
             except (ValueError, TypeError):
                 pass
 
-            # Restore booleans if originally boolean
             if self.original_dtypes and col in self.original_dtypes:
                 orig_dtype = self.original_dtypes[col]
                 if is_bool_dtype(orig_dtype):
@@ -84,17 +85,6 @@ class SklearnImputerWrapper:
 
         self.validate(result)
         return result
-
-    def _add_missingness_flags(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Adds a boolean column for each original feature with missing values.
-        """
-        df = df.copy()
-        for col in df.columns:
-            if df[col].isnull().any():
-                flag_col = f"{col}_missing_flag"
-                df[flag_col] = df[col].isnull()
-        return df
 
     def _build_pipeline(self, df: pd.DataFrame) -> Pipeline:
         transformers = []
@@ -153,6 +143,13 @@ class SklearnImputerWrapper:
             return False
 
         return True
+
+    def _add_missingness_flags(self, df: pd.DataFrame) -> pd.DataFrame:
+        df = df.copy()
+        for col in df.columns:
+            if df[col].isnull().any():
+                df[f"{col}_missing_flag"] = df[col].isnull().astype(int)
+        return df
 
     @classmethod
     def load(
