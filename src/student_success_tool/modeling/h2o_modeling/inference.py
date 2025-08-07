@@ -64,7 +64,7 @@ def compute_h2o_shap_contributions(
     return contribs_df, preprocessed_df
 
 
-def group_feature_matrix(
+def group_shap_values(
     df: pd.DataFrame,
     drop_bias_term: bool = False,
     group_missing_flags: bool = False,
@@ -94,6 +94,52 @@ def group_feature_matrix(
             grouped_data[base_col] += df[col]
 
     return pd.DataFrame(grouped_data)
+
+
+def group_feature_values(df: pd.DataFrame, group_missing_flags: bool) -> pd.DataFrame:
+    """
+    Groups one-hot encoded feature columns and *_missing_flag columns into base features.
+
+    For categorical values, combines one-hot groups into readable values, handling missing flags.
+
+    Args:
+        df: Preprocessed input feature DataFrame (e.g., after one-hot encoding).
+        group_missing_flags: Whether to group *_missing_flag into the same feature bucket.
+
+    Returns:
+        DataFrame with same number of rows, but fewer, grouped columns.
+    """
+    grouped = {}
+
+    for col in df.columns:
+        base = get_base_feature_name(col, group_missing_flags)
+        grouped.setdefault(base, []).append(df[col])
+
+    out = {}
+    for base, cols in grouped.items():
+        if all(pd.api.types.is_numeric_dtype(c) for c in cols):
+            out[base] = sum(cols)
+        elif group_missing_flags:
+
+            def resolve_row(values: list) -> str | None:
+                val_names = [v for v in values if isinstance(v, str)]
+                bool_flags = [v for v in values if isinstance(v, bool) and v]
+                if bool_flags:
+                    return "MISSING"
+                if len(val_names) == 1:
+                    return val_names[0]
+                else:
+                    raise ValueError(
+                        f"Could not resolve base feature '{base}' due to ambiguous or missing encoding. "
+                        f"Expected exactly one active one-hot value or missing flag. Found: {values}"
+                    )
+
+            stacked_df = pd.concat(cols, axis=1)
+            out[base] = stacked_df.apply(lambda row: resolve_row(row.tolist()), axis=1)
+        else:
+            out[base] = pd.DataFrame(cols).apply(lambda row: None, axis=1)
+
+    return pd.DataFrame(out)
 
 
 def create_color_hint_features(
@@ -168,10 +214,10 @@ def plot_grouped_shap(
         group_missing_flags: Whether to group missingness flag columns (e.g., 'math_placement_missing_flag')
                              into their corresponding base feature (e.g., 'math_placement') in the SHAP plot.
     """
-    grouped_shap = group_feature_matrix(
+    grouped_shap = group_shap_values(
         contribs_df, group_missing_flags=group_missing_flags
     )
-    grouped_inputs = group_feature_matrix(
+    grouped_inputs = group_feature_values(
         preprocessed_df, group_missing_flags=group_missing_flags
     )
     color_hint = create_color_hint_features(original_df, grouped_inputs)

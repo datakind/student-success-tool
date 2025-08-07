@@ -134,6 +134,20 @@ def evaluate_and_log_model(
                 # Log model ID as a parameter
                 mlflow.log_param("model_id", model_id)
 
+                # Log H2O model hyperparameters
+                try:
+                    hyperparams = {
+                        k: str(v)
+                        for k, v in model._parms.items()
+                        if not isinstance(v, (h2o.H2OFrame, list, dict))
+                    }
+                    if hyperparams:
+                        mlflow.log_params(hyperparams)
+                except Exception as e:
+                    LOGGER.warning(
+                        f"Failed to log hyperparameters for model {model_id}: {e}"
+                    )
+
                 # Log Metrics
                 for k, v in metrics.items():
                     if k != "model_id":
