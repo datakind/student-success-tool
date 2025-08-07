@@ -164,15 +164,21 @@ def evaluate_and_log_model(
 
                         # Save original dtypes if present
                         if hasattr(imputer, "original_dtypes"):
-                            with tempfile.NamedTemporaryFile(
-                                "w", suffix=".json", delete=False
-                            ) as f:
-                                json.dump(imputer.original_dtypes, f, indent=2)
-                                dtype_file = f.name
-                            mlflow.log_artifact(
-                                dtype_file, artifact_path="original_dtypes"
-                            )
-                            os.remove(dtype_file)
+                            try:
+                                with tempfile.TemporaryDirectory() as tmpdir:
+                                    dtype_file = os.path.join(
+                                        tmpdir, "original_dtypes.json"
+                                    )
+                                    with open(dtype_file, "w") as f:
+                                        json.dump(imputer.original_dtypes, f, indent=2)
+
+                                    mlflow.log_artifact(
+                                        dtype_file, artifact_path="original_dtypes"
+                                    )
+                            except Exception as e:
+                                LOGGER.warning(
+                                    f"Failed to save or log original_dtypes: {e}"
+                                )
                     except Exception as e:
                         LOGGER.warning(f"Failed to log imputer artifacts: {e}")
 
