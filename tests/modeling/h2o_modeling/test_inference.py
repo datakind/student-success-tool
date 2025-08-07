@@ -3,6 +3,7 @@ import pytest
 from unittest import mock
 from student_success_tool.modeling.h2o_modeling import inference
 
+
 # Existing SHAP grouping test
 def test_group_shap_by_feature_basic():
     df = pd.DataFrame(
@@ -18,7 +19,7 @@ def test_group_shap_by_feature_basic():
     pd.testing.assert_frame_equal(grouped, expected)
 
 
-# New test: one-hot with missing flag grouping
+# One-hot with missing flag grouping
 def test_group_feature_values_with_missing_flag():
     df = pd.DataFrame(
         {
@@ -50,7 +51,7 @@ def test_group_feature_values_ambiguous_encoding_raises():
         inference.group_feature_values(df, group_missing_flags=True)
 
 
-# Renamed for clarity — now tests color hint logic
+# Renamed for clarity - now tests color hint logic
 def test_create_color_hint_features_mixed_types():
     orig_df = pd.DataFrame(
         {
