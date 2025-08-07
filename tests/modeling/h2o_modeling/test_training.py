@@ -112,15 +112,22 @@ def test_run_h2o_automl_success(
     assert test.columns == test_frame.columns
 
 
-def test_run_h2o_automl_missing_logging_param(sample_df):
-    with pytest.raises(ValueError, match="Missing logging parameters"):
+@mock.patch("student_success_tool.modeling.h2o_modeling.training.h2o.H2OFrame")
+def test_run_h2o_automl_missing_logging_param(mock_h2oframe, sample_df):
+    # Fake H2OFrame instance
+    fake_h2o_frame = mock.MagicMock()
+    fake_h2o_frame.columns = sample_df.columns.tolist()
+    mock_h2oframe.return_value = fake_h2o_frame
+
+    # Remove a required logging param to trigger the ValueError
+    with pytest.raises(ValueError, match="Missing logging parameters: target_name"):
         training.run_h2o_automl_classification(
             sample_df,
             target_col="target",
             primary_metric="AUC",
             institution_id="inst1",
             student_id_col="student_id",
-            target_name=None,
+            # target_name is missing
             checkpoint_name="ckpt_001",
             workspace_path="mlflow_experiments/",
         )

@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+
+import typing as t
 import os
 import tempfile
 import logging
@@ -30,7 +32,7 @@ class SklearnImputerWrapper:
 
     def __init__(self, add_missing_flags: bool = True):
         self.pipeline = None
-        self.original_dtypes = None
+        self.original_dtypes: t.Optional[dict[str, str]] = None
         self.add_missing_flags = add_missing_flags
         self.feature_names = None
 
@@ -44,9 +46,10 @@ class SklearnImputerWrapper:
         pipeline = self._build_pipeline(df)
         pipeline.fit(df)
         self.pipeline = pipeline
-        self.feature_names = self.pipeline.named_steps[
-            "imputer"
-        ].get_feature_names_out()
+        if self.pipeline is not None:
+            self.feature_names = self.pipeline.named_steps[
+                "imputer"
+            ].get_feature_names_out()
 
         return self.pipeline
 
@@ -116,7 +119,7 @@ class SklearnImputerWrapper:
         )
         return Pipeline([("imputer", ct)])
 
-    def log_pipeline(self, artifact_path: str):
+    def log_pipeline(self, artifact_path: str) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             file_path = os.path.join(tmpdir, self.PIPELINE_FILENAME)
             joblib.dump(self.pipeline, file_path)

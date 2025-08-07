@@ -30,7 +30,7 @@ def run_h2o_automl_classification(
     primary_metric: str,
     institution_id: str,
     student_id_col: str,
-    client: t.Optional["MLflowClient"] = None,
+    client: t.Optional[MlflowClient] = None,
     **kwargs: object,
 ) -> tuple[str, H2OAutoML, h2o.H2OFrame, h2o.H2OFrame, h2o.H2OFrame]:
     """
@@ -41,13 +41,13 @@ def run_h2o_automl_classification(
 
     # Set and validate inputs
     seed = kwargs.pop("seed", 42)
-    timeout_minutes = kwargs.pop("timeout_minutes", 5)
-    exclude_cols = kwargs.pop("exclude_cols", [])
-    split_col = kwargs.pop("split_col", "split")
+    timeout_minutes = int(float(str(kwargs.pop("timeout_minutes", 5))))
+    exclude_cols = t.cast(list[str], kwargs.pop("exclude_cols", []))
+    split_col = str(kwargs.pop("split_col", "split"))
     sample_weights_col = kwargs.pop("sample_weights_col", None)
-    target_name = kwargs.pop("target_name")
-    checkpoint_name = kwargs.pop("checkpoint_name")
-    workspace_path = kwargs.pop("workspace_path")
+    target_name = kwargs.pop("target_name", None)
+    checkpoint_name = kwargs.pop("checkpoint_name", None)
+    workspace_path = kwargs.pop("workspace_path", None)
     primary_metric = primary_metric.lower()
 
     required = {
@@ -73,7 +73,11 @@ def run_h2o_automl_classification(
 
     # Set experiment
     experiment_id = utils.set_or_create_experiment(
-        workspace_path, institution_id, target_name, checkpoint_name, client=client
+        workspace_path=str(workspace_path),
+        institution_id=institution_id,
+        target_name=str(target_name),
+        checkpoint_name=str(checkpoint_name),
+        client=client,
     )
 
     # Fit and apply sklearn imputation
@@ -134,14 +138,9 @@ def run_h2o_automl_classification(
         train=train,
         valid=valid,
         test=test,
-        institution_id=institution_id,
         target_col=target_col,
-        target_name=target_name,
-        checkpoint_name=checkpoint_name,
-        workspace_path=workspace_path,
         experiment_id=experiment_id,
         imputer=imputer,
-        client=client,
     )
 
     return experiment_id, aml, train, valid, test

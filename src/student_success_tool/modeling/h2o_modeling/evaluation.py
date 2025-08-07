@@ -1,13 +1,11 @@
 import logging
-import typing as t
-import tempfile
-import json
+from collections.abc import Callable
+
+import shutil
+import uuid
 
 import os
 import mlflow
-from mlflow.tracking import MlflowClient
-import contextlib
-
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,8 +20,6 @@ from sklearn.metrics import (
 )
 from sklearn.calibration import calibration_curve
 
-
-from . import imputation
 
 import h2o
 from h2o.estimators.estimator_base import H2OEstimator
@@ -74,7 +70,10 @@ def generate_all_classification_plots(
         y_proba: Predicted probabilities for the positive class
         prefix: Prefix for plot file names (e.g., "train", "test", "val")
     """
-    plot_fns = {
+
+    plot_fns: dict[
+        str, tuple[Callable[[np.ndarray, np.ndarray], plt.Figure], np.ndarray]
+    ] = {
         "confusion_matrix": (create_confusion_matrix_plot, y_pred),
         "roc_curve": (create_roc_curve_plot, y_proba),
         "precision_recall": (create_precision_recall_curve_plot, y_proba),
@@ -84,128 +83,6 @@ def generate_all_classification_plots(
     for name, (plot_fn, values) in plot_fns.items():
         fig = plot_fn(y_true, values)
         mlflow.log_figure(fig, f"{prefix}_{name}.png")
-
-
-def evaluate_and_log_model(
-    aml: h2o.automl.H2OAutoML,
-    *,
-    model_id: str,
-    train: h2o.H2OFrame,
-    valid: h2o.H2OFrame,
-    test: h2o.H2OFrame,
-    client: MlflowClient,
-    threshold: float = 0.5,
-    imputer: t.Optional[imputation.SklearnImputerWrapper] = None,
-) -> dict | None:
-    """
-    Evaluates a single H2O model and logs metrics, plots, and artifacts to MLflow.
-
-    Args:
-        aml: Trained H2OAutoML object.
-        model_id: The H2O model ID to evaluate.
-        train: H2OFrame for training.
-        valid: H2OFrame for validation.
-        test: H2OFrame for testing.
-        client: Initialized MLflow client.
-        threshold: Classification threshold for binary metrics.
-        imputer: Optional SklearnImputerWrapper used in preprocessing.
-        artifact_path: MLflow artifact path for saving imputer files.
-
-    Returns:
-        dict of metrics with `mlflow_run_id`, or None on failure.
-    """
-    try:
-        model = h2o.get_model(model_id)
-        with (
-            open(os.devnull, "w") as fnull,
-            contextlib.redirect_stdout(fnull),
-            contextlib.redirect_stderr(fnull),
-        ):
-            metrics = get_metrics_near_threshold_all_splits(
-                model, train, valid, test, threshold=threshold
-            )
-
-            if mlflow.active_run():
-                mlflow.end_run()
-
-            with mlflow.start_run():
-                run_id = mlflow.active_run().info.run_id
-
-                # Log model ID as a parameter
-                mlflow.log_param("model_id", model_id)
-
-                # Log H2O model hyperparameters
-                try:
-                    hyperparams = {
-                        k: str(v)
-                        for k, v in model._parms.items()
-                        if not isinstance(v, (h2o.H2OFrame, list, dict))
-                    }
-                    if hyperparams:
-                        mlflow.log_params(hyperparams)
-                except Exception as e:
-                    LOGGER.warning(
-                        f"Failed to log hyperparameters for model {model_id}: {e}"
-                    )
-
-                # Log Metrics
-                for k, v in metrics.items():
-                    if k != "model_id":
-                        mlflow.log_metric(k, v)
-
-                # Log Classification Plots
-                for split_name, frame in zip(
-                    ["train", "val", "test"], [train, valid, test]
-                ):
-                    y_true = frame["target"].as_data_frame().values.flatten()
-                    preds = model.predict(frame)
-                    positive_class_label = preds.col_names[-1]
-                    y_proba = (
-                        preds[positive_class_label].as_data_frame().values.flatten()
-                    )
-                    y_pred = (y_proba >= threshold).astype(int)
-
-                    generate_all_classification_plots(
-                        y_true, y_pred, y_proba, prefix=split_name
-                    )
-
-                # Log H2O Model
-                local_model_dir = f"/tmp/h2o_models/{model_id}"
-                os.makedirs(local_model_dir, exist_ok=True)
-                h2o.save_model(model, path=local_model_dir, force=True)
-                mlflow.log_artifacts(local_model_dir, artifact_path="model")
-
-                # Log Imputer Artifacts
-                if imputer is not None:
-                    try:
-                        imputer.log_pipeline(artifact_path="sklearn_imputer")
-
-                        # Save original dtypes if present
-                        if hasattr(imputer, "original_dtypes"):
-                            try:
-                                with tempfile.TemporaryDirectory() as tmpdir:
-                                    dtype_file = os.path.join(
-                                        tmpdir, "original_dtypes.json"
-                                    )
-                                    with open(dtype_file, "w") as f:
-                                        json.dump(imputer.original_dtypes, f, indent=2)
-
-                                    mlflow.log_artifact(
-                                        dtype_file, artifact_path="original_dtypes"
-                                    )
-                            except Exception as e:
-                                LOGGER.warning(
-                                    f"Failed to save or log original_dtypes: {e}"
-                                )
-                    except Exception as e:
-                        LOGGER.warning(f"Failed to log imputer artifacts: {e}")
-
-            metrics["mlflow_run_id"] = run_id
-            return metrics
-
-    except Exception as e:
-        LOGGER.exception(f"Failed to evaluate and log model {model_id}: {e}")
-        return None
 
 
 def extract_training_data_from_model(

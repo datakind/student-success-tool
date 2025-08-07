@@ -1,5 +1,6 @@
 import unittest.mock as mock
 import pandas as pd
+import numpy as np
 
 from student_success_tool.modeling.h2o_modeling import utils
 
@@ -7,9 +8,7 @@ from student_success_tool.modeling.h2o_modeling import utils
 @mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.log_artifact")
 @mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.start_run")
 @mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.active_run")
-@mock.patch(
-    "student_success_tool.modeling.h2o_modeling.evaluation.evaluate_and_log_model"
-)
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.log_h2o_model")
 def test_log_h2o_experiment_logs_metrics(
     mock_eval_log,
     mock_active_run,
@@ -34,13 +33,8 @@ def test_log_h2o_experiment_logs_metrics(
         train=mock.MagicMock(),
         valid=mock.MagicMock(),
         test=mock.MagicMock(),
-        institution_id="inst1",
         target_col="target",
-        target_name="Outcome",
-        checkpoint_name="CP",
-        workspace_path="/workspace",
         experiment_id="exp123",
-        client=mock.MagicMock(),
     )
 
     assert not results_df.empty
@@ -127,3 +121,61 @@ def test_log_h2o_experiment_summary_basic(
     assert (
         mock_log_artifact.call_count == 5
     )  # leaderboard + features + train.csv + target dist + schema
+
+
+@mock.patch(
+    "student_success_tool.modeling.h2o_modeling.evaluation.generate_all_classification_plots"
+)
+@mock.patch(
+    "student_success_tool.modeling.h2o_modeling.evaluation.get_metrics_near_threshold_all_splits"
+)
+@mock.patch("student_success_tool.modeling.h2o_modeling.evaluation.h2o.save_model")
+@mock.patch("student_success_tool.modeling.h2o_modeling.evaluation.mlflow.active_run")
+@mock.patch("student_success_tool.modeling.h2o_modeling.evaluation.mlflow.start_run")
+@mock.patch("student_success_tool.modeling.h2o_modeling.evaluation.h2o.get_model")
+def test_log_model_success(
+    mock_get_model,
+    mock_start_run,
+    mock_active_run,
+    mock_save_model,
+    mock_get_metrics,
+    mock_generate_plots,
+):
+    # Mock model prediction
+    model_mock = mock.MagicMock()
+    model_mock.predict.return_value.col_names = ["p0", "p1"]
+    model_mock.predict.return_value.__getitem__.return_value.as_data_frame.return_value.values.flatten.return_value = np.array(
+        [0.6, 0.7, 0.8]
+    )
+    mock_get_model.return_value = model_mock
+
+    # Mock metrics and plots
+    mock_get_metrics.return_value = {"accuracy": 0.91}
+    mock_generate_plots.return_value = None
+
+    # Mock MLflow run
+    mock_active_run.return_value.info.run_id = "run-xyz"
+
+    # Call function under test
+    result = utils.log_h2o_model(
+        model_id="model1",
+        train=mock.MagicMock(),
+        valid=mock.MagicMock(),
+        test=mock.MagicMock(),
+        threshold=0.5,
+    )
+
+    # Assertions
+    assert isinstance(result, dict)
+    assert "mlflow_run_id" in result
+    assert result["mlflow_run_id"] == "run-xyz"
+    assert result["accuracy"] == 0.91
+    mock_save_model.assert_called_once()
+    mock_get_metrics.assert_called_once()
+
+    expected_calls = [
+        mock.call(mock.ANY, mock.ANY, mock.ANY, prefix="train"),
+        mock.call(mock.ANY, mock.ANY, mock.ANY, prefix="val"),
+        mock.call(mock.ANY, mock.ANY, mock.ANY, prefix="test"),
+    ]
+    mock_generate_plots.assert_has_calls(expected_calls, any_order=False)

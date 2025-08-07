@@ -22,7 +22,7 @@ def get_h2o_used_features(model: H2OEstimator) -> t.List[str]:
     """
     # The last name is usually the response/target variable
     feature_names = model._model_json["output"]["names"][:-1]
-    return feature_names
+    return list(feature_names)
 
 
 def compute_h2o_shap_contributions(
@@ -109,7 +109,7 @@ def group_feature_values(df: pd.DataFrame, group_missing_flags: bool) -> pd.Data
     Returns:
         DataFrame with same number of rows, but fewer, grouped columns.
     """
-    grouped = {}
+    grouped: dict[str, list[int]] = {}
 
     for col in df.columns:
         base = get_base_feature_name(col, group_missing_flags)
