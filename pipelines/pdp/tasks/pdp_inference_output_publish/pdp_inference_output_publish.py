@@ -92,6 +92,10 @@ def main():
     """Main function."""
     logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser()
+        # hack replace any multiple _  if found in the databricks institution name
+    args.databricks_institution_name = args.databricks_institution_name.replace(
+        "___", "_"
+    )
     parser.add_argument(
         "--DB_workspace", required=True, help="Databricks workspace of the task."
     )

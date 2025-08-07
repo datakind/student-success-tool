@@ -292,6 +292,10 @@ def parse_arguments() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_arguments()
+    # hack replace any multiple _  if found in the databricks institution name
+    args.databricks_institution_name = args.databricks_institution_name.replace(
+        "___", "_"
+    )
     sys.path.append(
         f"/Volumes/staging_sst_01/{args.databricks_institution_name}_gold/gold_volume/inference_inputs"
     )
