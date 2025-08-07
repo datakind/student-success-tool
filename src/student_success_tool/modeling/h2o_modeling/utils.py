@@ -255,7 +255,11 @@ def log_h2o_model(
                     hyperparams = {
                         k: str(v)
                         for k, v in model._parms.items()
-                        if not isinstance(v, (h2o.H2OFrame, list, dict))
+                        if (
+                            v is not None
+                            and k != "model_id"
+                            and not isinstance(v, (h2o.H2OFrame, list, dict))
+                        )
                     }
                     if hyperparams:
                         mlflow.log_params(hyperparams)
