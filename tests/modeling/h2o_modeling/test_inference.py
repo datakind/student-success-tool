@@ -3,7 +3,6 @@ import pytest
 from unittest import mock
 from student_success_tool.modeling.h2o_modeling import inference
 
-
 # Existing SHAP grouping test
 def test_group_shap_by_feature_basic():
     df = pd.DataFrame(

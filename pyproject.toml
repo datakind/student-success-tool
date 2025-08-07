@@ -28,7 +28,7 @@ dependencies = [
     "pydyf~=0.8.0",
     "markdown~=3.5",
     "types-markdown~=3.8",
-    "h2o>=3.44,<3.46",
+    "h2o==3.44.0.3",
     "polars~=0.20",
     "tomlkit==0.13.3"
 ]
