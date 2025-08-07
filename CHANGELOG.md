@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.3.10 (2025-08)
+- Created automated model selection (PR 267)
+- Corrected aliasing & typos model cards (PR 264)
+
 ## 0.3.9 (2025-07)
 - Add pre-cohort courses to config (PR 258)
 

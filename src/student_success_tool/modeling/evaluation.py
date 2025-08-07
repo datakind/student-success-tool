@@ -235,7 +235,15 @@ def infer_directions(metrics: list[str]) -> list[str]:
     Returns:
         List of directions, one for each metric.
     """
-    minimize_keywords = ("loss", "error", "log_loss", "mae", "mse")
+    minimize_keywords = (
+        "loss",
+        "error",
+        "log_loss",
+        "mae",
+        "mse",
+        "bias_score_mean",
+        "bias_score_max",
+    )
     return [
         "asc" if any(metric.lower().endswith(k) for k in minimize_keywords) else "desc"
         for metric in metrics
