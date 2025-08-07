@@ -36,7 +36,7 @@ class SklearnImputerWrapper:
 
     def fit(self, df: pd.DataFrame, artifact_path: str = "sklearn_imputer") -> Pipeline:
         df = df.replace({None: np.nan})
-        self.original_dtypes = df.dtypes.to_dict()
+        self.original_dtypes = {k: str(v) for k, v in df.dtypes.items()}
 
         if self.add_missing_flags:
             df = self._add_missingness_flags(df)
@@ -122,10 +122,12 @@ class SklearnImputerWrapper:
             joblib.dump(self.pipeline, file_path)
 
             if mlflow.active_run():
-                mlflow.end_run()
-
-            with mlflow.start_run(run_name="sklearn_preprocessing"):
+                # Use the current run (do not start a new one)
                 mlflow.log_artifact(file_path, artifact_path=artifact_path)
+            else:
+                # Only start a new run if one isn't active
+                with mlflow.start_run("sklearn_preprocessing"):
+                    mlflow.log_artifact(file_path, artifact_path=artifact_path)
 
             LOGGER.info(
                 f"Logged pipeline to MLflow: {artifact_path}/{self.PIPELINE_FILENAME}"

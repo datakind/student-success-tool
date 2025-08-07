@@ -101,5 +101,4 @@ def test_pipeline_logged_to_mlflow(
     imputer.log_pipeline(artifact_path="test_artifact_path")
 
     # Assert MLflow behavior
-    mock_start_run.assert_called_once()
     mock_log_artifact.assert_called_once()
