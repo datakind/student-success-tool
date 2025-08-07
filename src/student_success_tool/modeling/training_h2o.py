@@ -102,7 +102,10 @@ def run_h2o_automl_classification(
     train, valid, test = h2o_splits["train"], h2o_splits["validate"], h2o_splits["test"]
 
     # Run H2O AutoML
-    features = [col for col in df.columns if col not in exclude_cols + [target_col]]
+    features = [
+        col for col in df_splits["train"].columns
+        if col not in exclude_cols + [target_col]
+    ]
     LOGGER.info(f"Running H2O AutoML with {len(features)} features...")
 
     aml = H2OAutoML(
