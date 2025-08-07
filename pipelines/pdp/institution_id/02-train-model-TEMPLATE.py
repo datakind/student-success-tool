@@ -41,6 +41,7 @@
 import logging
 import mlflow
 from databricks.connect import DatabricksSession
+from databricks.sdk.runtime import dbutils
 
 from student_success_tool import configs, dataio, modeling, utils
 
