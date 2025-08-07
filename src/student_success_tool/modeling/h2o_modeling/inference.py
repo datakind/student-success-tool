@@ -137,7 +137,7 @@ def group_feature_values(df: pd.DataFrame, group_missing_flags: bool) -> pd.Data
             stacked_df = pd.concat(cols, axis=1)
             out[base] = stacked_df.apply(lambda row: resolve_row(row.tolist()), axis=1)
         else:
-            out[base] = pd.DataFrame(cols).apply(lambda row: None, axis=1)
+            out[base] = pd.concat(cols, axis=1).apply(lambda row: None, axis=1)
 
     return pd.DataFrame(out)
 
@@ -191,9 +191,12 @@ def get_base_feature_name(col: str, group_missing_flags: bool) -> str:
     Returns:
         Base feature name for grouping
     """
-    if group_missing_flags and col.endswith("_missing_flag"):
-        return col.removesuffix("_missing_flag")
-    return re.split(r"\.", col, maxsplit=1)[0]
+    base = re.split(r"\.", col, maxsplit=1)[0]
+
+    if group_missing_flags and base.endswith("_missing_flag"):
+        return base[: -len("_missing_flag")]
+
+    return base
 
 
 def plot_grouped_shap(

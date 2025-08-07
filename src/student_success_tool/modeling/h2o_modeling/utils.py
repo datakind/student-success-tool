@@ -187,9 +187,9 @@ def log_h2o_experiment_summary(
 
             # Log sampled training data
             train_df = train.as_data_frame(use_pandas=True)
-            train_path = os.path.join(tmpdir, "train.csv")
-            train_df.to_csv(train_path, index=False)
-            mlflow.log_artifact(train_path, artifact_path="inputs")
+            train_parquet_path = os.path.join(tmpdir, "train.parquet")
+            train_df.to_parquet(train_parquet_path, index=False)
+            mlflow.log_artifact(train_parquet_path, artifact_path="inputs")
 
             # Log target distribution
             target_dist_df = train[target_col].table().as_data_frame()
