@@ -173,9 +173,6 @@ def evaluate_and_log_model(
                                 dtype_file, artifact_path="original_dtypes"
                             )
                             os.remove(dtype_file)
-                        LOGGER.info(
-                            f"Logged imputer pipeline for run {run_id}."
-                        )
                     except Exception as e:
                         LOGGER.warning(f"Failed to log imputer artifacts: {e}")
 

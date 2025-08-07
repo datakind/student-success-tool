@@ -129,7 +129,7 @@ class SklearnImputerWrapper:
                 with mlflow.start_run("sklearn_preprocessing"):
                     mlflow.log_artifact(file_path, artifact_path=artifact_path)
 
-            LOGGER.info(
+            LOGGER.debug(
                 f"Logged pipeline to MLflow: {artifact_path}/{self.PIPELINE_FILENAME}"
             )
 
@@ -150,7 +150,7 @@ class SklearnImputerWrapper:
         df = df.copy()
         for col in df.columns:
             if df[col].isnull().any():
-                df[f"{col}_missing_flag"] = df[col].isnull().astype(int)
+                df[f"{col}_missing_flag"] = df[col].isnull()
         return df
 
     @classmethod

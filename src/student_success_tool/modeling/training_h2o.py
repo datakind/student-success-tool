@@ -87,8 +87,14 @@ def run_h2o_automl_classification(
     }
 
     # Convert to H2OFrames and fix dtypes
+    missing_flags = [col for col in df.columns if col.endswith("_missing_flag")]
     h2o_splits = {
-        k: correct_h2o_dtypes(h2o.H2OFrame(v), v) for k, v in df_splits.items()
+        k: correct_h2o_dtypes(
+            h2o.H2OFrame(v),
+            v,
+            force_enum_cols=missing_flags,
+        )
+        for k, v in df_splits.items()
     }
     for frame in h2o_splits.values():
         frame[target_col] = frame[target_col].asfactor()
