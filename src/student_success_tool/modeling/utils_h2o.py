@@ -154,7 +154,7 @@ def log_h2o_experiment_summary(
     leaderboard_df: pd.DataFrame,
     train: h2o.H2OFrame,
     target_col: str,
-    run_name: str = "h2o_automl_experiment_summary",
+    run_name: str = "H2O AutoML Experiment Summary and Storage",
     sample_size: int = 1000,
 ) -> None:
     """

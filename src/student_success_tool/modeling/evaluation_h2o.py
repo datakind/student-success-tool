@@ -11,6 +11,7 @@ import contextlib
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from sklearn.metrics import (
     confusion_matrix,
     ConfusionMatrixDisplay,
@@ -127,8 +128,11 @@ def evaluate_and_log_model(
             if mlflow.active_run():
                 mlflow.end_run()
 
-            with mlflow.start_run(run_name=f"h2o_eval_{model_id}"):
+            with mlflow.start_run():
                 run_id = mlflow.active_run().info.run_id
+
+                # Log model ID as a parameter
+                mlflow.log_param("model_id", model_id)
 
                 # Log Metrics
                 for k, v in metrics.items():
@@ -188,6 +192,44 @@ def evaluate_and_log_model(
     except Exception as e:
         LOGGER.exception(f"Failed to evaluate and log model {model_id}: {e}")
         return None
+
+
+def extract_training_data_from_model(
+    automl_experiment_id: str,
+    data_runname: str = "H2O AutoML Experiment Summary and Storage",
+) -> pd.DataFrame:
+    """
+    Read training data from a model into a pandas DataFrame. This allows us to run more
+    evaluations of the model, ensuring that we are using the same train/test/validation split
+
+    Args:
+        automl_experiment_id: Experiment ID of the AutoML experiment
+        data_runname: The runName tag designating where there training data is stored
+
+    Returns:
+        The data used for training a model, with train/test/validation flags
+    """
+    run_df = mlflow.search_runs(
+        experiment_ids=[automl_experiment_id], output_format="pandas"
+    )
+    assert isinstance(run_df, pd.DataFrame)  # type guard
+    data_run_id = run_df[run_df["tags.mlflow.runName"] == data_runname]["run_id"].item()
+
+    # Create temp directory to download input data from MLflow
+    input_temp_dir = os.path.join(
+        os.environ["SPARK_LOCAL_DIRS"], "tmp", str(uuid.uuid4())[:8]
+    )
+    os.makedirs(input_temp_dir)
+
+    # Download the artifact and read it into a pandas DataFrame
+    input_data_path = mlflow.artifacts.download_artifacts(
+        run_id=data_run_id, artifact_path="inputs", dst_path=input_temp_dir
+    )
+    df_loaded = pd.read_parquet(os.path.join(input_data_path, "train.csv"))
+    # Delete the temp data
+    shutil.rmtree(input_temp_dir)
+
+    return df_loaded
 
 
 ############
