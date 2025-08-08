@@ -76,7 +76,10 @@ class SklearnImputerWrapper:
                 raise ValueError(f"Missing required input features: {missing}")
             df = df[self.input_feature_names]
 
-        # Add only the missingness flags from fit-time
+        # Add missingness flags
+        df = self._add_missingness_flags(df)
+
+        # Ensure missingness flags from fit-time exist
         if self.add_missing_flags:
             for col in self.missing_flag_cols:
                 if col not in df:
