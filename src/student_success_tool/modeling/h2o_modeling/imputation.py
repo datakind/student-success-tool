@@ -75,17 +75,24 @@ class SklearnImputerWrapper:
                 raise ValueError(f"Missing required input features: {missing}")
             df = df[self.input_feature_names]
 
-        # Add locked missingness flag columns
+        # Add locked missingness flag columns from fit-time only
         if self.add_missing_flags:
-            # Add any missing flag cols as False
             for col in self.missing_flag_cols:
                 if col not in df:
                     df[col] = False
-            df = self._add_missingness_flags(df)
-            # Ensure all expected flags exist, in same order as fit-time
-            for col in self.missing_flag_cols:
-                if col not in df:
-                    df[col] = False
+
+            # Drift detection -> check if any original non-flag columns now have NaNs
+            drift_cols = [
+                col for col in self.input_feature_names if df[col].isnull().any()
+            ]
+            if drift_cols:
+                LOGGER.warning(
+                    f"Data drift detected: previously complete columns now have NaNs: {drift_cols}"
+                )
+
+        # Maintain column order from fit
+        if self.input_feature_names:
+            df = df[self.input_feature_names + self.missing_flag_cols]
 
         # Maintain column order from fit
         if self.input_feature_names:
