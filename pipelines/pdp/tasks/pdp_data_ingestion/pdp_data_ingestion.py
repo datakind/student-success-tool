@@ -296,6 +296,9 @@ if __name__ == "__main__":
     args.databricks_institution_name = args.databricks_institution_name.replace(
         "___", "_"
     )
+    args.job_root_dir = args.job_root_dir.replace(
+        "___", "_"
+    )
     sys.path.append(
         f"/Volumes/staging_sst_01/{args.databricks_institution_name}_gold/gold_volume/inference_inputs"
     )
