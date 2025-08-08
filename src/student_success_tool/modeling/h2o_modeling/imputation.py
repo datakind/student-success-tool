@@ -35,8 +35,9 @@ class SklearnImputerWrapper:
         self.pipeline = None
         self.input_dtypes: t.Optional[dict[str, str]] = None
         self.add_missing_flags = add_missing_flags
-        self.input_feature_names = None
-        self.output_feature_names = None
+        self.input_feature_names: t.Optional[list[str]] = None
+        self.output_feature_names: t.Optional[list[str]] = None
+        self.missing_flag_cols: list[str] = []
 
     def fit(self, df: pd.DataFrame) -> Pipeline:
         df = df.replace({None: np.nan})
@@ -45,6 +46,11 @@ class SklearnImputerWrapper:
 
         if self.add_missing_flags:
             df = self._add_missingness_flags(df)
+            self.missing_flag_cols = [
+                c for c in df.columns if c.endswith("_missing_flag")
+            ]
+        else:
+            self.missing_flag_cols = []
 
         pipeline = self._build_pipeline(df)
         pipeline.fit(df)
@@ -62,20 +68,38 @@ class SklearnImputerWrapper:
 
         df = df.replace({None: np.nan})
 
-        # Filter and reorder columns to match training-time input
+        # Filter/reorder to match original feature list
         if self.input_feature_names is not None:
             missing = set(self.input_feature_names) - set(df.columns)
             if missing:
                 raise ValueError(f"Missing required input features: {missing}")
             df = df[self.input_feature_names]
 
-        # Add missingness flags if enabled
+        # Add locked missingness flag columns
         if self.add_missing_flags:
+            # Add any missing flag cols as False
+            for col in self.missing_flag_cols:
+                if col not in df:
+                    df[col] = False
             df = self._add_missingness_flags(df)
+            # Ensure all expected flags exist, in same order as fit-time
+            for col in self.missing_flag_cols:
+                if col not in df:
+                    df[col] = False
+
+        # Maintain column order from fit
+        if self.input_feature_names:
+            df = df[self.input_feature_names + self.missing_flag_cols]
 
         transformed = self.pipeline.transform(df)
 
-        # Use stored feature names from fit()
+        # Row count safety check
+        if transformed.shape[0] != df.shape[0]:
+            raise ValueError(
+                f"Row count mismatch after imputation: input had {df.shape[0]} rows, "
+                f"output has {transformed.shape[0]} rows"
+            )
+
         if self.output_feature_names is None:
             raise ValueError(
                 "Output feature names not set. Did you forget to call `fit()`?"
@@ -85,7 +109,7 @@ class SklearnImputerWrapper:
             transformed, columns=self.output_feature_names, index=df.index
         )
 
-        # Restore data types where applicable
+        # Restore data types
         for col in result.columns:
             try:
                 result[col] = pd.to_numeric(result[col])
@@ -98,13 +122,6 @@ class SklearnImputerWrapper:
                     uniques = set(result[col].dropna().unique())
                     if uniques.issubset({0, 1, True, False}):
                         result[col] = result[col].astype(bool)
-
-            if result[col].dtype == "object":
-                sample_vals = result[col].dropna().astype(str).head(10)
-                if all(v.replace(".", "", 1).isdigit() for v in sample_vals):
-                    LOGGER.warning(
-                        f"Column '{col}' is object but contains numeric-looking values after imputation."
-                    )
 
         self.validate(result)
         return result
@@ -167,6 +184,14 @@ class SklearnImputerWrapper:
             else:
                 features_path = None
 
+            # Save missing_flag_cols if available
+            if self.add_missing_flags:
+                flags_path = os.path.join(tmpdir, "missing_flag_cols.json")
+                with open(flags_path, "w") as f:
+                    json.dump(self.missing_flag_cols, f, indent=2)
+            else:
+                flags_path = None
+
             def log_artifacts():
                 mlflow.log_artifact(pipeline_path, artifact_path=artifact_path)
                 LOGGER.debug(
@@ -181,6 +206,11 @@ class SklearnImputerWrapper:
                     mlflow.log_artifact(features_path, artifact_path=artifact_path)
                     LOGGER.debug(
                         f"Logged input_feature_names to MLflow at: {artifact_path}/input_feature_names.json"
+                    )
+                if flags_path:
+                    mlflow.log_artifact(flags_path, artifact_path=artifact_path)
+                    LOGGER.debug(
+                        f"Logged missing_flag_cols to MLflow at: {artifact_path}/missing_flag_cols.json"
                     )
 
             # Respect existing run context or start a new one
