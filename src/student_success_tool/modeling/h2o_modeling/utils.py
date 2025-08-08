@@ -4,7 +4,6 @@ import typing as t
 import os
 import datetime
 import tempfile
-import json
 import contextlib
 
 import mlflow
@@ -14,6 +13,7 @@ import pandas as pd
 
 import h2o
 from h2o.automl import H2OAutoML
+from h2o.model.model_base import ModelBase
 
 from . import evaluation
 from . import imputation
@@ -100,6 +100,8 @@ def log_h2o_experiment(
         aml=aml,
         leaderboard_df=leaderboard_df,
         train=train,
+        valid=valid,
+        test=test,
         target_col=target_col,
     )
 
@@ -131,6 +133,7 @@ def log_h2o_experiment(
             test=test,
             threshold=0.5,
             imputer=imputer,
+            primary_metric=aml.sort_metric,
         )
 
         if metrics:
@@ -147,18 +150,23 @@ def log_h2o_experiment_summary(
     aml: H2OAutoML,
     leaderboard_df: pd.DataFrame,
     train: h2o.H2OFrame,
+    valid: h2o.H2OFrame,
+    test: h2o.H2OFrame,
     target_col: str,
     run_name: str = "H2O AutoML Experiment Summary and Storage",
 ) -> None:
     """
     Logs summary information about the H2O AutoML experiment to a dedicated MLflow run in
-    the experiment with the leaderboard as a CSV, list of input features, training dataset,
-    target distribution, and the schema (column names and types)
+    the experiment with the leaderboard as a CSV, list of input features, training dataset
+    (with splits e.g. "train", "test", "val"), target distribution, and the
+    schema (column names and types).
 
     Args:
         aml: Trained H2OAutoML object.
         leaderboard_df (pd.DataFrame): Leaderboard as DataFrame.
         train (H2OFrame): Training H2OFrame.
+        valid (H2OFrame): Validation H2OFrame.
+        test (H2OFrame): Test H2OFrame.
         target_col (str): Name of the target column.
         run_name (str): Name of the MLflow run. Defaults to "h2o_automl_experiment_summary".
     """
@@ -187,9 +195,12 @@ def log_h2o_experiment_summary(
 
             # Log sampled training data
             train_df = train.as_data_frame(use_pandas=True)
-            train_parquet_path = os.path.join(tmpdir, "train.parquet")
-            train_df.to_parquet(train_parquet_path, index=False)
-            mlflow.log_artifact(train_parquet_path, artifact_path="inputs")
+            valid_df = valid.as_data_frame(use_pandas=True)
+            test_df = test.as_data_frame(use_pandas=True)
+            full_df = pd.concat([train_df, valid_df, test_df], axis=0)
+            df_parquet_path = os.path.join(tmpdir, "full_dataset.parquet")
+            full_df.to_parquet(df_parquet_path, index=False)
+            mlflow.log_artifact(df_parquet_path, artifact_path="inputs")
 
             # Log target distribution
             target_dist_df = train[target_col].table().as_data_frame()
@@ -212,6 +223,7 @@ def log_h2o_model(
     test: h2o.H2OFrame,
     threshold: float = 0.5,
     imputer: t.Optional[imputation.SklearnImputerWrapper] = None,
+    primary_metric: str = "logloss",
 ) -> dict | None:
     """
     Evaluates a single H2O model and logs metrics, plots, and artifacts to MLflow.
@@ -247,43 +259,16 @@ def log_h2o_model(
                 if active_run is not None:  # type check
                     run_id = active_run.info.run_id
 
-                # Log model ID as a parameter
-                mlflow.log_param("model_id", model_id)
+                log_model_metadata_to_mlflow(
+                    model_id=model_id,
+                    model=model,
+                    metrics=metrics,
+                    exclude_keys={"model_id"},
+                )
 
-                # Log H2O model hyperparameters
-                try:
-                    hyperparams = {
-                        k: str(v)
-                        for k, v in model._parms.items()
-                        if (
-                            v is not None
-                            and k != "model_id"
-                            and not isinstance(v, (h2o.H2OFrame, list, dict))
-                        )
-                    }
-                    if hyperparams:
-                        mlflow.log_params(hyperparams)
-                except Exception as e:
-                    LOGGER.warning(
-                        f"Failed to log hyperparameters for model {model_id}: {e}"
-                    )
-
-                # Log Metrics
-                for k, v in metrics.items():
-                    if k == "model_id":
-                        continue
-
-                    try:
-                        if isinstance(v, float):
-                            mlflow.log_metric(k, v)
-                        elif isinstance(v, (int, str)):
-                            mlflow.log_metric(k, float(v))
-                        else:
-                            print(
-                                f"Skipping metric '{k}': unsupported type {type(v).__name__}"
-                            )
-                    except (ValueError, TypeError) as e:
-                        print(f"Could not log metric '{k}' with value '{v}': {e}")
+                # Assign initial sort key for mlflow UI
+                primary_metric_key = f"validate_{primary_metric}"
+                mlflow.set_tag("mlflow.primaryMetric", primary_metric_key)
 
                 # Log Classification Plots
                 for split_name, frame in zip(
@@ -311,24 +296,6 @@ def log_h2o_model(
                 if imputer is not None:
                     try:
                         imputer.log_pipeline(artifact_path="sklearn_imputer")
-
-                        # Save original dtypes if present
-                        if hasattr(imputer, "original_dtypes"):
-                            try:
-                                with tempfile.TemporaryDirectory() as tmpdir:
-                                    dtype_file = os.path.join(
-                                        tmpdir, "original_dtypes.json"
-                                    )
-                                    with open(dtype_file, "w") as f:
-                                        json.dump(imputer.original_dtypes, f, indent=2)
-
-                                    mlflow.log_artifact(
-                                        dtype_file, artifact_path="original_dtypes"
-                                    )
-                            except Exception as e:
-                                LOGGER.warning(
-                                    f"Failed to save or log original_dtypes: {e}"
-                                )
                     except Exception as e:
                         LOGGER.warning(f"Failed to log imputer artifacts: {e}")
 
@@ -338,6 +305,59 @@ def log_h2o_model(
     except Exception as e:
         LOGGER.exception(f"Failed to evaluate and log model {model_id}: {e}")
         return None
+
+
+def log_model_metadata_to_mlflow(
+    model_id: str,
+    model: ModelBase,
+    metrics: dict[str, t.Any],
+    exclude_keys: t.Optional[set[str]] = None,
+) -> None:
+    """
+    Logs model ID, hyperparameters, and metrics to MLflow.
+
+    Args:
+        model_id: ID string of the H2O model.
+        model: H2O model object.
+        metrics: Dictionary of metrics to log.
+        exclude_keys: Optional set of metric keys to exclude from logging.
+    """
+    exclude_keys = exclude_keys or set()
+
+    # Log model ID
+    mlflow.log_param("model_id", model_id)
+
+    # Log hyperparameters
+    try:
+        hyperparams = {
+            k: str(v)
+            for k, v in model._parms.items()
+            if (
+                v is not None
+                and k != "model_id"
+                and not isinstance(v, (h2o.H2OFrame, list, dict))
+            )
+        }
+        if hyperparams:
+            mlflow.log_params(hyperparams)
+    except Exception as e:
+        LOGGER.warning(f"Failed to log hyperparameters for model {model_id}: {e}")
+
+    # Log metrics
+    for k, v in metrics.items():
+        if k in exclude_keys:
+            continue
+        try:
+            if isinstance(v, (float, int)):
+                mlflow.log_metric(k, float(v))
+            elif isinstance(v, str):
+                mlflow.log_metric(k, float(v))  # Best-effort conversion
+            else:
+                LOGGER.warning(
+                    f"Skipping metric '{k}': unsupported type {type(v).__name__}"
+                )
+        except (ValueError, TypeError) as e:
+            LOGGER.warning(f"Could not log metric '{k}' with value '{v}': {e}")
 
 
 def set_or_create_experiment(

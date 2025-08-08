@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import json
 
 import typing as t
 import os
@@ -120,21 +121,42 @@ class SklearnImputerWrapper:
         return Pipeline([("imputer", ct)])
 
     def log_pipeline(self, artifact_path: str) -> None:
+        """
+        Logs the fitted pipeline and original dtypes to MLflow as artifacts.
+
+        Args:
+            artifact_path: MLflow artifact subdirectory (e.g., "sklearn_imputer")
+        """
         with tempfile.TemporaryDirectory() as tmpdir:
-            file_path = os.path.join(tmpdir, self.PIPELINE_FILENAME)
-            joblib.dump(self.pipeline, file_path)
+            # Save pipeline
+            pipeline_path = os.path.join(tmpdir, self.PIPELINE_FILENAME)
+            joblib.dump(self.pipeline, pipeline_path)
 
-            if mlflow.active_run():
-                # Use the current run (do not start a new one)
-                mlflow.log_artifact(file_path, artifact_path=artifact_path)
+            # Save original dtypes if available
+            if self.original_dtypes is not None:
+                dtypes_path = os.path.join(tmpdir, "original_dtypes.json")
+                with open(dtypes_path, "w") as f:
+                    json.dump(self.original_dtypes, f, indent=2)
             else:
-                # Only start a new run if one isn't active
-                with mlflow.start_run("sklearn_preprocessing"):
-                    mlflow.log_artifact(file_path, artifact_path=artifact_path)
+                dtypes_path = None
 
-            LOGGER.debug(
-                f"Logged pipeline to MLflow: {artifact_path}/{self.PIPELINE_FILENAME}"
-            )
+            def log_artifacts():
+                mlflow.log_artifact(pipeline_path, artifact_path=artifact_path)
+                LOGGER.debug(
+                    f"Logged pipeline to MLflow at: {artifact_path}/{self.PIPELINE_FILENAME}"
+                )
+                if dtypes_path:
+                    mlflow.log_artifact(dtypes_path, artifact_path=artifact_path)
+                    LOGGER.debug(
+                        f"Logged original_dtypes to MLflow at: {artifact_path}/original_dtypes.json"
+                    )
+
+            # Respect existing run context or start a new one
+            if mlflow.active_run():
+                log_artifacts()
+            else:
+                with mlflow.start_run(run_name="sklearn_preprocessing"):
+                    log_artifacts()
 
     def validate(self, df: pd.DataFrame, raise_error: bool = True) -> bool:
         missing = df.isnull().sum()
@@ -160,11 +182,63 @@ class SklearnImputerWrapper:
     def load(
         cls, run_id: str, artifact_path: str = "sklearn_imputer"
     ) -> "SklearnImputerWrapper":
+        """
+        Load a trained SklearnImputerWrapper from MLflow, including pipeline and original dtypes.
+
+        Args:
+            run_id: MLflow run ID from training time.
+            artifact_path: Artifact subdirectory where the imputer and metadata were logged.
+
+        Returns:
+            SklearnImputerWrapper instance with pipeline and dtypes restored.
+        """
         instance = cls()
         LOGGER.info(f"Loading pipeline from MLflow run {run_id}...")
 
-        local_path = mlflow.artifacts.download_artifacts(
+        # Download pipeline artifact
+        local_pipeline_path = mlflow.artifacts.download_artifacts(
             run_id=run_id, artifact_path=f"{artifact_path}/{cls.PIPELINE_FILENAME}"
         )
-        instance.pipeline = joblib.load(local_path)
+        instance.pipeline = joblib.load(local_pipeline_path)
+
+        # Download original_dtypes JSON
+        try:
+            dtypes_path = mlflow.artifacts.download_artifacts(
+                run_id=run_id, artifact_path=f"{artifact_path}/original_dtypes.json"
+            )
+            with open(dtypes_path) as f:
+                instance.original_dtypes = json.load(f)
+            LOGGER.info("Successfully loaded original_dtypes from MLflow.")
+        except Exception as e:
+            LOGGER.warning(
+                f"Could not load original_dtypes.json for run {run_id}. Inference may have reduced type fidelity. ({e})"
+            )
+            instance.original_dtypes = None
+
         return instance
+
+    @classmethod
+    def load_and_transform(
+        cls,
+        df: pd.DataFrame,
+        *,
+        run_id: str,
+        artifact_path: str = "sklearn_imputer",
+        raise_on_nulls: bool = True,
+    ) -> pd.DataFrame:
+        """
+        Load a trained SklearnImputerWrapper from MLflow and apply it to the given DataFrame.
+
+        Args:
+            df: Raw input DataFrame to transform.
+            run_id: MLflow run ID where the imputer was logged.
+            artifact_path: Path within the run where pipeline and metadata are stored.
+            raise_on_nulls: If True, raises an error if transformed data has missing values.
+
+        Returns:
+            Transformed DataFrame with imputed and dtype-aligned features.
+        """
+        instance = cls.load(run_id=run_id, artifact_path=artifact_path)
+        transformed = instance.transform(df)
+        instance.validate(transformed, raise_error=raise_on_nulls)
+        return transformed

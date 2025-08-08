@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 import pytest
 from unittest import mock
 from student_success_tool.modeling.h2o_modeling import imputation
@@ -100,5 +101,18 @@ def test_pipeline_logged_to_mlflow(
     # Now call the method that triggers MLflow logging
     imputer.log_pipeline(artifact_path="test_artifact_path")
 
-    # Assert MLflow behavior
-    mock_log_artifact.assert_called_once()
+    # Expect both pipeline and original_dtypes to be logged
+    assert mock_log_artifact.call_count == 2
+
+    # Check that both were logged to the correct artifact path
+    artifact_paths = [
+        call.kwargs["artifact_path"] for call in mock_log_artifact.call_args_list
+    ]
+    assert all(path == "test_artifact_path" for path in artifact_paths)
+
+    # Optionally check filenames
+    logged_filenames = [
+        os.path.basename(call.args[0]) for call in mock_log_artifact.call_args_list
+    ]
+    assert "imputer_pipeline.joblib" in logged_filenames
+    assert "original_dtypes.json" in logged_filenames
