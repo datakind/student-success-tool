@@ -188,6 +188,9 @@ def main():
     )
     parser.set_defaults(fail_on_anomalies=True)
     args = parser.parse_args()
+    args.input_table_path = args.input_table_path.replace("___", "_")
+    args.input_schema_path = args.input_schema_path.replace("___", "_")
+    args.output_artifact_path = args.output_artifact_path.replace("___", "_")
 
     task = DataValidationTask()
 

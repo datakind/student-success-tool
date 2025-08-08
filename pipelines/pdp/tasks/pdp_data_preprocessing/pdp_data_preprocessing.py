@@ -271,10 +271,12 @@ def parse_arguments() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_arguments()
-    # hack replace any multiple _  if found in the databricks institution name
-    args.databricks_institution_name = args.databricks_institution_name.replace(
-        "___", "_"
-    )
+    args.databricks_institution_name = args.databricks_institution_name.replace("___", "_")
+    args.cohort_dataset_validated_path = args.cohort_dataset_validated_path.replace("___", "_")
+    args.course_dataset_validated_path = args.course_dataset_validated_path.replace("___", "_")
+    args.toml_file_path = args.toml_file_path.replace("___", "_")
+    args.custom_schemas_path = args.custom_schemas_path.replace("___", "_")
+
     try:
         sys.path.append(args.custom_schemas_path)
         sys.path.append(

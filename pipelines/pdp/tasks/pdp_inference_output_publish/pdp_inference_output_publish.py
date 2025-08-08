@@ -93,9 +93,7 @@ def main():
     logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser()
         # hack replace any multiple _  if found in the databricks institution name
-    args.databricks_institution_name = args.databricks_institution_name.replace(
-        "___", "_"
-    )
+
     parser.add_argument(
         "--DB_workspace", required=True, help="Databricks workspace of the task."
     )
@@ -121,6 +119,8 @@ def main():
         help="User's email who triggered the inference run.",
     )
     args = parser.parse_args()
+    args.databricks_institution_name = args.databricks_institution_name.replace("___", "_")
+
     w = WorkspaceClient()
     logging.info("Publishing files to GCP bucket")
     publish_inference_output_files(
