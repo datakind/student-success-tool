@@ -116,7 +116,7 @@ def extract_training_data_from_model(
     input_data_path = mlflow.artifacts.download_artifacts(
         run_id=data_run_id, artifact_path="inputs", dst_path=input_temp_dir
     )
-    df_loaded = pd.read_parquet(os.path.join(input_data_path, "train.parquet"))
+    df_loaded = pd.read_parquet(os.path.join(input_data_path, "full_dataset.parquet"))
     # Delete the temp data
     shutil.rmtree(input_temp_dir)
 
