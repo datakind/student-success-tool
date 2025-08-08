@@ -33,45 +33,51 @@ def run_h2o_automl_classification(
     client: t.Optional[MlflowClient] = None,
     **kwargs: object,
 ) -> tuple[str, H2OAutoML, h2o.H2OFrame, h2o.H2OFrame, h2o.H2OFrame]:
-    """
-    Runs H2O AutoML for classification, with sklearn-based imputation (leakage-safe).
-    """
     if client is None:
         client = MlflowClient()
 
     # Set and validate inputs
     seed = kwargs.pop("seed", 42)
     timeout_minutes = int(float(str(kwargs.pop("timeout_minutes", 5))))
-    exclude_cols = t.cast(list[str], kwargs.pop("exclude_cols", []))
-    split_col = str(kwargs.pop("split_col", "split"))
-    sample_weights_col = kwargs.pop("sample_weights_col", None)
+    exclude_cols: list[str] = [
+        c for c in kwargs.pop("exclude_cols", []) if c is not None
+    ]
+    split_col: str = str(kwargs.pop("split_col", "split"))
+    sample_weights_col = kwargs.pop(
+        "sample_weight_col", kwargs.pop("sample_weights_col", None)
+    )
     target_name = kwargs.pop("target_name", None)
     checkpoint_name = kwargs.pop("checkpoint_name", None)
     workspace_path = kwargs.pop("workspace_path", None)
-    primary_metric = primary_metric.lower()
+    metric = primary_metric.lower()
 
-    required = {
-        "target_name": target_name,
-        "checkpoint_name": checkpoint_name,
-        "workspace_path": workspace_path,
-    }
-    missing = [k for k, v in required.items() if not v]
-    if missing:
-        raise ValueError(f"Missing logging parameters: {', '.join(missing)}")
-
-    if target_col not in df.columns:
-        raise ValueError(f"Missing target_col '{target_col}' in DataFrame.")
-    if split_col not in df.columns:
-        raise ValueError(f"Missing split column '{split_col}' in DataFrame.")
-    if primary_metric not in VALID_H2O_METRICS:
+    if not all([target_name, checkpoint_name, workspace_path]):
         raise ValueError(
-            f"Invalid metric '{primary_metric}', must be one of {VALID_H2O_METRICS}."
+            "Missing logging parameters: target_name, checkpoint_name, workspace_path"
+        )
+    if target_col not in df or split_col not in df:
+        raise ValueError("Missing target_col or split column in DataFrame.")
+    if metric not in VALID_H2O_METRICS:
+        raise ValueError(
+            f"Invalid metric '{metric}', must be one of {VALID_H2O_METRICS}."
         )
 
+    # Ensure columns that need to be excluded are from training & imputation
     if student_id_col and student_id_col not in exclude_cols:
         exclude_cols.append(student_id_col)
 
-    # Set experiment
+    must_exclude = {target_col, split_col}
+    if sample_weights_col:
+        must_exclude.add(sample_weights_col)
+    for c in must_exclude:
+        if c not in exclude_cols:
+            exclude_cols.append(c)
+
+    missing_cols = [c for c in exclude_cols if c not in df.columns]
+    if missing_cols:
+        raise ValueError(f"exclude_cols contains missing columns: {missing_cols}")
+
+    # Set training experiment
     experiment_id = utils.set_or_create_experiment(
         workspace_path=str(workspace_path),
         institution_id=institution_id,
@@ -81,48 +87,44 @@ def run_h2o_automl_classification(
     )
 
     # Fit and apply sklearn imputation
-    LOGGER.info("Running sklearn-based imputation...")
+    LOGGER.info("Running sklearn-based imputation on feature columns only...")
     imputer = imputation.SklearnImputerWrapper()
-    imputer.fit(df[df[split_col] == "train"])
+    raw_model_features = [c for c in df.columns if c not in exclude_cols]
+    imputer.fit(df.loc[df[split_col] == "train", raw_model_features])
 
-    splits = ["train", "validate", "test"]
-    df_splits = {
-        split: imputer.transform(df[df[split_col] == split]) for split in splits
-    }
+    df_splits: dict[str, pd.DataFrame] = {}
+    for split in ("train", "validate", "test"):
+        part = df[df[split_col] == split]
+        X = imputer.transform(part[raw_model_features])
+        stitched = pd.concat([X, part[exclude_cols].reset_index(drop=True)], axis=1)
+        stitched.index = part.index  # keep original row order/labels
+        df_splits[split] = stitched
 
     # Convert to H2OFrames and fix dtypes
-    missing_flags = [col for col in df.columns if col.endswith("_missing_flag")]
-    h2o_splits = {
-        k: correct_h2o_dtypes(
-            h2o.H2OFrame(v),
-            v,
-            force_enum_cols=missing_flags,
-        )
-        for k, v in df_splits.items()
-    }
-    for frame in h2o_splits.values():
-        frame[target_col] = frame[target_col].asfactor()
+    h2o_splits: dict[str, h2o.H2OFrame] = {}
+    for k, v in df_splits.items():
+        missing_flags = [c for c in v.columns if c.endswith("_missing_flag")]
+        hf = h2o.H2OFrame(v)
+        hf = correct_h2o_dtypes(hf, v, force_enum_cols=missing_flags)
+        hf[target_col] = hf[target_col].asfactor()
+        h2o_splits[k] = hf
 
     train, valid, test = h2o_splits["train"], h2o_splits["validate"], h2o_splits["test"]
 
     # Run H2O AutoML
-    features = [
-        col
-        for col in df_splits["train"].columns
-        if col not in exclude_cols + [target_col]
-    ]
-    LOGGER.info(f"Running H2O AutoML with {len(features)} features...")
+    processed_model_features = list(X.columns)
+    LOGGER.info(f"Running H2O AutoML with {len(processed_model_features)} features...")
 
     aml = H2OAutoML(
         max_runtime_secs=timeout_minutes * 60,
-        sort_metric=primary_metric,
-        stopping_metric=primary_metric,
+        sort_metric=metric,
+        stopping_metric=metric,
         seed=seed,
         verbosity="info",
         include_algos=["XGBoost", "GBM", "GLM", "DRF"],
     )
     aml.train(
-        x=features,
+        x=processed_model_features,
         y=target_col,
         training_frame=train,
         validation_frame=valid,
@@ -132,7 +134,6 @@ def run_h2o_automl_classification(
 
     LOGGER.info(f"Best model: {aml.leader.model_id}")
 
-    # Log experiment
     utils.log_h2o_experiment(
         aml=aml,
         train=train,
