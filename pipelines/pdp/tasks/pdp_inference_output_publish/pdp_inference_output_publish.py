@@ -119,7 +119,7 @@ def main():
         help="User's email who triggered the inference run.",
     )
     args = parser.parse_args()
-    args.databricks_institution_name = args.databricks_institution_name.replace("___", "_")
+    # args.databricks_institution_name = args.databricks_institution_name.replace("___", "_")
 
     w = WorkspaceClient()
     logging.info("Publishing files to GCP bucket")
