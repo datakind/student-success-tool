@@ -254,11 +254,15 @@ class SklearnImputerWrapper:
             instance.input_feature_names = None
 
         # Restore output feature names if possible
-        try:
-            instance.output_feature_names = instance.pipeline.named_steps[
-                "imputer"
-            ].get_feature_names_out()
-        except Exception:
+        pipeline = instance.pipeline
+        if pipeline is not None:
+            try:
+                instance.output_feature_names = pipeline.named_steps[
+                    "imputer"
+                ].get_feature_names_out()
+            except Exception:
+                instance.output_feature_names = None
+        else:
             instance.output_feature_names = None
 
         return instance

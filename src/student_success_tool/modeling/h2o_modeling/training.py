@@ -39,13 +39,12 @@ def run_h2o_automl_classification(
     # Set and validate inputs
     seed = kwargs.pop("seed", 42)
     timeout_minutes = int(float(str(kwargs.pop("timeout_minutes", 5))))
-    exclude_cols: list[str] = [
-        c for c in kwargs.pop("exclude_cols", []) if c is not None
+    exclude_cols = [
+        c for c in t.cast(list[str], kwargs.pop("exclude_cols", [])) if c is not None
     ]
     split_col: str = str(kwargs.pop("split_col", "split"))
-    sample_weights_col = kwargs.pop(
-        "sample_weight_col", kwargs.pop("sample_weights_col", None)
-    )
+    sample_weight_col = t.cast(str | None, kwargs.pop("sample_weight_col", None))
+
     target_name = kwargs.pop("target_name", None)
     checkpoint_name = kwargs.pop("checkpoint_name", None)
     workspace_path = kwargs.pop("workspace_path", None)
@@ -66,9 +65,9 @@ def run_h2o_automl_classification(
     if student_id_col and student_id_col not in exclude_cols:
         exclude_cols.append(student_id_col)
 
-    must_exclude = {target_col, split_col}
-    if sample_weights_col:
-        must_exclude.add(sample_weights_col)
+    must_exclude: set[str] = {target_col, split_col}
+    if sample_weight_col:
+        must_exclude.add(sample_weight_col)
     for c in must_exclude:
         if c not in exclude_cols:
             exclude_cols.append(c)
@@ -129,7 +128,7 @@ def run_h2o_automl_classification(
         training_frame=train,
         validation_frame=valid,
         leaderboard_frame=test,
-        weights_column=sample_weights_col,
+        weights_column=sample_weight_col,
     )
 
     LOGGER.info(f"Best model: {aml.leader.model_id}")
