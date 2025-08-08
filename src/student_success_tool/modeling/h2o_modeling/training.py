@@ -95,6 +95,7 @@ def run_h2o_automl_classification(
     for split in ("train", "validate", "test"):
         part = df[df[split_col] == split]
         X = imputer.transform(part[raw_model_features])
+        LOGGER.info(f"X shape: {X.shape}, exclude_cols shape: {part[exclude_cols].shape}, part shape: {part.shape}")
         stitched = pd.concat([X, part[exclude_cols].reset_index(drop=True)], axis=1)
         stitched.index = part.index  # keep original row order/labels
         df_splits[split] = stitched
