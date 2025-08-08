@@ -164,6 +164,14 @@ class DataProcessingTask:
                 df_student_terms,
                 min_num_credits=self.cfg.preprocessing.checkpoint.min_num_credits,
             )
+        elif checkpoint_type == "first":
+            logging.info("Checkpoint type: first")
+            df_ckpt = checkpoints.pdp.first_student_terms(
+                df = df_student_terms,
+                student_id_cols=student_id_col,
+                sort_cols=self.cfg.preprocessing.checkpoint.sort_cols,
+                include_cols=self.cfg.preprocessing.checkpoint.include_cols,
+            )
 
         df_processed = pd.merge(
             df_ckpt, pd.Series(selected_students.index), how="inner", on=student_id_col
