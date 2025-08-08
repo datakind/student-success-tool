@@ -158,12 +158,6 @@ class DataProcessingTask:
                 enrollment_year_col="year_of_enrollment_at_cohort_inst",
                 valid_enrollment_year=1,
             )
-        elif checkpoint_type == "first_at_num_credits_earned":
-            logging.info("Checkpoint type: first_at_num_credits_earned")
-            df_ckpt = checkpoints.pdp.first_student_terms_at_num_credits_earned(
-                df_student_terms,
-                min_num_credits=self.cfg.preprocessing.checkpoint.min_num_credits,
-            )
         elif checkpoint_type == "first":
             logging.info("Checkpoint type: first")
             df_ckpt = checkpoints.pdp.first_student_terms(
@@ -172,7 +166,42 @@ class DataProcessingTask:
                 sort_cols=self.cfg.preprocessing.checkpoint.sort_cols,
                 include_cols=self.cfg.preprocessing.checkpoint.include_cols,
             )
+        elif checkpoint_type == "last":
+            logging.info("Checkpoint type: last")
+            df_ckpt = checkpoints.pdp.last_student_terms_in_enrollment_year(
+                df_student_terms,
+                enrollment_year=self.cfg.preprocessing.checkpoint.enrollment_year,
+                enrollment_year_col=self.cfg.preprocessing.checkpoint.enrollment_year_col,
+                student_id_cols=student_id_col,
+                sort_cols=self.cfg.preprocessing.checkpoint.sort_cols,
+                include_cols=self.cfg.preprocessing.checkpoint.include_cols,
+            )
+        elif checkpoint_type == "first_at_num_credits_earned":
+            logging.info("Checkpoint type: first_at_num_credits_earned")
+            df_ckpt = checkpoints.pdp.first_student_terms_at_num_credits_earned(
+                df_student_terms,
+                min_num_credits=self.cfg.preprocessing.checkpoint.min_num_credits,
+            )
 
+        elif checkpoint_type == "first_within_cohort":
+            logging.info("Checkpoint type: first_within_cohort")
+            df_ckpt = checkpoints.pdp.first_student_terms_within_cohort(
+                df_student_terms,
+                term_is_pre_cohort_col=self.cfg.preprocessing.checkpoint.term_is_pre_cohort_col,
+                student_id_cols=student_id_col,
+            )
+        elif checkpoint_type == "last_in_enrollment_year":
+            logging.info("Checkpoint type: last_in_enrollment_year")
+            df_ckpt = checkpoints.pdp.last_student_terms_in_enrollment_year(
+                df_student_terms,
+                enrollment_year=self.cfg.preprocessing.checkpoint.enrollment_year,
+                enrollment_year_col=self.cfg.preprocessing.checkpoint.enrollment_year_col,
+                student_id_cols=student_id_col,
+            )
+        else:
+            logging.error("Unknown checkpoint type: %s", checkpoint_type)
+            raise ValueError(f"Unknown checkpoint type: {checkpoint_type}")
+        
         df_processed = pd.merge(
             df_ckpt, pd.Series(selected_students.index), how="inner", on=student_id_col
         )
