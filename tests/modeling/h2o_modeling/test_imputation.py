@@ -101,8 +101,8 @@ def test_pipeline_logged_to_mlflow(
     # Now call the method that triggers MLflow logging
     imputer.log_pipeline(artifact_path="test_artifact_path")
 
-    # Expect both pipeline and original_dtypes to be logged
-    assert mock_log_artifact.call_count == 2
+    # Expect pipeline,input_dtypes, and input_feature_names to be logged
+    assert mock_log_artifact.call_count == 3
 
     # Check that both were logged to the correct artifact path
     artifact_paths = [
@@ -115,4 +115,5 @@ def test_pipeline_logged_to_mlflow(
         os.path.basename(call.args[0]) for call in mock_log_artifact.call_args_list
     ]
     assert "imputer_pipeline.joblib" in logged_filenames
-    assert "original_dtypes.json" in logged_filenames
+    assert "input_dtypes.json" in logged_filenames
+    assert "input_feature_names.json" in logged_filenames

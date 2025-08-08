@@ -33,13 +33,15 @@ class SklearnImputerWrapper:
 
     def __init__(self, add_missing_flags: bool = True):
         self.pipeline = None
-        self.original_dtypes: t.Optional[dict[str, str]] = None
+        self.input_dtypes: t.Optional[dict[str, str]] = None
         self.add_missing_flags = add_missing_flags
-        self.feature_names = None
+        self.input_feature_names = None
+        self.output_feature_names = None
 
-    def fit(self, df: pd.DataFrame, artifact_path: str = "sklearn_imputer") -> Pipeline:
+    def fit(self, df: pd.DataFrame) -> Pipeline:
         df = df.replace({None: np.nan})
-        self.original_dtypes = {k: str(v) for k, v in df.dtypes.items()}
+        self.input_dtypes = {k: str(v) for k, v in df.dtypes.items()}
+        self.input_feature_names = df.columns.tolist()
 
         if self.add_missing_flags:
             df = self._add_missingness_flags(df)
@@ -48,7 +50,7 @@ class SklearnImputerWrapper:
         pipeline.fit(df)
         self.pipeline = pipeline
         if self.pipeline is not None:
-            self.feature_names = self.pipeline.named_steps[
+            self.output_feature_names = self.pipeline.named_steps[
                 "imputer"
             ].get_feature_names_out()
 
@@ -60,21 +62,38 @@ class SklearnImputerWrapper:
 
         df = df.replace({None: np.nan})
 
+        # Filter and reorder columns to match training-time input
+        if self.input_feature_names is not None:
+            missing = set(self.input_feature_names) - set(df.columns)
+            if missing:
+                raise ValueError(f"Missing required input features: {missing}")
+            df = df[self.input_feature_names]
+
+        # Add missingness flags if enabled
         if self.add_missing_flags:
             df = self._add_missingness_flags(df)
 
         transformed = self.pipeline.transform(df)
-        result = pd.DataFrame(transformed, columns=self.feature_names, index=df.index)
 
-        # Restore dtypes
+        # Use stored feature names from fit()
+        if self.output_feature_names is None:
+            raise ValueError(
+                "Output feature names not set. Did you forget to call `fit()`?"
+            )
+
+        result = pd.DataFrame(
+            transformed, columns=self.output_feature_names, index=df.index
+        )
+
+        # Restore data types where applicable
         for col in result.columns:
             try:
                 result[col] = pd.to_numeric(result[col])
             except (ValueError, TypeError):
                 pass
 
-            if self.original_dtypes and col in self.original_dtypes:
-                orig_dtype = self.original_dtypes[col]
+            if self.input_dtypes and col in self.input_dtypes:
+                orig_dtype = self.input_dtypes[col]
                 if is_bool_dtype(orig_dtype):
                     uniques = set(result[col].dropna().unique())
                     if uniques.issubset({0, 1, True, False}):
@@ -122,7 +141,7 @@ class SklearnImputerWrapper:
 
     def log_pipeline(self, artifact_path: str) -> None:
         """
-        Logs the fitted pipeline and original dtypes to MLflow as artifacts.
+        Logs the fitted pipeline and input dtypes to MLflow as artifacts.
 
         Args:
             artifact_path: MLflow artifact subdirectory (e.g., "sklearn_imputer")
@@ -132,13 +151,21 @@ class SklearnImputerWrapper:
             pipeline_path = os.path.join(tmpdir, self.PIPELINE_FILENAME)
             joblib.dump(self.pipeline, pipeline_path)
 
-            # Save original dtypes if available
-            if self.original_dtypes is not None:
-                dtypes_path = os.path.join(tmpdir, "original_dtypes.json")
+            # Save input dtypes if available
+            if self.input_dtypes is not None:
+                dtypes_path = os.path.join(tmpdir, "input_dtypes.json")
                 with open(dtypes_path, "w") as f:
-                    json.dump(self.original_dtypes, f, indent=2)
+                    json.dump(self.input_dtypes, f, indent=2)
             else:
                 dtypes_path = None
+
+            # Save input feature names if available
+            if self.input_feature_names is not None:
+                features_path = os.path.join(tmpdir, "input_feature_names.json")
+                with open(features_path, "w") as f:
+                    json.dump(self.input_feature_names, f, indent=2)
+            else:
+                features_path = None
 
             def log_artifacts():
                 mlflow.log_artifact(pipeline_path, artifact_path=artifact_path)
@@ -148,7 +175,12 @@ class SklearnImputerWrapper:
                 if dtypes_path:
                     mlflow.log_artifact(dtypes_path, artifact_path=artifact_path)
                     LOGGER.debug(
-                        f"Logged original_dtypes to MLflow at: {artifact_path}/original_dtypes.json"
+                        f"Logged input_dtypes to MLflow at: {artifact_path}/input_dtypes.json"
+                    )
+                if features_path:
+                    mlflow.log_artifact(features_path, artifact_path=artifact_path)
+                    LOGGER.debug(
+                        f"Logged input_feature_names to MLflow at: {artifact_path}/input_feature_names.json"
                     )
 
             # Respect existing run context or start a new one
@@ -183,37 +215,51 @@ class SklearnImputerWrapper:
         cls, run_id: str, artifact_path: str = "sklearn_imputer"
     ) -> "SklearnImputerWrapper":
         """
-        Load a trained SklearnImputerWrapper from MLflow, including pipeline and original dtypes.
-
-        Args:
-            run_id: MLflow run ID from training time.
-            artifact_path: Artifact subdirectory where the imputer and metadata were logged.
-
-        Returns:
-            SklearnImputerWrapper instance with pipeline and dtypes restored.
+        Load a trained SklearnImputerWrapper from MLflow, including pipeline and input metadata.
         """
         instance = cls()
         LOGGER.info(f"Loading pipeline from MLflow run {run_id}...")
 
-        # Download pipeline artifact
+        # Load pipeline
         local_pipeline_path = mlflow.artifacts.download_artifacts(
             run_id=run_id, artifact_path=f"{artifact_path}/{cls.PIPELINE_FILENAME}"
         )
         instance.pipeline = joblib.load(local_pipeline_path)
 
-        # Download original_dtypes JSON
+        # Load input_dtypes
         try:
             dtypes_path = mlflow.artifacts.download_artifacts(
-                run_id=run_id, artifact_path=f"{artifact_path}/original_dtypes.json"
+                run_id=run_id, artifact_path=f"{artifact_path}/input_dtypes.json"
             )
             with open(dtypes_path) as f:
-                instance.original_dtypes = json.load(f)
-            LOGGER.info("Successfully loaded original_dtypes from MLflow.")
+                instance.input_dtypes = json.load(f)
+            LOGGER.info("Successfully loaded input_dtypes from MLflow.")
+        except Exception as e:
+            LOGGER.warning(f"Could not load input_dtypes.json for run {run_id}. ({e})")
+            instance.input_dtypes = None
+
+        # Load input_feature_names
+        try:
+            features_path = mlflow.artifacts.download_artifacts(
+                run_id=run_id, artifact_path=f"{artifact_path}/input_feature_names.json"
+            )
+            with open(features_path) as f:
+                instance.input_feature_names = json.load(f)
+            LOGGER.info("Successfully loaded input_feature_names from MLflow.")
         except Exception as e:
             LOGGER.warning(
-                f"Could not load original_dtypes.json for run {run_id}. Inference may have reduced type fidelity. ({e})"
+                f"Could not load input_feature_names.json for run {run_id}. "
+                f"Transformation input alignment may be incorrect. ({e})"
             )
-            instance.original_dtypes = None
+            instance.input_feature_names = None
+
+        # Restore output feature names if possible
+        try:
+            instance.output_feature_names = instance.pipeline.named_steps[
+                "imputer"
+            ].get_feature_names_out()
+        except Exception:
+            instance.output_feature_names = None
 
         return instance
 
@@ -228,17 +274,17 @@ class SklearnImputerWrapper:
     ) -> pd.DataFrame:
         """
         Load a trained SklearnImputerWrapper from MLflow and apply it to the given DataFrame.
-
-        Args:
-            df: Raw input DataFrame to transform.
-            run_id: MLflow run ID where the imputer was logged.
-            artifact_path: Path within the run where pipeline and metadata are stored.
-            raise_on_nulls: If True, raises an error if transformed data has missing values.
-
-        Returns:
-            Transformed DataFrame with imputed and dtype-aligned features.
         """
         instance = cls.load(run_id=run_id, artifact_path=artifact_path)
+
+        # Filter and/or reorder columns if input_feature_names are available
+        if instance.input_feature_names:
+            missing = set(instance.input_feature_names) - set(df.columns)
+            if missing:
+                raise ValueError(f"Missing required input features: {missing}")
+
+            df = df[instance.input_feature_names]
+
         transformed = instance.transform(df)
         instance.validate(transformed, raise_error=raise_on_nulls)
         return transformed
