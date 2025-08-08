@@ -66,35 +66,23 @@ class SklearnImputerWrapper:
         if self.pipeline is None:
             raise ValueError("Pipeline not fitted. Call `fit()` first.")
 
+        orig_index = df.index  # Lock in row order
         df = df.replace({None: np.nan})
 
-        # Filter/reorder to match original feature list
+        # Filter/reorder to match training-time input
         if self.input_feature_names is not None:
             missing = set(self.input_feature_names) - set(df.columns)
             if missing:
                 raise ValueError(f"Missing required input features: {missing}")
             df = df[self.input_feature_names]
 
-        # Add locked missingness flag columns from fit-time only
+        # Add only the missingness flags from fit-time
         if self.add_missing_flags:
             for col in self.missing_flag_cols:
                 if col not in df:
                     df[col] = False
 
-            # Drift detection -> check if any original non-flag columns now have NaNs
-            drift_cols = [
-                col for col in self.input_feature_names if df[col].isnull().any()
-            ]
-            if drift_cols:
-                LOGGER.warning(
-                    f"Data drift detected: previously complete columns now have NaNs: {drift_cols}"
-                )
-
-        # Maintain column order from fit
-        if self.input_feature_names:
-            df = df[self.input_feature_names + self.missing_flag_cols]
-
-        # Maintain column order from fit
+        # Maintain exact column order from fit
         if self.input_feature_names:
             df = df[self.input_feature_names + self.missing_flag_cols]
 
@@ -112,11 +100,12 @@ class SklearnImputerWrapper:
                 "Output feature names not set. Did you forget to call `fit()`?"
             )
 
+        # Build DataFrame with original index
         result = pd.DataFrame(
-            transformed, columns=self.output_feature_names, index=df.index
+            transformed, columns=self.output_feature_names, index=orig_index
         )
 
-        # Restore data types
+        # --- Restore data types as before ---
         for col in result.columns:
             try:
                 result[col] = pd.to_numeric(result[col])
@@ -129,6 +118,13 @@ class SklearnImputerWrapper:
                     uniques = set(result[col].dropna().unique())
                     if uniques.issubset({0, 1, True, False}):
                         result[col] = result[col].astype(bool)
+
+            if result[col].dtype == "object":
+                sample_vals = result[col].dropna().astype(str).head(10)
+                if all(v.replace(".", "", 1).isdigit() for v in sample_vals):
+                    LOGGER.warning(
+                        f"Column '{col}' is object but contains numeric-looking values after imputation."
+                    )
 
         self.validate(result)
         return result
