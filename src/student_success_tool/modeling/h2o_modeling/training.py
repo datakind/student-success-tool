@@ -136,8 +136,8 @@ def run_h2o_automl_classification(
             min_val = col.min()
             max_val = col.max()
             LOGGER.info(
-                "[%s] rows=%d, NA=%d, min=%.5f, max=%.5f, type=%s",
-                split_name, hf.nrows, na_count, min_val, max_val, col.type()
+                "[%s] rows=%d, NA=%d, min=%.5f, max=%.5f",
+                split_name, hf.nrows, na_count, min_val, max_val
             )
 
     aml = H2OAutoML(
