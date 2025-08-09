@@ -133,6 +133,7 @@ def run_h2o_automl_classification(
         verbosity="info",
         include_algos=["XGBoost", "GBM", "GLM", "DRF"],
         nfolds=0, # disable CV, use validation frame for early stopping
+        balance_classes=True,
     )
     aml.train(
         x=processed_model_features,
@@ -140,7 +141,6 @@ def run_h2o_automl_classification(
         training_frame=train,
         validation_frame=valid,
         leaderboard_frame=test,
-        weights_column=sample_weight_col,
     )
 
     LOGGER.info(f"Best model: {aml.leader.model_id}")
