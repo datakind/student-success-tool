@@ -18,6 +18,7 @@ import mlflow
 import pandas as pd
 import sys
 import importlib
+import tomllib
 
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
@@ -51,6 +52,8 @@ class DataProcessingTask:
         self.spark_session = self.get_spark_session()
         self.args = args
         self.cfg = self.read_config(self.args.toml_file_path)
+        with open(self.args.inference_toml_file_path, "rb") as f:
+            self.inf_cfg = tomllib.load(f)
 
     def get_spark_session(self) -> DatabricksSession | None:
         """
@@ -112,7 +115,7 @@ class DataProcessingTask:
             raise
 
     def select_inference_cohort(
-        self, df_course: pd.DataFrame, df_cohort: pd.DataFrame, cohorts_list: list[str]
+        self, df_course: pd.DataFrame, df_cohort: pd.DataFrame
     )-> tuple[pd.DataFrame, pd.DataFrame]:
         """
         Selects the specified cohorts from the course and cohort DataFrames.
@@ -128,6 +131,8 @@ class DataProcessingTask:
         Raises:
             ValueError: If filtering results in empty DataFrames.
         """
+        cohorts_list = self.inf_cfg["inference_cohort"]
+
         #We only have cohort and cohort term split up, so combine and strip to lower to prevent cap issues
         df_course['cohort_selection'] = df_course['cohort_term'].astype(str).str.lower() + " " + df_course['cohort'].astype(str).str.lower()
         df_cohort['cohort_selection'] = df_cohort['cohort_term'].astype(str).str.lower() + " " + df_cohort['cohort'].astype(str).str.lower()
@@ -171,7 +176,8 @@ class DataProcessingTask:
         student_id_col = self.cfg.student_id_col
 
         #Select correct cohort 
-        df_course, df_cohort = self.select_inference_cohort(df_course, df_cohort, ['fall 2024-25'])
+
+        df_course, df_cohort = self.select_inference_cohort(df_course, df_cohort)
 
         # Create student-term dataset
         df_student_terms = preprocessing.pdp.make_student_term_dataset(
@@ -331,6 +337,9 @@ def parse_arguments() -> argparse.Namespace:
         "--toml_file_path", type=str, required=True, help="Path to configuration file"
     )
     parser.add_argument(
+        "--inference_toml_file_path", type=str, required=True, help="Path to configuration file"
+    )
+    parser.add_argument(
         "--custom_schemas_path",
         required=False,
         help="Folder path to store custom schemas folders",
@@ -340,11 +349,6 @@ def parse_arguments() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_arguments()
-    # args.databricks_institution_name = args.databricks_institution_name.replace("___", "_")
-    # args.cohort_dataset_validated_path = args.cohort_dataset_validated_path.replace("___", "_")
-    # args.course_dataset_validated_path = args.course_dataset_validated_path.replace("___", "_")
-    # args.toml_file_path = args.toml_file_path.replace("___", "_")
-    # args.custom_schemas_path = args.custom_schemas_path.replace("___", "_")
 
     try:
         sys.path.append(args.custom_schemas_path)
@@ -352,7 +356,6 @@ if __name__ == "__main__":
             f"/Volumes/staging_sst_01/{args.databricks_institution_name}_gold/gold_volume/inference_inputs"
         )
         schemas = importlib.import_module("schemas")
-        # schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
         logging.info("Running task with custom schema")
     except Exception:
         from student_success_tool.dataio.schemas import pdp as schemas
