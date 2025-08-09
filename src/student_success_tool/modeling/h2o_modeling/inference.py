@@ -68,10 +68,10 @@ def predict_probs_h2o(
             raise ValueError(
                 f"pos_label {pos_label_str} not found in prediction output columns: {pred.columns}"
             )
-        return pred[pos_label_str].values
+        return np.array(pred[pos_label_str].values)
     else:
         prob_cols = [col for col in pred.columns if col != "predict"]
-        return pred[prob_cols].values
+        return np.array(pred[prob_cols].values)
 
 
 def compute_h2o_shap_contributions(

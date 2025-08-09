@@ -4,6 +4,8 @@ import pandas as pd
 from student_success_tool.modeling.h2o_modeling import utils
 
 
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.log_param")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.log_metric")
 @mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.log_artifact")
 @mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.start_run")
 @mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.active_run")
@@ -13,6 +15,8 @@ def test_log_h2o_experiment_logs_metrics(
     mock_active_run,
     mock_start_run,
     mock_log_artifact,
+    mock_log_metric,
+    mock_log_param,
 ):
     mock_aml = mock.MagicMock()
     mock_aml.leaderboard.as_data_frame.return_value = pd.DataFrame(

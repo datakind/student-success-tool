@@ -37,7 +37,7 @@ class SklearnImputerWrapper:
         self.add_missing_flags = add_missing_flags
         self.input_feature_names: t.Optional[list[str]] = None
         self.output_feature_names: t.Optional[list[str]] = None
-        self.missing_flag_cols: list[str] = []
+        self.missing_flag_cols: t.Optional[list[str]] = None
 
     def fit(self, df: pd.DataFrame) -> Pipeline:
         df = df.replace({None: np.nan})

@@ -92,18 +92,23 @@ def run_h2o_automl_classification(
     imputer.fit(df.loc[df[split_col] == "train", raw_model_features])
 
     df_splits: dict[str, pd.DataFrame] = {}
-    for split in ("train", "validate", "test"):
-        part = df[df[split_col] == split]
-        X = imputer.transform(part[raw_model_features])
+    for split_name in ("train", "validate", "test"):
+        df_split = df[df[split_col] == split_name]
+        X_transformed = imputer.transform(df_split[raw_model_features])
+
         LOGGER.info(
-            f"X shape: {X.shape}, exclude_cols shape: {part[exclude_cols].shape}, part shape: {part.shape}"
+            f"X_transformed shape: {X_transformed.shape}, "
+            f"exclude_cols shape: {df_split[exclude_cols].shape}, "
+            f"original split shape: {df_split.shape}"
         )
+
         # Force imputer output to have the same index as the original split
-        X.index = part.index
-        # Concat now preserves row order without introducing duplicates
-        stitched = pd.concat([X, part[exclude_cols]], axis=1)
-        # No need to reset index again — it's already aligned
-        df_splits[split] = stitched
+        X_transformed.index = df_split.index
+
+        # Combine transformed features with excluded columns
+        df_split_processed = pd.concat([X_transformed, df_split[exclude_cols]], axis=1)
+
+        df_splits[split_name] = df_split_processed
 
     # Convert to H2OFrames and fix dtypes
     h2o_splits: dict[str, h2o.H2OFrame] = {}
@@ -117,8 +122,27 @@ def run_h2o_automl_classification(
     train, valid, test = h2o_splits["train"], h2o_splits["validate"], h2o_splits["test"]
 
     # Run H2O AutoML
-    processed_model_features = list(X.columns)
+    processed_model_features = [c for c in train.columns if c not in exclude_cols]
     LOGGER.info(f"Running H2O AutoML with {len(processed_model_features)} features...")
+
+    if sample_weight_col:
+        LOGGER.info("Checking weight column '%s' in all splits...", sample_weight_col)
+        for split_name, hf in [("train", train), ("valid", valid), ("test", test)]:
+            if sample_weight_col not in hf.columns:
+                LOGGER.warning("[%s] Missing weight column '%s'", split_name, sample_weight_col)
+                continue
+            col = hf[sample_weight_col]
+            # Basic stats
+            na_count = col.isna().sum()
+            min_val = col.min()
+            max_val = col.max()
+            nrows = hf.nrows
+            LOGGER.info(
+                "[%s] rows=%d, NA=%d, min=%.5f, max=%.5f",
+                split_name, nrows, na_count, min_val, max_val
+            )
+            # For extra safety, check type
+            LOGGER.info("[%s] H2O type for '%s': %s", split_name, sample_weight_col, col.type)
 
     aml = H2OAutoML(
         max_runtime_secs=timeout_minutes * 60,
