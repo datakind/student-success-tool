@@ -125,21 +125,6 @@ def run_h2o_automl_classification(
     processed_model_features = [c for c in train.columns if c not in exclude_cols]
     LOGGER.info(f"Running H2O AutoML with {len(processed_model_features)} features...")
 
-    if sample_weight_col:
-        LOGGER.info("Checking weight column '%s' in all splits...", sample_weight_col)
-        for split_name, hf in [("train", train), ("valid", valid), ("test", test)]:
-            if sample_weight_col not in hf.columns:
-                LOGGER.warning("[%s] Missing weight column '%s'", split_name, sample_weight_col)
-                continue
-            col = hf[sample_weight_col]
-            na_count = col.isna().sum()
-            min_val = col.min()
-            max_val = col.max()
-            LOGGER.info(
-                "[%s] rows=%d, NA=%d, min=%.5f, max=%.5f",
-                split_name, hf.nrows, na_count, min_val, max_val
-            )
-
     aml = H2OAutoML(
         max_runtime_secs=timeout_minutes * 60,
         sort_metric=metric,
@@ -147,6 +132,7 @@ def run_h2o_automl_classification(
         seed=seed,
         verbosity="info",
         include_algos=["XGBoost", "GBM", "GLM", "DRF"],
+        nfolds=0, # disable CV, use validation frame for early stopping
     )
     aml.train(
         x=processed_model_features,
