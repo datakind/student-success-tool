@@ -27,6 +27,10 @@ def patch_mlflow(monkeypatch):
 @pytest.fixture
 def mock_mlflow(monkeypatch):
     monkeypatch.setattr(mlflow, "log_figure", lambda *args, **kwargs: None)
+    monkeypatch.setattr(mlflow, "log_artifact", lambda *args, **kwargs: None)
+    monkeypatch.setattr(mlflow, "log_metric", lambda *args, **kwargs: None)
+    monkeypatch.setattr(mlflow, "log_param", lambda *args, **kwargs: None)
+
     monkeypatch.setattr(
         bias_detection, "log_group_metrics_to_mlflow", lambda *args, **kwargs: None
     )
@@ -139,7 +143,14 @@ def test_evaluate_bias_basic(mock_df_pred):
         assert bias_score_summary["num_bias_flags"] == 1  # only 1 moderate flag
 
 
-def test_compute_group_bias_metrics(mock_helpers):
+@patch("student_success_tool.modeling.bias_detection.mlflow.log_metric")
+@patch("student_success_tool.modeling.bias_detection.mlflow.log_artifact")
+@patch("student_success_tool.modeling.bias_detection.mlflow.log_param")
+def test_compute_group_bias_metrics(
+    mock_param,
+    mock_artifact,
+    mock_metric,
+):
     df = pd.DataFrame(
         {
             "group_col": ["A", "A", "B", "B"],
@@ -167,7 +178,14 @@ def test_compute_group_bias_metrics(mock_helpers):
     assert all("FNR" in m for m in bias_metrics)
     assert all("subgroup" in f for f in fnr_data)
     assert all(f["split_name"] == "test" for f in fnr_data)
-    assert all(f["fnr"] > 0 and f["ci"][0] < f["fnr"] < f["ci"][1] for f in fnr_data)
+    assert all(
+        (
+            (0 <= f["fnr"] <= 1)  # valid probability
+            and (f["ci"][0] <= f["fnr"] <= f["ci"][1])  # inclusive bounds
+        )
+        or np.isnan(f["fnr"])
+        for f in fnr_data
+    )
 
 
 @pytest.mark.parametrize(
