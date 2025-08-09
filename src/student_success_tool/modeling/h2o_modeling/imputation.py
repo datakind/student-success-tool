@@ -289,6 +289,21 @@ class SklearnImputerWrapper:
             )
             instance.input_feature_names = None
 
+        # Load missingness_flags from fit()
+        try:
+            flags_path = mlflow.artifacts.download_artifacts(
+                run_id=run_id, artifact_path=f"{artifact_path}/missing_flag_cols.json"
+            )
+            with open(flags_path) as f:
+                instance.missing_flag_cols = json.load(f)
+            LOGGER.info("Successfully loaded missing_flag_cols from MLflow.")
+        except Exception as e:
+            LOGGER.warning(
+                f"Could not load missing_flag_cols.json for run {run_id}. "
+                f"Missing flags may have been generated incorrectly. ({e})"
+            )
+            instance.missing_flag_cols = None
+
         # Restore output feature names if possible
         pipeline = instance.pipeline
         if pipeline is not None:

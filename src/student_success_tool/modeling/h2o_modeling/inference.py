@@ -2,6 +2,7 @@ import logging
 import typing as t
 import re
 
+import numpy as np
 import pandas as pd
 from pandas.api.types import (
     is_object_dtype,
@@ -20,9 +21,57 @@ def get_h2o_used_features(model: H2OEstimator) -> t.List[str]:
     """
     Extracts the actual feature names used by the H2O model (excluding dropped/constant columns).
     """
-    # The last name is usually the response/target variable
-    feature_names = model._model_json["output"]["names"][:-1]
-    return list(feature_names)
+    names = list(model._model_json["output"]["names"][:-1])
+
+    # Pull params from either location
+    params: dict = {}
+    for key in ("actual_params", "_parms"):
+        p = getattr(model, key, None)
+        if isinstance(p, dict):
+            params.update(p)
+
+    # Known non-predictor cols that can appear in names
+    non_predictors = set()
+    for k in ("weights_column", "offset_column", "fold_column"):
+        v = params.get(k)
+        if isinstance(v, str) and v:
+            non_predictors.add(v)
+
+    return [c for c in names if c not in non_predictors]
+
+
+def predict_probs_h2o(
+    features: pd.DataFrame | np.ndarray,
+    model: H2OEstimator,
+    *,
+    feature_names: t.Optional[list[str]] = None,
+    pos_label: t.Optional[bool | str] = None,
+    dtypes: t.Optional[dict[str, object]] = None,
+) -> np.ndarray:
+    """
+    Predict target probabilities using an H2O model.
+    """
+    if isinstance(features, np.ndarray):
+        if feature_names is None:
+            raise ValueError("feature_names must be provided when using a numpy array.")
+        features = pd.DataFrame(features, columns=feature_names)
+
+    if dtypes:
+        features = features.astype(dtypes)
+
+    h2o_features = h2o.H2OFrame(features)
+    pred = model.predict(h2o_features).as_data_frame()
+
+    if pos_label is not None:
+        pos_label_str = str(pos_label)
+        if pos_label_str not in pred.columns:
+            raise ValueError(
+                f"pos_label {pos_label_str} not found in prediction output columns: {pred.columns}"
+            )
+        return pred[pos_label_str].values
+    else:
+        prob_cols = [col for col in pred.columns if col != "predict"]
+        return pred[prob_cols].values
 
 
 def compute_h2o_shap_contributions(
