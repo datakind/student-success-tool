@@ -112,7 +112,7 @@ class DataProcessingTask:
             raise
 
     def select_inference_cohort(
-        df_course: pd.DataFrame, df_cohort: pd.DataFrame, cohorts_list: list[str]
+        self, df_course: pd.DataFrame, df_cohort: pd.DataFrame, cohorts_list: list[str]
     )-> tuple[pd.DataFrame, pd.DataFrame]:
         """
         Selects the specified cohorts from the course and cohort DataFrames.
