@@ -137,9 +137,8 @@ def run_h2o_automl_classification(
             max_val = col.max()
             LOGGER.info(
                 "[%s] rows=%d, NA=%d, min=%.5f, max=%.5f, type=%s",
-                split_name, hf.nrows, na_count, min_val, max_val, col.type
+                split_name, hf.nrows, na_count, min_val, max_val, col.type()
             )
-
 
     aml = H2OAutoML(
         max_runtime_secs=timeout_minutes * 60,
