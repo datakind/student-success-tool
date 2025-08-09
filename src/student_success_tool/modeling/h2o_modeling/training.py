@@ -132,17 +132,14 @@ def run_h2o_automl_classification(
                 LOGGER.warning("[%s] Missing weight column '%s'", split_name, sample_weight_col)
                 continue
             col = hf[sample_weight_col]
-            # Basic stats
             na_count = col.isna().sum()
             min_val = col.min()
             max_val = col.max()
-            nrows = hf.nrows
             LOGGER.info(
-                "[%s] rows=%d, NA=%d, min=%.5f, max=%.5f",
-                split_name, nrows, na_count, min_val, max_val
+                "[%s] rows=%d, NA=%d, min=%.5f, max=%.5f, type=%s",
+                split_name, hf.nrows, na_count, min_val, max_val, col.type
             )
-            # For extra safety, check type
-            LOGGER.info("[%s] H2O type for '%s': %s", split_name, sample_weight_col, col.type)
+
 
     aml = H2OAutoML(
         max_runtime_secs=timeout_minutes * 60,
