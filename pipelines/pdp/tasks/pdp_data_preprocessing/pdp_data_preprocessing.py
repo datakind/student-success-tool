@@ -52,6 +52,7 @@ class DataProcessingTask:
         self.spark_session = self.get_spark_session()
         self.args = args
         self.cfg = self.read_config(self.args.toml_file_path)
+        #hack - remove when we move this to the main config
         with open(self.args.inference_toml_file_path, "rb") as f:
             self.inf_cfg = tomllib.load(f)
 
@@ -131,6 +132,7 @@ class DataProcessingTask:
         Raises:
             ValueError: If filtering results in empty DataFrames.
         """
+        #change to main config when its updated
         cohorts_list = self.inf_cfg["inference_cohort"]
 
         #We only have cohort and cohort term split up, so combine and strip to lower to prevent cap issues

@@ -374,7 +374,7 @@ class ModelInferenceTask:
         df_processed = dataio.from_delta_table(
             self.args.processed_dataset_path, spark_session=self.spark_session
         )
-        df_processed = df_processed[:30]
+        # df_processed = df_processed[:30] # this is to subset for testing since shap takes forever, turn off for production
         unique_ids = df_processed[self.cfg.student_id_col]
 
         model = self.load_mlflow_model()
@@ -409,7 +409,6 @@ class ModelInferenceTask:
                 f"now cfg.model.experiment_id = {self.cfg.model.experiment_id}"
             )
             with mlflow.start_run(run_id=self.cfg.model.run_id):
-                # full_model_name = f"{self.args.DB_workspace}.{self.args.databricks_institution_name}_gold.{self.args.model_name}"
                 # --- SHAP Summary Plot ---
                 shap_fig = plot_shap_beeswarm(shap_values)
 
@@ -560,14 +559,6 @@ def parse_arguments() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_arguments()
-        # hack replace any multiple _  if found in the databricks institution name
-    # args.databricks_institution_name = args.databricks_institution_name.replace("___", "_")
-    # args.job_root_dir = args.job_root_dir.replace("___", "_")
-    # args.toml_file_path = args.toml_file_path.replace("___", "_")
-    # args.processed_dataset_path = args.processed_dataset_path.replace("___", "_")
-    # args.modeling_table_path = args.modeling_table_path.replace("___", "_")
-    # args.custom_schemas_path = args.custom_schemas_path.replace("___", "_")
-
     try:
         sys.path.append(args.custom_schemas_path)
         schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
