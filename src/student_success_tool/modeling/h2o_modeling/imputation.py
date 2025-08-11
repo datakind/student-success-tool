@@ -15,6 +15,7 @@ from pandas.api.types import (
     is_numeric_dtype,
     is_bool_dtype,
     is_categorical_dtype,
+    is_integer_dtype,
     is_object_dtype,
     pandas_dtype,
 )
@@ -181,25 +182,41 @@ class SklearnImputerWrapper:
         skew_vals = df.select_dtypes(include="number").skew(numeric_only=True)
 
         for col in df.columns:
-            if df[col].isnull().sum() == 0:
-                strategy = "passthrough"
-            elif is_bool_dtype(df[col]):
+            s = df[col]
+            n_obs = s.notna().sum()
+
+            # 1) All NaNs -> constant fill
+            if n_obs == 0:
+                if is_bool_dtype(s):
+                    imputer = SimpleImputer(strategy="constant", fill_value=False)
+                elif is_numeric_dtype(s):
+                    fill_val = 0 if is_integer_dtype(s) else 0.0
+                    imputer = SimpleImputer(strategy="constant", fill_value=fill_val)
+                else:
+                    imputer = SimpleImputer(strategy="constant", fill_value="missing")
+                transformers.append((col, imputer, [col]))
+                continue
+
+            # 2) No NaNs -> passthrough
+            if not s.isna().any():
+                transformers.append((col, "passthrough", [col]))
+                continue
+
+            # 3) Some NaNs -> choose strategy by dtype (check skew for numerics)
+            if is_bool_dtype(s):
                 strategy = "most_frequent"
-            elif is_numeric_dtype(df[col]):
+            elif is_numeric_dtype(s):
                 skew = skew_vals.get(col, 0)
                 strategy = (
                     "median" if abs(skew) >= self.DEFAULT_SKEW_THRESHOLD else "mean"
                 )
-            elif is_categorical_dtype(df[col]) or is_object_dtype(df[col]):
+            elif is_categorical_dtype(s) or is_object_dtype(s):
                 strategy = "most_frequent"
             else:
                 strategy = "most_frequent"
 
-            if strategy == "passthrough":
-                transformers.append((col, "passthrough", [col]))
-            else:
-                imputer = SimpleImputer(strategy=strategy)
-                transformers.append((col, imputer, [col]))
+            imputer = SimpleImputer(strategy=strategy)
+            transformers.append((col, imputer, [col]))
 
         ct = ColumnTransformer(
             transformers, remainder="passthrough", verbose_feature_names_out=False
