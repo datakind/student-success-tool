@@ -43,7 +43,6 @@ def run_h2o_automl_classification(
         c for c in t.cast(list[str], kwargs.pop("exclude_cols", [])) if c is not None
     ]
     split_col: str = str(kwargs.pop("split_col", "split"))
-    sample_weight_col = t.cast(str | None, kwargs.pop("sample_weight_col", None))
 
     target_name = kwargs.pop("target_name", None)
     checkpoint_name = kwargs.pop("checkpoint_name", None)
@@ -66,8 +65,6 @@ def run_h2o_automl_classification(
         exclude_cols.append(student_id_col)
 
     must_exclude: set[str] = {target_col, split_col}
-    if sample_weight_col:
-        must_exclude.add(sample_weight_col)
     for c in must_exclude:
         if c not in exclude_cols:
             exclude_cols.append(c)

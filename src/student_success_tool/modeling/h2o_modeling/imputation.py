@@ -31,26 +31,33 @@ class SklearnImputerWrapper:
     DEFAULT_SKEW_THRESHOLD = 0.5
     PIPELINE_FILENAME = "imputer_pipeline.joblib"
 
-    def __init__(self, add_missing_flags: bool = True):
+    def __init__(self):
         self.pipeline = None
         self.input_dtypes: t.Optional[dict[str, str]] = None
-        self.add_missing_flags = add_missing_flags
         self.input_feature_names: t.Optional[list[str]] = None
         self.output_feature_names: t.Optional[list[str]] = None
         self.missing_flag_cols: t.Optional[list[str]] = None
 
     def fit(self, df: pd.DataFrame) -> Pipeline:
+        """
+        Fit the imputer pipeline on a DataFrame. Replaces `None` with NaN, records dtypes and feature names,
+        optionally adds missingness flags, and builds a column-wise imputer
+        with appropriate strategies for each dtype.
+
+        Parameters:
+            df: Input DataFrame to fit on.
+
+        Returns:
+            The fitted scikit-learn `Pipeline` instance.
+        """
         df = df.replace({None: np.nan})
         self.input_dtypes = {k: str(v) for k, v in df.dtypes.items()}
         self.input_feature_names = df.columns.tolist()
 
-        if self.add_missing_flags:
-            df = self._add_missingness_flags(df)
-            self.missing_flag_cols = [
-                c for c in df.columns if c.endswith("_missing_flag")
-            ]
-        else:
-            self.missing_flag_cols = []
+        df = self._add_missingness_flags(df)
+        self.missing_flag_cols = [
+            c for c in df.columns if c.endswith("_missing_flag")
+        ]
 
         pipeline = self._build_pipeline(df)
         pipeline.fit(df)
@@ -63,6 +70,19 @@ class SklearnImputerWrapper:
         return self.pipeline
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Apply the fitted imputer pipeline to new data.
+        Ensures column alignment with training-time features, adds missingness
+        flags if enabled, maintains original row order, and restores data types
+        after imputation. Raises 'ValueError' if  the pipeline has not been fitted, or if required
+        features are missing, or if row counts mismatch.
+
+        Parameters:
+            df: DataFrame to transform.
+
+        Returns:
+            Imputed DataFrame with same index as input.
+        """
         if self.pipeline is None:
             raise ValueError("Pipeline not fitted. Call `fit()` first.")
 
@@ -80,10 +100,9 @@ class SklearnImputerWrapper:
         df = self._add_missingness_flags(df)
 
         # Ensure missingness flags from fit-time exist
-        if self.add_missing_flags:
-            for col in self.missing_flag_cols:
-                if col not in df:
-                    df[col] = False
+        for col in self.missing_flag_cols:
+            if col not in df:
+                df[col] = False
 
         # Maintain exact column order from fit
         if self.input_feature_names:
@@ -133,6 +152,23 @@ class SklearnImputerWrapper:
         return result
 
     def _build_pipeline(self, df: pd.DataFrame) -> Pipeline:
+        """
+        Construct an imputation pipeline with dtype and skew-aware strategies.
+
+        For each column in the DataFrame, an imputation strategy is chosen based on:
+        - No missing values-> passthrough (no transformation)
+        - Boolean dtype -> most frequent value
+        - Numeric dtype -> median if absolute skewness ≥ DEFAULT_SKEW_THRESHOLD, else mean
+        - Categorical or object dtype -> most frequent value
+        - Other types -> most frequent value
+
+        Parameters:
+            df: Input DataFrame used to determine dtypes, skewness, and missingness patterns.
+
+        Returns:
+            A fitted scikit-learn `Pipeline` containing a `ColumnTransformer`
+            with per-column `SimpleImputer` instances or passthroughs.
+        """
         transformers = []
         skew_vals = df.select_dtypes(include="number").skew()
 
@@ -166,7 +202,7 @@ class SklearnImputerWrapper:
         """
         Logs the fitted pipeline and input dtypes to MLflow as artifacts.
 
-        Args:
+        Parameters:
             artifact_path: MLflow artifact subdirectory (e.g., "sklearn_imputer")
         """
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -191,7 +227,7 @@ class SklearnImputerWrapper:
                 features_path = None
 
             # Save missing_flag_cols if available
-            if self.add_missing_flags:
+            if self.missing_flag_cols is not None:
                 flags_path = os.path.join(tmpdir, "missing_flag_cols.json")
                 with open(flags_path, "w") as f:
                     json.dump(self.missing_flag_cols, f, indent=2)
@@ -226,17 +262,21 @@ class SklearnImputerWrapper:
                 with mlflow.start_run(run_name="sklearn_preprocessing"):
                     log_artifacts()
 
-    def validate(self, df: pd.DataFrame, raise_error: bool = True) -> bool:
+    def validate(self, df: pd.DataFrame) -> bool:
+        """
+        Check that the DataFrame contains no null values after imputation.
+
+        Parameters:
+            df: DataFrame to validate.
+
+        Returns:
+            True if no nulls found, False otherwise.
+        """
         missing = df.isnull().sum()
         missing_cols = missing[missing > 0].index.tolist()
 
         if missing_cols:
-            msg = f"Transformed data still contains nulls in: {missing_cols}"
-            if raise_error:
-                raise ValueError(msg)
-            LOGGER.warning(msg)
-            return False
-
+            raise ValueError(f"Transformed data still contains nulls in: {missing_cols}")
         return True
 
     def _add_missingness_flags(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -251,7 +291,16 @@ class SklearnImputerWrapper:
         cls, run_id: str, artifact_path: str = "sklearn_imputer"
     ) -> "SklearnImputerWrapper":
         """
-        Load a trained SklearnImputerWrapper from MLflow, including pipeline and input metadata.
+        Load a trained imputer pipeline from MLflow.
+        Restores the fitted pipeline and associated metadata, including input
+        dtypes, feature names, and missingness flag columns.
+
+        Parameters:
+            run_id: The MLflow run ID from which to load artifacts.
+            artifact_path: The artifact subdirectory used when logging.
+
+        Returns:
+            An instance of `SklearnImputerWrapper` with loaded state.
         """
         instance = cls()
         LOGGER.info(f"Loading pipeline from MLflow run {run_id}...")
@@ -325,10 +374,17 @@ class SklearnImputerWrapper:
         *,
         run_id: str,
         artifact_path: str = "sklearn_imputer",
-        raise_on_nulls: bool = True,
     ) -> pd.DataFrame:
         """
-        Load a trained SklearnImputerWrapper from MLflow and apply it to the given DataFrame.
+        Load a trained imputer from MLflow and apply it to data.
+
+        Parameters:
+            df: DataFrame to transform.
+            run_id: MLflow run ID for loading the pipeline.
+            artifact_path: Artifact subdirectory used when logging.
+
+        Returns:
+            Imputed DataFrame with same index as input.
         """
         instance = cls.load(run_id=run_id, artifact_path=artifact_path)
 
@@ -341,5 +397,5 @@ class SklearnImputerWrapper:
             df = df[instance.input_feature_names]
 
         transformed = instance.transform(df)
-        instance.validate(transformed, raise_error=raise_on_nulls)
+        instance.validate(transformed)
         return transformed
