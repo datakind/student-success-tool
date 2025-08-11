@@ -84,8 +84,10 @@ class SklearnImputerWrapper:
         """
         if self.pipeline is None:
             raise ValueError("Pipeline not fitted. Call `fit()` first.")
-        
-        assert self.input_dtypes is not None, "input_dtypes missing; call fit() before transform()."
+
+        assert self.input_dtypes is not None, (
+            "input_dtypes missing; call fit() before transform()."
+        )
 
         orig_index = df.index  # Lock in row order
         df = df.replace({None: np.nan})
@@ -133,14 +135,12 @@ class SklearnImputerWrapper:
                 continue
 
             if is_bool_dtype(orig_dtype):
-                # Imputer may output floats 0/1 or bools; coerce safely to pandas BooleanDtype
+                # Imputer may output floats 0/1 or bools, coerce safely to pandas boolean dtype
                 s = pd.Series(result[col])
-                # handle strings "0"/"1"/"True"/"False" and numerics
+                # handle strings "0"/"1" or "True"/"False" and numerics
                 s = pd.to_numeric(s, errors="coerce").round()
                 result[col] = (
-                    s.astype("Int64")
-                    .map({0: False, 1: True})
-                    .astype("boolean")
+                    s.astype("Int64").map({0: False, 1: True}).astype("boolean")
                 )
 
             elif is_numeric_dtype(orig_dtype):
@@ -148,7 +148,7 @@ class SklearnImputerWrapper:
                 result[col] = pd.to_numeric(result[col], errors="coerce")
 
             else:
-                # Originally non-numeric -> keep as pandas StringDtype (prevents "1010" -> 1010)
+                # Originally non-numeric -> keep as pandas string dtype (prevents "1010" -> 1010)
                 result[col] = pd.Series(result[col]).astype("string")
 
         # Ensure missing_flag columns are boolean
@@ -227,7 +227,9 @@ class SklearnImputerWrapper:
             if self.input_dtypes is not None:
                 dtypes_path = os.path.join(tmpdir, "input_dtypes.json")
                 with open(dtypes_path, "w") as f:
-                    json.dump({k: str(v) for k, v in self.input_dtypes.items()}, f, indent=2)
+                    json.dump(
+                        {k: str(v) for k, v in self.input_dtypes.items()}, f, indent=2
+                    )
             else:
                 dtypes_path = None
 
