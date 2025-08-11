@@ -128,27 +128,6 @@ class SklearnImputerWrapper:
             transformed, columns=self.output_feature_names, index=orig_index
         )
 
-        # --- Restore data types as before ---
-        # for col in result.columns:
-        #     try:
-        #         result[col] = pd.to_numeric(result[col])
-        #     except (ValueError, TypeError):
-        #         pass
-
-        #     if self.input_dtypes and col in self.input_dtypes:
-        #         orig_dtype = self.input_dtypes[col]
-        #         if is_bool_dtype(orig_dtype):
-        #             uniques = set(result[col].dropna().unique())
-        #             if uniques.issubset({0, 1, True, False}):
-        #                 result[col] = result[col].astype(bool)
-
-        #     if result[col].dtype == "object":
-        #         sample_vals = result[col].dropna().astype(str).head(10)
-        #         if all(v.replace(".", "", 1).isdigit() for v in sample_vals):
-        #             LOGGER.warning(
-        #                 f"Column '{col}' is object but contains numeric-looking values after imputation."
-        #             )
-
         for col, orig_dtype in self.input_dtypes.items():
             if col not in result.columns:
                 continue
