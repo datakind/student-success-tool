@@ -204,7 +204,9 @@ class SklearnImputerWrapper:
             artifact_path: MLflow artifact subdirectory (e.g., "sklearn_imputer")
         """
         if self.pipeline is None:
-            raise RuntimeError("Pipeline not fitted. Call `fit()` before `log_pipeline()`.")
+            raise RuntimeError(
+                "Pipeline not fitted. Call `fit()` before `log_pipeline()`."
+            )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             # Save pipeline
