@@ -129,7 +129,7 @@ def run_h2o_automl_classification(
         seed=seed,
         verbosity="info",
         include_algos=["XGBoost", "GBM", "GLM", "DRF"],
-        nfolds=0, # disable CV, use validation frame for early stopping
+        nfolds=0,  # disable CV, use validation frame for early stopping
         balance_classes=True,
     )
     aml.train(

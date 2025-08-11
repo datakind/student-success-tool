@@ -55,9 +55,7 @@ class SklearnImputerWrapper:
         self.input_feature_names = df.columns.tolist()
 
         df = self._add_missingness_flags(df)
-        self.missing_flag_cols = [
-            c for c in df.columns if c.endswith("_missing_flag")
-        ]
+        self.missing_flag_cols = [c for c in df.columns if c.endswith("_missing_flag")]
 
         pipeline = self._build_pipeline(df)
         pipeline.fit(df)
@@ -276,7 +274,9 @@ class SklearnImputerWrapper:
         missing_cols = missing[missing > 0].index.tolist()
 
         if missing_cols:
-            raise ValueError(f"Transformed data still contains nulls in: {missing_cols}")
+            raise ValueError(
+                f"Transformed data still contains nulls in: {missing_cols}"
+            )
         return True
 
     def _add_missingness_flags(self, df: pd.DataFrame) -> pd.DataFrame:
