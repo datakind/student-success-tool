@@ -36,7 +36,7 @@ class SklearnImputerWrapper:
         self.input_dtypes: t.Optional[dict[str, str]] = None
         self.input_feature_names: t.Optional[list[str]] = None
         self.output_feature_names: t.Optional[list[str]] = None
-        self.missing_flag_cols: t.Optional[list[str]] = None
+        self.missing_flag_cols: list[str] = []
 
     def fit(self, df: pd.DataFrame) -> Pipeline:
         """
@@ -351,7 +351,7 @@ class SklearnImputerWrapper:
                 f"Could not load missing_flag_cols.json for run {run_id}. "
                 f"Missing flags may have been generated incorrectly. ({e})"
             )
-            instance.missing_flag_cols = None
+            instance.missing_flag_cols = []
 
         # Restore output feature names if possible
         pipeline = instance.pipeline
