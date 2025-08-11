@@ -164,11 +164,11 @@ class SklearnImputerWrapper:
             df: Input DataFrame used to determine dtypes, skewness, and missingness patterns.
 
         Returns:
-            A fitted scikit-learn `Pipeline` containing a `ColumnTransformer`
+            An unfitted scikit-learn `Pipeline` containing a `ColumnTransformer`
             with per-column `SimpleImputer` instances or passthroughs.
         """
         transformers = []
-        skew_vals = df.select_dtypes(include="number").skew()
+        skew_vals = df.select_dtypes(include="number").skew(numeric_only=True)
 
         for col in df.columns:
             if df[col].isnull().sum() == 0:
@@ -203,6 +203,9 @@ class SklearnImputerWrapper:
         Parameters:
             artifact_path: MLflow artifact subdirectory (e.g., "sklearn_imputer")
         """
+        if self.pipeline is None:
+            raise RuntimeError("Pipeline not fitted. Call `fit()` before `log_pipeline()`.")
+
         with tempfile.TemporaryDirectory() as tmpdir:
             # Save pipeline
             pipeline_path = os.path.join(tmpdir, self.PIPELINE_FILENAME)
