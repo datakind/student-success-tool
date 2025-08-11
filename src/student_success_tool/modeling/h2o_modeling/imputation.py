@@ -16,6 +16,7 @@ from pandas.api.types import (
     is_bool_dtype,
     is_categorical_dtype,
     is_object_dtype,
+    pandas_dtype,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -33,7 +34,7 @@ class SklearnImputerWrapper:
 
     def __init__(self):
         self.pipeline = None
-        self.input_dtypes: t.Optional[dict[str, str]] = None
+        self.input_dtypes: t.Optional[dict[str, t.Any]] = None
         self.input_feature_names: t.Optional[list[str]] = None
         self.output_feature_names: t.Optional[list[str]] = None
         self.missing_flag_cols: list[str] = []
@@ -51,7 +52,7 @@ class SklearnImputerWrapper:
             The fitted scikit-learn `Pipeline` instance.
         """
         df = df.replace({None: np.nan})
-        self.input_dtypes = {k: str(v) for k, v in df.dtypes.items()}
+        self.input_dtypes = df.dtypes.to_dict()
         self.input_feature_names = df.columns.tolist()
 
         df = self._add_missingness_flags(df)
@@ -83,6 +84,8 @@ class SklearnImputerWrapper:
         """
         if self.pipeline is None:
             raise ValueError("Pipeline not fitted. Call `fit()` first.")
+        
+        assert self.input_dtypes is not None, "input_dtypes missing; call fit() before transform()."
 
         orig_index = df.index  # Lock in row order
         df = df.replace({None: np.nan})
@@ -126,20 +129,53 @@ class SklearnImputerWrapper:
         )
 
         # --- Restore data types as before ---
-        for col in result.columns:
-            if self.input_dtypes and col in self.input_dtypes:
-                orig_dtype = self.input_dtypes[col]
-                if is_bool_dtype(orig_dtype):
-                    uniques = set(result[col].dropna().unique())
-                    if uniques.issubset({0, 1, True, False}):
-                        result[col] = result[col].astype(bool)
+        # for col in result.columns:
+        #     try:
+        #         result[col] = pd.to_numeric(result[col])
+        #     except (ValueError, TypeError):
+        #         pass
 
-            if result[col].dtype == "object":
-                sample_vals = result[col].dropna().astype(str).head(10)
-                if all(v.replace(".", "", 1).isdigit() for v in sample_vals):
-                    LOGGER.warning(
-                        f"Column '{col}' is object but contains numeric-looking values after imputation."
-                    )
+        #     if self.input_dtypes and col in self.input_dtypes:
+        #         orig_dtype = self.input_dtypes[col]
+        #         if is_bool_dtype(orig_dtype):
+        #             uniques = set(result[col].dropna().unique())
+        #             if uniques.issubset({0, 1, True, False}):
+        #                 result[col] = result[col].astype(bool)
+
+        #     if result[col].dtype == "object":
+        #         sample_vals = result[col].dropna().astype(str).head(10)
+        #         if all(v.replace(".", "", 1).isdigit() for v in sample_vals):
+        #             LOGGER.warning(
+        #                 f"Column '{col}' is object but contains numeric-looking values after imputation."
+        #             )
+
+        for col, orig_dtype in self.input_dtypes.items():
+            if col not in result.columns:
+                continue
+
+            if is_bool_dtype(orig_dtype):
+                # Imputer may output floats 0/1 or bools; coerce safely to pandas BooleanDtype
+                s = pd.Series(result[col])
+                # handle strings "0"/"1"/"True"/"False" and numerics
+                s = pd.to_numeric(s, errors="coerce").round()
+                result[col] = (
+                    s.astype("Int64")
+                    .map({0: False, 1: True})
+                    .astype("boolean")
+                )
+
+            elif is_numeric_dtype(orig_dtype):
+                # Keep numeric columns numeric
+                result[col] = pd.to_numeric(result[col], errors="coerce")
+
+            else:
+                # Originally non-numeric -> keep as pandas StringDtype (prevents "1010" -> 1010)
+                result[col] = pd.Series(result[col]).astype("string")
+
+        # Ensure missing_flag columns are boolean
+        for col in self.missing_flag_cols:
+            if col in result.columns:
+                result[col] = pd.Series(result[col]).astype("boolean")
 
         self.validate(result)
         return result
@@ -212,7 +248,7 @@ class SklearnImputerWrapper:
             if self.input_dtypes is not None:
                 dtypes_path = os.path.join(tmpdir, "input_dtypes.json")
                 with open(dtypes_path, "w") as f:
-                    json.dump(self.input_dtypes, f, indent=2)
+                    json.dump({k: str(v) for k, v in self.input_dtypes.items()}, f, indent=2)
             else:
                 dtypes_path = None
 
@@ -317,7 +353,9 @@ class SklearnImputerWrapper:
                 run_id=run_id, artifact_path=f"{artifact_path}/input_dtypes.json"
             )
             with open(dtypes_path) as f:
-                instance.input_dtypes = json.load(f)
+                loaded = json.load(f)
+            # convert back to dtype objects
+            instance.input_dtypes = {k: pandas_dtype(v) for k, v in loaded.items()}
             LOGGER.info("Successfully loaded input_dtypes from MLflow.")
         except Exception as e:
             LOGGER.warning(f"Could not load input_dtypes.json for run {run_id}. ({e})")
