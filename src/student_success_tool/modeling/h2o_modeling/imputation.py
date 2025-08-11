@@ -127,11 +127,6 @@ class SklearnImputerWrapper:
 
         # --- Restore data types as before ---
         for col in result.columns:
-            try:
-                result[col] = pd.to_numeric(result[col])
-            except (ValueError, TypeError):
-                pass
-
             if self.input_dtypes and col in self.input_dtypes:
                 orig_dtype = self.input_dtypes[col]
                 if is_bool_dtype(orig_dtype):
