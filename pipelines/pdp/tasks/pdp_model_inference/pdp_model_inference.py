@@ -383,6 +383,7 @@ class ModelInferenceTask:
         # --- Email notify users ---
         # Uncomment below once we want to enable CC'ing to DK's email.
         # Secrets from Databricks
+        #comment for testing blah 
         w = WorkspaceClient()
         MANDRILL_USERNAME = w.dbutils.secrets.get(scope="sst", key="MANDRILL_USERNAME")
         MANDRILL_PASSWORD = w.dbutils.secrets.get(scope="sst", key="MANDRILL_PASSWORD")
