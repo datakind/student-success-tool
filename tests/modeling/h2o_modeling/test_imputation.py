@@ -33,10 +33,8 @@ def test_fit_and_transform_shapes_and_columns(sample_df):
     original_cols = set(sample_df.columns)
     result_cols = set(result.columns)
 
-    # All original columns should still be in the result
     assert original_cols.issubset(result_cols)
 
-    # All extra columns should be missing flags
     extra_cols = result_cols - original_cols
     assert all(col.endswith("_missing_flag") for col in extra_cols)
 
@@ -67,7 +65,6 @@ def test_missing_flags_added_only_for_missing_columns(sample_df):
     imputer.fit(sample_df)
     result = imputer.transform(sample_df)
 
-    # These columns have missing data
     expected_flags = {
         "num_low_skew_missing_flag",
         "num_high_skew_missing_flag",
@@ -80,7 +77,6 @@ def test_missing_flags_added_only_for_missing_columns(sample_df):
         assert flag_col in result.columns
         assert set(result[flag_col].unique()).issubset({0, 1})
 
-    # This column has no missingness, should not have flag
     assert "complete_col_missing_flag" not in result.columns
 
 
@@ -98,19 +94,16 @@ def test_pipeline_logged_to_mlflow(
     imputer = imputation.SklearnImputerWrapper()
     imputer.fit(sample_df)
 
-    # Now call the method that triggers MLflow logging
     imputer.log_pipeline(artifact_path="test_artifact_path")
 
     # Expect pipeline, input_dtypes, input_feature_names, missing_flag_cols to be logged
     assert mock_log_artifact.call_count == 4
 
-    # Check that both were logged to the correct artifact path
     artifact_paths = [
         call.kwargs["artifact_path"] for call in mock_log_artifact.call_args_list
     ]
     assert all(path == "test_artifact_path" for path in artifact_paths)
 
-    # Optionally check filenames
     logged_filenames = [
         os.path.basename(call.args[0]) for call in mock_log_artifact.call_args_list
     ]

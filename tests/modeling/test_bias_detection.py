@@ -192,7 +192,7 @@ def test_compute_group_bias_metrics(
     "targets, preds, expected_fnr, expected_ci_lower, expected_ci_upper, valid_samples_flag",
     [
         (
-            pd.Series(np.random.choice([False, True], size=500)),  # Use bool values
+            pd.Series(np.random.choice([False, True], size=500)),
             pd.Series(np.random.choice([False, True], size=500)),
             0.504685,
             0.444092,
