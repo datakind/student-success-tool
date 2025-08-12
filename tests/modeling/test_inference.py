@@ -311,8 +311,11 @@ def ranked_feature_table_data():
     return features, shap_values, features_table
 
 
+@patch("student_success_tool.modeling.inference.mlflow.log_artifact")
 @pytest.mark.parametrize("use_features_table", [True, False])
-def test_generate_ranked_feature_table(ranked_feature_table_data, use_features_table):
+def test_generate_ranked_feature_table(
+    mock_log_artifact, ranked_feature_table_data, use_features_table
+):
     features, shap_values, features_table = ranked_feature_table_data
 
     selected_features_table = features_table if use_features_table else None
