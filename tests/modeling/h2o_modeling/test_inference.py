@@ -51,7 +51,6 @@ def test_group_feature_values_ambiguous_encoding_raises():
         inference.group_feature_values(df, group_missing_flags=True)
 
 
-# Renamed for clarity - now tests color hint logic
 def test_create_color_hint_features_mixed_types():
     orig_df = pd.DataFrame(
         {
