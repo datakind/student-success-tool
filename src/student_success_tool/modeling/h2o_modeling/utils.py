@@ -131,7 +131,6 @@ def log_h2o_experiment(
             train=train,
             valid=valid,
             test=test,
-            threshold=0.5,
             imputer=imputer,
             primary_metric=aml.sort_metric,
         )
