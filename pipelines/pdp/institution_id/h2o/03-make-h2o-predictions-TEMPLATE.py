@@ -35,12 +35,10 @@
 
 # COMMAND ----------
 
-import functools as ft
 import logging
 
 import mlflow
 import pandas as pd
-import shap
 from databricks.connect import DatabricksSession
 
 from student_success_tool import configs, dataio, modeling
