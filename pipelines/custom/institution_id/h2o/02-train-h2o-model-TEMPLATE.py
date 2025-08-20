@@ -214,11 +214,6 @@ experiment_id, aml, train, valid, test = (
 # HACK: Evaluate an experiment you've already trained
 # experiment_id = cfg.model.experiment_id
 
-# NOTE: AutoML generates a split column if not manually specified
-split_col = training_params.get("split_col", "_automl_split_col_0000")
-
-# COMMAND ----------
-
 # only possible to do bias evaluation if you specify a split col for train/test/validate
 # AutoML doesn't preserve student ids the training set, which we need for [reasons]
 if evaluate_model_bias := (training_params.get("split_col") is not None):
