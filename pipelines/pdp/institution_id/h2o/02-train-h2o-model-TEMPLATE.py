@@ -36,12 +36,9 @@
 
 import logging
 import os
-import sys
 
 import mlflow
 from mlflow.tracking import MlflowClient
-import matplotlib.pyplot as plt
-import sklearn.metrics
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
 from pyspark.dbutils import DBUtils
@@ -57,7 +54,7 @@ import h2o
 # HACK: Disable the mlflow widget template otherwise it freaks out
 os.environ["MLFLOW_ENABLE_ARTIFACTS_PROGRESS_BAR"] = "false"
 
-logging.info(f"Starting H2O cluster...")
+logging.info("Starting H2O cluster...")
 h2o.init()
 
 # COMMAND ----------
@@ -208,8 +205,8 @@ training_params = {
     "timeout_minutes": cfg.modeling.training.timeout_minutes,
     "exclude_cols": sorted(
         set(
-            (cfg.modeling.training.exclude_cols or []) 
-            + (cfg.student_group_cols or []) 
+            (cfg.modeling.training.exclude_cols or [])
+            + (cfg.student_group_cols or [])
             + (cfg.non_feature_cols or [])
         )
     ),
@@ -222,8 +219,12 @@ logging.info("training params = %s", training_params)
 
 # COMMAND ----------
 
-experiment_id, aml, train, valid, test = h2o_modeling.training.run_h2o_automl_classification(
-    df=df, **training_params, client=client,
+experiment_id, aml, train, valid, test = (
+    h2o_modeling.training.run_h2o_automl_classification(
+        df=df,
+        **training_params,
+        client=client,
+    )
 )
 
 # COMMAND ----------
@@ -286,7 +287,7 @@ for run_id in top_runs.values():
                 cfg.pred_prob_col: preds_df.iloc[:, 1].values,
             }
         )
-        
+
         modeling.evaluation.evaluate_performance(
             df_pred,
             target_col=cfg.target_col,
