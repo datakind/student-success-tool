@@ -55,7 +55,9 @@ h2o.display.toggle_user_tips(False)
 
 logging.basicConfig(level=logging.INFO, force=True)
 logging.getLogger("py4j").setLevel(logging.WARNING)  # ignore databricks logger
-logging.getLogger("h2o").setLevel(logging.WARN) # ignore h2o logger since it gets verbose
+logging.getLogger("h2o").setLevel(
+    logging.WARN
+)  # ignore h2o logger since it gets verbose
 
 try:
     spark = DatabricksSession.builder.getOrCreate()
@@ -102,9 +104,7 @@ df.head()
 
 # COMMAND ----------
 
-model = h2o_modeling.utils.load_h2o_model(
-    cfg.model.run_id
-)
+model = h2o_modeling.utils.load_h2o_model(cfg.model.run_id)
 model
 
 # COMMAND ----------
@@ -116,7 +116,9 @@ logging.info(
 
 # COMMAND ----------
 
-df_train = h2o_modeling.evaluation.extract_training_data_from_model(cfg.model.experiment_id)
+df_train = h2o_modeling.evaluation.extract_training_data_from_model(
+    cfg.model.experiment_id
+)
 if cfg.split_col:
     df_train = df_train.loc[df_train[cfg.split_col].eq("train"), :]
 df_train.shape
@@ -137,10 +139,9 @@ student_ids = df_test.student_id
 
 # Load and transform using sklearn imputer
 df_test = h2o_modeling.imputation.SklearnImputerWrapper.load_and_transform(
-    df_test,
-    run_id=cfg.model.run_id
+    df_test, run_id=cfg.model.run_id
 )
-df_test['student_id'] = student_ids
+df_test["student_id"] = student_ids
 
 # COMMAND ----------
 
@@ -183,8 +184,12 @@ contribs_df
 # COMMAND ----------
 
 # Group one-hot encoding and missing value flags
-grouped_contribs_df = h2o_modeling.inference.group_shap_values(contribs_df, group_missing_flags=True)
-grouped_features = h2o_modeling.inference.group_feature_values(features, group_missing_flags=True)
+grouped_contribs_df = h2o_modeling.inference.group_shap_values(
+    contribs_df, group_missing_flags=True
+)
+grouped_features = h2o_modeling.inference.group_feature_values(
+    features, group_missing_flags=True
+)
 
 # COMMAND ----------
 
@@ -264,7 +269,9 @@ if shap_feature_importance is not None and features_table is not None:
         ["readable_feature_name", "short_feature_desc", "long_feature_desc"]
     ] = shap_feature_importance["Feature Name"].apply(
         lambda feature: pd.Series(
-            modeling.inference._get_mapped_feature_name(feature, features_table, metadata=True)
+            modeling.inference._get_mapped_feature_name(
+                feature, features_table, metadata=True
+            )
         )
     )
     shap_feature_importance.columns = shap_feature_importance.columns.str.replace(

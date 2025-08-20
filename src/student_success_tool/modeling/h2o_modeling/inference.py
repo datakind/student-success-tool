@@ -289,4 +289,6 @@ def plot_grouped_shap(
     if group_missing_flags:
         mlflow.log_figure(shap_fig, "h2o_feature_importances_by_shap_plot.png")
     else:
-        mlflow.log_figure(shap_fig, "h2o_feature_importances_by_shap_plot_with_missing_flags.png")
+        mlflow.log_figure(
+            shap_fig, "h2o_feature_importances_by_shap_plot_with_missing_flags.png"
+        )

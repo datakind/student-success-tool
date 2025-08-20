@@ -68,8 +68,9 @@ def test_create_color_hint_features_mixed_types():
     assert result["opted_in"].tolist() == [1, 0]
 
 
+@mock.patch("student_success_tool.modeling.h2o_modeling.inference.mlflow.log_figure")
 @mock.patch("student_success_tool.modeling.h2o_modeling.inference.shap.summary_plot")
-def test_plot_grouped_shap_calls_summary_plot(mock_summary_plot):
+def test_plot_grouped_shap_calls_summary_plot(mock_summary_plot, mock_log_figure):
     contribs_df = pd.DataFrame(
         {"feature.X.1": [0.1, 0.2], "feature.X.2": [0.2, 0.3], "feature.Y": [0.3, 0.1]}
     )
