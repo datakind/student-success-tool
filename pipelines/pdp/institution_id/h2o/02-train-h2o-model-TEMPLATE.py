@@ -27,7 +27,7 @@
 # we need to manually install a certain version of pandas and scikit-learn in order
 # for our models to load and run properly.
 
-# %pip install "student-success-tool==0.3.11"
+# %pip install git+https://github.com/datakind/student-success-tool.git@feat/h2o
 # %restart_python
 
 # COMMAND ----------
