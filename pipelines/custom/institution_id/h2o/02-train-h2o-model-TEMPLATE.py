@@ -28,8 +28,6 @@
 # for our models to load and run properly.
 
 # %pip install "student-success-tool==0.3.11"
-# %pip install "pandas==1.5.3"
-# %pip install "scikit-learn==1.3.0"
 # %restart_python
 
 # COMMAND ----------
