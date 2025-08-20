@@ -1,9 +1,11 @@
 import logging
 import typing as t
+import mlflow
 import re
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from pandas.api.types import (
     is_object_dtype,
     is_string_dtype,
@@ -278,4 +280,13 @@ def plot_grouped_shap(
         grouped_shap.values,
         features=color_hint,
         feature_names=grouped_shap.columns,
+        max_display=20,
+        show=False,
     )
+
+    shap_fig = plt.gcf()
+
+    if group_missing_flags:
+        mlflow.log_figure(shap_fig, "h2o_feature_importances_by_shap_plot.png")
+    else:
+        mlflow.log_figure(shap_fig, "h2o_feature_importances_by_shap_plot_with_missing_flags.png")
