@@ -23,18 +23,31 @@ def get_h2o_used_features(model: H2OEstimator) -> t.List[str]:
     """
     Extracts the actual feature names used by the H2O model (excluding dropped/constant columns).
     """
-    names = list(model._model_json["output"]["names"][:-1])
-
-    # Pull params from either location
+    out = model._model_json["output"]
     params = model.actual_params
 
-    # Known non-predictor cols that can appear in names
+    names = list(out["names"])
+
+    # Figure out the response/target name
+    response = (
+        (out.get("response_column") or {}).get("name")
+        or params.get("response_column")
+        or params.get("y")
+    )
+
+    # Collect special (non-predictor) columns to drop
     non_predictors = set()
+    if response:
+        non_predictors.add(response)
+
     for k in ("weights_column", "offset_column", "fold_column"):
         v = params.get(k)
+        if isinstance(v, dict):
+            v = v.get("column_name")
         if v:
-            non_predictors.add(k)
+            non_predictors.add(v)
 
+    # Keep only real predictors
     return [c for c in names if c not in non_predictors]
 
 
