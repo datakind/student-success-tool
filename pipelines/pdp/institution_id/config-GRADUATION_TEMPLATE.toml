@@ -30,19 +30,19 @@ framework = "sklearn"
 [preprocessing]
 splits = { train = 0.6, test = 0.2, validate = 0.2 }
 sample_class_weight = "balanced"
+# TODO: change to true if school wants otherwise
 include_pre_cohort_courses = false
 
 [preprocessing.features]
 min_passing_grade = 1.0
 min_num_credits_full_time = 12
-# NOTE: single quotes *required* here; it's TOML syntax for literal strings
-course_level_pattern = '^TODO(?P<course_level>\d)TODO$'
+course_level_pattern = '^(?:[A-Z_-]+)?(?P<course_level>\d)\d{2}(?:-?[A-Z\d]+)?$'
 core_terms = ["FALL", "SPRING"]
-key_course_subject_areas = ["24", "51", ["27", "31"]]
-key_course_ids = ["ENGL101", "MATH101", ["ENGL102", "MATH102"]]
+key_course_subject_areas = []
+key_course_ids = []
 
 [preprocessing.selection]
-student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year_1 = "Bachelor's Degree" }
+student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year_1 = "ASSOCIATE'S DEGREE" }
 intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
 
 [preprocessing.checkpoint]
@@ -50,6 +50,12 @@ name = "30_credits_earned"
 type_ = "first_at_num_credits_earned"
 min_num_credits = 30.0
 num_credits_col = "cumsum_num_credits_earned"
+# TODO: remove above and replace with bottom based on selected checkpoint 
+name = "term 2 including only core terms"
+type_ = "nth"
+n = 1
+term_is_core_col = "term_is_core"
+exclude_non_core_terms = true
 
 [preprocessing.target]
 name = "graduation_150pct_time"
