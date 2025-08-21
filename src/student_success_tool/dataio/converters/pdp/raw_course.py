@@ -70,3 +70,42 @@ def dedupe_by_renumbering_courses(df: pd.DataFrame) -> pd.DataFrame:
     # update course numbers for dupe'd records in-place
     df.update(deduped_course_numbers, overwrite=True)
     return df
+
+
+def drop_real_duplicates(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Dropping true duplicate course records. 
+    """
+    # HACK: infer the correct student id col in raw data from the data itself
+    student_id_col = (
+        "student_guid"
+        if "student_guid" in df.columns
+        else "study_id"
+        if "study_id" in df.columns
+        else "student_id"
+    )
+    unique_cols = [
+        student_id_col,
+        "academic_year",
+        "academic_term",
+        "course_prefix",
+        "course_number",
+        "section_id",
+    ]
+    dupe_rows = df.loc[
+    df.duplicated(unique_cols, keep=False), :
+    ].sort_values(
+        by=unique_cols + ["number_of_credits_attempted"],
+        ascending=False,
+        ignore_index=True,
+    )
+    LOGGER.warning(
+        "%s duplicate rows found & dropped",
+        int(len(dupe_rows)/2),
+    )
+    df = df.drop_duplicates(subset=unique_cols, keep='first').sort_values(
+        by=unique_cols + ["number_of_credits_attempted"], 
+        ascending=False, 
+        ignore_index=True
+    )
+    return df

@@ -216,9 +216,6 @@ df_cohort = dataio.pdp.read_raw_cohort_data(
 )
 df_cohort
 
-# if u need the converter function for the wrong names (Mesh is working on a fix but just incase)
-# converter_func=dataio.converters.pdp.raw_cohort.rename_mangled_column_names
-
 # COMMAND ----------
 
 # MAGIC %md
