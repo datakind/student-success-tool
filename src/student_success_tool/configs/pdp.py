@@ -44,12 +44,9 @@ class PDPProjectConfig(pyd.BaseModel):
     random_state: t.Optional[int] = None
 
     # key artifacts produced by project pipeline
-    datasets: dict[str, "DatasetConfig"] = pyd.Field(
-        default={},
+    datasets: "AllDatasetStagesConfig" = pyd.Field(
         description=(
-            "Mapping of dataset name, e.g. 'labeled', to file/table paths for each "
-            "derived form produced by steps in the data transformation pipeline, "
-            "used to load the artifacts from storage"
+            "Key datasets produced by the pipeline represented here in this config"
         ),
     )
     model: t.Optional["ModelConfig"] = pyd.Field(
@@ -86,12 +83,24 @@ class PDPProjectConfig(pyd.BaseModel):
     model_config = pyd.ConfigDict(extra="forbid", strict=True)
 
 
-class DatasetConfig(pyd.BaseModel):
+class BronzeDatasetConfig(pyd.BaseModel):
     raw_course: "DatasetIOConfig"
     raw_cohort: "DatasetIOConfig"
-    preprocessed: t.Optional["DatasetIOConfig"] = None
-    predictions: t.Optional["DatasetIOConfig"] = None
-    finalized: t.Optional["DatasetIOConfig"] = None
+
+
+class SilverDatasetConfig(pyd.BaseModel):
+    preprocessed: "DatasetIOConfig"
+    modeling: "DatasetIOConfig"
+
+
+class GoldDatasetConfig(pyd.BaseModel):
+    advisor_output: "DatasetIOConfig"
+
+
+class AllDatasetStagesConfig(pyd.BaseModel):
+    bronze: BronzeDatasetConfig
+    silver: SilverDatasetConfig
+    gold: GoldDatasetConfig
 
 
 class DatasetIOConfig(pyd.BaseModel):
@@ -150,6 +159,12 @@ class PreprocessingConfig(pyd.BaseModel):
             ),
         )
     )
+    include_pre_cohort_courses: bool = pyd.Field(
+        default=False,
+        description=(
+            "Whether to include course records that occurred before the student's cohort term. Usually, we do end up excluding these so the default will always be False unless set otherwise."
+        ),
+    )
 
     @pyd.field_validator("splits", mode="after")
     @classmethod
@@ -199,18 +214,19 @@ class FeaturesConfig(pyd.BaseModel):
             "as 'peak' COVID, for use in control variables to account for pandemic effects"
         ),
     )
-    key_course_subject_areas: t.Optional[list[str]] = pyd.Field(
+    key_course_subject_areas: t.Optional[t.List[t.Union[str, t.List[str]]]] = pyd.Field(
         default=None,
         description=(
             "One or more course subject areas (formatted as 2-digit CIP codes) "
-            "for which custom features should be computed"
+            "for which custom features should be computed, can be a list or include a nested list"
+            "Example: ['51', ['27', '48']], so you would get features for 51 alone and features for 27 and 48 combined."
         ),
     )
-    key_course_ids: t.Optional[list[str]] = pyd.Field(
+    key_course_ids: t.Optional[t.List[t.Union[str, t.List[str]]]] = pyd.Field(
         default=None,
         description=(
             "One or more course ids (formatted as '[COURSE_PREFIX][COURSE_NUMBER]') "
-            "for which custom features should be computed"
+            "for which custom features should be computed, can be a list or include nested lists"
         ),
     )
 
@@ -262,6 +278,12 @@ class CheckpointBaseConfig(pyd.BaseModel):
 class CheckpointNthConfig(CheckpointBaseConfig):
     type_: types.CheckpointTypeType = "nth"
     n: int = pyd.Field(default=...)
+    term_is_pre_cohort_col: t.Optional[str] = pyd.Field(default="term_is_pre_cohort")
+    exclude_pre_cohort_terms: t.Optional[bool] = pyd.Field(default=True)
+    term_is_core_col: t.Optional[str] = pyd.Field(default="term_is_core")
+    exclude_non_core_terms: t.Optional[bool] = pyd.Field(default=True)
+    enrollment_year_col: t.Optional[str] = pyd.Field(default=None)
+    valid_enrollment_year: t.Optional[int] = pyd.Field(default=None)
 
 
 class CheckpointFirstConfig(CheckpointBaseConfig):
@@ -333,7 +355,6 @@ class FeatureSelectionConfig(pyd.BaseModel):
         - :func:`modeling.feature_selection.select_features()`
     """
 
-    non_feature_cols: t.Optional[list[str]] = None
     force_include_cols: t.Optional[list[str]] = None
     incomplete_threshold: float = 0.5
     low_variance_threshold: float = 0.0

@@ -1,4 +1,5 @@
 import typing as t
+from mlflow.tracking import MlflowClient
 
 from ...configs.pdp import PDPProjectConfig
 from .base import ModelCard
@@ -12,6 +13,7 @@ class PDPModelCard(ModelCard[PDPProjectConfig]):
         catalog: str,
         model_name: str,
         assets_path: t.Optional[str] = None,
+        mlflow_client: t.Optional[MlflowClient] = None,
     ):
         """
         Initializes PDP model card by enforcing a PDP project config.
@@ -21,7 +23,7 @@ class PDPModelCard(ModelCard[PDPProjectConfig]):
         if not isinstance(config, PDPProjectConfig):  # type guard
             raise TypeError("Expected config to be of type PDPProjectConfig")
 
-        super().__init__(config, catalog, model_name, assets_path)
+        super().__init__(config, catalog, model_name, assets_path, mlflow_client)
 
     def _register_sections(self):
         """

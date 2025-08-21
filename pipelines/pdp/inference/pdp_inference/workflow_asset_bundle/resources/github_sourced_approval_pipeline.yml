@@ -1,0 +1,71 @@
+resources:
+  jobs:
+    github_sourced_approval_pipeline:
+      name: github_sourced_approval_pipeline
+      description: >-
+        This job should be run by the Datakinder after they have validated the
+        inference output and is ready to publish the output as approved and 
+        notify the user.
+      tasks:
+        - task_key: notify_and_publish_results
+          spark_python_task:
+            python_file: pipelines/tasks/approve_output/approve_output_task.py
+            source: GIT
+            parameters:
+              - --institution_name
+              - "{{job.parameters.institution_name}}"
+              - --sst_job_id
+              - "{{job.parameters.sst_job_id}}"
+              - --db_workspace
+              - "{{job.parameters.db_workspace}}"
+              - --external_bucket_name
+              - "{{job.parameters.external_bucket_name}}"
+              - --email_recipient
+              - "{{job.parameters.email_recipient}}"
+          job_cluster_key: approval-pipeline-cluster
+          libraries:
+            - pypi:
+                package: git+https://github.com/datakind/student-success-tool.git@develop
+      job_clusters:
+        - job_cluster_key: approval-pipeline-cluster
+          new_cluster:
+            cluster_name: ""
+            spark_version: 15.4.x-cpu-ml-scala2.12
+            spark_conf:
+              spark.master: local[*, 4]
+              spark.databricks.cluster.profile: singleNode
+            gcp_attributes:
+              use_preemptible_executors: false
+              # google_service_account: ${var.pipeline_sa_email}
+              availability: ON_DEMAND_GCP
+              zone_id: HA
+            node_type_id: n2-standard-8
+            custom_tags:
+              ResourceClass: SingleNode
+              x-databricks-nextgen-cluster: "true"
+            enable_elastic_disk: true
+            data_security_mode: SINGLE_USER
+            runtime_engine: STANDARD
+            num_workers: 0
+      git_source:
+        git_url: https://github.com/datakind/student-success-tool
+        git_provider: gitHub
+        git_branch: develop
+      queue:
+        enabled: true
+      parameters:
+        - name: db_workspace
+          default: dev_sst_02
+        - name: email_recipient
+          default: ${var.end_user_notification_email}
+        - name: external_bucket_name
+          default: dev_6782b2f451f84c17ae6e14e918432b65
+        - name: institution_name
+          default: uni_of_crystal_testing
+        - name: sst_job_id
+          default: "1047723304980128"
+      permissions:
+        - user_name: ${var.service_account_executer}
+          level: CAN_MANAGE_RUN
+        - group_name: ${var.datakind_group_to_manage_workflow} 
+          level: CAN_MANAGE

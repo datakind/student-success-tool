@@ -75,10 +75,11 @@ Note: Since `student_success_tool` is a "library" (in Python packaging parlance)
 ### releases
 
 1. Ensure that all changes (features, bug fixes, etc.) to be included in the release have been merged into the `develop` branch.
-2. Create a new feature branch based off `develop` that includes two release-specific changes:
+2. Create a new feature branch based off `develop` that includes three release-specific changes:
     - bump the `project.version` attribute in the package's `pyproject.toml` file to the desired version; follow [SemVer conventions](https://semver.org)
     - add an entry in `CHANGELOG.md` for the specified version, with a manually-curated summary of the changes included in the release, optionally including call-outs to specific PRs for reference
-3. Merge the above PR into `develop`, then open a new PR to merge all changes in `develop` into the `main` branch; merge it
+    - update the version in the templates and pipelines
+3. Merge the above PR into `develop`, then open a new PR to merge all changes in `develop` into the `main` branch; merge it. Check that main is ahead by 0 from develop. If it is ahead of dev, then merge the main branch back into develop.
 4. Go to the GitHub repo's [Releases](https://github.com/datakind/student-success-tool/releases) page, then click the "draft a new release" button
     - choose a tag; it should be formatted as "v[VERSION]", for example "v0.2.0"
     - choose `main` as the target branch

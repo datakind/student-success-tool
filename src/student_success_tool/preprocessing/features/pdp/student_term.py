@@ -169,11 +169,11 @@ def add_features(
     feature_name_funcs = (
         {
             "year_of_enrollment_at_cohort_inst": year_of_enrollment_at_cohort_inst,
-            "student_has_prior_degree_at_cohort_inst": ft.partial(
-                student_has_prior_degree, inst="cohort"
+            "student_has_earned_certificate_at_cohort_inst": ft.partial(
+                student_earned_certificate, inst="cohort"
             ),
-            "student_has_prior_degree_at_other_inst": ft.partial(
-                student_has_prior_degree, inst="other"
+            "student_has_earned_certificate_at_other_inst": ft.partial(
+                student_earned_certificate, inst="other"
             ),
             "term_is_pre_cohort": term_is_pre_cohort,
             "term_is_while_student_enrolled_at_other_inst": term_is_while_student_enrolled_at_other_inst,
@@ -236,7 +236,7 @@ def year_of_enrollment_at_cohort_inst(
     return pd.Series(np.ceil((dts_diff + 1) / 365.25), dtype="Int8")
 
 
-def student_has_prior_degree(
+def student_earned_certificate(
     df: pd.DataFrame,
     *,
     inst: t.Literal["cohort", "other"],
@@ -244,14 +244,8 @@ def student_has_prior_degree(
 ) -> pd.Series:
     degree_year_cols = [
         f"first_year_to_certificate_at_{inst}_inst",
-        f"first_year_to_associates_at_{inst}_inst",
-        f"first_year_to_associates_or_certificate_at_{inst}_inst",
+        f"years_to_latest_certificate_at_{inst}_inst",
     ]
-    # yes, they really are inconsistent here
-    if inst == "cohort":
-        degree_year_cols.append("first_year_to_bachelors_at_cohort_inst")
-    else:
-        degree_year_cols.append("first_year_to_bachelor_at_other_inst")
     return df.loc[:, degree_year_cols].lt(df[enrollment_year_col], axis=0).any(axis=1)
 
 
@@ -483,10 +477,15 @@ def equal_cols_by_group(
     num_prefix = constants.NUM_COURSE_FEATURE_COL_PREFIX
     dummy_prefix = constants.DUMMY_COURSE_FEATURE_COL_PREFIX
 
+    course_subject_prefixes = [
+        constants.NUM_COURSE_FEATURE_COL_PREFIX + "_course_id",
+        constants.NUM_COURSE_FEATURE_COL_PREFIX + "_course_subject_area",
+    ]
+
     dummy_cols = {
         col.replace(num_prefix, dummy_prefix, 1): df[col].ge(1)
         for col in df.columns
-        if col.startswith(constants.NUM_COURSE_FEATURE_COL_PREFIX)
+        if any(col.startswith(prefix) for prefix in course_subject_prefixes)
     }
 
     return df.assign(**dummy_cols).reindex(columns=grp_cols + list(dummy_cols.keys()))

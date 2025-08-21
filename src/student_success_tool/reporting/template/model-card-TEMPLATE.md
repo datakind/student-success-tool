@@ -6,7 +6,7 @@
 ### Overview
 - {outcome_section}
 - {checkpoint_section}
-- Developed by DataKind in {current_year}, Model Version {version_number}
+- {development_note_section}
 - If there are questions or concerns about the model, you can contact **education@datakind.org** or your client success manager.
 
 ### Intended Use
@@ -32,7 +32,7 @@
             - Threshold Applied: Removed features with variance less than {low_variance_threshold}.
             - Explanation: Features with very low variance do not vary much across observations, meaning they carry little predictive signal. For example, features with variance below 0.01 are often considered near-constant.
         - Missing Data Threshold
-            - Threshold Applied: Removed features with more than {incomplete_threshold}% missing values.
+            - Threshold Applied: Removed features with {incomplete_threshold}% or more missing values.
             - Explanation: Features with a high percentage of missing values may introduce noise or require extensive imputation.
     - After our feature selection processes, {number_of_features} actionable, relevant, and non-redundant features were retained for modeling.
 - **Target Population**
@@ -73,7 +73,7 @@
 
 - **Analyzing Bias Across Student Groups**
 {bias_groups_section}
-    - From our analysis, we identified statistically significant differences across the following student groups _below_.
+    - We evaluated FNR across these student groups and tested for statistically significant disparities.
 
 {bias_summary_section}
 
@@ -96,5 +96,9 @@
 {feature_importances_by_shap_plot}
 
 ### Appendix
+
+{performance_by_splits_section}
+
+{selected_features_ranked_by_shap}
 
 {evaluation_by_group_section}

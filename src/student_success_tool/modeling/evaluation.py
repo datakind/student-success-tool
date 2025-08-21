@@ -4,7 +4,7 @@ import shutil
 import typing as t
 import uuid
 from collections.abc import Sequence
-
+from typing import Optional, List
 import matplotlib.colors as mcolors
 import matplotlib.figure
 import matplotlib.pyplot as plt
@@ -18,7 +18,13 @@ import sklearn.inspection
 import sklearn.metrics
 import sklearn.utils
 from sklearn.calibration import calibration_curve
+from sklearn.preprocessing import MinMaxScaler
 from statsmodels.nonparametric.smoothers_lowess import lowess
+
+try:
+    from IPython.display import display
+except ImportError:
+    display = t.cast(t.Callable[..., t.Any], print)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +79,7 @@ def evaluate_performance(
     pos_label: PosLabelType,
     split_col: str = "split",
     target_col: str = "target",
+    pred_col: str = "pred",
     pred_prob_col: str = "pred_prob",
 ) -> None:
     """
@@ -88,6 +95,8 @@ def evaluate_performance(
     """
     calibration_dir = "calibration"
     preds_dir = "preds"
+    metrics_dir = "metrics"
+    metrics_records = []
 
     for split_name, split_data in df_pred.groupby(split_col):
         LOGGER.info("Evaluating model performance for '%s' split", split_name)
@@ -96,8 +105,6 @@ def evaluate_performance(
             local_path=f"/tmp/{split_name}_preds.csv",
             artifact_path=preds_dir,
         )
-        plt.close()
-
         hist_fig, cal_fig = create_evaluation_plots(
             split_data,
             pred_prob_col,
@@ -112,44 +119,166 @@ def evaluate_performance(
         # Closes all matplotlib figures in console to free memory
         plt.close("all")
 
+        # Compute performance metrics by split (returns a dict)
+        perf_metrics_raw = compute_classification_perf_metrics(
+            targets=split_data[target_col],
+            preds=split_data[pred_col],
+            pred_probs=split_data[pred_prob_col],
+            pos_label=pos_label,
+        )
 
-def get_top_run_ids(
-    experiment_id: str,
-    optimization_metric: str,
-    topn_runs_included: int = 1,
-) -> list[str]:
+        perf_metrics = format_perf_metrics(perf_metrics_raw)
+        perf_split_col = f"Dataset {split_col.capitalize()}"
+        split_map = {"test": "Test", "train": "Training", "validate": "Validation"}
+        perf_metrics[perf_split_col] = split_map.get(split_name)
+        metrics_records.append(perf_metrics)
+
+    # Convert to DataFrame for display or saving
+    metrics_df = pd.DataFrame(metrics_records).set_index(perf_split_col)
+    metrics_df.to_csv("/tmp/performance_across_splits.csv")
+    mlflow.log_artifact("/tmp/performance_across_splits.csv", artifact_path=metrics_dir)
+    LOGGER.info("Creating summary of performance metrics across splits")
+
+
+def format_perf_metrics(perf_metrics_raw: dict) -> dict:
     """
-    Retrieve top run IDs from an MLflow experiment using evaluation parameters.
+    Formats performance metrics from raw metrics. This is for a model cards
+    table that presents performance by splits.
 
     Args:
+        perf_metrics_raw: Dictionary containing raw performance metrics.
+
+    Returns:
+        Dictionary summarizing the formatted performance metrics.
+    """
+    return {
+        "Number of Samples": int(perf_metrics_raw["num_samples"]),
+        "Number of Positive Samples": int(perf_metrics_raw["num_positives"]),
+        "Actual Target Prevalence": round(
+            float(perf_metrics_raw["true_positive_prevalence"]), 2
+        ),
+        "Predicted Target Prevalence": round(
+            float(perf_metrics_raw["pred_positive_prevalence"]), 2
+        ),
+        "Accuracy": round(float(perf_metrics_raw["accuracy"]), 2),
+        "Precision": round(float(perf_metrics_raw["precision"]), 2),
+        "Recall": round(float(perf_metrics_raw["recall"]), 2),
+        "F1 Score": round(float(perf_metrics_raw["f1_score"]), 2),
+        "Log Loss": round(float(perf_metrics_raw["log_loss"]), 2),
+    }
+
+
+def get_top_runs(
+    experiment_id: str,
+    optimization_metrics: t.Union[str, list[str]],
+    topn_runs_included: int = 1,
+) -> dict[str, str]:
+    """
+    Retrieve top runs from an MLflow experiment using a balanced score over multiple metrics.
+
+    Parameters:
         experiment_id: MLflow experiment ID.
-        optimization_metric: Metric used to optimize the model.
+        optimization_metrics: Single metric or list of metrics to sort by.
         topn_runs_included: Number of top runs to return.
 
     Returns:
-        top_run_ids: List of top run IDs based on the optimization metric.
+        A dictionary mapping run_name to run_id.
     """
+    if isinstance(optimization_metrics, str):
+        optimization_metrics = [optimization_metrics]
+
+    # Prepare column names and directions
+    sort_by = [f"metrics.{m}" for m in optimization_metrics]
+    directions = infer_directions(optimization_metrics)
+
     # Fetch all runs
-    runs = mlflow.search_runs(
-        experiment_ids=[experiment_id],
-        order_by=["metrics.m DESC"],
-        output_format="pandas",
+    runs = mlflow.search_runs(experiment_ids=[experiment_id], output_format="pandas")
+    assert isinstance(runs, pd.DataFrame)
+
+    # Clean and filter
+    valid_runs = runs.dropna(subset=sort_by).copy()
+    for col in sort_by:
+        valid_runs[col] = valid_runs[col].astype(float)
+
+    # Score and sort
+    valid_runs["balanced_score"] = compute_balanced_score(
+        valid_runs, sort_by, directions
     )
-    assert isinstance(runs, pd.DataFrame)  # type guard
-    # Retrieve validation metric for sorting
-    search_metric = (
-        f"metrics.val_{optimization_metric}"
-        if optimization_metric in ["log_loss", "roc_auc"]
-        else f"metrics.val_{optimization_metric}_score"
+    sorted_runs = valid_runs.sort_values("balanced_score")
+
+    # Display viz of top runs
+    display_cols = ["tags.mlflow.runName", "run_id"] + sort_by + ["balanced_score"]
+
+    print("Inferred directions:")
+    for metric, direction in zip(optimization_metrics, directions):
+        print(f"  • {metric}: {'minimize' if direction == 'asc' else 'maximize'}")
+
+    print(f"\n Top {topn_runs_included} runs (by balanced score):")
+    display(sorted_runs[display_cols].head(topn_runs_included))
+
+    # Return as {run_name: run_id}
+    top_runs = sorted_runs.head(topn_runs_included)
+    return {
+        row.get("tags.mlflow.runName", f"Unnamed_{row['run_id']}"): row["run_id"]
+        for _, row in top_runs.iterrows()
+    }
+
+
+def infer_directions(metrics: list[str]) -> list[str]:
+    """
+    When getting top runs, we can infer optimization direction
+    for each metric: 'asc' (minimize) or 'desc' (maximize).
+
+    Parameters:
+        metrics: List of metric names.
+
+    Returns:
+        List of directions, one for each metric.
+    """
+    minimize_keywords = (
+        "loss",
+        "error",
+        "log_loss",
+        "mae",
+        "mse",
+        "bias_score_mean",
+        "bias_score_max",
     )
-    # Sort and select top run IDs based on min/max with loss vs. score
-    ascending_order = optimization_metric == "log_loss"
-    top_run_ids: list[str] = (
-        runs.sort_values(by=search_metric, ascending=ascending_order)
-        .iloc[:topn_runs_included]["run_id"]
-        .tolist()
-    )
-    return top_run_ids
+    return [
+        "asc" if any(metric.lower().endswith(k) for k in minimize_keywords) else "desc"
+        for metric in metrics
+    ]
+
+
+def compute_balanced_score(
+    df: pd.DataFrame, metrics: list[str], directions: list[str]
+) -> pd.Series:
+    """
+    When sorting through top runs, we need to average normalize our metrics in order to
+    properly find the best overall runs across all given metrics. We balance ALL metrics
+    equally. We then compute a balanced average score (lower is better).
+
+    TODO: Provide a priority list of metrics: higher recall, then ROC AUC, then log loss,
+    for example.
+
+    Parameters:
+        df: Pandas DataFrame containing metrics
+        metrics: List of metric names
+        directions: List of directions for each metric
+
+    Returns:
+        Balanced score for each row in the DataFrame
+    """
+    scaler = MinMaxScaler()
+    data = df[metrics].copy()
+    normalized = scaler.fit_transform(data)
+
+    # Flip maximization metrics so that lower = better for everything
+    for i, direction in enumerate(directions):
+        if direction == "desc":
+            normalized[:, i] = 1 - normalized[:, i]
+
+    return pd.Series(normalized.mean(axis=1), index=df.index)
 
 
 def compute_classification_perf_metrics(
@@ -318,6 +447,189 @@ def compute_feature_permutation_importance(
     return result
 
 
+def log_confusion_matrix(
+    institution_id: str,
+    *,
+    automl_run_id: str,
+    catalog: str = "staging_sst_01",
+) -> None:
+    """
+    Register an mlflow model according to one of their various recommended approaches.
+
+    Args:
+        institution_id
+        automl_run_id
+        catalog
+    """
+    try:
+        from databricks.connect import DatabricksSession
+
+        spark = DatabricksSession.builder.getOrCreate()
+    except Exception:
+        print("Databricks Connect failed. Falling back to local Spark.")
+        from pyspark.sql import SparkSession
+
+        spark = (
+            SparkSession.builder.master("local[*]").appName("Fallback").getOrCreate()
+        )
+
+    confusion_matrix_table_path = (
+        f"{catalog}.{institution_id}_silver.training_{automl_run_id}_confusion_matrix"
+    )
+
+    def safe_div(numerator, denominator):
+        return numerator / denominator if denominator else 0.0
+
+    if mlflow.active_run() is None:
+        raise RuntimeError(
+            "No active MLflow run. Please call this within an MLflow run context."
+        )
+
+    try:
+        run = mlflow.get_run(automl_run_id)
+        required_metrics = [
+            "test_true_positives",
+            "test_true_negatives",
+            "test_false_positives",
+            "test_false_negatives",
+        ]
+        metrics = {m: run.data.metrics.get(m) for m in required_metrics}
+
+        if any(v is None for v in metrics.values()):
+            raise ValueError(
+                f"Missing one or more required metrics in run {automl_run_id}: {metrics}"
+            )
+
+        tp, tn, fp, fn = (
+            metrics["test_true_positives"],
+            metrics["test_true_negatives"],
+            metrics["test_false_positives"],
+            metrics["test_false_negatives"],
+        )
+
+        tn_percentage = safe_div(tn, tn + fp)
+        tp_percentage = safe_div(tp, tp + fn)
+        fp_percentage = safe_div(fp, fp + tn)
+        fn_percentage = safe_div(fn, fn + tp)
+
+        confusion_matrix_table = pd.DataFrame(
+            {
+                "true_positive": [tp_percentage],
+                "false_positive": [fp_percentage],
+                "true_negative": [tn_percentage],
+                "false_negative": [fn_percentage],
+            }
+        )
+
+        confusion_matrix_table_spark = spark.createDataFrame(confusion_matrix_table)
+        confusion_matrix_table_spark.write.mode("overwrite").saveAsTable(
+            confusion_matrix_table_path
+        )
+        LOGGER.info(
+            "Confusion matrix written to table '%s' for run_id=%s",
+            confusion_matrix_table_path,
+            automl_run_id,
+        )
+
+    except mlflow.exceptions.MlflowException as e:
+        raise RuntimeError(f"MLflow error while retrieving run {automl_run_id}: {e}")
+    except Exception:
+        LOGGER.exception("Failed to compute or store confusion matrix.")
+        raise
+
+
+def log_roc_table(
+    institution_id: str,
+    *,
+    automl_run_id: str,
+    catalog: str = "staging_sst_01",
+    target_col: str = "target",
+    modeling_dataset_name: str = "modeling_dataset",
+    split_col: Optional[str] = None,
+) -> None:
+    """
+    Computes and saves an ROC curve table (FPR, TPR, threshold, etc.) for a given MLflow run
+    by reloading the test dataset and the trained model.
+
+    Args:
+        institution_id (str): Institution ID prefix for table name.
+        automl_experiment_id (str): MLflow run ID of the trained model.
+        experiment_id
+        catalog (str): Destination catalog/schema for the ROC curve table.
+    """
+    try:
+        from databricks.connect import DatabricksSession
+
+        spark = DatabricksSession.builder.getOrCreate()
+    except Exception:
+        print("⚠️ Databricks Connect failed. Falling back to local Spark.")
+        from pyspark.sql import SparkSession
+
+        spark = (
+            SparkSession.builder.master("local[*]").appName("Fallback").getOrCreate()
+        )
+
+    split_col = split_col or "split"
+
+    table_path = f"{catalog}.{institution_id}_silver.training_{automl_run_id}_roc_curve"
+
+    try:
+        df = spark.read.table(modeling_dataset_name).toPandas()
+        test_df = df[df[split_col] == "test"].copy()
+
+        # Load model + features
+        model = mlflow.sklearn.load_model(f"runs:/{automl_run_id}/model")
+        feature_names: List[str] = model.named_steps["column_selector"].get_params()[
+            "cols"
+        ]
+
+        # Prepare inputs for ROC
+        y_true = test_df[target_col].values
+        X_test = test_df[feature_names]
+        y_scores = model.predict_proba(X_test)[:, 1]  # probabilities for class 1
+
+        # Calculate ROC table manually and plot all thresholds.
+        # Down the line, we might want to specify a threshold to reduce plot density
+        thresholds = np.sort(np.unique(y_scores))[::-1]
+        rounded_thresholds = sorted(
+            set([round(t, 4) for t in thresholds]), reverse=True
+        )
+
+        P, N = np.sum(y_true == 1), np.sum(y_true == 0)
+
+        rows = []
+        for thresh in rounded_thresholds:
+            y_pred = (y_scores >= thresh).astype(int)
+            TP = np.sum((y_pred == 1) & (y_true == 1))
+            FP = np.sum((y_pred == 1) & (y_true == 0))
+            TN = np.sum((y_pred == 0) & (y_true == 0))
+            FN = np.sum((y_pred == 0) & (y_true == 1))
+            TPR = TP / P if P else 0
+            FPR = FP / N if N else 0
+            rows.append(
+                {
+                    "threshold": round(thresh, 4),
+                    "true_positive_rate": round(TPR, 4),
+                    "false_positive_rate": round(FPR, 4),
+                    "true_positive": int(TP),
+                    "false_positives": int(FP),
+                    "true_negatives": int(TN),
+                    "false_negatives": int(FN),
+                }
+            )
+
+        roc_df = pd.DataFrame(rows)
+        spark_df = spark.createDataFrame(roc_df)
+        spark_df.write.mode("overwrite").saveAsTable(table_path)
+        logging.info(
+            "ROC table written to table '%s' for run_id=%s", table_path, automl_run_id
+        )
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed to log ROC table for run {automl_run_id}: {e}"
+        ) from e
+
+
 ############
 ## PLOTS! ##
 ############
@@ -471,6 +783,9 @@ def plot_trained_models_comparison(
     ax.tick_params(axis="x", colors="lightgrey", which="both")  # Color of ticks
     ax.xaxis.grid(True, color="lightgrey", linestyle="--", linewidth=0.5)
     fig.tight_layout()
+
+    mlflow.log_figure(fig, "model_comparison.png")
+    plt.close()
 
     return fig
 

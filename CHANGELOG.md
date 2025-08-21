@@ -1,5 +1,60 @@
 # CHANGELOG
 
+## 0.3.10 (2025-08)
+- Created automated model selection (PR 267)
+- Corrected aliasing & typos model cards (PR 264)
+
+## 0.3.9 (2025-07)
+- Add pre-cohort courses to config (PR 258)
+
+## 0.3.8 (2025-07)
+- Patching up gold volume path due to Azure/GCP naming differences, keeping GCP version (PR 249)
+
+## 0.3.7 (2025-07)
+- Adjusted feature naming for better flexibility and robustness in feature table (PR 243)
+- Updated codebased to have better data leakage handling (PR 237)
+- Added SHAP feature metadata to FE tables to have better compatibility with FE needs and resolve endpoint bugs (PR 242)
+- Updated model card output location to gold volumes instead of artifacts for compatibility with API endpoint & FE (PR 245) 
+
+## 0.3.6 (2025-06)
+- Fixed bug in features table (PR 229)
+- Fixed bug in 12 credit features (PR 230)
+
+## 0.3.5 (2025-06)
+- Added support scores to to features (PR 222)
+- Limit boolean features to courses and subjects (PR 223)
+- Add boolean features into VIF calcs (PR 223)
+- Clean up features table (PR 223)
+- Adjusting config unit tests to import templates directly (PR 224)
+
+## 0.3.4 (2025-06)
+- Update features table (PR #218)
+- Add features table to top shap feature output table (PR #217)
+
+## 0.3.3 (2025-06)
+- Added unit test for PDP features table (PR 202)
+
+## 0.3.2 (2025-05)
+- Moved logging of plots from templates to modules (PR 184)
+- Updated pre-cohort and core term parameters in the checkpointing functions (PRs 188, 190, 194, 195)
+- Update compute dataset unit test to handle failures (PR 191)
+- Removed students with NA target values from dataset (PR 197)
+- Added binary feature names and descriptions to the feature table files (PR 198)
+
+
+## 0.3.1 (2025-05)
+- Added bronze, silver, and gold dataset types in config to align with catalog from our pipelines.
+
+## 0.3.0 (2025-05)
+- Update inference pipeline with custom converter functionality.
+- Standardized feature set across all schools by adding custom features & learnings across schools.
+- Restructured subpackage in order to better modularize our SST process.
+- Added longer description to feature table for SST web app.
+- Updated schema validation for gateway/dev fields based on NSC update.
+- Added model card module under `reporting`.
+  - Model cards can now be created for PDP schools.
+  - Updated PDP config for model card compatibility.
+
 ## 0.2.0 (2025-04)
 
 - Extended and modularized functionality into several new subpackages, with `pdp` as a secondary level, to make imports more intuitive and allow for extending code to support other 3rd-party data formats

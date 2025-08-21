@@ -5,6 +5,7 @@ import matplotlib.figure
 import matplotlib.pyplot as plt
 import mlflow
 import numpy as np
+from collections import Counter
 import pandas as pd
 import scipy.stats as st
 import seaborn as sns
@@ -29,6 +30,14 @@ FLAG_NAMES = {
     "🟡 LOW BIAS": "low_bias",
     "🟠 MODERATE BIAS": "moderate_bias",
     "🔴 HIGH BIAS": "high_bias",
+}
+
+# Define flag weights for scoring bias
+FLAG_WEIGHTS = {
+    "🟡 LOW BIAS": 0.25,
+    "🟠 MODERATE BIAS": 0.75,
+    "🔴 HIGH BIAS": 1.0,
+    # Exclude 🟢 and ⚪
 }
 
 # TODO: eventually we should use the custom_style.mplstyle colors, but currently
@@ -77,7 +86,7 @@ def evaluate_bias(
 
     for split_name, split_data in df_pred.groupby(split_col):
         for group_col in student_group_cols:
-            group_metrics, fnr_data = compute_group_bias_metrics(
+            bias_metrics, perf_metrics, fnr_data = compute_group_bias_metrics(
                 split_data,
                 split_name,
                 group_col,
@@ -87,7 +96,9 @@ def evaluate_bias(
                 pos_label,
                 sample_weight_col,
             )
-            log_group_metrics_to_mlflow(group_metrics, split_name, group_col)
+
+            log_group_metrics_to_mlflow(bias_metrics, f"bias_{split_name}", group_col)
+            log_group_metrics_to_mlflow(perf_metrics, f"perf_{split_name}", group_col)
 
             # Detect bias flags
             all_flags = flag_bias(fnr_data)
@@ -119,6 +130,11 @@ def evaluate_bias(
 
             model_flags.extend(all_flags)
 
+        # Compute and log bias scores to mlflow
+        summary = aggregate_bias_scores(model_flags, split=split_name)
+        log_bias_scores_to_mlflow(summary, split=split_name)
+
+    # Log bias flags to mlflow
     log_bias_flags_to_mlflow(model_flags)
 
 
@@ -131,10 +147,11 @@ def compute_group_bias_metrics(
     pred_prob_col: str,
     pos_label: PosLabelType,
     sample_weight_col: str,
-) -> tuple[list, list]:
+) -> tuple[list, list, list]:
     """
     Computes group metrics (including FNR) based on evaluation parameters and logs them to MLflow.
-
+    We split bias & performance metrics into separate dictionaries in our output to make the model
+    card more readable with two separate tables.
     Args:
         split_data: Data for the current split to evaluate
         split_name: Name of the data split (e.g., "train", "test", or "val")
@@ -144,7 +161,8 @@ def compute_group_bias_metrics(
         pos_label: Positive class label.
         student_group_cols: List of columns for subgroups.
     """
-    group_metrics = []
+    bias_group_metrics = []
+    perf_group_metrics = []
     fnr_data = []
 
     for subgroup_name, subgroup_data in split_data.groupby(group_col):
@@ -177,17 +195,27 @@ def compute_group_bias_metrics(
         )
         # HACK: avoid duplicative metrics
         eval_metrics.pop("num_positives", None)
-        subgroup_metrics = format_subgroup_metrics(eval_metrics, fnr_subgroup_data)
+        bias_subgroup_metrics, perf_subgroup_metrics = format_subgroup_metrics(
+            eval_metrics, fnr_subgroup_data
+        )
 
-        log_subgroup_metrics_to_mlflow(subgroup_metrics, split_name, group_col)
+        log_subgroup_metrics_to_mlflow(
+            bias_subgroup_metrics, f"{split_name}_bias", group_col
+        )
+        log_subgroup_metrics_to_mlflow(
+            perf_subgroup_metrics, f"{split_name}_performance", group_col
+        )
 
-        group_metrics.append(subgroup_metrics)
+        bias_group_metrics.append(bias_subgroup_metrics)
+        perf_group_metrics.append(perf_subgroup_metrics)
         fnr_data.append(fnr_subgroup_data)
 
-    return group_metrics, fnr_data
+    return bias_group_metrics, perf_group_metrics, fnr_data
 
 
-def format_subgroup_metrics(eval_metrics: dict, fnr_subgroup_data: dict) -> dict:
+def format_subgroup_metrics(
+    eval_metrics: dict, fnr_subgroup_data: dict
+) -> tuple[dict, dict]:
     """
     Formats the evaluation metrics and bias metrics together for logging into MLflow.
 
@@ -195,9 +223,9 @@ def format_subgroup_metrics(eval_metrics: dict, fnr_subgroup_data: dict) -> dict
         eval_metrics: Dictionary performance metrics for subgroup
         fnr_subgroup_data: List of dictionaries containing FNR and CI information for each subgroup.
     Returns:
-        Dictionary summarizing both performance & bias metrics
+        Tuple of dictionaries summarizing both performance & bias metrics
     """
-    return {
+    bias_metrics = {
         "Subgroup": fnr_subgroup_data["subgroup"],
         "Number of Samples": eval_metrics["num_samples"],
         "Number of Positive Samples": fnr_subgroup_data["number_of_positive_samples"],
@@ -209,6 +237,9 @@ def format_subgroup_metrics(eval_metrics: dict, fnr_subgroup_data: dict) -> dict
         "FNR": round(fnr_subgroup_data["fnr"], 2),
         "FNR CI Lower": round(fnr_subgroup_data["ci"][0], 2),
         "FNR CI Upper": round(fnr_subgroup_data["ci"][1], 2),
+    }
+    performance_metrics = {
+        "Subgroup": fnr_subgroup_data["subgroup"],
         # Performance Metrics
         "Accuracy": round(eval_metrics["accuracy"], 2),
         "Precision": round(eval_metrics["precision"], 2),
@@ -216,6 +247,7 @@ def format_subgroup_metrics(eval_metrics: dict, fnr_subgroup_data: dict) -> dict
         "F1 Score": round(eval_metrics["f1_score"], 2),
         "Log Loss": round(eval_metrics["log_loss"], 2),
     }
+    return bias_metrics, performance_metrics
 
 
 def flag_bias(
@@ -256,24 +288,31 @@ def flag_bias(
     for i, current in enumerate(fnr_data):
         for other in fnr_data[i + 1 :]:
             if current["fnr"] > 0 and other["fnr"] > 0:
-                fnr_diff = np.abs(current["fnr"] - other["fnr"])
-                p_value = z_test_fnr_difference(
-                    current["fnr"], other["fnr"], current["size"], other["size"]
+                # Determine ordering based on FNR values
+                sg1, sg2 = (
+                    (current, other)
+                    if current["fnr"] >= other["fnr"]
+                    else (other, current)
                 )
-                ci_overlap = check_ci_overlap(current["ci"], other["ci"])
+                # Guaranteed to be greater than zero
+                fnr_diff = sg1["fnr"] - sg2["fnr"]
+                p_value = z_test_fnr_difference(
+                    sg1["fnr"], sg2["fnr"], sg1["size"], sg2["size"]
+                )
+                ci_overlap = check_ci_overlap(sg1["ci"], sg2["ci"])
 
                 if np.isnan(p_value) or (
-                    (current["number_of_positive_samples"] < min_samples)
-                    or (other["number_of_positive_samples"] < min_samples)
+                    (sg1["number_of_positive_samples"] < min_samples)
+                    or (sg2["number_of_positive_samples"] < min_samples)
                 ):
                     bias_flags.append(
                         generate_bias_flag(
-                            current["group"],
-                            current["subgroup"],
-                            other["subgroup"],
+                            sg1["group"],
+                            sg1["subgroup"],
+                            sg2["subgroup"],
                             fnr_diff,
-                            "Insufficient samples for statistical test",
-                            current["split_name"],
+                            "insufficient samples for statistical test",
+                            sg1["split_name"],
                             "⚪ INSUFFICIENT DATA",
                             p_value,
                         )
@@ -281,12 +320,12 @@ def flag_bias(
                 elif fnr_diff < low_bias_thresh or p_value > 0.1:
                     bias_flags.append(
                         generate_bias_flag(
-                            current["group"],
-                            current["subgroup"],
-                            other["subgroup"],
+                            sg1["group"],
+                            sg1["subgroup"],
+                            sg2["subgroup"],
                             fnr_diff,
-                            "No significant difference",
-                            current["split_name"],
+                            "no significant difference",
+                            sg1["split_name"],
                             "🟢 NO BIAS",
                             p_value,
                         )
@@ -295,18 +334,18 @@ def flag_bias(
                     for threshold, flag, p_thresh in thresholds:
                         if fnr_diff >= threshold and p_value <= p_thresh:
                             reason = (
-                                "Overlapping CIs"
+                                "overlapping confidence intervals"
                                 if ci_overlap
-                                else "Non-overlapping CIs"
+                                else "non-overlapping confidence intervals"
                             )
                             bias_flags.append(
                                 generate_bias_flag(
-                                    current["group"],
-                                    current["subgroup"],
-                                    other["subgroup"],
+                                    sg1["group"],
+                                    sg1["subgroup"],
+                                    sg2["subgroup"],
                                     fnr_diff,
                                     reason,
-                                    current["split_name"],
+                                    sg1["split_name"],
                                     flag,
                                     p_value,
                                 )
@@ -314,6 +353,75 @@ def flag_bias(
                             break  # Exit after the first matched threshold
 
     return bias_flags
+
+
+def aggregate_bias_scores(
+    flags: t.List[dict],
+    split: str = "test",
+) -> t.Dict[str, float]:
+    """
+    Create model bias score by aggregating bias flag scores, while accounting
+    for valid subgroup comparisons. A bias score for a flag is simply its FNR magnitude.
+
+    We also use flag weights to ensure we're accounting for statistical significance, which is baked
+    into each flag (e.g. low has a p-value less than 0.1; medium or high has p-values less than 0.01).
+    This design captures both magnitude and statistical strength of disparities.
+
+    Once we sum all of our weighted bias flag scores, we then normalize using the number of valid
+    comparisons, which is the sum of all "no bias", "low", "medium", and "high" bias flags, while
+    excluding "insufficient data" flags.
+
+    This normalization is performed for the following reasons:
+        (1) Our mean bias score for a model will be theoretically bounded between 0 and 1.
+        (2) We appropriately include "no bias" flags in determining overall model bias
+        (3) We account for sample size differences. Otherwise, a model with more bias flags
+        and more valid comparisons will always have a higher score than a model with few flags &
+        comparisons.
+
+    Returns:
+        Dictionary with:
+        - bias_score_sum: sum of weighted per-flag scores
+        - bias_score_mean: normalized by num_valid_comparisons
+        - bias_score_max: max single flag score (raw)
+        - num_bias_flags: total number of bias flags, includes only "low", "medium", and "high"
+        - num_valid_comparisons: total valid bias comparisons  with "no bias" flags included,
+          but excludes any "insufficient data" flags
+    """
+    # Filter flags to relevant split
+    split_flags = [f for f in flags if f["split_name"] == split]
+
+    # Count flags by type
+    flag_counts = Counter(f["flag"] for f in split_flags)
+
+    # Compute numerator (weighted score sum)
+    included_flags = [f for f in split_flags if f["flag"] in FLAG_WEIGHTS]
+    weighted_scores = [
+        f["fnr_percentage_difference"] * FLAG_WEIGHTS[f["flag"]] for f in included_flags
+    ]
+    raw_scores = [f["fnr_percentage_difference"] for f in included_flags]
+
+    # Compute denominator = all flags (no bias, low, medium, high)
+    # excludes insufficient data flag
+    num_valid_comparisons = sum(
+        count for flag, count in flag_counts.items() if flag != "⚪ INSUFFICIENT DATA"
+    )
+
+    # Final metrics
+    total_score = round(sum(weighted_scores), 4)
+    mean_score = (
+        round(total_score / num_valid_comparisons, 4)
+        if num_valid_comparisons > 0
+        else 0.0
+    )
+    max_score = round(max(raw_scores), 4) if raw_scores else 0.0
+
+    return {
+        "bias_score_sum": total_score,
+        "bias_score_mean": mean_score,
+        "bias_score_max": max_score,
+        "num_bias_flags": len(included_flags),
+        "num_valid_comparisons": num_valid_comparisons,
+    }
 
 
 def calculate_fnr_and_ci(
@@ -438,10 +546,11 @@ def generate_bias_flag(
         "type": (
             bias_type
             if np.isnan(p_value)
-            else f"{bias_type}, p-value: {'< 0.001' if p_value < 0.001 else f'{p_value:.3f}'}"
+            else f"{bias_type} with a p-value {'less than 0.001' if p_value < 0.001 else f'of {p_value:.3f}'}"
         ),
         "split_name": split_name,
         "flag": flag,
+        "p_value": p_value,
     }
     return flag_entry
 
@@ -482,7 +591,8 @@ def log_group_metrics_to_mlflow(
     Saves and logs group-level bias metrics as a CSV artifact in MLflow.
 
     Args:
-        group_metrics: List of dictionaries containing computed group-level bias metrics.
+        group_metrics: List of dictionaries containing computed group-level bias
+        or performance metrics.
         split_name: Name of the data split (e.g., "train", "test", "validation").
         group_col: Column name representing the group for bias evaluation.
     """
@@ -490,6 +600,25 @@ def log_group_metrics_to_mlflow(
     metrics_tmp_path = f"/tmp/{split_name}_{group_col}_metrics.csv"
     df_group_metrics.to_csv(metrics_tmp_path, index=False)
     mlflow.log_artifact(local_path=metrics_tmp_path, artifact_path="group_metrics")
+
+
+def log_bias_scores_to_mlflow(scores: dict, split: str = "test") -> None:
+    """
+    Logs bias scores to MLflow as both individual metrics and a summary CSV artifact.
+
+    Args:
+        scores: Dictionary of bias scores and related metadata to log.
+        split: The dataset split associated with the scores (e.g. "test", "val", "train").
+    """
+    # Log individual metrics with split prefix
+    for metric_name, value in scores.items():
+        mlflow.log_metric(f"{split}_{metric_name}", value)
+
+    # Log summary as CSV artifact
+    df = pd.DataFrame([scores])
+    bias_score_tmp_path = f"/tmp/{split}_bias_scores.csv"
+    df.to_csv(bias_score_tmp_path, index=False)
+    mlflow.log_artifact(bias_score_tmp_path, artifact_path="bias_scores")
 
 
 def log_subgroup_metrics_to_mlflow(

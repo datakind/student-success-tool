@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+import tomlkit
 
 from student_success_tool.modeling import utils
 
@@ -11,13 +12,13 @@ from student_success_tool.modeling import utils
             pd.DataFrame(data=list(range(1000))),
             {"train": 0.5, "test": 0.5},
             True,
-            None,
+            10,
         ),
         (
             pd.DataFrame(data=list(range(1000))),
             {"train": 0.6, "test": 0.2, "valid": 0.2},
             False,
-            None,
+            11,
         ),
         (
             pd.DataFrame(data=list(range(1000))),
@@ -81,3 +82,29 @@ def test_compute_sample_weights(df, target_col, class_weight, exp):
     assert isinstance(obs, pd.Series)
     assert len(obs) == len(df)
     assert pd.testing.assert_series_equal(obs, exp, rtol=0.01) is None
+
+
+# --- Sample config classes ---
+
+
+def test_update_run_metadata_in_toml(tmp_path):
+    # Create a dummy TOML config
+    config_path = tmp_path / "config.toml"
+    original_doc = tomlkit.document()
+    original_doc["institution_id"] = "TEST_INST"
+    original_doc["model"] = tomlkit.table()
+    original_doc["model"]["framework"] = "sklearn"
+
+    config_path.write_text(tomlkit.dumps(original_doc))
+
+    # Update with new values
+    run_id = "new_run_123"
+    experiment_id = "exp_456"
+    utils.update_run_metadata_in_toml(str(config_path), run_id, experiment_id)
+
+    # Re-read and validate
+    updated = tomlkit.parse(config_path.read_text())
+    assert updated["model"]["run_id"] == run_id
+    assert updated["model"]["experiment_id"] == experiment_id
+    assert updated["model"]["framework"] == "sklearn"  # Existing field preserved
+    assert updated["institution_id"] == "TEST_INST"  # Other sections untouched

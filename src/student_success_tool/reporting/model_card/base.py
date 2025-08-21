@@ -1,10 +1,12 @@
 import os
 import logging
 import typing as t
-from datetime import datetime
 
-import mlflow
 from mlflow.tracking import MlflowClient
+
+# export .md to .pdf
+import markdown
+from weasyprint import HTML
 
 # resolving files in templates module within package
 from importlib.abc import Traversable
@@ -35,6 +37,7 @@ class ModelCard(t.Generic[C]):
         catalog: str,
         model_name: str,
         assets_path: t.Optional[str] = None,
+        mlflow_client: t.Optional[MlflowClient] = None,
     ):
         """
         Initializes the ModelCard object with the given config and the model name
@@ -46,7 +49,7 @@ class ModelCard(t.Generic[C]):
         self.uc_model_name = f"{catalog}.{self.cfg.institution_id}_gold.{model_name}"
         LOGGER.info("Initializing ModelCard for model: %s", self.uc_model_name)
 
-        self.client = MlflowClient()
+        self.client = mlflow_client or MlflowClient()
         self.section_registry = SectionRegistry()
         self.format = Formatting()
         self.context: dict[str, t.Any] = {}
@@ -104,13 +107,20 @@ class ModelCard(t.Generic[C]):
         """
         Retrieves the model version from the MLflow client based on the run ID.
         """
-        versions = self.client.search_model_versions(f"name='{self.uc_model_name}'")
-        for v in versions:
-            if v.run_id == self.run_id:
-                self.context["version_number"] = v.version
-                return
-        LOGGER.warning(f"Unable to find model version for run id: {self.run_id}")
-        self.context["version_number"] = "Unknown"
+        try:
+            versions = self.client.search_model_versions(f"name='{self.uc_model_name}'")
+            for v in versions:
+                if v.run_id == self.run_id:
+                    self.context["version_number"] = v.version
+                    LOGGER.info(f"Model Version = {self.context['version_number']}")
+                    return
+            LOGGER.warning(f"Unable to find model version for run id: {self.run_id}")
+            self.context["version_number"] = None
+        except Exception as e:
+            LOGGER.error(
+                f"Error retrieving model version for run id {self.run_id}: {e}"
+            )
+            self.context["version_number"] = None
 
     def extract_training_data(self):
         """
@@ -121,13 +131,18 @@ class ModelCard(t.Generic[C]):
         )
         self.training_data = self.modeling_data
         if self.cfg.split_col:
+            if self.cfg.split_col not in self.modeling_data.columns:
+                raise ValueError(
+                    f"Configured split_col '{self.cfg.split_col}' is not present in modeling data columns: "
+                    f"{list(self.modeling_data.columns)}"
+                )
             self.training_data = self.modeling_data[
                 self.modeling_data[self.cfg.split_col] == "train"
             ]
         self.context["training_dataset_size"] = self.training_data.shape[0]
-        self.context["num_runs_in_experiment"] = mlflow.search_runs(
-            experiment_ids=[self.experiment_id]
-        ).shape[0]
+        self.context["num_runs_in_experiment"] = utils.safe_count_runs(
+            self.experiment_id
+        )
 
     def collect_metadata(self):
         """
@@ -159,11 +174,10 @@ class ModelCard(t.Generic[C]):
             "logo": utils.download_static_asset(
                 description="Logo",
                 static_path=self.logo_path,
-                width=250,
                 local_folder=self.assets_folder,
-            ),
+            )
+            or "",
             "institution_name": self.cfg.institution_name,
-            "current_year": str(datetime.now().year),
         }
 
     def get_feature_metadata(self) -> dict[str, str]:
@@ -175,6 +189,11 @@ class ModelCard(t.Generic[C]):
             A dictionary with the keys as the variable names that will be called
             dynamically in template with values for each variable.
         """
+
+        def as_percent(val: float | int) -> str:
+            val = float(val) * 100
+            return str(int(val) if val.is_integer() else round(val, 2))
+
         feature_count = len(
             self.model.named_steps["column_selector"].get_params()["cols"]
         )
@@ -189,7 +208,7 @@ class ModelCard(t.Generic[C]):
             "number_of_features": str(feature_count),
             "collinearity_threshold": str(fs_cfg.collinear_threshold),
             "low_variance_threshold": str(fs_cfg.low_variance_threshold),
-            "incomplete_threshold": str(fs_cfg.incomplete_threshold),
+            "incomplete_threshold": as_percent(fs_cfg.incomplete_threshold),
         }
 
     def get_model_plots(self) -> dict[str, str]:
@@ -203,23 +222,35 @@ class ModelCard(t.Generic[C]):
             of the artifacts.
         """
         plots = {
-            "model_comparison_plot": ("Model Comparison", "model_comparison.png", 450),
+            "model_comparison_plot": (
+                "Model Comparison",
+                "model_comparison.png",
+                "125mm",
+            ),
             "test_calibration_curve": (
                 "Test Calibration Curve",
                 "calibration/test_calibration.png",
-                475,
+                "125mm",
             ),
-            "test_roc_curve": ("Test ROC Curve", "test_roc_curve_plot.png", 500),
+            "test_roc_curve": (
+                "Test ROC Curve",
+                "test_roc_curve_plot.png",
+                "125mm",
+            ),
             "test_confusion_matrix": (
                 "Test Confusion Matrix",
                 "test_confusion_matrix.png",
-                425,
+                "125mm",
             ),
-            "test_histogram": ("Test Histogram", "preds/test_hist.png", 475),
+            "test_histogram": (
+                "Test Histogram",
+                "preds/test_hist.png",
+                "125mm",
+            ),
             "feature_importances_by_shap_plot": (
                 "Feature Importances",
-                "shap_summary_labeled_dataset_100_ref_rows.png",
-                500,
+                "feature_importances_by_shap_plot.png",
+                "150mm",
             ),
         }
         return {
@@ -227,9 +258,10 @@ class ModelCard(t.Generic[C]):
                 run_id=self.run_id,
                 description=description,
                 artifact_path=path,
-                width=width,
                 local_folder=self.assets_folder,
+                fixed_width=width,
             )
+            or ""
             for key, (description, path, width) in plots.items()
         }
 
@@ -243,6 +275,64 @@ class ModelCard(t.Generic[C]):
         with open(self.output_path, "w") as file:
             file.write(filled)
         LOGGER.info(f"✅ Model card generated at {self.output_path}")
+
+    def reload_card(self):
+        """
+        Reloads Markdown model card post user editing after rendering.
+        This offers flexibility in case user wants to utilize this class
+        as a base and then makes edits in markdown before exporting as a PDF.
+        """
+        # Read the Markdown output
+        with open(self.output_path, "r") as f:
+            self.md_content = f.read()
+        LOGGER.info("Reloaded model card content")
+
+    def style_card(self):
+        """
+        Styles card using CSS.
+        """
+        # Convert Markdown to HTML
+        html_content = markdown.markdown(
+            self.md_content,
+            extensions=["extra", "tables", "sane_lists", "toc", "smarty"],
+        )
+
+        # Load CSS from external file
+        css_path = self._resolve(
+            "student_success_tool.reporting.template.styles", "model_card.css"
+        )
+        with open(css_path, "r") as f:
+            style = f"<style>\n{f.read()}\n</style>"
+
+        # Prepend CSS to HTML
+        self.html_content = style + html_content
+        LOGGER.info("Applied CSS styling")
+
+    def export_to_pdf(self):
+        """
+        Export CSS styled HTML to PDF utilizing weasyprint for conversion.
+        Also logs the card, so it can be accessed as a PDF in the run artifacts.
+        """
+        # Styles card using model_card.css
+        self.style_card()
+
+        # Define PDF path
+        base_path = os.path.dirname(self.output_path) or "."
+        self.pdf_path = self.output_path.replace(".md", ".pdf")
+
+        # Render PDF
+        try:
+            HTML(string=self.html_content, base_url=base_path).write_pdf(self.pdf_path)
+            LOGGER.info(f"✅ PDF model card saved to {self.pdf_path}")
+        except Exception as e:
+            raise RuntimeError(f"Failed to create PDF: {e}")
+
+        # Save model card into gold volume for access web app compatibility
+        utils.save_card_to_gold_volume(
+            filename=self.pdf_path,
+            catalog=self.catalog,
+            institution_id=self.cfg.institution_id,
+        )
 
     def _build_output_path(self) -> str:
         """

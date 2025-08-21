@@ -238,11 +238,26 @@ def add_empty_cols_if_missing(
     )
 
 
-def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
+def clean_up_labeled_dataset_cols_and_vals(
+    df: pd.DataFrame, num_credits_col: str = "cumsum_num_credits_earned"
+) -> pd.DataFrame:
     """
     Drop a bunch of columns not needed or wanted for modeling, and set to null
     any values corresponding to time after a student's current year of enrollment.
+
+    Args:
+        df: DataFrame as created with features and targets and limited to the checkpoint term.
+        num_credits_col: Name of the column containing cumulative earned credits.
     """
+    num_credit_check = constants.DEFAULT_COURSE_CREDIT_CHECK
+    credit_pattern = re.compile(rf"in_{num_credit_check}_creds")
+    # To prevent data leakage, students that have not reached the 12 credits and not taken the course
+    # by the checkpoint term (which this data is limited to at the time of this function),
+    # will have the applicable in_12_credits columns set to null.
+    for col in df.columns:
+        if credit_pattern.search(col):
+            df[col] = df[col].mask((df[num_credits_col] < num_credit_check))
+
     return (
         # drop many columns that *should not* be included as features in a model
         df.pipe(
@@ -281,21 +296,35 @@ def clean_up_labeled_dataset_cols_and_vals(df: pd.DataFrame) -> pd.DataFrame:
                 # "outcome" variables / likely sources of data leakage
                 "retention",
                 "persistence",
+                # years to bachelors
                 "years_to_bachelors_at_cohort_inst",
                 "years_to_bachelor_at_other_inst",
+                "first_year_to_bachelors_at_cohort_inst",
+                "first_year_to_bachelor_at_other_inst",
+                # years to associates
+                "years_to_latest_associates_at_cohort_inst",
+                "years_to_latest_associates_at_other_inst",
+                "first_year_to_associates_at_cohort_inst",
+                "first_year_to_associates_at_other_inst",
+                # years to associates / certificate
                 "years_to_associates_or_certificate_at_cohort_inst",
                 "years_to_associates_or_certificate_at_other_inst",
+                "first_year_to_associates_or_certificate_at_cohort_inst",
+                "first_year_to_associates_or_certificate_at_other_inst",
+                # years of last enrollment
                 "years_of_last_enrollment_at_cohort_institution",
                 "years_of_last_enrollment_at_other_institution",
             ],
         ).assign(
-            # keep "first year to X credential at Y inst" values if they occurred
+            # keep "first year to X credential at Y inst"  or "years to latest X credential at Y inst" values if they occurred
             # in any year prior to the current year of enrollment; otherwise, set to null
             # in this case, the values themselves represent years
             **{
                 col: ft.partial(_mask_year_values_based_on_enrollment_year, col=col)
                 for col in df.columns[
-                    df.columns.str.contains(r"^first_year_to")
+                    df.columns.str.contains(
+                        r"^(?:first_year_to_certificate|years_to_latest_certificate)"
+                    )
                 ].tolist()
             }
             # keep values in "*_year_X" columns if they occurred in any year prior
@@ -431,3 +460,43 @@ def infer_num_terms_in_year(s: pd.Series) -> int:
             "so the number of term in the academic year can't be inferred. "
             "Update the raw course data schema to properly set its categories!"
         )
+
+
+def remove_pre_cohort_courses(
+    df_course: pd.DataFrame, df_cohort: pd.DataFrame, student_id_col: str
+) -> pd.DataFrame:
+    """
+    Removes any course records that occur before a student's cohort start term.
+
+    This ensures that any pre-cohort course records are excluded before generating any features
+    in our `student_term_df`. These records can otherwise introduce inconsistencies in
+    cumulative features. For example, in retention models, we observed mismatches
+    between `cumulative_credits_earned` and `number_of_credits_earned` when using the
+    first cohort term as the checkpoint because pre-cohort courses were
+    still included in the data when generating these features. To avoid this, we drop all records that occurred
+    prior to the student's official cohort start term before feature generation.
+
+    Please rememeber to check with your respective schools during the data assessment call how they would like pre-cohort course records to be handled and if this function needs to be called or not.
+
+    Args:
+        df_course
+        df_cohort
+        student_id_col
+
+    Returns:
+        pd.DataFrame: Filtered DataFrame excluding pre-cohort course records.
+    """
+    df_course = df_course.drop(columns=["cohort", "cohort_term"], errors="ignore")
+    df_course_merged = df_course.merge(
+        df_cohort[[student_id_col, "cohort", "cohort_term"]],
+        on=student_id_col,
+        how="left",
+    )
+    df_course = df_course_merged[
+        (df_course_merged["academic_year"] > df_course_merged["cohort"])
+        | (
+            (df_course_merged["academic_year"] == df_course_merged["cohort"])
+            & (df_course_merged["academic_term"] >= df_course_merged["cohort_term"])
+        )
+    ]
+    return df_course

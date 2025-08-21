@@ -60,6 +60,17 @@ class Formatting:
         Returns:
             Human-friendly string.
         """
+        if isinstance(text, (int, float)):
+            return str(text)
+
+        # If the string is numeric-like (int or float), return as-is
+        try:
+            float_val = float(text)
+            if text.strip().replace(".", "", 1).isdigit() or text.strip().isdigit():
+                return text
+        except ValueError:
+            pass  # Not a float-like string; continue formatting
+
         text = text.replace("_", " ")
 
         def smart_cap(word: str) -> str:

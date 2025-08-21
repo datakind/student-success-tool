@@ -1,0 +1,47 @@
+# This is a Databricks asset bundle definition for SST Inference demo pipeline.
+# See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
+bundle:
+  name: SST Inference demo pipeline
+  uuid: 99992898-07ae-4641-b086-dd3ba80ffc2f
+    
+include:
+  - resources/github_sourced_pdp_inference_pipeline.yml
+  - resources/github_sourced_approval_pipeline.yml
+
+variables:
+  DB_workspace:
+    description: "Databricks workspace"
+  pipeline_sa_email:
+    description: "Ingestion pipeline SA"
+  datakind_notification_email:
+    description: "Datakind address used for email notifications"
+  end_user_notification_email:
+    description: "End user address used for email notifications"
+  datakind_group_to_manage_workflow:
+    description: "Group with permissions to manage the job"
+  service_account_executer:
+    description: "Service account to execute the pipeline"
+  service_principal_run_as:
+    description: "Account to run the pipeline"
+  pip_install_branch:
+    description: "SST github Branch used to install SST libraries from"
+  custom_schemas_path:
+    description: "Path to custom schemas"
+
+run_as:
+  service_principal_name: ${var.service_principal_run_as}
+    
+targets:
+  dev:
+    # The default target uses 'mode: development' to create a development copy.
+    # - Deployed resources get prefixed with '[dev my_user_name]'
+    # - Any job schedules and triggers are paused by default.
+    # See also https://docs.databricks.com/dev-tools/bundles/deployment-modes.html.
+    mode: development
+    default: true
+  prod:
+    mode: production
+    workspace:
+      root_path: /Workspace/Users/kayla@datakind.org/.bundle/${bundle.name}/${bundle.target}
+
+
