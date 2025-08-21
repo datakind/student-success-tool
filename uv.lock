@@ -963,13 +963,15 @@ wheels = [
 
 [[package]]
 name = "h2o"
-version = "3.44.0.3"
+version = "3.46.0.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "requests" },
     { name = "tabulate" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/10/fe/fee69dab2ef122ef84ff47090e5c76a7e88d1c14fa66a620bcb7a2885a26/h2o-3.44.0.3.tar.gz", hash = "sha256:7c18807ba68f59108fdd1f03f1c87d524eaf5682d17b2cada683654a0f6f192d", size = 265200099, upload-time = "2023-12-20T19:10:56.866Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/45/11/1bbc9dab18a3c9648a6b14ddfe8d19954a64f6eca7e923f8eae1d29e9b5a/h2o-3.46.0.7-py2.py3-none-any.whl", hash = "sha256:58e15c5cf3e134876fd242b07e38309f68614702ec299b3c6ffbd53484b51e79", size = 265885843, upload-time = "2025-03-27T20:59:49.937Z" },
+]
 
 [[package]]
 name = "html5lib"
@@ -2939,7 +2941,7 @@ requires-dist = [
     { name = "databricks-sdk", specifier = "~=0.38.0" },
     { name = "faker", specifier = ">=20.1" },
     { name = "google-cloud-storage", specifier = "~=2.17" },
-    { name = "h2o", specifier = "==3.44.0.3" },
+    { name = "h2o", specifier = ">=3.46.0.3,<3.47" },
     { name = "ipywidgets", specifier = "~=8.1" },
     { name = "markdown", specifier = "~=3.5" },
     { name = "matplotlib", specifier = "~=3.7" },
