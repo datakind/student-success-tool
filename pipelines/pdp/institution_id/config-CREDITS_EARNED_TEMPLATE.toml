@@ -43,31 +43,23 @@ key_course_ids = []
 
 [preprocessing.selection]
 student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year_1 = "ASSOCIATE'S DEGREE" }
+# TODO: edit based on timelines for full-time vs. part-time students
 intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
 
 [preprocessing.checkpoint]
-# TODO: select and edit option 1 if using a credits based checkpoint and remove option 2; select and edit option 2 if using a term-based checkpoint and remove option 1
-# Option 1
+# TODO: edit based on how many credits need to be earned prior to checkin
 name = "30_credits_earned"
 type_ = "first_at_num_credits_earned"
 min_num_credits = 30.0
 num_credits_col = "cumsum_num_credits_earned"
 
-# Option 2
-# name = "term 2 including only core terms"
-# type_ = "nth"
-# n = 1
-# term_is_core_col = "term_is_core"
-# exclude_non_core_terms = true
-
 [preprocessing.target]
-# TODO: edit based on target timeline for school
-name = "graduation_150pct_time"
-type_ = "graduation"
+name_ = "credits_earned"
+type_ = "credits_earned"
+# TODO: edits based on credits needed for degree awardal 
+min_num_credits = 60.0
 # TODO: edit based on timelines for full-time vs. part-time students
 intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
-# TODO: edit based on target for school, bachelors or associates 
-years_to_degree_col = "first_year_to_associates_at_cohort_inst"
 # TODO: edit based on number of terms in a year
 num_terms_in_year = 4
 max_term_rank = "infer"
