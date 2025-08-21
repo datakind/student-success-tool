@@ -26,18 +26,14 @@ def get_h2o_used_features(model: H2OEstimator) -> t.List[str]:
     names = list(model._model_json["output"]["names"][:-1])
 
     # Pull params from either location
-    params: dict = {}
-    for key in ("actual_params", "_parms"):
-        p = getattr(model, key, None)
-        if isinstance(p, dict):
-            params.update(p)
+    params = model.actual_params
 
     # Known non-predictor cols that can appear in names
     non_predictors = set()
     for k in ("weights_column", "offset_column", "fold_column"):
         v = params.get(k)
-        if isinstance(v, str) and v:
-            non_predictors.add(v)
+        if v:
+            non_predictors.add(k)
 
     return [c for c in names if c not in non_predictors]
 
