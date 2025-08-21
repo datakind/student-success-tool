@@ -447,15 +447,15 @@ class ModelInferenceTask:
                     raise Exception(msg)
                 self.write_data_to_delta(
                     inference_features_with_most_impact,
-                    f"inference_{self.cfg.model.run_id}_features_with_most_impact",
+                    f"inference_{self.args.db_run_id}_features_with_most_impact",
                 )
                 self.write_data_to_delta(
                     shap_feature_importance,
-                    f"inference_{self.cfg.model.run_id}_shap_feature_importance",
+                    f"inference_{self.args.db_run_id}_shap_feature_importance",
                 )
                 self.write_data_to_delta(
                     support_overview_table,
-                    f"inference_{self.cfg.model.run_id}_support_overview",
+                    f"inference_{self.args.db_run_id}_support_overview",
                 )
 
                 # Shap Result Table
