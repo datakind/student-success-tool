@@ -74,7 +74,7 @@ def dedupe_by_renumbering_courses(df: pd.DataFrame) -> pd.DataFrame:
 
 def drop_real_duplicates(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Dropping true duplicate course records. 
+    Dropping true duplicate course records.
     """
     # HACK: infer the correct student id col in raw data from the data itself
     student_id_col = (
@@ -92,20 +92,18 @@ def drop_real_duplicates(df: pd.DataFrame) -> pd.DataFrame:
         "course_number",
         "section_id",
     ]
-    dupe_rows = df.loc[
-    df.duplicated(unique_cols, keep=False), :
-    ].sort_values(
+    dupe_rows = df.loc[df.duplicated(unique_cols, keep=False), :].sort_values(
         by=unique_cols + ["number_of_credits_attempted"],
         ascending=False,
         ignore_index=True,
     )
     LOGGER.warning(
         "%s duplicate rows found & dropped",
-        int(len(dupe_rows)/2),
+        int(len(dupe_rows) / 2),
     )
-    df = df.drop_duplicates(subset=unique_cols, keep='first').sort_values(
-        by=unique_cols + ["number_of_credits_attempted"], 
-        ascending=False, 
-        ignore_index=True
+    df = df.drop_duplicates(subset=unique_cols, keep="first").sort_values(
+        by=unique_cols + ["number_of_credits_attempted"],
+        ascending=False,
+        ignore_index=True,
     )
     return df
