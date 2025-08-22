@@ -102,20 +102,13 @@ def run_h2o_automl_classification(
     df_splits: dict[str, pd.DataFrame] = {}
     for split_name in ("train", "validate", "test"):
         df_split = df[df[split_col] == split_name]
-        X_transformed = imputer.transform(df_split[raw_model_features])
-
+        df_split_processed = imputer.transform(df_split)
         LOGGER.info(
-            f"X_transformed shape: {X_transformed.shape}, "
-            f"exclude_cols shape: {df_split[exclude_cols].shape}, "
-            f"original split shape: {df_split.shape}"
+            "Processed '%s' split -> shape: %s (kept %d passthrough cols)",
+            split_name,
+            df_split_processed.shape,
+            len([c for c in df_split_processed.columns if c not in imputer.output_feature_names]),
         )
-
-        # Force imputer output to have the same index as the original split
-        X_transformed.index = df_split.index
-
-        # Combine transformed features with excluded columns
-        df_split_processed = pd.concat([X_transformed, df_split[exclude_cols]], axis=1)
-
         df_splits[split_name] = df_split_processed
 
     # Convert to H2OFrames and fix dtypes
