@@ -107,7 +107,13 @@ def run_h2o_automl_classification(
             "Processed '%s' split -> shape: %s (kept %d passthrough cols)",
             split_name,
             df_split_processed.shape,
-            len([c for c in df_split_processed.columns if c not in imputer.output_feature_names]),
+            len(
+                [
+                    c
+                    for c in df_split_processed.columns
+                    if c not in imputer.output_feature_names
+                ]
+            ),
         )
         df_splits[split_name] = df_split_processed
 
