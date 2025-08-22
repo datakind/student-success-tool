@@ -111,7 +111,8 @@ def run_h2o_automl_classification(
                 [
                     c
                     for c in df_split_processed.columns
-                    if c not in imputer.output_feature_names
+                    if imputer.output_feature_names is not None
+                    and c not in imputer.output_feature_names
                 ]
             ),
         )
