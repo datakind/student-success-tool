@@ -100,6 +100,7 @@ def predict_contribs_batched(
     output_format: t.Optional[str] = None,
     background_frame: t.Optional[h2o.H2OFrame] = None,
     drop_bias: bool = True,
+    output_space: bool = False,
 ) -> pd.DataFrame:
     """
     Compute SHAP/TreeSHAP contributions in batches and return a single pandas DataFrame.
@@ -117,6 +118,8 @@ def predict_contribs_batched(
         kwargs.update(dict(output_format=output_format))
     if background_frame is not None:
         kwargs.update(dict(background_frame=background_frame))
+    if output_space:
+        kwargs.update(dict(output_space=True)) 
 
     LOGGER.info(
         f"Starting SHAP (with per-batch pandas conversion): {n} rows, {batches} batches of up to {batch_rows}"
@@ -167,6 +170,7 @@ def compute_h2o_shap_contributions(
     bottom_n: int = 0,
     compare_abs: bool = True,
     output_format: t.Optional[str] = None,
+    output_space: bool = False,
     return_features: bool = True,
 ) -> t.Tuple[pd.DataFrame, t.Optional[pd.DataFrame]]:
     """
@@ -196,6 +200,7 @@ def compute_h2o_shap_contributions(
         output_format=output_format,
         background_frame=bg_subset,
         drop_bias=drop_bias,
+        output_space=output_space,
     )
 
     # 3) Convert the same subset to pandas so columns line up with SHAP
