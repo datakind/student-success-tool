@@ -95,6 +95,8 @@ def test_compute_h2o_shap_contributions_with_bias_drop(mock_h2o_frame):
     mock_model._model_json = {"output": {"names": ["feature1", "feature2", "target"]}}
 
     h2o_frame = mock.MagicMock()
+    h2o_frame.nrows = 2
+    h2o_frame.__getitem__.return_value.nrows = 2
     h2o_frame.__getitem__.return_value.as_data_frame.return_value = pd.DataFrame(
         {"feature1": [1, 2], "feature2": [3, 4]}
     )

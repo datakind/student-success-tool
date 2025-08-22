@@ -2,6 +2,8 @@ import logging
 import typing as t
 import mlflow
 import re
+import math
+import time
 
 import numpy as np
 import pandas as pd
@@ -15,6 +17,8 @@ from pandas.api.types import (
 import h2o
 from h2o.estimators.estimator_base import H2OEstimator
 import shap
+
+from . import utils
 
 LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +75,7 @@ def predict_probs_h2o(
         features = features.astype(dtypes)
 
     h2o_features = h2o.H2OFrame(features)
-    pred = model.predict(h2o_features).as_data_frame()
+    pred = utils._to_pandas(model.predict(h2o_features))
 
     if pos_label is not None:
         pos_label_str = str(pos_label)
@@ -85,43 +89,125 @@ def predict_probs_h2o(
         return np.array(pred[prob_cols].values)
 
 
+def predict_contribs_batched(
+    model: H2OEstimator,
+    hf: h2o.H2OFrame,
+    *,
+    batch_rows: int = 1000,
+    top_n: t.Optional[int] = None,
+    bottom_n: int = 0,
+    compare_abs: bool = True,
+    output_format: t.Optional[str] = None,
+    background_frame: t.Optional[h2o.H2OFrame] = None,
+    drop_bias: bool = True,
+) -> pd.DataFrame:
+    """
+    Compute SHAP/TreeSHAP contributions in batches and return a single pandas DataFrame.
+    Converts each batch to pandas immediately (no H2O rbind), then concatenates in Python.
+    """
+    n = hf.nrows
+    batches = max(1, math.ceil(n / batch_rows))
+    dfs: t.List[pd.DataFrame] = []
+
+    # Build kwargs once
+    kwargs: dict = {}
+    if top_n is not None:
+        kwargs.update(dict(top_n=top_n, bottom_n=bottom_n, compare_abs=compare_abs))
+    if output_format is not None:
+        kwargs.update(dict(output_format=output_format))
+    if background_frame is not None:
+        kwargs.update(dict(background_frame=background_frame))
+
+    LOGGER.info(
+        f"Starting SHAP (with per-batch pandas conversion): {n} rows, {batches} batches of up to {batch_rows}"
+    )
+
+    for b in range(batches):
+        start = b * batch_rows
+        end = min((b + 1) * batch_rows, n)
+        chunk = hf[start:end, :]  # lightweight slice
+        t0 = time.time()
+        contrib_chunk_hf = model.predict_contributions(chunk, **kwargs)
+
+        # Convert this batch to pandas right away
+        contrib_df = utils._to_pandas(contrib_chunk_hf)
+        if drop_bias and "BiasTerm" in contrib_df.columns:
+            contrib_df = contrib_df.drop(columns="BiasTerm")
+
+        dfs.append(contrib_df)
+
+        # Free H2O temporaries early
+        try:
+            h2o.remove(contrib_chunk_hf)
+        except Exception:
+            pass
+        try:
+            h2o.remove(chunk)
+        except Exception:
+            pass
+
+        LOGGER.info(
+            f"Batch {b + 1}/{batches}: {end - start} rows in {time.time() - t0:.1f}s"
+        )
+
+    # Concatenate all pandas batches once
+    out_df = pd.concat(dfs, axis=0, ignore_index=True)
+    LOGGER.info(f"All batches complete. Final SHAP shape: {out_df.shape}")
+    return out_df
+
+
 def compute_h2o_shap_contributions(
     model: H2OEstimator,
     h2o_frame: h2o.H2OFrame,
+    *,
     background_data: t.Optional[h2o.H2OFrame] = None,
     drop_bias: bool = True,
-) -> t.Tuple[pd.DataFrame, pd.DataFrame]:
+    batch_rows: int = 1000,
+    top_n: t.Optional[int] = None,
+    bottom_n: int = 0,
+    compare_abs: bool = True,
+    output_format: t.Optional[str] = None,
+    return_features: bool = True,
+) -> t.Tuple[pd.DataFrame, t.Optional[pd.DataFrame]]:
     """
-    Computes SHAP-like contribution values from an H2O model.
-
-    Args:
-        model: Trained H2O model
-        h2o_frame: h2o.H2OFrame for which to compute contributions
-        background_data: Optional h2o.H2OFrame to use as the background reference for SHAP values
-        drop_bias: Whether to exclude the 'BiasTerm' column
-
-    Returns:
-        contribs_df: SHAP contributions aligned with input features
-        preprocessed_df: Input feature values used
+    Returns (contribs_df, features_df) for exactly the model-used features.
     """
-    used_features = get_h2o_used_features(model)
-    hf_subset = h2o_frame[used_features]
+    LOGGER.info("Computing SHAP contributions with batching...")
 
-    if background_data is not None:
-        background_data = background_data[used_features]
-        contribs_hf = model.predict_contributions(
-            hf_subset, background_frame=background_data
+    # 1) Select only the features the model actually uses
+    used_features = get_h2o_used_features(model)  # your existing helper
+    if used_features:
+        hf_subset = h2o_frame[used_features]
+        bg_subset = (
+            background_data[used_features] if background_data is not None else None
         )
     else:
-        contribs_hf = model.predict_contributions(hf_subset)
+        hf_subset = h2o_frame
+        bg_subset = background_data
 
-    contribs_df = contribs_hf.as_data_frame(use_pandas=True)
-    preprocessed_df = hf_subset.as_data_frame(use_pandas=True)
+    # 2) Compute contributions on the subset
+    contribs_df = predict_contribs_batched(
+        model,
+        hf_subset,
+        batch_rows=batch_rows,
+        top_n=top_n,
+        bottom_n=bottom_n,
+        compare_abs=compare_abs,
+        output_format=output_format,
+        background_frame=bg_subset,
+        drop_bias=drop_bias,
+    )
 
-    if drop_bias and "BiasTerm" in contribs_df.columns:
-        contribs_df = contribs_df.drop(columns="BiasTerm")
+    # 3) Convert the same subset to pandas so columns line up with SHAP
+    features_df: t.Optional[pd.DataFrame] = None
+    if return_features:
+        features_df = utils._to_pandas(hf_subset)
 
-    return contribs_df, preprocessed_df
+    LOGGER.info(
+        f"Finished SHAP computation. SHAP={contribs_df.shape}"
+        f"{'' if features_df is None else f', features={features_df.shape}'}"
+    )
+    return contribs_df, features_df
 
 
 def group_shap_values(

@@ -39,7 +39,9 @@ def run_h2o_automl_classification(
     # Set and validate inputs
     seed = kwargs.pop("seed", 42)
     timeout_minutes = int(float(str(kwargs.pop("timeout_minutes", 5))))
-    user_exclude = [c for c in t.cast(list[str], kwargs.pop("exclude_cols", [])) if c is not None]
+    user_exclude = [
+        c for c in t.cast(list[str], kwargs.pop("exclude_cols", [])) if c is not None
+    ]
     exclude_cols = list(user_exclude)  # start from user intent
     split_col: str = str(kwargs.pop("split_col", "split"))
     sample_weight_col = str(kwargs.pop("sample_weight_col", "sample_weight"))
@@ -61,7 +63,11 @@ def run_h2o_automl_classification(
         )
 
     # Ensure columns that need to be excluded are from training & imputation
-    if student_id_col and student_id_col in df.columns and student_id_col not in exclude_cols:
+    if (
+        student_id_col
+        and student_id_col in df.columns
+        and student_id_col not in exclude_cols
+    ):
         exclude_cols.append(student_id_col)
 
     # Always exclude target & split; sample_weight only if it exists

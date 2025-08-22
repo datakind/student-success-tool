@@ -94,7 +94,7 @@ def log_h2o_experiment(
     """
     LOGGER.info("Logging experiment to MLflow with classification plots...")
 
-    leaderboard_df = aml.leaderboard.as_data_frame()
+    leaderboard_df = _to_pandas(aml.leaderboard)
 
     log_h2o_experiment_summary(
         aml=aml,
@@ -132,6 +132,7 @@ def log_h2o_experiment(
             valid=valid,
             test=test,
             imputer=imputer,
+            target_col=target_col,
             primary_metric=aml.sort_metric,
         )
 
@@ -193,16 +194,16 @@ def log_h2o_experiment_summary(
             mlflow.log_artifact(features_path, artifact_path="inputs")
 
             # Log sampled training data
-            train_df = train.as_data_frame(use_pandas=True)
-            valid_df = valid.as_data_frame(use_pandas=True)
-            test_df = test.as_data_frame(use_pandas=True)
+            train_df = _to_pandas(train)
+            valid_df = _to_pandas(valid)
+            test_df = _to_pandas(test)
             full_df = pd.concat([train_df, valid_df, test_df], axis=0)
             df_parquet_path = os.path.join(tmpdir, "full_dataset.parquet")
             full_df.to_parquet(df_parquet_path, index=False)
             mlflow.log_artifact(df_parquet_path, artifact_path="inputs")
 
             # Log target distribution
-            target_dist_df = train[target_col].table().as_data_frame()
+            target_dist_df = _to_pandas(train[target_col].table())
             target_dist_path = os.path.join(tmpdir, "target_distribution.csv")
             target_dist_df.to_csv(target_dist_path, index=False)
             mlflow.log_artifact(target_dist_path, artifact_path="inputs")
@@ -221,6 +222,7 @@ def log_h2o_model(
     valid: h2o.H2OFrame,
     test: h2o.H2OFrame,
     threshold: float = 0.5,
+    target_col: str = "target",
     imputer: t.Optional[imputation.SklearnImputerWrapper] = None,
     primary_metric: str = "logloss",
 ) -> dict | None:
@@ -273,12 +275,10 @@ def log_h2o_model(
                 for split_name, frame in zip(
                     ["train", "val", "test"], [train, valid, test]
                 ):
-                    y_true = frame["target"].as_data_frame().values.flatten()
+                    y_true = _to_pandas(frame[target_col]).values.flatten()
                     preds = model.predict(frame)
                     positive_class_label = preds.col_names[-1]
-                    y_proba = (
-                        preds[positive_class_label].as_data_frame().values.flatten()
-                    )
+                    y_proba = _to_pandas(preds[positive_class_label]).values.flatten()
                     y_pred = (y_proba >= threshold).astype(int)
 
                     evaluation.generate_all_classification_plots(
@@ -384,7 +384,7 @@ def set_or_create_experiment(
 
     timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
 
-    name_parts = [institution_id, target_name, checkpoint_name, "h20_automl", timestamp]
+    name_parts = [institution_id, target_name, checkpoint_name, "h2o_automl", timestamp]
     experiment_name = "/".join(
         [
             workspace_path.rstrip("/"),
@@ -404,3 +404,12 @@ def set_or_create_experiment(
         return experiment_id
     except Exception as e:
         raise RuntimeError(f"Failed to create or set MLflow experiment: {e}")
+
+
+def _to_pandas(hf: h2o.H2OFrame) -> pd.DataFrame:
+    """Convert H2OFrame to pandas, using multithreaded path if available."""
+    try:
+        # H2O supports this flag when pyarrow & polars are installed
+        return hf.as_data_frame(use_pandas=True, use_multi_thread=True)  # type: ignore[arg-type]
+    except TypeError:
+        return hf.as_data_frame(use_pandas=True)

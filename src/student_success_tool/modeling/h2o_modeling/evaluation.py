@@ -20,9 +20,10 @@ from sklearn.metrics import (
 )
 from sklearn.calibration import calibration_curve
 
-
 import h2o
 from h2o.estimators.estimator_base import H2OEstimator
+
+from . import utils
 
 LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ def get_metrics_near_threshold_all_splits(
     threshold: float = 0.5,
 ) -> dict[str, float | str]:
     def _metrics(perf, label):
-        thresh_df = perf.thresholds_and_metric_scores().as_data_frame()
+        thresh_df = utils._to_pandas(perf.thresholds_and_metric_scores())
         closest = thresh_df.iloc[
             (thresh_df["threshold"] - threshold).abs().argsort()[:1]
         ]
