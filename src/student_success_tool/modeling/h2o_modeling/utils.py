@@ -15,6 +15,8 @@ import h2o
 from h2o.automl import H2OAutoML
 from h2o.model.model_base import ModelBase
 
+from sklearn.metrics import confusion_matrix
+
 from . import evaluation
 from . import imputation
 
@@ -260,13 +262,6 @@ def log_h2o_model(
                 if active_run is not None:  # type check
                     run_id = active_run.info.run_id
 
-                log_model_metadata_to_mlflow(
-                    model_id=model_id,
-                    model=model,
-                    metrics=metrics,
-                    exclude_keys={"model_id"},
-                )
-
                 # Assign initial sort key for mlflow UI
                 primary_metric_key = f"validate_{primary_metric}"
                 mlflow.set_tag("mlflow.primaryMetric", primary_metric_key)
@@ -281,9 +276,31 @@ def log_h2o_model(
                     y_proba = _to_pandas(preds[positive_class_label]).values.flatten()
                     y_pred = (y_proba >= threshold).astype(int)
 
+                    # Log Confusion matrix metrics for FE tables
+                    label = "validate" if split_name == "val" else split_name
+                    tn, fp, fn, tp = confusion_matrix(
+                        y_true, y_pred, labels=[0, 1]
+                    ).ravel()
+
+                    metrics.update(
+                        {
+                            f"{label}_true_positives": float(tp),
+                            f"{label}_true_negatives": float(tn),
+                            f"{label}_false_positives": float(fp),
+                            f"{label}_false_negatives": float(fn),
+                        }
+                    )
+
                     evaluation.generate_all_classification_plots(
                         y_true, y_pred, y_proba, prefix=split_name
                     )
+
+                log_model_metadata_to_mlflow(
+                    model_id=model_id,
+                    model=model,
+                    metrics=metrics,
+                    exclude_keys={"model_id"},
+                )
 
                 # Log H2O Model
                 local_model_dir = f"/tmp/h2o_models/{model_id}"
