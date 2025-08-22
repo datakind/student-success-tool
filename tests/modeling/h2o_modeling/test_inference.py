@@ -52,18 +52,21 @@ def test_group_feature_values_ambiguous_encoding_raises():
 
 
 def test_create_color_hint_features_mixed_types():
-    orig_df = pd.DataFrame(
+    original_df = pd.DataFrame(
         {
             "gender": pd.Series(["M", "F"], dtype="category"),
             "income": [50000, 60000],
             "opted_in": [True, False],
         }
     )
+    orig_dtypes = {"gender": "category", "income": "int", "opted_in": "bool"}
     grouped_df = pd.DataFrame(
         {"gender": [1.0, 0.0], "income": [0.3, 0.7], "opted_in": [1, 0]}
     )
-    result = inference.create_color_hint_features(orig_df, grouped_df)
-    assert result["gender"].tolist() == ["category", "category"]
+    result = inference.create_color_hint_features(
+        grouped_df, original_dtypes=orig_dtypes
+    )
+    assert result["gender"].tolist() == ["1.0", "0.0"]
     assert result["income"].tolist() == [0.3, 0.7]
     assert result["opted_in"].tolist() == [1, 0]
 
@@ -74,13 +77,8 @@ def test_plot_grouped_shap_calls_summary_plot(mock_summary_plot, mock_log_figure
     contribs_df = pd.DataFrame(
         {"feature.X.1": [0.1, 0.2], "feature.X.2": [0.2, 0.3], "feature.Y": [0.3, 0.1]}
     )
-    input_df = pd.DataFrame(
-        {"feature.X.1": [1, 0], "feature.X.2": [0, 1], "feature.Y": [1, 0]}
-    )
     original_df = pd.DataFrame({"feature.X": ["A", "B"], "feature.Y": ["C", "D"]})
-    inference.plot_grouped_shap(
-        contribs_df, input_df, original_df, group_missing_flags=False
-    )
+    inference.plot_grouped_shap(contribs_df, original_df, group_missing_flags=False)
     mock_summary_plot.assert_called_once()
 
 
@@ -102,11 +100,22 @@ def test_compute_h2o_shap_contributions_with_bias_drop(mock_h2o_frame):
     )
 
     contribs, inputs = inference.compute_h2o_shap_contributions(
-        mock_model, h2o_frame, drop_bias=True
+        mock_model,
+        h2o_frame,
+        drop_bias=True,
+        return_features=True,
     )
 
     assert "BiasTerm" not in contribs.columns
     assert list(inputs.columns) == ["feature1", "feature2"]
+
+    contribs = inference.compute_h2o_shap_contributions(
+        mock_model,
+        h2o_frame,
+        drop_bias=True,
+    )
+    assert "BiasTerm" not in contribs.columns
+    assert contribs.shape == (2, 2)
 
 
 def test_group_missing_flags_aggregated_correctly():

@@ -12,6 +12,8 @@ from pandas.api.types import (
     is_object_dtype,
     is_string_dtype,
     is_bool_dtype,
+    CategoricalDtype,
+    pandas_dtype,
 )
 
 import h2o
@@ -100,11 +102,29 @@ def predict_contribs_batched(
     output_format: t.Optional[str] = None,
     background_frame: t.Optional[h2o.H2OFrame] = None,
     drop_bias: bool = True,
-    output_space: bool = False,
+    output_space: bool = True,
 ) -> pd.DataFrame:
     """
-    Compute SHAP/TreeSHAP contributions in batches and return a single pandas DataFrame.
-    Converts each batch to pandas immediately (no H2O rbind), then concatenates in Python.
+    Compute SHAP/TreeSHAP contributions in batches and return a combined DataFrame.
+
+    Contributions are computed in row batches to reduce memory usage. Each batch is
+    immediately converted to pandas, then concatenated at the end.
+
+    Args:
+        model: Trained H2O model.
+        hf: Input H2OFrame with features to score.
+        batch_rows: Maximum number of rows per batch. Defaults to 1000.
+        top_n: Return only the top N features by contribution. Defaults to None.
+        bottom_n: Return only the bottom N features by contribution. Defaults to 0.
+        compare_abs: Rank features by absolute contribution. Defaults to True.
+        output_format: Format for output, e.g. "Compact" for XGBoost. Defaults to None.
+        background_frame: Optional reference data for SHAP baseline. Defaults to None.
+        drop_bias: If True, drop the BiasTerm column. Defaults to True.
+        output_space: If True, return contributions in the model’s response
+            space (e.g., probabilities). If False, keep logit space. Defaults to True.
+
+    Returns:
+        pd.DataFrame: Concatenated contributions aligned to rows of `hf`.
     """
     n = hf.nrows
     batches = max(1, math.ceil(n / batch_rows))
@@ -119,7 +139,7 @@ def predict_contribs_batched(
     if background_frame is not None:
         kwargs.update(dict(background_frame=background_frame))
     if output_space:
-        kwargs.update(dict(output_space=True)) 
+        kwargs.update(dict(output_space=True))
 
     LOGGER.info(
         f"Starting SHAP (with per-batch pandas conversion): {n} rows, {batches} batches of up to {batch_rows}"
@@ -170,16 +190,41 @@ def compute_h2o_shap_contributions(
     bottom_n: int = 0,
     compare_abs: bool = True,
     output_format: t.Optional[str] = None,
-    output_space: bool = False,
-    return_features: bool = True,
+    output_space: bool = True,
+    return_features: bool = False,
 ) -> t.Tuple[pd.DataFrame, t.Optional[pd.DataFrame]]:
     """
-    Returns (contribs_df, features_df) for exactly the model-used features.
+    Compute SHAP/TreeSHAP contributions and optionally return input features.
+
+    This is a wrapper around batched SHAP computation that also extracts
+    the feature subset actually used by the model.
+
+    Args:
+        model: Trained H2O model.
+        h2o_frame: Input frame with predictors and identifiers.
+        background_data: Reference frame for SHAP baseline. Defaults to None.
+        drop_bias: If True, drop the BiasTerm column. Defaults to True.
+        batch_rows: Maximum number of rows per batch. Defaults to 1000.
+        top_n: Return only the top N features by contribution. Defaults to None.
+        bottom_n: Return only the bottom N features by contribution. Defaults to 0.
+        compare_abs: Rank features by absolute contribution. Defaults to True.
+        output_format: Format for output, e.g. "Compact" for XGBoost. Defaults to None.
+        output_space: If True, return contributions in the model’s response
+            space (e.g., probabilities). If False, keep link space. Defaults to True.
+        return_features: If True, also return a DataFrame of input features
+            corresponding to the contribution rows. Defaults to True.
+
+    Returns:
+        Tuple[pd.DataFrame, Optional[pd.DataFrame]]:
+            - contribs_df: SHAP contributions aligned to rows of `h2o_frame`.
+            - features_df: Pandas DataFrame of input features if `return_features=True`,
+              else None.
+
     """
     LOGGER.info("Computing SHAP contributions with batching...")
 
-    # 1) Select only the features the model actually uses
-    used_features = get_h2o_used_features(model)  # your existing helper
+    # Select only the features the model actually uses
+    used_features = get_h2o_used_features(model)
     if used_features:
         hf_subset = h2o_frame[used_features]
         bg_subset = (
@@ -189,7 +234,7 @@ def compute_h2o_shap_contributions(
         hf_subset = h2o_frame
         bg_subset = background_data
 
-    # 2) Compute contributions on the subset
+    # Compute contributions on the subset
     contribs_df = predict_contribs_batched(
         model,
         hf_subset,
@@ -203,7 +248,7 @@ def compute_h2o_shap_contributions(
         output_space=output_space,
     )
 
-    # 3) Convert the same subset to pandas so columns line up with SHAP
+    # Convert the same subset to pandas so columns line up with SHAP
     features_df: t.Optional[pd.DataFrame] = None
     if return_features:
         features_df = utils._to_pandas(hf_subset)
@@ -212,7 +257,7 @@ def compute_h2o_shap_contributions(
         f"Finished SHAP computation. SHAP={contribs_df.shape}"
         f"{'' if features_df is None else f', features={features_df.shape}'}"
     )
-    return contribs_df, features_df
+    return (contribs_df, features_df) if return_features else contribs_df
 
 
 def group_shap_values(
@@ -294,41 +339,43 @@ def group_feature_values(df: pd.DataFrame, group_missing_flags: bool) -> pd.Data
 
 
 def create_color_hint_features(
-    original_df: pd.DataFrame, grouped_df: pd.DataFrame
+    grouped_df: pd.DataFrame,
+    original_dtypes: dict[str, t.Any],
 ) -> pd.DataFrame:
-    """
-    Classifies each feature in the grouped input DataFrame as categorical or numeric,
-    based on the original DataFrame's dtypes. Used for SHAP color hinting.
+    """Build a color-hint frame for SHAP: categorical cols → string values; numeric/bool → numeric values.
 
     Args:
-        original_df (pd.DataFrame): The raw input DataFrame before encoding.
-        grouped_df (pd.DataFrame): Input features post one-hot collapsing.
+        grouped_df: Features after grouping one-hots/missing flags; rows align with SHAP rows.
+        original_dtypes: Mapping {col_name: dtype-like} from the raw data (pre-imputation/encoding).
+                         Values may be strings (e.g., "category", "int64"); they are normalized.
 
     Returns:
-        pd.DataFrame: Same shape as grouped_df, with 'category' markers or original numeric values.
+        DataFrame shaped like `grouped_df`. For columns considered categorical,
+        the series is cast to pandas string dtype; for numeric/bool, values are kept numeric.
     """
-    gray_features = pd.DataFrame(index=grouped_df.index)
+    out = pd.DataFrame(index=grouped_df.index)
 
     for col in grouped_df.columns:
-        if col in original_df.columns:
-            dtype = original_df[col].dtype
-            is_categorical = (
-                is_object_dtype(dtype)
-                or isinstance(dtype, pd.CategoricalDtype)
-                or is_string_dtype(dtype)
-            ) and not is_bool_dtype(dtype)
-        else:
-            dtype = None
-            is_categorical = False
+        dt_raw = original_dtypes.get(col, None)
+        try:
+            dt = pandas_dtype(dt_raw) if dt_raw is not None else None
+        except Exception:
+            dt = None
 
-        if is_categorical:
-            gray_features[col] = "category"
-            LOGGER.debug(f"{col}: classified as categorical (dtype={dtype})")
-        else:
-            gray_features[col] = grouped_df[col]
-            LOGGER.debug(f"{col}: classified as numeric (dtype={dtype})")
+        is_cat = (
+            dt is not None
+            and (
+                is_object_dtype(dt)
+                or isinstance(dt, CategoricalDtype)
+                or is_string_dtype(dt)
+            )
+            and not is_bool_dtype(dt)
+        )
 
-    return gray_features
+        # Cast categorical columns to string; keep numeric/bool as-is
+        out[col] = grouped_df[col].astype("string") if is_cat else grouped_df[col]
+
+    return out
 
 
 def get_base_feature_name(col: str, group_missing_flags: bool) -> str:
@@ -352,9 +399,12 @@ def get_base_feature_name(col: str, group_missing_flags: bool) -> str:
 
 def plot_grouped_shap(
     contribs_df: pd.DataFrame,
-    preprocessed_df: pd.DataFrame,
-    original_df: pd.DataFrame,
+    features_df: pd.DataFrame,
+    *,
     group_missing_flags: bool = False,
+    original_dtypes: t.Optional[dict[str, t.Any]] = None,
+    max_display: int = 20,
+    mlflow_name: str = "h2o_feature_importances_by_shap_plot.png",
 ) -> None:
     """
     Plot grouped SHAP values as a global summary plot. One-hot encoded features are grouped under their base feature name.
@@ -363,32 +413,35 @@ def plot_grouped_shap(
 
     Parameters:
         contribs_df: DataFrame of SHAP contributions (from H2O), including one-hot or exploded categorical features.
-        preprocessed_df: Preprocessed feature matrix (e.g., after imputation and one-hot encoding), matching SHAP columns.
-        original_df: Original raw input DataFrame (before preprocessing), used for inferring data types and color hints.
+        features_df: Feature matrix (e.g., after imputation), matching SHAP columns.
+        original_dtypes: Dictionary with dtypes from raw data (before imputation), used for inferring data types and color hints.
         group_missing_flags: Whether to group missingness flag columns (e.g., 'math_placement_missing_flag')
                              into their corresponding base feature (e.g., 'math_placement') in the SHAP plot.
     """
+    # Group SHAP and features to base names
     grouped_shap = group_shap_values(
         contribs_df, group_missing_flags=group_missing_flags
     )
-    grouped_inputs = group_feature_values(
-        preprocessed_df, group_missing_flags=group_missing_flags
+    grouped_feats = group_feature_values(
+        features_df, group_missing_flags=group_missing_flags
     )
-    color_hint = create_color_hint_features(original_df, grouped_inputs)
 
+    # Build color hint if we have original dtypes; otherwise use grouped features directly
+    # NOTE: original dtypes should be available from sklearn imputer step during training
+    if original_dtypes is not None:
+        color_hint = create_color_hint_features(
+            grouped_df=grouped_feats, original_dtypes=original_dtypes
+        )
+        features_for_plot = color_hint
+    else:
+        features_for_plot = grouped_feats  # no color hint
+
+    # Plot + log
     shap.summary_plot(
         grouped_shap.values,
-        features=color_hint,
+        features=features_for_plot,
         feature_names=grouped_shap.columns,
-        max_display=20,
+        max_display=max_display,
         show=False,
     )
-
-    shap_fig = plt.gcf()
-
-    if group_missing_flags:
-        mlflow.log_figure(shap_fig, "h2o_feature_importances_by_shap_plot.png")
-    else:
-        mlflow.log_figure(
-            shap_fig, "h2o_feature_importances_by_shap_plot_with_missing_flags.png"
-        )
+    mlflow.log_figure(plt.gcf(), mlflow_name)
