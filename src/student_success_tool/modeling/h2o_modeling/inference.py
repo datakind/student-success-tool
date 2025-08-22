@@ -262,8 +262,8 @@ def compute_h2o_shap_contributions(
 
 def group_shap_values(
     df: pd.DataFrame,
-    drop_bias_term: bool = False,
-    group_missing_flags: bool = False,
+    drop_bias_term: bool = True,
+    group_missing_flags: bool = True,
 ) -> pd.DataFrame:
     """
     Groups one-hot encoded or exploded features into base features by summing.
@@ -401,7 +401,7 @@ def plot_grouped_shap(
     contribs_df: pd.DataFrame,
     features_df: pd.DataFrame,
     *,
-    group_missing_flags: bool = False,
+    group_missing_flags: bool = True,
     original_dtypes: t.Optional[dict[str, t.Any]] = None,
     max_display: int = 20,
     mlflow_name: str = "h2o_feature_importances_by_shap_plot.png",

@@ -168,7 +168,9 @@ class SklearnImputerWrapper:
         # Reattach extras (avoid name collisions with imputed output)
         extra_cols = [c for c in extra_cols if c not in result.columns]
         if extra_cols:
-            result = pd.concat([result, df_original.loc[orig_index, extra_cols]], axis=1)
+            result = pd.concat(
+                [result, df_original.loc[orig_index, extra_cols]], axis=1
+            )
 
         # Validate only the imputed columns
         self.validate(result[self.output_feature_names])
@@ -437,15 +439,6 @@ class SklearnImputerWrapper:
             Imputed DataFrame with same index as input.
         """
         instance = cls.load(run_id=run_id, artifact_path=artifact_path)
-
-        # Filter and/or reorder columns if input_feature_names are available
-        if instance.input_feature_names:
-            missing = set(instance.input_feature_names) - set(df.columns)
-            if missing:
-                raise ValueError(f"Missing required input features: {missing}")
-
-            df = df[instance.input_feature_names]
-
         transformed = instance.transform(df)
         if instance.output_feature_names is not None:
             instance.validate(transformed[instance.output_feature_names])
