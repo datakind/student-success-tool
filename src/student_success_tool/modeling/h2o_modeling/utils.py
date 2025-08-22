@@ -14,6 +14,8 @@ import pandas as pd
 import h2o
 from h2o.automl import H2OAutoML
 from h2o.model.model_base import ModelBase
+from h2o.frame import H2OFrame
+from h2o.two_dim_table import H2OTwoDimTable
 
 from sklearn.metrics import confusion_matrix
 
@@ -423,10 +425,32 @@ def set_or_create_experiment(
         raise RuntimeError(f"Failed to create or set MLflow experiment: {e}")
 
 
-def _to_pandas(hf: h2o.H2OFrame) -> pd.DataFrame:
-    """Convert H2OFrame to pandas, using multithreaded path if available."""
-    try:
-        # H2O supports this flag when pyarrow & polars are installed
-        return hf.as_data_frame(use_pandas=True, use_multi_thread=True)  # type: ignore[arg-type]
-    except TypeError:
-        return hf.as_data_frame(use_pandas=True)
+def _to_pandas(hobj: t.Any):
+    """
+    Convert common H2O objects to pandas.DataFrame.
+
+    - H2OFrame.as_data_frame(...) supports `use_pandas` and `use_multi_thread` (keep these for speed).
+    - H2OTwoDimTable.as_data_frame() takes **no arguments** in H2O 3.46+.
+    - For other objects exposing `as_data_frame()`, call it without args.
+    """
+    # Case 1: Big data — use multithreaded pull for H2OFrame
+    if H2OFrame is not None and isinstance(hobj, H2OFrame):
+        try:
+            return hobj.as_data_frame(use_pandas=True, use_multi_thread=True)
+        except TypeError:
+            # Very old H2O without use_multi_thread
+            return hobj.as_data_frame(use_pandas=True)
+
+    # Case 2: Metric tables such as H2OTwoDimTable doesn't support multi-thread
+    if H2OTwoDimTable is not None and isinstance(hobj, H2OTwoDimTable):
+        return hobj.as_data_frame()
+
+    # Case 3: Fallback for any other hobj that supports as_dataframe
+    if hasattr(hobj, "as_data_frame"):
+        try:
+            return hobj.as_data_frame()
+        except TypeError:
+            # Last-resort fallback for legacy signatures
+            return hobj.as_data_frame(use_pandas=True)
+
+    raise TypeError(f"_to_pandas: unsupported object type {type(hobj)}")
