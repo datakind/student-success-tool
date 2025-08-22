@@ -1,3 +1,4 @@
+import typing as t
 import logging
 from collections.abc import Callable
 
@@ -24,6 +25,8 @@ import h2o
 from h2o.estimators.estimator_base import H2OEstimator
 
 from . import utils
+from . import imputation
+from . import inference
 
 LOGGER = logging.getLogger(__name__)
 
@@ -208,3 +211,102 @@ def create_calibration_curve_plot(
     ax.legend()
     plt.close(fig)
     return fig
+
+
+def log_roc_table(
+    institution_id: str,
+    *,
+    automl_run_id: str,
+    catalog: str = "staging_sst_01",
+    target_col: str = "target",
+    modeling_dataset_name: str = "modeling_dataset",
+    split_col: t.Optional[str] = None,
+) -> None:
+    """
+    Computes and saves an ROC curve table (FPR, TPR, threshold, etc.) for a given H2O model run
+    by reloading the test dataset and the trained model.
+
+    Args:
+        institution_id (str): Institution ID prefix for table name.
+        automl_experiment_id (str): MLflow run ID of the trained model.
+        experiment_id
+        catalog (str): Destination catalog/schema for the ROC curve table.
+    """
+    try:
+        from databricks.connect import DatabricksSession
+
+        spark = DatabricksSession.builder.getOrCreate()
+    except Exception:
+        print("⚠️ Databricks Connect failed. Falling back to local Spark.")
+        from pyspark.sql import SparkSession
+
+        spark = (
+            SparkSession.builder.master("local[*]").appName("Fallback").getOrCreate()
+        )
+
+    split_col = split_col or "split"
+
+    table_path = f"{catalog}.{institution_id}_silver.training_{automl_run_id}_roc_curve"
+
+    try:
+        df = spark.read.table(modeling_dataset_name).toPandas()
+        test_df = df[df[split_col] == "test"].copy()
+
+        # Load and transform using sklearn imputer
+        test_df = imputation.SklearnImputerWrapper.load_and_transform(
+            test_df,
+            run_id=automl_run_id,
+        )
+
+        # Load model + features
+        model = utils.load_h2o_model(automl_run_id)
+        feature_names: t.List[str] = inference.get_h2o_used_features(model)
+
+        # Prepare inputs for ROC
+        y_true = test_df[target_col].values
+        X_test = test_df[feature_names]
+        y_scores = inference.predict_probs_h2o(
+            X_test,
+            model=model,
+        )[:, 1]
+
+        # Calculate ROC table manually and plot all thresholds.
+        # Down the line, we might want to specify a threshold to reduce plot density
+        thresholds = np.sort(np.unique(y_scores))[::-1]
+        rounded_thresholds = sorted(
+            set([round(t, 4) for t in thresholds]), reverse=True
+        )
+
+        P, N = np.sum(y_true == 1), np.sum(y_true == 0)
+
+        rows = []
+        for thresh in rounded_thresholds:
+            y_pred = (y_scores >= thresh).astype(int)
+            TP = np.sum((y_pred == 1) & (y_true == 1))
+            FP = np.sum((y_pred == 1) & (y_true == 0))
+            TN = np.sum((y_pred == 0) & (y_true == 0))
+            FN = np.sum((y_pred == 0) & (y_true == 1))
+            TPR = TP / P if P else 0
+            FPR = FP / N if N else 0
+            rows.append(
+                {
+                    "threshold": round(thresh, 4),
+                    "true_positive_rate": round(TPR, 4),
+                    "false_positive_rate": round(FPR, 4),
+                    "true_positive": int(TP),
+                    "false_positives": int(FP),
+                    "true_negatives": int(TN),
+                    "false_negatives": int(FN),
+                }
+            )
+
+        roc_df = pd.DataFrame(rows)
+        spark_df = spark.createDataFrame(roc_df)
+        spark_df.write.mode("overwrite").saveAsTable(table_path)
+        logging.info(
+            "ROC table written to table '%s' for run_id=%s", table_path, automl_run_id
+        )
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed to log ROC table for run {automl_run_id}: {e}"
+        ) from e

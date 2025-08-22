@@ -263,7 +263,7 @@ def compute_h2o_shap_contributions(
 def group_shap_values(
     df: pd.DataFrame,
     drop_bias_term: bool = True,
-    group_missing_flags: bool = True,
+    group_missing_flags: t.Optional[bool] = True,
 ) -> pd.DataFrame:
     """
     Groups one-hot encoded or exploded features into base features by summing.
@@ -292,7 +292,9 @@ def group_shap_values(
     return pd.DataFrame(grouped_data)
 
 
-def group_feature_values(df: pd.DataFrame, group_missing_flags: bool) -> pd.DataFrame:
+def group_feature_values(
+    df: pd.DataFrame, group_missing_flags: t.Optional[bool]
+) -> pd.DataFrame:
     """
     Groups one-hot encoded feature columns and *_missing_flag columns into base features.
 
@@ -378,7 +380,9 @@ def create_color_hint_features(
     return out
 
 
-def get_base_feature_name(col: str, group_missing_flags: bool) -> str:
+def get_base_feature_name(
+    col: str, group_missing_flags: t.Optional[bool] = True
+) -> str:
     """
     Derives the base feature name used for grouping SHAP values or input features.
 
@@ -401,7 +405,7 @@ def plot_grouped_shap(
     contribs_df: pd.DataFrame,
     features_df: pd.DataFrame,
     *,
-    group_missing_flags: bool = True,
+    group_missing_flags: t.Optional[bool] = True,
     original_dtypes: t.Optional[dict[str, t.Any]] = None,
     max_display: int = 20,
     mlflow_name: str = "h2o_feature_importances_by_shap_plot.png",
