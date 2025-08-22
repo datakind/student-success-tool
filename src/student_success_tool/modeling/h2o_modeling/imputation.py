@@ -92,13 +92,14 @@ class SklearnImputerWrapper:
 
         orig_index = df.index  # Lock in row order
         df = df.replace({None: np.nan})
+        df_original = df.copy()
 
         # Compute extra columns (e.g. student_id_col) before subsetting so we can reattach later
         raw_features = list(self.input_feature_names or [])
         missing = set(raw_features) - set(df.columns)
         if missing:
             raise ValueError(f"Missing required input features: {missing}")
-        extra_cols = [c for c in df.columns if c not in raw_features]
+        extra_cols = [c for c in df_original.columns if c not in raw_features]
 
         # Filter/reorder to match training-time input
         if self.input_feature_names is not None:
@@ -167,7 +168,7 @@ class SklearnImputerWrapper:
         # Reattach extras (avoid name collisions with imputed output)
         extra_cols = [c for c in extra_cols if c not in result.columns]
         if extra_cols:
-            result = pd.concat([result, df.loc[orig_index, extra_cols]], axis=1)
+            result = pd.concat([result, df_original.loc[orig_index, extra_cols]], axis=1)
 
         # Validate only the imputed columns
         self.validate(result[self.output_feature_names])
