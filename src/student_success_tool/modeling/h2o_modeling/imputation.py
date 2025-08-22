@@ -446,6 +446,6 @@ class SklearnImputerWrapper:
             df = df[instance.input_feature_names]
 
         transformed = instance.transform(df)
-        if instance.output_feature_names:
+        if instance.output_feature_names is not None:
             instance.validate(transformed[instance.output_feature_names])
         return transformed
