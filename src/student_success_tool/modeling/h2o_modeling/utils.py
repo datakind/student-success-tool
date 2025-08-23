@@ -425,7 +425,7 @@ def set_or_create_experiment(
         raise RuntimeError(f"Failed to create or set MLflow experiment: {e}")
 
 
-def _to_pandas(hobj: t.Any):
+def _to_pandas(hobj: t.Any) -> pd.DataFrame:
     """
     Convert common H2O objects to pandas.DataFrame.
 
