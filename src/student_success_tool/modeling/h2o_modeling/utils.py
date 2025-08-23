@@ -429,9 +429,9 @@ def _to_pandas(hobj: t.Any):
     """
     Convert common H2O objects to pandas.DataFrame.
 
-    - H2OFrame.as_data_frame(...) supports `use_pandas` and `use_multi_thread` (keep these for speed).
-    - H2OTwoDimTable.as_data_frame() takes **no arguments** in H2O 3.46+.
-    - For other objects exposing `as_data_frame()`, call it without args.
+    - H2OFrame.as_data_frame() supports `use_pandas` and `use_multi_thread` (for performance).
+    - H2OTwoDimTable.as_data_frame() takes no arguments in H2O 3.46+.
+    - For other objects, we'll use `as_data_frame()`.
     """
     # Case 1: Big data — use multithreaded pull for H2OFrame
     if H2OFrame is not None and isinstance(hobj, H2OFrame):
