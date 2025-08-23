@@ -293,7 +293,7 @@ def group_shap_values(
 
 
 def group_feature_values(
-    df: pd.DataFrame, group_missing_flags: t.Optional[bool]
+    df: pd.DataFrame, group_missing_flags: t.Optional[bool] = True
 ) -> pd.DataFrame:
     """
     Groups one-hot encoded feature columns and *_missing_flag columns into base features.
