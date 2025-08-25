@@ -139,8 +139,25 @@ class ModelConfig(pyd.BaseModel):
 class PreprocessingConfig(pyd.BaseModel):
     features: "FeaturesConfig"
     selection: "SelectionConfig"
-    checkpoint: "CheckpointNthConfig | CheckpointFirstConfig | CheckpointLastConfig | CheckpointFirstAtNumCreditsEarnedConfig | CheckpointFirstWithinCohortConfig | CheckpointLastInEnrollmentYearConfig"
-    target: "TargetGraduationConfig | TargetRetentionConfig | TargetCreditsEarnedConfig"
+    checkpoint: t.Annotated[
+    t.Union[
+        CheckpointNthConfig,
+        CheckpointFirstConfig,
+        CheckpointLastConfig,
+        CheckpointFirstAtNumCreditsEarnedConfig,
+        CheckpointFirstWithinCohortConfig,
+        CheckpointLastInEnrollmentYearConfig,
+    ],
+    pyd.Field(discriminator="type_")
+]
+    target: t.Annotated[
+    t.Union[
+        TargetGraduationConfig,
+        TargetRetentionConfig,
+        TargetCreditsEarnedConfig,
+    ],
+    pyd.Field(discriminator="type_")
+]
     splits: dict[t.Literal["train", "test", "validate"], float] = pyd.Field(
         default={"train": 0.6, "test": 0.2, "validate": 0.2},
         description=(
