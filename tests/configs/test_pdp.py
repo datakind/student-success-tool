@@ -11,16 +11,23 @@ from student_success_tool.configs import pdp
 
 SRC_ROOT = pathlib.Path(__file__).parents[2] / "pipelines" / "pdp" / "institution_id"
 
+CONFIG_FILES = [
+    "config-CREDITS_EARNED_TEMPLATE.toml",
+    "config-GRADUATION_TEMPLATE.toml",
+    "config-RETENTION_TEMPLATE.toml",
+]
 
-@pytest.fixture(scope="module")
-def template_cfg_dict():
-    config_path = SRC_ROOT / "config-TEMPLATE.toml"
+@pytest.mark.parametrize("config_file", CONFIG_FILES)
+def test_template_pdp_cfgs(config_file):
+    """
+    Validates that each PDP config template loads correctly and matches
+    the PDPProjectConfig schema.
+    """
+    config_path = SRC_ROOT / config_file
     with config_path.open("rb") as f:
-        return tomllib.load(f)
+        cfg = tomllib.load(f)
 
-
-def test_template_pdp_cfgs(template_cfg_dict):
-    result = pdp.PDPProjectConfig.model_validate(template_cfg_dict)
+    result = pdp.PDPProjectConfig.model_validate(cfg)
     print(result)
     assert isinstance(result, pyd.BaseModel)
 
