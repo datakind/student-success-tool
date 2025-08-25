@@ -136,3 +136,73 @@ def test_log_h2o_experiment_summary_basic(
     mock_log_metric.assert_called_once_with("num_models_trained", 2)
     mock_log_param.assert_called_once_with("best_model_id", "best_model")
     assert mock_log_artifact.call_count == 5
+
+
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.h2o.save_model")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.log_artifacts")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.log_metric")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.log_param")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.active_run")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.start_run")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.evaluation")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.h2o.get_model")
+def test_log_h2o_model_basic(
+    mock_get_model,
+    mock_eval,
+    mock_start_run,
+    mock_active_run,
+    mock_log_param,
+    mock_log_metric,
+    mock_log_artifacts,
+    mock_save_model,
+):
+    # ---- Mock H2O model
+    mock_model = mock.MagicMock()
+    mock_get_model.return_value = mock_model
+    mock_save_model.return_value = "/tmp/h2o_models/m1"
+
+    # Mock predictions
+    preds = mock.MagicMock()
+    preds.col_names = ["p0", "p1"]
+    prob_frame = mock.MagicMock()
+    prob_frame.as_data_frame.return_value = pd.DataFrame({"p1": [0.8, 0.2]})
+    preds.__getitem__.return_value = prob_frame
+    mock_model.predict.return_value = preds
+
+    # ---- Mock eval metrics
+    mock_eval.get_metrics_near_threshold_all_splits.return_value = {
+        "validate_logloss": 0.3
+    }
+
+    # ---- Mock H2OFrame for train/valid/test
+    target_frame = mock.MagicMock()
+    target_frame.as_data_frame.return_value = pd.DataFrame({"target": [0, 1]})
+    frame_mock = mock.MagicMock()
+    frame_mock.__getitem__.return_value = target_frame
+
+    # ---- Mock mlflow.start_run & active_run
+    mock_run = mock.MagicMock()
+    mock_run.__enter__.return_value = mock_run
+    mock_start_run.return_value = mock_run
+    mock_active_run.return_value.info.run_id = "run-123"
+
+    # ---- Run function
+    result = utils.log_h2o_model(
+        aml=mock.MagicMock(),
+        model_id="m1",
+        train=frame_mock,
+        valid=frame_mock,
+        test=frame_mock,
+        target_col="target",
+    )
+
+    # ---- Assertions
+    assert result is not None
+    assert "validate_logloss" in result
+    assert result["mlflow_run_id"] == "run-123"
+    mock_log_param.assert_any_call("model_id", "m1")
+    mock_log_metric.assert_any_call("validate_logloss", 0.3)
+    mock_log_artifacts.assert_called()
+    mock_save_model.assert_called_once_with(
+        mock_model, path="/tmp/h2o_models/m1", force=True
+    )

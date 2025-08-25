@@ -131,6 +131,7 @@ def log_h2o_experiment(
 
         # Setting threshold to 0.5 due to binary classification
         metrics = log_h2o_model(
+            aml=aml,
             model_id=model_id,
             train=train,
             valid=valid,
