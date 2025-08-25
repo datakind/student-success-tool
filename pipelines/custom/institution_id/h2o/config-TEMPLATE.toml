@@ -106,7 +106,7 @@ collinear_threshold = 10.0
 # force_include_cols = []
 
 [modeling.training]
-primary_metric = "log_loss"
+primary_metric = "logloss"
 timeout_minutes = 10
 # exclude_frameworks = ["XGBoost", "GBM"]
 # exclude_cols = []

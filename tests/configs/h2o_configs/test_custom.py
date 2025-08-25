@@ -11,7 +11,7 @@ from student_success_tool.configs.h2o_configs import custom
 
 
 SRC_ROOT = (
-    pathlib.Path(__file__).parents[2]
+    pathlib.Path(__file__).parents[3]
     / "pipelines"
     / "custom"
     / "institution_id"
