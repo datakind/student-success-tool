@@ -136,59 +136,6 @@ class ModelConfig(pyd.BaseModel):
         return f"runs:/{self.run_id}/model"
 
 
-class PreprocessingConfig(pyd.BaseModel):
-    features: "FeaturesConfig"
-    selection: "SelectionConfig"
-    checkpoint: t.Annotated[
-    "CheckpointNthConfig | "
-    "CheckpointFirstConfig | "
-    "CheckpointLastConfig | "
-    "CheckpointFirstAtNumCreditsEarnedConfig | "
-    "CheckpointFirstWithinCohortConfig | "
-    "CheckpointLastInEnrollmentYearConfig",
-    pyd.Field(discriminator="type_"),
-]
-    target: t.Annotated[
-    "TargetGraduationConfig | ",
-    "TargetRetentionConfig | ",
-    "TargetCreditsEarnedConfig",
-    pyd.Field(discriminator="type_"),
-]
-    splits: dict[t.Literal["train", "test", "validate"], float] = pyd.Field(
-        default={"train": 0.6, "test": 0.2, "validate": 0.2},
-        description=(
-            "Mapping of name to fraction of the full datset belonging to a given 'split', "
-            "which is a randomized subset used for different parts of the modeling process"
-        ),
-    )
-    sample_class_weight: t.Optional[t.Literal["balanced"] | dict[object, int]] = (
-        pyd.Field(
-            default=None,
-            description=(
-                "Weights associated with classes in the form ``{class_label: weight}`` "
-                "or 'balanced' to automatically adjust weights inversely proportional "
-                "to class frequencies in the input data. "
-                "If null (default), then sample weights are not computed."
-            ),
-        )
-    )
-    include_pre_cohort_courses: bool = pyd.Field(
-        default=False,
-        description=(
-            "Whether to include course records that occurred before the student's cohort term. Usually, we do end up excluding these so the default will always be False unless set otherwise."
-        ),
-    )
-
-    @pyd.field_validator("splits", mode="after")
-    @classmethod
-    def check_split_fractions(cls, value: dict) -> dict:
-        if (sum_fracs := sum(value.values())) != 1.0:
-            raise pyd.ValidationError(
-                f"split fractions must sum up to 1.0, but input sums up to {sum_fracs}"
-            )
-        return value
-
-
 class FeaturesConfig(pyd.BaseModel):
     min_passing_grade: float = pyd.Field(
         default=constants.DEFAULT_MIN_PASSING_GRADE,
@@ -354,6 +301,63 @@ class TargetCreditsEarnedConfig(TargetBaseConfig):
     intensity_time_limits: types.IntensityTimeLimitsType
     num_terms_in_year: int = pyd.Field(default=4)
     max_term_rank: int | t.Literal["infer"]
+
+
+class PreprocessingConfig(pyd.BaseModel):
+    features: "FeaturesConfig"
+    selection: "SelectionConfig"
+    checkpoint: t.Annotated[
+    t.Union[
+        CheckpointNthConfig,
+        CheckpointFirstConfig,
+        CheckpointLastConfig,
+        CheckpointFirstAtNumCreditsEarnedConfig,
+        CheckpointFirstWithinCohortConfig,
+        CheckpointLastInEnrollmentYearConfig,
+    ],
+    pyd.Field(discriminator="type_")
+]
+    target: t.Annotated[
+    t.Union[
+        TargetGraduationConfig,
+        TargetRetentionConfig,
+        TargetCreditsEarnedConfig,
+    ],
+    pyd.Field(discriminator="type_")
+]
+    splits: dict[t.Literal["train", "test", "validate"], float] = pyd.Field(
+        default={"train": 0.6, "test": 0.2, "validate": 0.2},
+        description=(
+            "Mapping of name to fraction of the full datset belonging to a given 'split', "
+            "which is a randomized subset used for different parts of the modeling process"
+        ),
+    )
+    sample_class_weight: t.Optional[t.Literal["balanced"] | dict[object, int]] = (
+        pyd.Field(
+            default=None,
+            description=(
+                "Weights associated with classes in the form ``{class_label: weight}`` "
+                "or 'balanced' to automatically adjust weights inversely proportional "
+                "to class frequencies in the input data. "
+                "If null (default), then sample weights are not computed."
+            ),
+        )
+    )
+    include_pre_cohort_courses: bool = pyd.Field(
+        default=False,
+        description=(
+            "Whether to include course records that occurred before the student's cohort term. Usually, we do end up excluding these so the default will always be False unless set otherwise."
+        ),
+    )
+
+    @pyd.field_validator("splits", mode="after")
+    @classmethod
+    def check_split_fractions(cls, value: dict) -> dict:
+        if (sum_fracs := sum(value.values())) != 1.0:
+            raise pyd.ValidationError(
+                f"split fractions must sum up to 1.0, but input sums up to {sum_fracs}"
+            )
+        return value
 
 
 class ModelingConfig(pyd.BaseModel):
