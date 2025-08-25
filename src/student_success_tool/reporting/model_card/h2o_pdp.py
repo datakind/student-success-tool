@@ -1,7 +1,7 @@
 import typing as t
 from mlflow.tracking import MlflowClient
 
-from ...configs.h2o.pdp import PDPProjectConfig
+from ...configs.h2o_configs.pdp import PDPProjectConfig
 from .base import ModelCard
 from ..sections.pdp import register_sections as register_pdp_sections
 

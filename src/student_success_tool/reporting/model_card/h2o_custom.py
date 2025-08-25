@@ -4,7 +4,7 @@ from mlflow.tracking import MlflowClient
 # internal SST modules
 from ...modeling import h2o_modeling
 
-from ...configs.h2o.custom import CustomProjectConfig
+from ...configs.h2o_configs.custom import CustomProjectConfig
 from .base import ModelCard
 from ..sections.custom import register_sections as register_custom_sections
 from ..utils import utils
