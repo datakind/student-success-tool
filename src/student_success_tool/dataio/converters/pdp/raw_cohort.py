@@ -12,13 +12,11 @@ def rename_mangled_column_names(
     """
     Rename column names in ``df`` that have been mangled somewhere in the data generation
     and/or ingestion process, so they match the standard data schema.
-
     Args:
         df: Raw cohort dataset
         overrides: Mapping of raw (mangled) to raw (valid) column names in ``df``
             to be renamed. Note that repeatedly mangled columns are already included,
             so only specify this if the base set doesn't cover a school's situation.
-
     See Also:
         :class:`schemas.pdp.RawPDPCohortDataSchema`
     """

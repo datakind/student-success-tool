@@ -78,7 +78,7 @@ from pipelines import *  # noqa: F403
 # COMMAND ----------
 
 # project configuration should be stored in a config file in TOML format
-cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig)
+cfg = dataio.read_config("./config.toml", schema=configs.pdp.PDPProjectConfig)
 cfg
 
 # COMMAND ----------
@@ -215,9 +215,6 @@ df_cohort = dataio.pdp.read_raw_cohort_data(
     file_path=raw_cohort_file_path, schema=dataio.schemas.pdp.RawPDPCohortDataSchema
 )
 df_cohort
-
-# if u need the converter function for the wrong names (Mesh is working on a fix but just incase)
-# converter_func=dataio.converters.pdp.raw_cohort.rename_mangled_column_names
 
 # COMMAND ----------
 
