@@ -22,6 +22,13 @@ VALID_H2O_METRICS = {
     "aucpr",
 }
 
+VALID_H2O_FRAMEWORKS = {
+    "XGBoost",
+    "GBM",
+    "GLM",
+    "DRF",
+}
+
 
 def run_h2o_automl_classification(
     df: pd.DataFrame,
@@ -39,17 +46,18 @@ def run_h2o_automl_classification(
     # Set and validate inputs
     seed = kwargs.pop("seed", 42)
     timeout_minutes = int(float(str(kwargs.pop("timeout_minutes", 5))))
-    user_exclude = [
-        c for c in t.cast(list[str], kwargs.pop("exclude_cols", [])) if c is not None
-    ]
-    exclude_cols = list(user_exclude)  # start from user intent
     split_col: str = str(kwargs.pop("split_col", "split"))
     sample_weight_col = str(kwargs.pop("sample_weight_col", "sample_weight"))
-
     target_name = kwargs.pop("target_name", None)
     checkpoint_name = kwargs.pop("checkpoint_name", None)
     workspace_path = kwargs.pop("workspace_path", None)
     metric = primary_metric.lower()
+
+    exclude_cols = t.cast(list[str], kwargs.pop("exclude_cols", []) or [])
+    exclude_cols = [c for c in exclude_cols if c is not None]
+
+    exclude_frameworks = t.cast(list[str], kwargs.pop("exclude_frameworks", []) or [])
+    exclude_frameworks = [c for c in exclude_frameworks if c is not None]
 
     if not all([target_name, checkpoint_name, workspace_path]):
         raise ValueError(
@@ -80,9 +88,17 @@ def run_h2o_automl_classification(
             exclude_cols.append(c)
 
     # Only error on missing user-provided excludes; ignore optional system-added ones if absent
-    missing_user_cols = [c for c in user_exclude if c not in df.columns]
+    missing_user_cols = [c for c in exclude_cols if c not in df.columns]
     if missing_user_cols:
         raise ValueError(f"exclude_cols contains missing columns: {missing_user_cols}")
+
+    # Set frameworks for training
+    frameworks = [fw for fw in VALID_H2O_FRAMEWORKS if fw not in exclude_frameworks]
+    if not frameworks:
+        raise ValueError(
+            "All frameworks were excluded; must allow at least one of "
+            f"{', '.join(VALID_H2O_FRAMEWORKS)}"
+        )
 
     # Set training experiment
     experiment_id = utils.set_or_create_experiment(
@@ -139,7 +155,7 @@ def run_h2o_automl_classification(
         stopping_metric=metric,
         seed=seed,
         verbosity="info",
-        include_algos=["XGBoost", "GBM", "GLM", "DRF"],
+        include_algos=frameworks,
         nfolds=0,  # disable CV, use validation frame for early stopping
     )
 
