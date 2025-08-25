@@ -68,6 +68,7 @@ collinear_threshold = 10.0
 primary_metric = "log_loss"
 timeout_minutes = 10
 # exclude_frameworks = ["XGBoost", "GBM"]
+# exclude_cols = []
 
 [modeling.evaluation]
 topn_runs_included = 5
