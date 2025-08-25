@@ -221,6 +221,7 @@ def log_h2o_experiment_summary(
 
 def log_h2o_model(
     *,
+    aml: H2OAutoML,
     model_id: str,
     train: h2o.H2OFrame,
     valid: h2o.H2OFrame,
@@ -267,6 +268,9 @@ def log_h2o_model(
                 # Assign initial sort key for mlflow UI
                 primary_metric_key = f"validate_{primary_metric}"
                 mlflow.set_tag("mlflow.primaryMetric", primary_metric_key)
+
+                # Create & log model comparisons plot
+                evaluation.create_and_log_h2o_model_comparison(aml=aml)
 
                 # Log Classification Plots
                 for split_name, frame in zip(

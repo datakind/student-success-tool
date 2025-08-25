@@ -22,8 +22,10 @@ from sklearn.metrics import (
 from sklearn.calibration import calibration_curve
 
 import h2o
+from h2o.automl import H2OAutoML
 from h2o.estimators.estimator_base import H2OEstimator
 
+from . import training
 from . import utils
 from . import imputation
 from . import inference
@@ -127,9 +129,109 @@ def extract_training_data_from_model(
     return df_loaded
 
 
+def extract_number_of_runs_from_model_training(
+    automl_experiment_id: str,
+    data_runname: str = "H2O AutoML Experiment Summary and Storage",
+) -> int:
+    """
+    Read number of runs from an H2O model. This is available from the h2o_leaderboard.csv,
+    which is saved under the "H2O AutoML Experiment Summary and Storage" run which is available
+    in an experiment. The leaderboard contains information on every run that was created during
+    H2O training. We only log the top 50 models, so it's typically hundreds of models. Each row
+    is a separate run in h2o_leaderboard.csv so the length of the dataframe is the number of models.
+
+    Args:
+        automl_experiment_id: Experiment ID of the AutoML experiment
+        data_runname: The runName tag designating where there training data is stored
+
+    Returns:
+        The data used for training a model, with train/test/validation flags
+    """
+    run_df = mlflow.search_runs(
+        experiment_ids=[automl_experiment_id], output_format="pandas"
+    )
+    assert isinstance(run_df, pd.DataFrame)  # type guard
+    data_run_id = run_df[run_df["tags.mlflow.runName"] == data_runname]["run_id"].item()
+
+    # Create temp directory to download input data from MLflow
+    input_temp_dir = os.path.join(
+        os.environ["SPARK_LOCAL_DIRS"], "tmp", str(uuid.uuid4())[:8]
+    )
+    os.makedirs(input_temp_dir)
+
+    # Download the artifact and read it into a pandas DataFrame
+    input_data_path = mlflow.artifacts.download_artifacts(
+        run_id=data_run_id, artifact_path="leaderboard", dst_path=input_temp_dir
+    )
+    df_leaderboard = pd.read_csv(os.path.join(input_data_path, "h2o_leaderboard.csv"))
+    # Delete the temp data
+    shutil.rmtree(input_temp_dir)
+
+    return int(df_leaderboard.shape[0])
+
+
 ############
 ## PLOTS! ##
 ############
+
+
+def create_and_log_h2o_model_comparison(
+    aml: H2OAutoML,
+    artifact_path: str = "model_comparison.png",
+) -> pd.DataFrame:
+    """
+    Plots best (lowest) logloss per framework using AutoML leaderboard metrics,
+    logs the figure to MLflow, and returns the compact DataFrame used for plotting.
+
+    Parameters:
+        aml: Trained AutoML object (with leaderboard_frame set if you want test metrics).
+        frameworks: Frameworks actually used in training (e.g., from your training code).
+        artifact_path: MLflow artifact filename for the chart.
+    """
+    included_frameworks = set(training.VALID_H2O_FRAMEWORKS)
+
+    lb = utils._to_pandas(aml.leaderboard)
+    # Keep only wanted algos and rows with logloss
+    df = lb.loc[lb["algo"].isin(included_frameworks), ["algo", "logloss"]].dropna()
+
+    # Best (lowest) per family, sorted low→high
+    best = (
+        df.sort_values("logloss", ascending=True)
+        .drop_duplicates(subset=["algo"], keep="first")
+        .sort_values("logloss", ascending=True)
+        .reset_index(drop=True)
+    )
+
+    # Plot
+    fig, ax = plt.subplots(figsize=(8, 5))
+    bars = ax.barh(best["algo"], best["logloss"])
+
+    # highlight the best (top bar after sorting)
+    if len(bars):
+        bars[0].set_alpha(1.0)
+        for b in bars[1:]:
+            b.set_alpha(0.5)
+        # annotate values on bars
+        for i, b in enumerate(bars):
+            ax.text(
+                b.get_width() * 0.98,
+                b.get_y() + b.get_height() / 2,
+                f"{best['logloss'].iloc[i]:.4f}",
+                va="center",
+                ha="right",
+            )
+
+    ax.set_xlabel("log_loss")
+    ax.set_title("log_loss by Model Type (lowest to highest)")
+    ax.set_xlim(left=0)
+    ax.invert_yaxis()
+    plt.tight_layout()
+    plt.close(fig)
+
+    # Log to MLflow
+    if mlflow.active_run():
+        mlflow.log_figure(fig, artifact_path)
+    plt.close(fig)
 
 
 def create_confusion_matrix_plot(y_true: np.ndarray, y_pred: np.ndarray) -> plt.Figure:
