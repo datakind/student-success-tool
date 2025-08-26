@@ -37,7 +37,7 @@ import mlflow
 import pandas as pd
 from databricks.connect import DatabricksSession
 
-from student_success_tool import configs, dataio, modeling
+from student_success_tool import dataio, modeling
 from student_success_tool.modeling import h2o_modeling
 from student_success_tool.configs import h2o_configs
 

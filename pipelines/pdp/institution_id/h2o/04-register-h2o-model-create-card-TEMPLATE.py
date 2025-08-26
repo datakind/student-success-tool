@@ -32,7 +32,7 @@ import mlflow
 import logging
 from databricks.connect import DatabricksSession
 
-from student_success_tool import dataio, configs, modeling
+from student_success_tool import dataio, modeling
 from student_success_tool.configs import h2o_configs
 from student_success_tool.reporting.model_card.h2o_pdp import H2OPDPModelCard
 

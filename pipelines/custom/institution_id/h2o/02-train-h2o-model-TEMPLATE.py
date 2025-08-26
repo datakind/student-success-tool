@@ -44,7 +44,7 @@ from pyspark.dbutils import DBUtils
 dbutils = DBUtils(spark)
 client = MlflowClient()
 
-from student_success_tool import configs, dataio, modeling, utils
+from student_success_tool import dataio, modeling, utils
 from student_success_tool.modeling import h2o_modeling
 from student_success_tool.configs import h2o_configs
 
