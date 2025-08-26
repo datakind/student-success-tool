@@ -54,7 +54,7 @@ min_num_credits = 30.0
 num_credits_col = "cumsum_num_credits_earned"
 
 [preprocessing.target]
-name_ = "credits_earned"
+name = "credits_earned"
 type_ = "credits_earned"
 # TODO: edits based on credits needed for degree awardal 
 min_num_credits = 60.0
