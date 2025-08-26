@@ -34,7 +34,10 @@ from databricks.connect import DatabricksSession
 
 from student_success_tool import dataio, configs, modeling
 from student_success_tool.configs import h2o_configs
-from student_success_tool.reporting.model_card.h2o_pdp import PDPModelCard
+from student_success_tool.reporting.model_card.h2o_pdp import H2OPDPModelCard
+
+import h2o
+h2o.init()
 
 # COMMAND ----------
 
@@ -108,7 +111,7 @@ modeling.registration.register_mlflow_model(
 # COMMAND ----------
 
 # Initialize card
-card = PDPModelCard(
+card = H2OPDPModelCard(
     config=cfg, catalog=catalog, model_name=model_name, mlflow_client=client
 )
 

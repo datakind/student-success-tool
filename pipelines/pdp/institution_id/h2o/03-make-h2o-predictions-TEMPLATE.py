@@ -31,10 +31,6 @@
 
 # COMMAND ----------
 
-# MAGIC %restart_python
-
-# COMMAND ----------
-
 import logging
 
 import mlflow
@@ -43,6 +39,8 @@ from databricks.connect import DatabricksSession
 
 from student_success_tool import configs, dataio, modeling
 from student_success_tool.modeling import h2o_modeling
+from student_success_tool.configs import h2o_configs
+
 
 import h2o
 
@@ -77,7 +75,7 @@ mlflow.autolog(disable=True)
 # COMMAND ----------
 
 # project configuration should be stored in a config file in TOML format
-cfg = dataio.read_config("./config.toml", schema=configs.pdp.PDPProjectConfig)
+cfg = dataio.read_config("./config.toml", schema=h2o_configs.pdp.PDPProjectConfig)
 cfg
 
 # COMMAND ----------
@@ -133,13 +131,14 @@ if cfg.split_col and cfg.split_col in df.columns:
 else:
     df_test = df.copy(deep=True)
 
-student_ids = df_test.student_id
+if run_type == "train":
+    df_test = df_test.sample(200)
 
 # Load and transform using sklearn imputer
-df_test = h2o_modeling.imputation.SklearnImputerWrapper.load_and_transform(
-    df_test, run_id=cfg.model.run_id
+imputer = h2o_modeling.imputation.SklearnImputerWrapper.load(
+    run_id=cfg.model.run_id
 )
-df_test["student_id"] = student_ids
+df_test = imputer.transform(df_test)
 
 # COMMAND ----------
 
@@ -169,35 +168,37 @@ pd.Series(pred_probs).describe()
 
 # COMMAND ----------
 
-train = h2o.H2OFrame(df_train)
+# Sample background data for performance optimization
+bd = df_train.sample(
+    cfg.inference.background_data_sample
+)
+
+# Convert to H2OFrame
+h2o_bd = h2o.H2OFrame(bd)
 h2o_features = h2o.H2OFrame(features)
 
-contribs_df, preprocessed_df = h2o_modeling.inference.compute_h2o_shap_contributions(
+contribs_df = h2o_modeling.inference.compute_h2o_shap_contributions(
     model=model,
     h2o_frame=h2o_features,
-    background_data=train,
+    background_data=h2o_bd,
 )
 contribs_df
 
 # COMMAND ----------
 
 # Group one-hot encoding and missing value flags
-grouped_contribs_df = h2o_modeling.inference.group_shap_values(
-    contribs_df, group_missing_flags=True
-)
-grouped_features = h2o_modeling.inference.group_feature_values(
-    features, group_missing_flags=True
-)
+grouped_contribs_df = h2o_modeling.inference.group_shap_values(contribs_df)
+grouped_features = h2o_modeling.inference.group_feature_values(features)
 
-# COMMAND ----------
+if mlflow.active_run():
+    mlflow.end_run()
 
 with mlflow.start_run(run_id=cfg.model.run_id):
     # Create & log SHAP summary plot (default to group missing flags)
     h2o_modeling.inference.plot_grouped_shap(
         contribs_df=contribs_df,
-        preprocessed_df=preprocessed_df,
-        original_df=features,
-        group_missing_flags=True,
+        features_df=features,
+        original_dtypes=imputer.input_dtypes,
     )
 
     # Create & log ranked features by SHAP magnitude
@@ -244,7 +245,7 @@ dataio.write.to_delta_table(
 
 # Log MLFlow confusion matrix & roc table figures in silver schema
 
-with mlflow.start_run() as run:
+with mlflow.start_run(run_id=cfg.model.run_id) as run:
     confusion_matrix = modeling.evaluation.log_confusion_matrix(
         institution_id=cfg.institution_id,
         automl_run_id=cfg.model.run_id,
@@ -293,7 +294,7 @@ support_score_distribution = modeling.inference.support_score_distribution_table
     df_serving=grouped_features,
     unique_ids=unique_ids,
     pred_probs=pred_probs,
-    shap_values=grouped_contribs_df.to_numpy(),
+    shap_values=grouped_contribs_df,
     inference_params=cfg.inference.dict(),
 )
 support_score_distribution
