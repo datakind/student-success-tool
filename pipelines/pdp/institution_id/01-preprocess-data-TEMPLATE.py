@@ -109,11 +109,13 @@ df_course.head()
 
 # COMMAND ----------
 
-# check for gateway courses and cip codes 
+# check for gateway courses and cip codes
 df_course[
     (df_course["math_or_english_gateway"] == "M")
     | (df_course["math_or_english_gateway"] == "E")
-][["course_prefix", "course_number", "course_name", "course_cip"]].value_counts().sort_index()
+][
+    ["course_prefix", "course_number", "course_name", "course_cip"]
+].value_counts().sort_index()
 
 # COMMAND ----------
 
@@ -134,7 +136,7 @@ print(course_list)
 
 # COMMAND ----------
 
-# confirm cip code list, then add to config 
+# confirm cip code list, then add to config
 cip_code_list = ["23", "27"]
 
 # COMMAND ----------
