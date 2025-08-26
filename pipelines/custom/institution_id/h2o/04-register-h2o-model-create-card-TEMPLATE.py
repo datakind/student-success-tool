@@ -33,10 +33,9 @@ import logging
 from databricks.connect import DatabricksSession
 
 from student_success_tool import dataio, modeling
+from student_success_tool.modeling import h2o_modeling
 from student_success_tool.configs import h2o_configs
 from student_success_tool.reporting.model_card.h2o_custom import H2OCustomModelCard
-
-import h2o
 
 h2o_modeling.utils.safe_h2o_init()
 
