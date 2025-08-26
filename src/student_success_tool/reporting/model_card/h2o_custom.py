@@ -48,7 +48,7 @@ class H2OCustomModelCard(ModelCard[CustomProjectConfig]):
         if not model_cfg:
             raise ValueError(f"Model configuration for '{self.model_name}' is missing.")
         if not all(
-            [model_cfg.mlflow_model_uri, model_cfg.run_id, model_cfg.experiment_id]
+            [model_cfg.run_id, model_cfg.experiment_id]
         ):
             raise ValueError(
                 f"Incomplete model config for '{self.model_name}': "
