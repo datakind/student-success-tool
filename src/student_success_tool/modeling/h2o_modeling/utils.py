@@ -41,7 +41,7 @@ def safe_h2o_init(base_port=54321, mem_per_cluster="4G") -> None:
     else:
         port = base_port + random.randint(0, 1000)
 
-    LOGGER(f"Starting H2O cluster at port {port}...")
+    LOGGER.info(f"Starting H2O cluster at port {port}...")
     h2o.init(port=port, nthreads=-1, max_mem_size=mem_per_cluster)
 
 
