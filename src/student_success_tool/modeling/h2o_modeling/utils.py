@@ -6,6 +6,7 @@ import os
 import datetime
 import tempfile
 import contextlib
+import random
 
 import mlflow
 from mlflow.models import Model, infer_signature
@@ -25,6 +26,21 @@ from . import evaluation
 from . import imputation
 
 LOGGER = logging.getLogger(__name__)
+
+
+def safe_h2o_init(base_port=54321, mem_per_cluster="4G") -> None:
+    """
+    Initialize a unique H2O cluster per Databricks task (or randomly if no task id).
+    Ensures isolation across parallel runs and caps memory usage. This also works in
+    a databricks workflow or interactively in a notebook.
+    """
+    task_id = os.environ.get("DATABRICKS_TASK_RUN_ID")
+    if task_id:
+        port = base_port + (int(task_id) % 10000)
+    else:
+        port = base_port + random.randint(0, 1000)
+
+    h2o.init(port=port, nthreads=-1, max_mem_size=mem_per_cluster)
 
 
 def download_model_artifact(run_id: str, artifact_subdir: str = "model") -> str:
