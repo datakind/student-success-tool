@@ -117,12 +117,12 @@ class H2OPDPModelCard(ModelCard[PDPProjectConfig]):
             ),
             "test_calibration_curve": (
                 "Test Calibration Curve",
-                "calibration/test_calibration.png",
+                "test_calibration_curve.png",
                 "125mm",
             ),
             "test_roc_curve": (
                 "Test ROC Curve",
-                "test_roc_curve_plot.png",
+                "test_roc_curve.png",
                 "125mm",
             ),
             "test_confusion_matrix": (
