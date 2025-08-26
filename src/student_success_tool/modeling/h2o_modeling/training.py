@@ -22,6 +22,13 @@ VALID_H2O_METRICS = {
     "aucpr",
 }
 
+VALID_H2O_FRAMEWORKS = {
+    "XGBoost",
+    "GBM",
+    "GLM",
+    "DRF",
+}
+
 
 def run_h2o_automl_classification(
     df: pd.DataFrame,
@@ -39,15 +46,18 @@ def run_h2o_automl_classification(
     # Set and validate inputs
     seed = kwargs.pop("seed", 42)
     timeout_minutes = int(float(str(kwargs.pop("timeout_minutes", 5))))
-    exclude_cols = [
-        c for c in t.cast(list[str], kwargs.pop("exclude_cols", [])) if c is not None
-    ]
     split_col: str = str(kwargs.pop("split_col", "split"))
-
+    sample_weight_col = str(kwargs.pop("sample_weight_col", "sample_weight"))
     target_name = kwargs.pop("target_name", None)
     checkpoint_name = kwargs.pop("checkpoint_name", None)
     workspace_path = kwargs.pop("workspace_path", None)
     metric = primary_metric.lower()
+
+    exclude_cols = t.cast(list[str], kwargs.pop("exclude_cols", []) or [])
+    exclude_cols = [c for c in exclude_cols if c is not None]
+
+    exclude_frameworks = t.cast(list[str], kwargs.pop("exclude_frameworks", []) or [])
+    exclude_frameworks = [c for c in exclude_frameworks if c is not None]
 
     if not all([target_name, checkpoint_name, workspace_path]):
         raise ValueError(
@@ -61,17 +71,34 @@ def run_h2o_automl_classification(
         )
 
     # Ensure columns that need to be excluded are from training & imputation
-    if student_id_col and student_id_col not in exclude_cols:
+    if (
+        student_id_col
+        and student_id_col in df.columns
+        and student_id_col not in exclude_cols
+    ):
         exclude_cols.append(student_id_col)
 
+    # Always exclude target & split; sample_weight only if it exists
     must_exclude: set[str] = {target_col, split_col}
+    if sample_weight_col and sample_weight_col in df.columns:
+        must_exclude.add(sample_weight_col)
+
     for c in must_exclude:
         if c not in exclude_cols:
             exclude_cols.append(c)
 
-    missing_cols = [c for c in exclude_cols if c not in df.columns]
-    if missing_cols:
-        raise ValueError(f"exclude_cols contains missing columns: {missing_cols}")
+    # Only error on missing user-provided excludes; ignore optional system-added ones if absent
+    missing_user_cols = [c for c in exclude_cols if c not in df.columns]
+    if missing_user_cols:
+        raise ValueError(f"exclude_cols contains missing columns: {missing_user_cols}")
+
+    # Set frameworks for training
+    frameworks = [fw for fw in VALID_H2O_FRAMEWORKS if fw not in exclude_frameworks]
+    if not frameworks:
+        raise ValueError(
+            "All frameworks were excluded; must allow at least one of "
+            f"{', '.join(VALID_H2O_FRAMEWORKS)}"
+        )
 
     # Set training experiment
     experiment_id = utils.set_or_create_experiment(
@@ -91,20 +118,20 @@ def run_h2o_automl_classification(
     df_splits: dict[str, pd.DataFrame] = {}
     for split_name in ("train", "validate", "test"):
         df_split = df[df[split_col] == split_name]
-        X_transformed = imputer.transform(df_split[raw_model_features])
-
+        df_split_processed = imputer.transform(df_split)
         LOGGER.info(
-            f"X_transformed shape: {X_transformed.shape}, "
-            f"exclude_cols shape: {df_split[exclude_cols].shape}, "
-            f"original split shape: {df_split.shape}"
+            "Processed '%s' split -> shape: %s (kept %d passthrough cols)",
+            split_name,
+            df_split_processed.shape,
+            len(
+                [
+                    c
+                    for c in df_split_processed.columns
+                    if imputer.output_feature_names is not None
+                    and c not in imputer.output_feature_names
+                ]
+            ),
         )
-
-        # Force imputer output to have the same index as the original split
-        X_transformed.index = df_split.index
-
-        # Combine transformed features with excluded columns
-        df_split_processed = pd.concat([X_transformed, df_split[exclude_cols]], axis=1)
-
         df_splits[split_name] = df_split_processed
 
     # Convert to H2OFrames and fix dtypes
@@ -128,17 +155,22 @@ def run_h2o_automl_classification(
         stopping_metric=metric,
         seed=seed,
         verbosity="info",
-        include_algos=["XGBoost", "GBM", "GLM", "DRF"],
+        include_algos=frameworks,
         nfolds=0,  # disable CV, use validation frame for early stopping
-        balance_classes=True,
     )
-    aml.train(
+
+    # Only pass weights_column if it exists in the data
+    train_kwargs = dict(
         x=processed_model_features,
         y=target_col,
         training_frame=train,
         validation_frame=valid,
         leaderboard_frame=test,
     )
+    if sample_weight_col in df.columns:
+        train_kwargs["weights_column"] = sample_weight_col
+
+    aml.train(**train_kwargs)
 
     LOGGER.info(f"Best model: {aml.leader.model_id}")
 

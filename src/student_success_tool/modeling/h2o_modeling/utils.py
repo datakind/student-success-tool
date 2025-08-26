@@ -1,3 +1,4 @@
+import yaml
 import logging
 import typing as t
 
@@ -7,6 +8,7 @@ import tempfile
 import contextlib
 
 import mlflow
+from mlflow.models import Model, infer_signature
 from mlflow.tracking import MlflowClient
 from mlflow.artifacts import download_artifacts
 import pandas as pd
@@ -14,6 +16,10 @@ import pandas as pd
 import h2o
 from h2o.automl import H2OAutoML
 from h2o.model.model_base import ModelBase
+from h2o.frame import H2OFrame
+from h2o.two_dim_table import H2OTwoDimTable
+
+from sklearn.metrics import confusion_matrix
 
 from . import evaluation
 from . import imputation
@@ -43,8 +49,7 @@ def load_h2o_model(
     run_id: str, artifact_path: str = "model"
 ) -> h2o.model.model_base.ModelBase:
     """
-    Initializes H2O, downloads the model artifact from MLflow, and loads it.
-    Cleans up the temp directory after loading.
+    Initializes H2O, downloads the UC-compatible H2O model artifact from MLflow, and loads it.
     """
     if not h2o.connection():
         h2o.init()
@@ -54,13 +59,13 @@ def load_h2o_model(
             run_id=run_id, artifact_path=artifact_path, dst_path=tmp_dir
         )
 
-        # Find the actual model file inside the directory
-        files = os.listdir(local_model_dir)
-        if not files:
-            raise FileNotFoundError(f"No model file found in {local_model_dir}")
+        model_file = os.path.join(local_model_dir, "model.h2o")
+        if not os.path.exists(model_file):
+            raise FileNotFoundError(
+                f"Expected model.h2o not found in {local_model_dir}"
+            )
 
-        model_path = os.path.join(local_model_dir, files[0])
-        return h2o.load_model(model_path)
+        return h2o.load_model(model_file)
 
 
 def log_h2o_experiment(
@@ -94,7 +99,7 @@ def log_h2o_experiment(
     """
     LOGGER.info("Logging experiment to MLflow with classification plots...")
 
-    leaderboard_df = aml.leaderboard.as_data_frame()
+    leaderboard_df = _to_pandas(aml.leaderboard)
 
     log_h2o_experiment_summary(
         aml=aml,
@@ -127,11 +132,13 @@ def log_h2o_experiment(
 
         # Setting threshold to 0.5 due to binary classification
         metrics = log_h2o_model(
+            aml=aml,
             model_id=model_id,
             train=train,
             valid=valid,
             test=test,
             imputer=imputer,
+            target_col=target_col,
             primary_metric=aml.sort_metric,
         )
 
@@ -193,16 +200,16 @@ def log_h2o_experiment_summary(
             mlflow.log_artifact(features_path, artifact_path="inputs")
 
             # Log sampled training data
-            train_df = train.as_data_frame(use_pandas=True)
-            valid_df = valid.as_data_frame(use_pandas=True)
-            test_df = test.as_data_frame(use_pandas=True)
+            train_df = _to_pandas(train)
+            valid_df = _to_pandas(valid)
+            test_df = _to_pandas(test)
             full_df = pd.concat([train_df, valid_df, test_df], axis=0)
             df_parquet_path = os.path.join(tmpdir, "full_dataset.parquet")
             full_df.to_parquet(df_parquet_path, index=False)
             mlflow.log_artifact(df_parquet_path, artifact_path="inputs")
 
             # Log target distribution
-            target_dist_df = train[target_col].table().as_data_frame()
+            target_dist_df = _to_pandas(train[target_col].table())
             target_dist_path = os.path.join(tmpdir, "target_distribution.csv")
             target_dist_df.to_csv(target_dist_path, index=False)
             mlflow.log_artifact(target_dist_path, artifact_path="inputs")
@@ -216,11 +223,13 @@ def log_h2o_experiment_summary(
 
 def log_h2o_model(
     *,
+    aml: H2OAutoML,
     model_id: str,
     train: h2o.H2OFrame,
     valid: h2o.H2OFrame,
     test: h2o.H2OFrame,
     threshold: float = 0.5,
+    target_col: str = "target",
     imputer: t.Optional[imputation.SklearnImputerWrapper] = None,
     primary_metric: str = "logloss",
 ) -> dict | None:
@@ -258,6 +267,42 @@ def log_h2o_model(
                 if active_run is not None:  # type check
                     run_id = active_run.info.run_id
 
+                # Assign initial sort key for mlflow UI
+                primary_metric_key = f"validate_{primary_metric}"
+                mlflow.set_tag("mlflow.primaryMetric", primary_metric_key)
+
+                # Create & log model comparisons plot
+                evaluation.create_and_log_h2o_model_comparison(aml=aml)
+
+                # Log Classification Plots
+                for split_name, frame in zip(
+                    ["train", "val", "test"], [train, valid, test]
+                ):
+                    y_true = _to_pandas(frame[target_col]).values.flatten()
+                    preds = model.predict(frame)
+                    positive_class_label = preds.col_names[-1]
+                    y_proba = _to_pandas(preds[positive_class_label]).values.flatten()
+                    y_pred = (y_proba >= threshold).astype(int)
+
+                    # Log Confusion matrix metrics for FE tables
+                    label = "validate" if split_name == "val" else split_name
+                    tn, fp, fn, tp = confusion_matrix(
+                        y_true, y_pred, labels=[0, 1]
+                    ).ravel()
+
+                    metrics.update(
+                        {
+                            f"{label}_true_positives": float(tp),
+                            f"{label}_true_negatives": float(tn),
+                            f"{label}_false_positives": float(fp),
+                            f"{label}_false_negatives": float(fn),
+                        }
+                    )
+
+                    evaluation.generate_all_classification_plots(
+                        y_true, y_pred, y_proba, prefix=split_name
+                    )
+
                 log_model_metadata_to_mlflow(
                     model_id=model_id,
                     model=model,
@@ -265,31 +310,21 @@ def log_h2o_model(
                     exclude_keys={"model_id"},
                 )
 
-                # Assign initial sort key for mlflow UI
-                primary_metric_key = f"validate_{primary_metric}"
-                mlflow.set_tag("mlflow.primaryMetric", primary_metric_key)
+                # # Log H2O Model
+                # local_model_dir = f"/tmp/h2o_models/{model_id}"
+                # os.makedirs(local_model_dir, exist_ok=True)
+                # h2o.save_model(model, path=local_model_dir, force=True)
+                # mlflow.log_artifacts(local_model_dir, artifact_path="model")
 
-                # Log Classification Plots
-                for split_name, frame in zip(
-                    ["train", "val", "test"], [train, valid, test]
-                ):
-                    y_true = frame["target"].as_data_frame().values.flatten()
-                    preds = model.predict(frame)
-                    positive_class_label = preds.col_names[-1]
-                    y_proba = (
-                        preds[positive_class_label].as_data_frame().values.flatten()
-                    )
-                    y_pred = (y_proba >= threshold).astype(int)
+                X_sample = _to_pandas(train.drop(target_col, axis=1))
+                y_pred_sample = model.predict(train).as_data_frame()
+                signature = infer_signature(X_sample, y_pred_sample)
 
-                    evaluation.generate_all_classification_plots(
-                        y_true, y_pred, y_proba, prefix=split_name
-                    )
-
-                # Log H2O Model
-                local_model_dir = f"/tmp/h2o_models/{model_id}"
-                os.makedirs(local_model_dir, exist_ok=True)
-                h2o.save_model(model, path=local_model_dir, force=True)
-                mlflow.log_artifacts(local_model_dir, artifact_path="model")
+                log_h2o_model_metadata_for_uc(
+                    h2o_model=model,
+                    artifact_path="model",
+                    signature=signature,
+                )
 
                 # Log Imputer Artifacts
                 if imputer is not None:
@@ -304,6 +339,67 @@ def log_h2o_model(
     except Exception as e:
         LOGGER.exception(f"Failed to evaluate and log model {model_id}: {e}")
         return None
+
+
+def log_h2o_model_metadata_for_uc(
+    h2o_model,
+    artifact_path: str,
+    signature=None,
+    input_example=None,
+):
+    """
+    Custom H2O model logger (Unity Catalog-compatible & future-proof for MLflow 3.x).
+    Mlflow 3.x will deprecate mlflow.h2o.log_model.
+    Saves the H2O model + MLmodel metadata so Unity Catalog can register it.
+
+    Args:
+        h2o_model: Trained H2O model to log.
+        artifact_path: Subdir in MLflow run artifacts (e.g. "model").
+        signature: Optional MLflow signature object (mlflow.models.signature.ModelSignature).
+        input_example: Optional example input dataframe to log.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # 1. Save raw H2O model
+        model_path = h2o.save_model(h2o_model, path=tmpdir, force=True)
+
+        # Normalize filename to "model.h2o"
+        final_model_path = os.path.join(tmpdir, "model.h2o")
+        if model_path != final_model_path:
+            os.rename(model_path, final_model_path)
+
+        # 2. Build MLmodel metadata
+        mlmodel = Model(artifact_path=artifact_path, flavors={})
+        mlmodel.add_flavor(
+            "h2o",
+            h2o_version=h2o.__version__,
+            model_data="model.h2o",
+        )
+        if signature is not None:
+            mlmodel.signature = signature
+        if input_example is not None:
+            mlmodel.save_input_example(input_example, tmpdir)
+
+        mlmodel.save(os.path.join(tmpdir, "MLmodel"))
+
+        # 3. Minimal environment specs
+        reqs_path = os.path.join(tmpdir, "requirements.txt")
+        with open(reqs_path, "w") as f:
+            f.write(f"h2o=={h2o.__version__}\n")
+
+        conda_env = {
+            "name": "h2o_env",
+            "channels": ["defaults", "conda-forge"],
+            "dependencies": [
+                f"h2o={h2o.__version__}",
+                "pip",
+                {"pip": [f"mlflow=={mlflow.__version__}"]},
+            ],
+        }
+        with open(os.path.join(tmpdir, "conda.yaml"), "w") as f:
+            yaml.safe_dump(conda_env, f)
+
+        # 4. Log directory to MLflow artifacts
+        mlflow.log_artifacts(tmpdir, artifact_path=artifact_path)
 
 
 def log_model_metadata_to_mlflow(
@@ -384,7 +480,7 @@ def set_or_create_experiment(
 
     timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
 
-    name_parts = [institution_id, target_name, checkpoint_name, "h20_automl", timestamp]
+    name_parts = [institution_id, target_name, checkpoint_name, "h2o_automl", timestamp]
     experiment_name = "/".join(
         [
             workspace_path.rstrip("/"),
@@ -404,3 +500,34 @@ def set_or_create_experiment(
         return experiment_id
     except Exception as e:
         raise RuntimeError(f"Failed to create or set MLflow experiment: {e}")
+
+
+def _to_pandas(hobj: t.Any) -> pd.DataFrame:
+    """
+    Convert common H2O objects to pandas.DataFrame.
+
+    - H2OFrame.as_data_frame() supports `use_pandas` and `use_multi_thread` (for performance).
+    - H2OTwoDimTable.as_data_frame() takes no arguments in H2O 3.46+.
+    - For other objects, we'll use `as_data_frame()`.
+    """
+    # Case 1: Big data — use multithreaded pull for H2OFrame
+    if H2OFrame is not None and isinstance(hobj, H2OFrame):
+        try:
+            return hobj.as_data_frame(use_pandas=True, use_multi_thread=True)
+        except TypeError:
+            # Very old H2O without use_multi_thread
+            return hobj.as_data_frame(use_pandas=True)
+
+    # Case 2: Metric tables such as H2OTwoDimTable doesn't support multi-thread
+    if H2OTwoDimTable is not None and isinstance(hobj, H2OTwoDimTable):
+        return hobj.as_data_frame()
+
+    # Case 3: Fallback for any other hobj that supports as_dataframe
+    if hasattr(hobj, "as_data_frame"):
+        try:
+            return hobj.as_data_frame()
+        except TypeError:
+            # Last-resort fallback for legacy signatures
+            return hobj.as_data_frame(use_pandas=True)
+
+    raise TypeError(f"_to_pandas: unsupported object type {type(hobj)}")

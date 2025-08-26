@@ -52,18 +52,21 @@ def test_group_feature_values_ambiguous_encoding_raises():
 
 
 def test_create_color_hint_features_mixed_types():
-    orig_df = pd.DataFrame(
+    original_df = pd.DataFrame(
         {
             "gender": pd.Series(["M", "F"], dtype="category"),
             "income": [50000, 60000],
             "opted_in": [True, False],
         }
     )
+    orig_dtypes = {"gender": "category", "income": "int", "opted_in": "bool"}
     grouped_df = pd.DataFrame(
         {"gender": [1.0, 0.0], "income": [0.3, 0.7], "opted_in": [1, 0]}
     )
-    result = inference.create_color_hint_features(orig_df, grouped_df)
-    assert result["gender"].tolist() == ["category", "category"]
+    result = inference.create_color_hint_features(
+        grouped_df, original_dtypes=orig_dtypes
+    )
+    assert result["gender"].tolist() == ["1.0", "0.0"]
     assert result["income"].tolist() == [0.3, 0.7]
     assert result["opted_in"].tolist() == [1, 0]
 
@@ -74,13 +77,8 @@ def test_plot_grouped_shap_calls_summary_plot(mock_summary_plot, mock_log_figure
     contribs_df = pd.DataFrame(
         {"feature.X.1": [0.1, 0.2], "feature.X.2": [0.2, 0.3], "feature.Y": [0.3, 0.1]}
     )
-    input_df = pd.DataFrame(
-        {"feature.X.1": [1, 0], "feature.X.2": [0, 1], "feature.Y": [1, 0]}
-    )
     original_df = pd.DataFrame({"feature.X": ["A", "B"], "feature.Y": ["C", "D"]})
-    inference.plot_grouped_shap(
-        contribs_df, input_df, original_df, group_missing_flags=False
-    )
+    inference.plot_grouped_shap(contribs_df, original_df, group_missing_flags=False)
     mock_summary_plot.assert_called_once()
 
 
@@ -95,16 +93,29 @@ def test_compute_h2o_shap_contributions_with_bias_drop(mock_h2o_frame):
     mock_model._model_json = {"output": {"names": ["feature1", "feature2", "target"]}}
 
     h2o_frame = mock.MagicMock()
+    h2o_frame.nrows = 2
+    h2o_frame.__getitem__.return_value.nrows = 2
     h2o_frame.__getitem__.return_value.as_data_frame.return_value = pd.DataFrame(
         {"feature1": [1, 2], "feature2": [3, 4]}
     )
 
     contribs, inputs = inference.compute_h2o_shap_contributions(
-        mock_model, h2o_frame, drop_bias=True
+        mock_model,
+        h2o_frame,
+        drop_bias=True,
+        return_features=True,
     )
 
     assert "BiasTerm" not in contribs.columns
     assert list(inputs.columns) == ["feature1", "feature2"]
+
+    contribs = inference.compute_h2o_shap_contributions(
+        mock_model,
+        h2o_frame,
+        drop_bias=True,
+    )
+    assert "BiasTerm" not in contribs.columns
+    assert contribs.shape == (2, 2)
 
 
 def test_group_missing_flags_aggregated_correctly():
@@ -137,3 +148,68 @@ def test_group_missing_flags_aggregated_correctly():
         }
     )
     pd.testing.assert_frame_equal(grouped_without_flag, expected_without_flag)
+
+
+def test_create_color_hint_features_keeps_missing_flags_numeric():
+    # grouped_df after grouping (e.g., SHAP + features grouped to base names)
+    grouped_df = pd.DataFrame(
+        {
+            "gender": [1.0, 0.0],  # categorical in original data
+            "income": [0.3, 0.7],  # numeric in original data
+            "gpa_missing_flag": [1, 0],  # boolean flag (not present in original_dtypes)
+        }
+    )
+
+    # original dtypes from raw (pre-imputation) – intentionally no *_missing_flag here
+    orig_dtypes = {
+        "gender": "category",
+        "income": "float64",
+        # "gpa_missing_flag" intentionally omitted
+    }
+
+    result = inference.create_color_hint_features(
+        grouped_df, original_dtypes=orig_dtypes
+    )
+
+    # gender => categorical → stringified values
+    assert list(result["gender"]) == ["1.0", "0.0"]
+    # income => numeric → unchanged float values
+    assert list(result["income"]) == [0.3, 0.7]
+    # *_missing_flag not in original_dtypes => stays numeric/boolean (NOT stringified)
+    assert list(result["gpa_missing_flag"]) == [1, 0]
+
+
+@mock.patch("student_success_tool.modeling.h2o_modeling.inference.mlflow.log_figure")
+@mock.patch("student_success_tool.modeling.h2o_modeling.inference.shap.summary_plot")
+def test_plot_grouped_shap_works_without_original_dtypes(
+    mock_summary_plot, mock_log_figure
+):
+    # Minimal contribs and features where grouped names align
+    contribs_df = pd.DataFrame(
+        {
+            "feature.X.A": [0.1, 0.2],
+            "feature.X.B": [0.2, 0.3],
+            "feature.Y": [0.3, 0.1],
+        }
+    )
+    features_df = pd.DataFrame(
+        {
+            "feature.X.A": [1, 0],
+            "feature.X.B": [0, 1],
+            "feature.Y": [1.2, 2.3],
+        }
+    )
+
+    # Call without original_dtypes — should fall back to grouped_feats (no color hint)
+    inference.plot_grouped_shap(
+        contribs_df,
+        features_df,
+        group_missing_flags=True,  # exercise grouping path too
+        original_dtypes=None,
+        max_display=10,
+        mlflow_name="dummy.png",
+    )
+
+    # Ensure SHAP and MLflow were called
+    mock_summary_plot.assert_called_once()
+    mock_log_figure.assert_called_once()

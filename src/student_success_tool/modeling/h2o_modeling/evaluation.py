@@ -1,3 +1,4 @@
+import typing as t
 import logging
 from collections.abc import Callable
 
@@ -20,9 +21,14 @@ from sklearn.metrics import (
 )
 from sklearn.calibration import calibration_curve
 
-
 import h2o
+from h2o.automl import H2OAutoML
 from h2o.estimators.estimator_base import H2OEstimator
+
+from . import training
+from . import utils
+from . import imputation
+from . import inference
 
 LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +42,7 @@ def get_metrics_near_threshold_all_splits(
     threshold: float = 0.5,
 ) -> dict[str, float | str]:
     def _metrics(perf, label):
-        thresh_df = perf.thresholds_and_metric_scores().as_data_frame()
+        thresh_df = utils._to_pandas(perf.thresholds_and_metric_scores())
         closest = thresh_df.iloc[
             (thresh_df["threshold"] - threshold).abs().argsort()[:1]
         ]
@@ -123,9 +129,113 @@ def extract_training_data_from_model(
     return df_loaded
 
 
+def extract_number_of_runs_from_model_training(
+    automl_experiment_id: str,
+    data_runname: str = "H2O AutoML Experiment Summary and Storage",
+) -> int:
+    """
+    Read number of runs from an H2O model. This is available from the h2o_leaderboard.csv,
+    which is saved under the "H2O AutoML Experiment Summary and Storage" run which is available
+    in an experiment. The leaderboard contains information on every run that was created during
+    H2O training. We only log the top 50 models, so it's typically hundreds of models. Each row
+    is a separate run in h2o_leaderboard.csv so the length of the dataframe is the number of models.
+
+    Args:
+        automl_experiment_id: Experiment ID of the AutoML experiment
+        data_runname: The runName tag designating where there training data is stored
+
+    Returns:
+        The data used for training a model, with train/test/validation flags
+    """
+    run_df = mlflow.search_runs(
+        experiment_ids=[automl_experiment_id], output_format="pandas"
+    )
+    assert isinstance(run_df, pd.DataFrame)  # type guard
+    data_run_id = run_df[run_df["tags.mlflow.runName"] == data_runname]["run_id"].item()
+
+    # Create temp directory to download input data from MLflow
+    input_temp_dir = os.path.join(
+        os.environ["SPARK_LOCAL_DIRS"], "tmp", str(uuid.uuid4())[:8]
+    )
+    os.makedirs(input_temp_dir)
+
+    # Download the artifact and read it into a pandas DataFrame
+    input_data_path = mlflow.artifacts.download_artifacts(
+        run_id=data_run_id, artifact_path="leaderboard", dst_path=input_temp_dir
+    )
+    df_leaderboard = pd.read_csv(os.path.join(input_data_path, "h2o_leaderboard.csv"))
+    # Delete the temp data
+    shutil.rmtree(input_temp_dir)
+
+    return int(df_leaderboard.shape[0])
+
+
 ############
 ## PLOTS! ##
 ############
+
+
+def create_and_log_h2o_model_comparison(
+    aml: H2OAutoML,
+    artifact_path: str = "model_comparison.png",
+) -> pd.DataFrame:
+    """
+    Plots best (lowest) logloss per framework using AutoML leaderboard metrics,
+    logs the figure to MLflow, and returns the compact DataFrame used for plotting.
+    """
+    included_frameworks = set(training.VALID_H2O_FRAMEWORKS)
+
+    lb = utils._to_pandas(aml.leaderboard)
+
+    # Ensure there's a 'framework' column
+    if "algo" in lb.columns:
+        df = lb.rename(columns={"algo": "framework"})
+    else:
+        df = lb.copy()
+        # infer framework by splitting model_id at '_' and taking first token
+        df["framework"] = df["model_id"].str.split("_").str[0]
+
+    # Keep only frameworks we trained with
+    df = df.loc[
+        df["framework"].isin(included_frameworks), ["framework", "logloss"]
+    ].dropna()
+
+    # Best (lowest) per family, sorted low→high
+    best = (
+        df.sort_values("logloss", ascending=True)
+        .drop_duplicates(subset=["framework"], keep="first")
+        .sort_values("logloss", ascending=True)
+        .reset_index(drop=True)
+    )
+
+    # Plot
+    fig, ax = plt.subplots(figsize=(8, 5))
+    bars = ax.barh(best["framework"], best["logloss"])
+
+    if len(bars):
+        bars[0].set_alpha(1.0)
+        for b in bars[1:]:
+            b.set_alpha(0.5)
+        for i, b in enumerate(bars):
+            ax.text(
+                b.get_width() * 0.98,
+                b.get_y() + b.get_height() / 2,
+                f"{best['logloss'].iloc[i]:.4f}",
+                va="center",
+                ha="right",
+            )
+
+    ax.set_xlabel("log_loss")
+    ax.set_title("log_loss by Model Type (lowest to highest)")
+    ax.set_xlim(left=0)
+    ax.invert_yaxis()
+    plt.tight_layout()
+
+    if mlflow.active_run():
+        mlflow.log_figure(fig, artifact_path)
+
+    plt.close(fig)
+    return best
 
 
 def create_confusion_matrix_plot(y_true: np.ndarray, y_pred: np.ndarray) -> plt.Figure:
@@ -207,3 +317,102 @@ def create_calibration_curve_plot(
     ax.legend()
     plt.close(fig)
     return fig
+
+
+def log_roc_table(
+    institution_id: str,
+    *,
+    automl_run_id: str,
+    catalog: str = "staging_sst_01",
+    target_col: str = "target",
+    modeling_dataset_name: str = "modeling_dataset",
+    split_col: t.Optional[str] = None,
+) -> None:
+    """
+    Computes and saves an ROC curve table (FPR, TPR, threshold, etc.) for a given H2O model run
+    by reloading the test dataset and the trained model.
+
+    Args:
+        institution_id (str): Institution ID prefix for table name.
+        automl_experiment_id (str): MLflow run ID of the trained model.
+        experiment_id
+        catalog (str): Destination catalog/schema for the ROC curve table.
+    """
+    try:
+        from databricks.connect import DatabricksSession
+
+        spark = DatabricksSession.builder.getOrCreate()
+    except Exception:
+        print("⚠️ Databricks Connect failed. Falling back to local Spark.")
+        from pyspark.sql import SparkSession
+
+        spark = (
+            SparkSession.builder.master("local[*]").appName("Fallback").getOrCreate()
+        )
+
+    split_col = split_col or "split"
+
+    table_path = f"{catalog}.{institution_id}_silver.training_{automl_run_id}_roc_curve"
+
+    try:
+        df = spark.read.table(modeling_dataset_name).toPandas()
+        test_df = df[df[split_col] == "test"].copy()
+
+        # Load and transform using sklearn imputer
+        test_df = imputation.SklearnImputerWrapper.load_and_transform(
+            test_df,
+            run_id=automl_run_id,
+        )
+
+        # Load model + features
+        model = utils.load_h2o_model(automl_run_id)
+        feature_names: t.List[str] = inference.get_h2o_used_features(model)
+
+        # Prepare inputs for ROC
+        y_true = test_df[target_col].values
+        X_test = test_df[feature_names]
+        y_scores = inference.predict_probs_h2o(
+            X_test,
+            model=model,
+        )[:, 1]
+
+        # Calculate ROC table manually and plot all thresholds.
+        # Down the line, we might want to specify a threshold to reduce plot density
+        thresholds = np.sort(np.unique(y_scores))[::-1]
+        rounded_thresholds = sorted(
+            set([round(t, 4) for t in thresholds]), reverse=True
+        )
+
+        P, N = np.sum(y_true == 1), np.sum(y_true == 0)
+
+        rows = []
+        for thresh in rounded_thresholds:
+            y_pred = (y_scores >= thresh).astype(int)
+            TP = np.sum((y_pred == 1) & (y_true == 1))
+            FP = np.sum((y_pred == 1) & (y_true == 0))
+            TN = np.sum((y_pred == 0) & (y_true == 0))
+            FN = np.sum((y_pred == 0) & (y_true == 1))
+            TPR = TP / P if P else 0
+            FPR = FP / N if N else 0
+            rows.append(
+                {
+                    "threshold": round(thresh, 4),
+                    "true_positive_rate": round(TPR, 4),
+                    "false_positive_rate": round(FPR, 4),
+                    "true_positive": int(TP),
+                    "false_positives": int(FP),
+                    "true_negatives": int(TN),
+                    "false_negatives": int(FN),
+                }
+            )
+
+        roc_df = pd.DataFrame(rows)
+        spark_df = spark.createDataFrame(roc_df)
+        spark_df.write.mode("overwrite").saveAsTable(table_path)
+        logging.info(
+            "ROC table written to table '%s' for run_id=%s", table_path, automl_run_id
+        )
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed to log ROC table for run {automl_run_id}: {e}"
+        ) from e

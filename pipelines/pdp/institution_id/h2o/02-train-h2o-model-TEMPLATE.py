@@ -46,6 +46,7 @@ client = MlflowClient()
 
 from student_success_tool import configs, dataio, modeling, utils
 from student_success_tool.modeling import h2o_modeling
+from student_success_tool.configs import h2o_configs
 
 import h2o
 
@@ -87,7 +88,7 @@ job_run_id = utils.databricks.get_db_widget_param("job_run_id", default="interac
 # COMMAND ----------
 
 # project configuration stored as a config file in TOML format
-cfg = dataio.read_config("./config.toml", schema=configs.pdp.PDPProjectConfig)
+cfg = dataio.read_config("./config.toml", schema=h2o_configs.pdp.PDPProjectConfig)
 cfg
 
 # COMMAND ----------
@@ -198,8 +199,9 @@ training_params = {
     "student_id_col": cfg.student_id_col,
     "target_col": cfg.target_col,
     "split_col": cfg.split_col,
+    "sample_weight_col": cfg.sample_weight_col,
     "pos_label": cfg.pos_label,
-    "primary_metric": "logloss",
+    "primary_metric": cfg.modeling.training.primary_metric,
     "timeout_minutes": cfg.modeling.training.timeout_minutes,
     "exclude_cols": sorted(
         set(
