@@ -1,3 +1,4 @@
+import yaml
 import logging
 import typing as t
 
@@ -7,6 +8,7 @@ import tempfile
 import contextlib
 
 import mlflow
+from mlflow.models import Model, infer_signature
 from mlflow.tracking import MlflowClient
 from mlflow.artifacts import download_artifacts
 import pandas as pd
@@ -315,6 +317,17 @@ def log_h2o_model(
                 h2o.save_model(model, path=local_model_dir, force=True)
                 mlflow.log_artifacts(local_model_dir, artifact_path="model")
 
+
+                X_sample = _to_pandas(train.drop(target_col, axis=1))
+                y_pred_sample = model.predict(train).as_data_frame()
+                signature = infer_signature(X_sample, y_pred_sample)
+
+                log_h2o_model_metadata_for_uc(
+                    h2o_model=model,
+                    artifact_path="model",
+                    signature=signature,
+                )
+
                 # Log Imputer Artifacts
                 if imputer is not None:
                     try:
@@ -328,6 +341,67 @@ def log_h2o_model(
     except Exception as e:
         LOGGER.exception(f"Failed to evaluate and log model {model_id}: {e}")
         return None
+
+
+def log_h2o_model_metadata_for_uc(
+    h2o_model,
+    artifact_path: str,
+    signature=None,
+    input_example=None,
+):
+    """
+    Custom H2O model logger (Unity Catalog-compatible & future-proof for MLflow 3.x).
+    Mlflow 3.x will deprecate mlflow.h2o.log_model.
+    Saves the H2O model + MLmodel metadata so Unity Catalog can register it.
+
+    Args:
+        h2o_model: Trained H2O model to log.
+        artifact_path: Subdir in MLflow run artifacts (e.g. "model").
+        signature: Optional MLflow signature object (mlflow.models.signature.ModelSignature).
+        input_example: Optional example input dataframe to log.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # 1. Save raw H2O model
+        model_path = h2o.save_model(h2o_model, path=tmpdir, force=True)
+
+        # Normalize filename to "model.h2o"
+        final_model_path = os.path.join(tmpdir, "model.h2o")
+        if model_path != final_model_path:
+            os.rename(model_path, final_model_path)
+
+        # 2. Build MLmodel metadata
+        mlmodel = Model(artifact_path=artifact_path, flavors={})
+        mlmodel.add_flavor(
+            "h2o",
+            h2o_version=h2o.__version__,
+            model_data="model.h2o",
+        )
+        if signature is not None:
+            mlmodel.signature = signature
+        if input_example is not None:
+            mlmodel.save_input_example(input_example, tmpdir)
+
+        mlmodel.save(os.path.join(tmpdir, "MLmodel"))
+
+        # 3. Minimal environment specs
+        reqs_path = os.path.join(tmpdir, "requirements.txt")
+        with open(reqs_path, "w") as f:
+            f.write(f"h2o=={h2o.__version__}\n")
+
+        conda_env = {
+            "name": "h2o_env",
+            "channels": ["defaults", "conda-forge"],
+            "dependencies": [
+                f"h2o={h2o.__version__}",
+                "pip",
+                {"pip": [f"mlflow=={mlflow.__version__}"]},
+            ],
+        }
+        with open(os.path.join(tmpdir, "conda.yaml"), "w") as f:
+            yaml.safe_dump(conda_env, f)
+
+        # 4. Log directory to MLflow artifacts
+        mlflow.log_artifacts(tmpdir, artifact_path=artifact_path)
 
 
 def log_model_metadata_to_mlflow(
