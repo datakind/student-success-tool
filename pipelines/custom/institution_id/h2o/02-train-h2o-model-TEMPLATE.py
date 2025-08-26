@@ -260,7 +260,9 @@ for run_id in top_runs.values():
         df_pred = df.assign(
             **{
                 cfg.pred_col: preds_df["predict"].to_numpy(),
-                cfg.pred_prob_col: preds_df.iloc[:, 2 if cfg.pos_label else 1].to_numpy(),
+                cfg.pred_prob_col: preds_df.iloc[
+                    :, 2 if cfg.pos_label else 1
+                ].to_numpy(),
             }
         )
 
