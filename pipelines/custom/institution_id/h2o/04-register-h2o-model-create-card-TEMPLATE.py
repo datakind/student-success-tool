@@ -54,7 +54,7 @@ except Exception:
 # HACK: hardcode uc base path and mlflow client
 # NOTE: registry uri needs to be set before creating the client
 # to avoid mlflow REST exception when registering the model
-catalog = "sst_dev"
+catalog = "staging_sst_01"
 mlflow.set_registry_uri("databricks-uc")
 client = mlflow.tracking.MlflowClient()
 
