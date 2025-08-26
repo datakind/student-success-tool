@@ -34,12 +34,14 @@ def safe_h2o_init(base_port=54321, mem_per_cluster="4G") -> None:
     Ensures isolation across parallel runs and caps memory usage. This also works in
     a databricks workflow or interactively in a notebook.
     """
+
     task_id = os.environ.get("DATABRICKS_TASK_RUN_ID")
     if task_id:
         port = base_port + (int(task_id) % 10000)
     else:
         port = base_port + random.randint(0, 1000)
 
+    LOGGER(f"Starting H2O cluster at port {port}...")
     h2o.init(port=port, nthreads=-1, max_mem_size=mem_per_cluster)
 
 
