@@ -310,12 +310,6 @@ def log_h2o_model(
                     exclude_keys={"model_id"},
                 )
 
-                # # Log H2O Model
-                # local_model_dir = f"/tmp/h2o_models/{model_id}"
-                # os.makedirs(local_model_dir, exist_ok=True)
-                # h2o.save_model(model, path=local_model_dir, force=True)
-                # mlflow.log_artifacts(local_model_dir, artifact_path="model")
-
                 X_sample = _to_pandas(train.drop(target_col, axis=1))
                 y_pred_sample = model.predict(train).as_data_frame()
                 signature = infer_signature(X_sample, y_pred_sample)
@@ -342,11 +336,10 @@ def log_h2o_model(
 
 
 def log_h2o_model_metadata_for_uc(
-    h2o_model,
+    h2o_model: ModelBase,
     artifact_path: str,
-    signature=None,
-    input_example=None,
-):
+    signature: mlflow.models.signature.ModelSignature,
+) -> None:
     """
     Custom H2O model logger (Unity Catalog-compatible & future-proof for MLflow 3.x).
     Mlflow 3.x will deprecate mlflow.h2o.log_model.
@@ -356,7 +349,6 @@ def log_h2o_model_metadata_for_uc(
         h2o_model: Trained H2O model to log.
         artifact_path: Subdir in MLflow run artifacts (e.g. "model").
         signature: Optional MLflow signature object (mlflow.models.signature.ModelSignature).
-        input_example: Optional example input dataframe to log.
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         # 1. Save raw H2O model
@@ -376,8 +368,6 @@ def log_h2o_model_metadata_for_uc(
         )
         if signature is not None:
             mlmodel.signature = signature
-        if input_example is not None:
-            mlmodel.save_input_example(input_example, tmpdir)
 
         mlmodel.save(os.path.join(tmpdir, "MLmodel"))
 

@@ -135,9 +135,7 @@ if run_type == "train":
     df_test = df_test.sample(200)
 
 # Load and transform using sklearn imputer
-imputer = h2o_modeling.imputation.SklearnImputerWrapper.load(
-    run_id=cfg.model.run_id
-)
+imputer = h2o_modeling.imputation.SklearnImputerWrapper.load(run_id=cfg.model.run_id)
 df_test = imputer.transform(df_test)
 
 # COMMAND ----------
@@ -169,9 +167,7 @@ pd.Series(pred_probs).describe()
 # COMMAND ----------
 
 # Sample background data for performance optimization
-bd = df_train.sample(
-    cfg.inference.background_data_sample
-)
+bd = df_train.sample(cfg.inference.background_data_sample)
 
 # Convert to H2OFrame
 h2o_bd = h2o.H2OFrame(bd)

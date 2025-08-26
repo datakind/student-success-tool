@@ -1,9 +1,12 @@
 import typing as t
 from mlflow.tracking import MlflowClient
 
+# internal SST modules
+from ...modeling import h2o_modeling
 from ...configs.h2o_configs.pdp import PDPProjectConfig
 from .base import ModelCard
 from ..sections.pdp import register_sections as register_pdp_sections
+from ..utils import utils
 
 
 class H2OPDPModelCard(ModelCard[PDPProjectConfig]):
@@ -24,6 +27,131 @@ class H2OPDPModelCard(ModelCard[PDPProjectConfig]):
             raise TypeError("Expected config to be of type PDPProjectConfig")
 
         super().__init__(config, catalog, model_name, assets_path, mlflow_client)
+
+    def load_model(self):
+        """
+        Loads the MLflow model from the MLflow client based on the MLflow model URI.
+        Also assigns the run ID and experiment ID from the config.
+        """
+        model_cfg = self.cfg.model
+        if not model_cfg:
+            raise ValueError(f"Model configuration for '{self.model_name}' is missing.")
+        if not all([model_cfg.run_id, model_cfg.experiment_id]):
+            raise ValueError(
+                f"Incomplete model config for '{self.model_name}': "
+                f"URI, run_id, or experiment_id missing."
+            )
+
+        self.model = h2o_modeling.utils.load_h2o_model(model_cfg.run_id)
+        self.run_id = model_cfg.run_id
+        self.experiment_id = model_cfg.experiment_id
+
+    def extract_training_data(self):
+        """
+        Extracts the training data from the MLflow run utilizing SST internal subpackages (modeling).
+        """
+        self.modeling_data = h2o_modeling.evaluation.extract_training_data_from_model(
+            self.experiment_id
+        )
+        self.training_data = self.modeling_data
+        if self.cfg.split_col:
+            if self.cfg.split_col not in self.modeling_data.columns:
+                raise ValueError(
+                    f"Configured split_col '{self.cfg.split_col}' is not present in modeling data columns: "
+                    f"{list(self.modeling_data.columns)}"
+                )
+            self.training_data = self.modeling_data[
+                self.modeling_data[self.cfg.split_col] == "train"
+            ]
+        self.context["training_dataset_size"] = self.training_data.shape[0]
+        self.context["num_runs_in_experiment"] = (
+            h2o_modeling.evaluation.extract_number_of_runs_from_model_training(
+                self.experiment_id
+            )
+        )
+
+    def get_feature_metadata(self) -> dict[str, str]:
+        """
+        Collects feature count from the MLflow run. Also, collects feature selection data
+        from the config file.
+
+        Returns:
+            A dictionary with the keys as the variable names that will be called
+            dynamically in template with values for each variable.
+        """
+
+        def as_percent(val: float | int) -> str:
+            val = float(val) * 100
+            return str(int(val) if val.is_integer() else round(val, 2))
+
+        feature_count = len(h2o_modeling.inference.get_h2o_used_features(self.model))
+        if not self.cfg.modeling or not self.cfg.modeling.feature_selection:
+            raise ValueError(
+                "Modeling configuration or feature selection config is missing."
+            )
+
+        fs_cfg = self.cfg.modeling.feature_selection
+
+        return {
+            "number_of_features": str(feature_count),
+            "collinearity_threshold": str(fs_cfg.collinear_threshold),
+            "low_variance_threshold": str(fs_cfg.low_variance_threshold),
+            "incomplete_threshold": as_percent(fs_cfg.incomplete_threshold),
+        }
+
+    def get_model_plots(self) -> dict[str, str]:
+        """
+        Collects model plots from the MLflow run, downloads them locally. These will later be
+        rendered in the template.
+
+        Returns:
+            A dictionary with the keys as the plot names called in the template
+            and the values are inline HTML (since these are all images) for each
+            of the artifacts.
+        """
+        plots = {
+            "model_comparison_plot": (
+                "Model Comparison",
+                "model_comparison.png",
+                "125mm",
+            ),
+            "test_calibration_curve": (
+                "Test Calibration Curve",
+                "calibration/test_calibration.png",
+                "125mm",
+            ),
+            "test_roc_curve": (
+                "Test ROC Curve",
+                "test_roc_curve_plot.png",
+                "125mm",
+            ),
+            "test_confusion_matrix": (
+                "Test Confusion Matrix",
+                "test_confusion_matrix.png",
+                "125mm",
+            ),
+            "test_histogram": (
+                "Test Histogram",
+                "preds/test_hist.png",
+                "125mm",
+            ),
+            "feature_importances_by_shap_plot": (
+                "Feature Importances",
+                "h2o_feature_importances_by_shap_plot.png",
+                "150mm",
+            ),
+        }
+        return {
+            key: utils.download_artifact(
+                run_id=self.run_id,
+                description=description,
+                artifact_path=path,
+                local_folder=self.assets_folder,
+                fixed_width=width,
+            )
+            or ""
+            for key, (description, path, width) in plots.items()
+        }
 
     def _register_sections(self):
         """

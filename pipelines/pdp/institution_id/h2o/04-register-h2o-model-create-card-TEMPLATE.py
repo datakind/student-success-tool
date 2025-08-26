@@ -37,6 +37,7 @@ from student_success_tool.configs import h2o_configs
 from student_success_tool.reporting.model_card.h2o_pdp import H2OPDPModelCard
 
 import h2o
+
 h2o.init()
 
 # COMMAND ----------

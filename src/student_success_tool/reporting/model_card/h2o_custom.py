@@ -3,7 +3,6 @@ from mlflow.tracking import MlflowClient
 
 # internal SST modules
 from ...modeling import h2o_modeling
-
 from ...configs.h2o_configs.custom import CustomProjectConfig
 from .base import ModelCard
 from ..sections.custom import register_sections as register_custom_sections
@@ -29,16 +28,6 @@ class H2OCustomModelCard(ModelCard[CustomProjectConfig]):
 
         super().__init__(config, catalog, model_name, assets_path, mlflow_client)
 
-    def _register_sections(self):
-        """
-        Register cusom-specific sections.
-        """
-        # Clearing registry for overrides
-        self.section_registry.clear()
-
-        # Register custom-specific sections
-        register_custom_sections(self, self.section_registry)
-
     def load_model(self):
         """
         Loads the MLflow model from the MLflow client based on the MLflow model URI.
@@ -47,9 +36,7 @@ class H2OCustomModelCard(ModelCard[CustomProjectConfig]):
         model_cfg = self.cfg.model
         if not model_cfg:
             raise ValueError(f"Model configuration for '{self.model_name}' is missing.")
-        if not all(
-            [model_cfg.run_id, model_cfg.experiment_id]
-        ):
+        if not all([model_cfg.run_id, model_cfg.experiment_id]):
             raise ValueError(
                 f"Incomplete model config for '{self.model_name}': "
                 f"URI, run_id, or experiment_id missing."
@@ -82,6 +69,35 @@ class H2OCustomModelCard(ModelCard[CustomProjectConfig]):
                 self.experiment_id
             )
         )
+
+    def get_feature_metadata(self) -> dict[str, str]:
+        """
+        Collects feature count from the MLflow run. Also, collects feature selection data
+        from the config file.
+
+        Returns:
+            A dictionary with the keys as the variable names that will be called
+            dynamically in template with values for each variable.
+        """
+
+        def as_percent(val: float | int) -> str:
+            val = float(val) * 100
+            return str(int(val) if val.is_integer() else round(val, 2))
+
+        feature_count = len(h2o_modeling.inference.get_h2o_used_features(self.model))
+        if not self.cfg.modeling or not self.cfg.modeling.feature_selection:
+            raise ValueError(
+                "Modeling configuration or feature selection config is missing."
+            )
+
+        fs_cfg = self.cfg.modeling.feature_selection
+
+        return {
+            "number_of_features": str(feature_count),
+            "collinearity_threshold": str(fs_cfg.collinear_threshold),
+            "low_variance_threshold": str(fs_cfg.low_variance_threshold),
+            "incomplete_threshold": as_percent(fs_cfg.incomplete_threshold),
+        }
 
     def get_model_plots(self) -> dict[str, str]:
         """
@@ -136,3 +152,13 @@ class H2OCustomModelCard(ModelCard[CustomProjectConfig]):
             or ""
             for key, (description, path, width) in plots.items()
         }
+
+    def _register_sections(self):
+        """
+        Register cusom-specific sections.
+        """
+        # Clearing registry for overrides
+        self.section_registry.clear()
+
+        # Register custom-specific sections
+        register_custom_sections(self, self.section_registry)
