@@ -30,7 +30,6 @@
 # %pip install git+https://github.com/datakind/student-success-tool.git@feat/h2o_sample_weight
 # %restart_python
 
-
 # COMMAND ----------
 
 import logging
