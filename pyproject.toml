@@ -19,6 +19,7 @@ dependencies = [
     "pyarrow~=16.0",
     "pydantic~=2.10",
     "pyyaml~=6.0",
+    "types-PyYAML~=6.0",
     "scikit-learn~=1.4",
     "seaborn~=0.13",
     "statsmodels~=0.14",
