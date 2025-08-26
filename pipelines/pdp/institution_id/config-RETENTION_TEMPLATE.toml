@@ -42,7 +42,8 @@ key_course_subject_areas = []
 key_course_ids = []
 
 [preprocessing.selection]
-student_criteria = { enrollment_type = "", credential_type_sought_year_1 = "" }
+# default is usually fall-to-fall retention, if otherwise then remove
+student_criteria = { enrollment_type = "", credential_type_sought_year_1 = "", cohort_term = "FALL" }
 
 [preprocessing.checkpoint]
 name = "end_of_first_term"
