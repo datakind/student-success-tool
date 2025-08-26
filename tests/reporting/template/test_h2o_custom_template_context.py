@@ -172,7 +172,9 @@ def dummy_custom_config():
 @patch(
     "student_success_tool.reporting.model_card.h2o_custom.H2OCustomModelCard.collect_metadata"
 )
-@patch("student_success_tool.reporting.model_card.h2o_custom.H2OCustomModelCard.load_model")
+@patch(
+    "student_success_tool.reporting.model_card.h2o_custom.H2OCustomModelCard.load_model"
+)
 @patch(
     "student_success_tool.reporting.model_card.h2o_custom.H2OCustomModelCard.extract_training_data"
 )
