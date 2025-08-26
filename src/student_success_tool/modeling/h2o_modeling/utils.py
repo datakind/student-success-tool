@@ -28,7 +28,7 @@ from . import imputation
 LOGGER = logging.getLogger(__name__)
 
 
-def safe_h2o_init(base_port=54321, mem_per_cluster="4G") -> None:
+def safe_h2o_init(base_port: int = 54321, mem_per_cluster: str = "4G") -> None:
     """
     Initialize a unique H2O cluster per Databricks task (or randomly if no task id).
     Ensures isolation across parallel runs and caps memory usage. This also works in
