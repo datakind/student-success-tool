@@ -182,36 +182,38 @@ def create_and_log_h2o_model_comparison(
     """
     Plots best (lowest) logloss per framework using AutoML leaderboard metrics,
     logs the figure to MLflow, and returns the compact DataFrame used for plotting.
-
-    Parameters:
-        aml: Trained AutoML object (with leaderboard_frame set if you want test metrics).
-        frameworks: Frameworks actually used in training (e.g., from your training code).
-        artifact_path: MLflow artifact filename for the chart.
     """
     included_frameworks = set(training.VALID_H2O_FRAMEWORKS)
 
     lb = utils._to_pandas(aml.leaderboard)
-    # Keep only wanted algos and rows with logloss
-    df = lb.loc[lb["algo"].isin(included_frameworks), ["algo", "logloss"]].dropna()
+
+    # Ensure there's a 'framework' column
+    if "algo" in lb.columns:
+        df = lb.rename(columns={"algo": "framework"})
+    else:
+        df = lb.copy()
+        # infer framework by splitting model_id at '_' and taking first token
+        df["framework"] = df["model_id"].str.split("_").str[0]
+
+    # Keep only frameworks we trained with
+    df = df.loc[df["framework"].isin(included_frameworks), ["framework", "logloss"]].dropna()
 
     # Best (lowest) per family, sorted low→high
     best = (
         df.sort_values("logloss", ascending=True)
-        .drop_duplicates(subset=["algo"], keep="first")
-        .sort_values("logloss", ascending=True)
-        .reset_index(drop=True)
+          .drop_duplicates(subset=["framework"], keep="first")
+          .sort_values("logloss", ascending=True)
+          .reset_index(drop=True)
     )
 
     # Plot
     fig, ax = plt.subplots(figsize=(8, 5))
-    bars = ax.barh(best["algo"], best["logloss"])
+    bars = ax.barh(best["framework"], best["logloss"])
 
-    # highlight the best (top bar after sorting)
     if len(bars):
         bars[0].set_alpha(1.0)
         for b in bars[1:]:
             b.set_alpha(0.5)
-        # annotate values on bars
         for i, b in enumerate(bars):
             ax.text(
                 b.get_width() * 0.98,
@@ -226,12 +228,12 @@ def create_and_log_h2o_model_comparison(
     ax.set_xlim(left=0)
     ax.invert_yaxis()
     plt.tight_layout()
-    plt.close(fig)
 
-    # Log to MLflow
     if mlflow.active_run():
         mlflow.log_figure(fig, artifact_path)
+
     plt.close(fig)
+    return best
 
 
 def create_confusion_matrix_plot(y_true: np.ndarray, y_pred: np.ndarray) -> plt.Figure:
