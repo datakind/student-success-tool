@@ -26,8 +26,9 @@
 # we need to manually install a certain version of pandas and scikit-learn in order
 # for our models to load and run properly.
 
-# %pip install git+https://github.com/datakind/student-success-tool.git@feat/h2o
+# %pip install git+https://github.com/datakind/student-success-tool.git@feat/h2o_sample_weight
 # %restart_python
+
 
 # COMMAND ----------
 
@@ -130,8 +131,8 @@ if cfg.split_col and cfg.split_col in df.columns:
 else:
     df_test = df.copy(deep=True)
 
-if run_type == "train":
-    df_test = df_test.sample(200)
+# always train for PDP
+df_test = df_test.sample(200)
 
 # Load and transform using sklearn imputer
 imputer = h2o_modeling.imputation.SklearnImputerWrapper.load(run_id=cfg.model.run_id)
@@ -247,7 +248,7 @@ with mlflow.start_run(run_id=cfg.model.run_id) as run:
     )
 
     # Log roc curve table for front-end
-    roc_logs = modeling.evaluation.log_roc_table(
+    roc_logs = h2o_modeling.evaluation.log_roc_table(
         institution_id=cfg.institution_id,
         automl_run_id=cfg.model.run_id,
         modeling_dataset_name=cfg.datasets.silver.modeling.table_path,

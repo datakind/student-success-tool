@@ -26,8 +26,9 @@
 # we need to manually install a certain version of pandas and scikit-learn in order
 # for our models to load and run properly.
 
-# %pip install git+https://github.com/datakind/student-success-tool.git@feat/h2o
+# %pip install git+https://github.com/datakind/student-success-tool.git@feat/h2o_sample_weight
 # %restart_python
+
 
 # COMMAND ----------
 
@@ -60,6 +61,13 @@ try:
 except Exception:
     logging.warning("unable to create spark session; are you in a Databricks runtime?")
     pass
+
+try:
+    # Get the pipeline type from job definition
+    run_type = dbutils.widgets.get("run_type")  # noqa: F821
+except Py4JJavaError:
+    # Run script interactively
+    run_type = "predict"
 
 # COMMAND ----------
 
