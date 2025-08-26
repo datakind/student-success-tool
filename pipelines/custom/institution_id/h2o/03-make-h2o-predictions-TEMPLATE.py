@@ -43,6 +43,7 @@ from student_success_tool.configs import h2o_configs
 
 
 import h2o
+
 h2o_modeling.utils.safe_h2o_init()
 h2o.display.toggle_user_tips(False)
 
