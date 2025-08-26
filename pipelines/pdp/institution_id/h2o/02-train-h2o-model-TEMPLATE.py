@@ -276,10 +276,12 @@ for run_id in top_runs.values():
         h2o_frame = h2o.H2OFrame(df_features)
         preds_df = model.predict(h2o_frame).as_data_frame()
 
+        # NOTE: H2O preds_df has False column first then True column
+        # True column is at idx == 2
         df_pred = df.assign(
             **{
-                cfg.pred_col: preds_df["predict"].values,
-                cfg.pred_prob_col: preds_df.iloc[:, 1].values,
+                cfg.pred_col: preds_df["predict"].to_numpy(),
+                cfg.pred_prob_col: preds_df.iloc[:, 2 if cfg.pos_label else 1].to_numpy(),
             }
         )
 
