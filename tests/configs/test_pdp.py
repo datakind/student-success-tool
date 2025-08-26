@@ -17,6 +17,7 @@ CONFIG_FILES = [
     "config-RETENTION_TEMPLATE.toml",
 ]
 
+
 @pytest.mark.parametrize("config_file", CONFIG_FILES)
 def test_template_pdp_cfgs(config_file):
     """
