@@ -196,14 +196,16 @@ def create_and_log_h2o_model_comparison(
         df["framework"] = df["model_id"].str.split("_").str[0]
 
     # Keep only frameworks we trained with
-    df = df.loc[df["framework"].isin(included_frameworks), ["framework", "logloss"]].dropna()
+    df = df.loc[
+        df["framework"].isin(included_frameworks), ["framework", "logloss"]
+    ].dropna()
 
     # Best (lowest) per family, sorted low→high
     best = (
         df.sort_values("logloss", ascending=True)
-          .drop_duplicates(subset=["framework"], keep="first")
-          .sort_values("logloss", ascending=True)
-          .reset_index(drop=True)
+        .drop_duplicates(subset=["framework"], keep="first")
+        .sort_values("logloss", ascending=True)
+        .reset_index(drop=True)
     )
 
     # Plot

@@ -317,7 +317,6 @@ def log_h2o_model(
                 h2o.save_model(model, path=local_model_dir, force=True)
                 mlflow.log_artifacts(local_model_dir, artifact_path="model")
 
-
                 X_sample = _to_pandas(train.drop(target_col, axis=1))
                 y_pred_sample = model.predict(train).as_data_frame()
                 signature = infer_signature(X_sample, y_pred_sample)
