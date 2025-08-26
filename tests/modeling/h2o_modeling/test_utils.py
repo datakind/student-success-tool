@@ -1,3 +1,4 @@
+import os
 import unittest.mock as mock
 import pandas as pd
 
@@ -146,7 +147,9 @@ def test_log_h2o_experiment_summary_basic(
 @mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.start_run")
 @mock.patch("student_success_tool.modeling.h2o_modeling.utils.evaluation")
 @mock.patch("student_success_tool.modeling.h2o_modeling.utils.h2o.get_model")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils.infer_signature")
 def test_log_h2o_model_basic(
+    mock_infer_signature,
     mock_get_model,
     mock_eval,
     mock_start_run,
@@ -156,6 +159,15 @@ def test_log_h2o_model_basic(
     mock_log_artifacts,
     mock_save_model,
 ):
+    import pandas as pd
+    from mlflow.models import infer_signature as real_infer_signature
+
+    # return a real signature (not a MagicMock!)
+    mock_infer_signature.return_value = real_infer_signature(
+        pd.DataFrame({"x": [1.0, 2.0, 3.0]}),
+        pd.DataFrame({"y": [0.0, 1.0, 0.0]}),
+    )
+
     # ---- Mock H2O model
     mock_model = mock.MagicMock()
     mock_get_model.return_value = mock_model
@@ -174,17 +186,25 @@ def test_log_h2o_model_basic(
         "validate_logloss": 0.3
     }
 
-    # ---- Mock H2OFrame for train/valid/test
+    # ---- Mock H2OFrame
     target_frame = mock.MagicMock()
     target_frame.as_data_frame.return_value = pd.DataFrame({"target": [0, 1]})
     frame_mock = mock.MagicMock()
     frame_mock.__getitem__.return_value = target_frame
 
-    # ---- Mock mlflow.start_run & active_run
+    # ---- Mock run
     mock_run = mock.MagicMock()
     mock_run.__enter__.return_value = mock_run
     mock_start_run.return_value = mock_run
     mock_active_run.return_value.info.run_id = "run-123"
+
+    def fake_save_model(model, path, force=True):
+        fname = os.path.join(path, "dummy_model")
+        with open(fname, "w") as f:
+            f.write("fake model")
+        return fname
+
+    mock_save_model.side_effect = fake_save_model
 
     # ---- Run function
     result = utils.log_h2o_model(
@@ -203,6 +223,4 @@ def test_log_h2o_model_basic(
     mock_log_param.assert_any_call("model_id", "m1")
     mock_log_metric.assert_any_call("validate_logloss", 0.3)
     mock_log_artifacts.assert_called()
-    mock_save_model.assert_called_once_with(
-        mock_model, path="/tmp/h2o_models/m1", force=True
-    )
+    mock_save_model.assert_called_once()

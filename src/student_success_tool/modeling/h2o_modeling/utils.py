@@ -49,8 +49,7 @@ def load_h2o_model(
     run_id: str, artifact_path: str = "model"
 ) -> h2o.model.model_base.ModelBase:
     """
-    Initializes H2O, downloads the model artifact from MLflow, and loads it.
-    Cleans up the temp directory after loading.
+    Initializes H2O, downloads the UC-compatible H2O model artifact from MLflow, and loads it.
     """
     if not h2o.connection():
         h2o.init()
@@ -60,13 +59,13 @@ def load_h2o_model(
             run_id=run_id, artifact_path=artifact_path, dst_path=tmp_dir
         )
 
-        # Find the actual model file inside the directory
-        files = os.listdir(local_model_dir)
-        if not files:
-            raise FileNotFoundError(f"No model file found in {local_model_dir}")
+        model_file = os.path.join(local_model_dir, "model.h2o")
+        if not os.path.exists(model_file):
+            raise FileNotFoundError(
+                f"Expected model.h2o not found in {local_model_dir}"
+            )
 
-        model_path = os.path.join(local_model_dir, files[0])
-        return h2o.load_model(model_path)
+        return h2o.load_model(model_file)
 
 
 def log_h2o_experiment(
@@ -311,11 +310,11 @@ def log_h2o_model(
                     exclude_keys={"model_id"},
                 )
 
-                # Log H2O Model
-                local_model_dir = f"/tmp/h2o_models/{model_id}"
-                os.makedirs(local_model_dir, exist_ok=True)
-                h2o.save_model(model, path=local_model_dir, force=True)
-                mlflow.log_artifacts(local_model_dir, artifact_path="model")
+                # # Log H2O Model
+                # local_model_dir = f"/tmp/h2o_models/{model_id}"
+                # os.makedirs(local_model_dir, exist_ok=True)
+                # h2o.save_model(model, path=local_model_dir, force=True)
+                # mlflow.log_artifacts(local_model_dir, artifact_path="model")
 
                 X_sample = _to_pandas(train.drop(target_col, axis=1))
                 y_pred_sample = model.predict(train).as_data_frame()
