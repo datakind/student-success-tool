@@ -103,28 +103,31 @@ df_course.head()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Checking for Gateway Math/English courses for Custom Features 
+# MAGIC ### Checking for Gateway Math/English courses for Custom Features
 # MAGIC
-# MAGIC Please add the below key course lists to your config by combining the course prefix and numbers and check with your school if they would like to expand the list at all. 
+# MAGIC Please add the below key course lists to your config by combining the course prefix and numbers and check with your school if they would like to expand the list at all.
 # MAGIC
 
 # COMMAND ----------
 
 # check for gateway courses
-df_course[(df_course["math_or_english_gateway"] == "M") | (df_course["math_or_english_gateway"] == "E")][["course_prefix", "course_number", "course_name"]].value_counts().sort_index()
+df_course[
+    (df_course["math_or_english_gateway"] == "M")
+    | (df_course["math_or_english_gateway"] == "E")
+][["course_prefix", "course_number", "course_name"]].value_counts().sort_index()
 
 # COMMAND ----------
 
 course_list = (
     df_course[
-        (df_course["math_or_english_gateway"] == "M") |
-        (df_course["math_or_english_gateway"] == "E")
+        (df_course["math_or_english_gateway"] == "M")
+        | (df_course["math_or_english_gateway"] == "E")
     ]
-    .assign(course_code=lambda x: x["course_prefix"] + x["course_number"].astype(str))
-    [["course_code"]]
+    .assign(course_code=lambda x: x["course_prefix"] + x["course_number"].astype(str))[
+        ["course_code"]
+    ]
     .drop_duplicates()
-    .sort_values("course_code")
-    ["course_code"]
+    .sort_values("course_code")["course_code"]
     .tolist()
 )
 
