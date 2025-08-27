@@ -6,7 +6,7 @@ resources:
       tasks:
         - task_key: data_ingestion
           spark_python_task:
-            python_file: pipelines/tasks/pdp_data_ingestion/pdp_data_ingestion.py
+            python_file: pipelines/pdp/tasks/pdp_data_ingestion/pdp_data_ingestion.py
             source: GIT
             parameters:
               - --cohort_file_name
@@ -33,7 +33,7 @@ resources:
           depends_on:
             - task_key: data_ingestion
           spark_python_task:
-            python_file: pipelines/tasks/pdp_data_preprocessing/pdp_data_preprocessing.py
+            python_file: pipelines/pdp/tasks/pdp_data_preprocessing/pdp_data_preprocessing.py
             source: GIT
             parameters:
               - --databricks_institution_name
@@ -50,6 +50,8 @@ resources:
               - "{{tasks.data_ingestion.values.course_dataset_validated_path}}"
               - --toml_file_path
               - "/Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/inference_inputs/config.toml"
+              - --inference_toml_file_path
+              - "/Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/inference_inputs/inference_config.toml"
               - --custom_schemas_path
               - "{{job.parameters.custom_schemas_path}}"
           job_cluster_key: pdp-inference-pipeline-cluster
@@ -67,7 +69,7 @@ resources:
           depends_on:
             - task_key: data_preprocessing
           spark_python_task:
-            python_file: pipelines/tasks/data_validation/data_validation_task.py
+            python_file: pipelines/pdp/tasks/data_validation/data_validation_task.py
             source: GIT
             parameters:
               - --input_table_path
@@ -91,7 +93,7 @@ resources:
           depends_on:
             - task_key: data_preprocessing
           spark_python_task:
-            python_file: pipelines/tasks/data_validation/data_validation_task.py
+            python_file: pipelines/pdp/tasks/data_validation/data_validation_task.py
             source: GIT
             parameters:
               - --input_table_path
@@ -111,7 +113,7 @@ resources:
           depends_on:
             - task_key: data_validation
           spark_python_task:
-            python_file: pipelines/tasks/pdp_model_inference/pdp_model_inference.py
+            python_file: pipelines/pdp/tasks/pdp_model_inference/pdp_model_inference.py
             source: GIT
             parameters:
               - --databricks_institution_name
@@ -135,7 +137,7 @@ resources:
               - --DK_CC_EMAIL
               - "{{job.parameters.DK_CC_EMAIL}}"
               - --modeling_table_path
-              - "{{job.parameters.DB_workspace}}.{{job.parameters.databricks_institution_name}}_silver.{{job.parameters.databricks_institution_name}}_pdp_modeling_ar_deid"
+              - "{{job.parameters.DB_workspace}}.{{job.parameters.databricks_institution_name}}_silver.modeling"
               - --custom_schemas_path
               - "{{job.parameters.custom_schemas_path}}"
           job_cluster_key: pdp-inference-pipeline-cluster
@@ -164,7 +166,7 @@ resources:
           depends_on:
             - task_key: inference
           spark_python_task: 
-            python_file: pipelines/tasks/pdp_inference_output_publish/pdp_inference_output_publish.py
+            python_file: pipelines/pdp/tasks/pdp_inference_output_publish/pdp_inference_output_publish.py
             source: GIT
             parameters:
               - --DB_workspace
@@ -205,7 +207,7 @@ resources:
       git_source:
         git_url: https://github.com/datakind/student-success-tool
         git_provider: gitHub
-        git_branch: develop
+        git_branch: inference-testing-v039
       tags:
         dev: kayla_wilding
       queue:
