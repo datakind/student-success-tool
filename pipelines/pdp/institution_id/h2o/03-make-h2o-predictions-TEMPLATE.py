@@ -131,7 +131,7 @@ else:
     df_test = df.copy(deep=True)
 
 # always train for PDP
-df_test = df_test.sample(200)
+df_test = df_test.sample(n=min(200, len(df_test)), random_state=cfg.random_state)
 
 # Load and transform using sklearn imputer
 imputer = h2o_modeling.imputation.SklearnImputerWrapper.load(run_id=cfg.model.run_id)
@@ -166,7 +166,10 @@ pd.Series(pred_probs).describe()
 # COMMAND ----------
 
 # Sample background data for performance optimization
-bd = df_train.sample(cfg.inference.background_data_sample)
+bd = df_train.sample(
+    n=min(cfg.inference.background_data_sample, len(df_test)),
+    random_state=cfg.random_state,
+)
 
 # Convert to H2OFrame
 h2o_bd = h2o.H2OFrame(bd)
