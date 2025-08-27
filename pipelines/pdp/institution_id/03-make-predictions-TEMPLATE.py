@@ -279,14 +279,14 @@ dataio.write.to_delta_table(
 
 with mlflow.start_run() as run:
     confusion_matrix = evaluation.log_confusion_matrix(
-        catalog = "sst_dev",
+        catalog="sst_dev",
         institution_id=cfg.institution_id,
         automl_run_id=cfg.model.run_id,
     )
 
     # Log roc curve table for front-end
     roc_logs = evaluation.log_roc_table(
-        catalog = "sst_dev",
+        catalog="sst_dev",
         institution_id=cfg.institution_id,
         automl_run_id=cfg.model.run_id,
         modeling_dataset_name=cfg.datasets.silver.modeling.table_path,
