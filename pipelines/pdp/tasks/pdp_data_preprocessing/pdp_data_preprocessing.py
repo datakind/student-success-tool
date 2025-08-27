@@ -52,7 +52,7 @@ class DataProcessingTask:
         self.spark_session = self.get_spark_session()
         self.args = args
         self.cfg = self.read_config(self.args.toml_file_path)
-        #hack - remove when we move this to the main config
+        # hack - remove when we move this to the main config
         with open(self.args.inference_toml_file_path, "rb") as f:
             self.inf_cfg = tomllib.load(f)
 
@@ -117,7 +117,7 @@ class DataProcessingTask:
 
     def select_inference_cohort(
         self, df_course: pd.DataFrame, df_cohort: pd.DataFrame
-    )-> tuple[pd.DataFrame, pd.DataFrame]:
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
         Selects the specified cohorts from the course and cohort DataFrames.
 
@@ -128,32 +128,44 @@ class DataProcessingTask:
 
         Returns:
             A tuple containing the filtered course and cohort DataFrames.
-        
+
         Raises:
             ValueError: If filtering results in empty DataFrames.
         """
-        #change to main config when its updated
+        # change to main config when its updated
         cohorts_list = self.inf_cfg["inference_cohort"]
 
-        #We only have cohort and cohort term split up, so combine and strip to lower to prevent cap issues
-        df_course['cohort_selection'] = df_course['cohort_term'].astype(str).str.lower() + " " + df_course['cohort'].astype(str).str.lower()
-        df_cohort['cohort_selection'] = df_cohort['cohort_term'].astype(str).str.lower() + " " + df_cohort['cohort'].astype(str).str.lower()
-        
-        #Subset both datsets to only these cohorts
-        df_course_filtered = df_course[df_course['cohort_selection'].isin(cohorts_list)]
-        df_cohort_filtered = df_cohort[df_cohort['cohort_selection'].isin(cohorts_list)]
-        
-        #Log confirmation we are selecting the correct cohorts
+        # We only have cohort and cohort term split up, so combine and strip to lower to prevent cap issues
+        df_course["cohort_selection"] = (
+            df_course["cohort_term"].astype(str).str.lower()
+            + " "
+            + df_course["cohort"].astype(str).str.lower()
+        )
+        df_cohort["cohort_selection"] = (
+            df_cohort["cohort_term"].astype(str).str.lower()
+            + " "
+            + df_cohort["cohort"].astype(str).str.lower()
+        )
+
+        # Subset both datsets to only these cohorts
+        df_course_filtered = df_course[df_course["cohort_selection"].isin(cohorts_list)]
+        df_cohort_filtered = df_cohort[df_cohort["cohort_selection"].isin(cohorts_list)]
+
+        # Log confirmation we are selecting the correct cohorts
         logging.info("Selected cohorts: %s", cohorts_list)
-        
-        #Throw error if either dataset is empty after filtering
+
+        # Throw error if either dataset is empty after filtering
         if df_course_filtered.empty or df_cohort_filtered.empty:
             logging.error("Selected cohorts resulted in empty DataFrames.")
             raise ValueError("Selected cohorts resulted in empty DataFrames.")
-        
-        logging.info("Cohort selection completed. Course shape: %s, Cohort shape: %s", df_course_filtered.shape, df_cohort_filtered.shape)
-        
-        return df_course_filtered, df_cohort_filtered        
+
+        logging.info(
+            "Cohort selection completed. Course shape: %s, Cohort shape: %s",
+            df_course_filtered.shape,
+            df_cohort_filtered.shape,
+        )
+
+        return df_course_filtered, df_cohort_filtered
 
     def preprocess_data(
         self, df_course: pd.DataFrame, df_cohort: pd.DataFrame
@@ -177,7 +189,7 @@ class DataProcessingTask:
         student_criteria = self.cfg.preprocessing.selection.student_criteria
         student_id_col = self.cfg.student_id_col
 
-        #Select correct cohort 
+        # Select correct cohort
 
         df_course, df_cohort = self.select_inference_cohort(df_course, df_cohort)
 
@@ -209,7 +221,7 @@ class DataProcessingTask:
         elif checkpoint_type == "first":
             logging.info("Checkpoint type: first")
             df_ckpt = checkpoints.pdp.first_student_terms(
-                df = df_student_terms,
+                df=df_student_terms,
                 student_id_cols=student_id_col,
                 sort_cols=self.cfg.preprocessing.checkpoint.sort_cols,
                 include_cols=self.cfg.preprocessing.checkpoint.include_cols,
@@ -249,7 +261,7 @@ class DataProcessingTask:
         else:
             logging.error("Unknown checkpoint type: %s", checkpoint_type)
             raise ValueError(f"Unknown checkpoint type: {checkpoint_type}")
-        
+
         df_processed = pd.merge(
             df_ckpt, pd.Series(selected_students.index), how="inner", on=student_id_col
         )
@@ -339,7 +351,10 @@ def parse_arguments() -> argparse.Namespace:
         "--toml_file_path", type=str, required=True, help="Path to configuration file"
     )
     parser.add_argument(
-        "--inference_toml_file_path", type=str, required=True, help="Path to configuration file"
+        "--inference_toml_file_path",
+        type=str,
+        required=True,
+        help="Path to configuration file",
     )
     parser.add_argument(
         "--custom_schemas_path",

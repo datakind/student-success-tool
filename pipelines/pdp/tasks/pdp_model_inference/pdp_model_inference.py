@@ -262,7 +262,6 @@ class ModelInferenceTask:
         unique_ids: pd.Series,
         shap_values: npt.NDArray[np.float64],
         n: int = 10,
-        n: int = 10,
     ) -> pd.DataFrame:
         features_table = dataio.read_features_table("assets/pdp/features_table.toml")
         try:
@@ -384,7 +383,7 @@ class ModelInferenceTask:
         # --- Email notify users ---
         # Uncomment below once we want to enable CC'ing to DK's email.
         # Secrets from Databricks
-        #comment for testing blah 
+        # comment for testing blah
         w = WorkspaceClient()
         MANDRILL_USERNAME = w.dbutils.secrets.get(scope="sst", key="MANDRILL_USERNAME")
         MANDRILL_PASSWORD = w.dbutils.secrets.get(scope="sst", key="MANDRILL_PASSWORD")
