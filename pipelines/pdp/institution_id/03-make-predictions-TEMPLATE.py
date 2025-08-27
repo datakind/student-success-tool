@@ -253,7 +253,13 @@ result = inference.select_top_features_for_display(
     features_table=features_table,
     needs_support_threshold_prob=cfg.inference.min_prob_pos_label,
 )
-result
+# top 10 scores
+result.sort_values("Support Score").tail(10)
+
+# COMMAND ----------
+
+# bottom 10 scores
+result.sort_values("Support Score").head(10)
 
 # COMMAND ----------
 
@@ -273,12 +279,14 @@ dataio.write.to_delta_table(
 
 with mlflow.start_run() as run:
     confusion_matrix = evaluation.log_confusion_matrix(
+        catalog = "sst_dev",
         institution_id=cfg.institution_id,
         automl_run_id=cfg.model.run_id,
     )
 
     # Log roc curve table for front-end
     roc_logs = evaluation.log_roc_table(
+        catalog = "sst_dev",
         institution_id=cfg.institution_id,
         automl_run_id=cfg.model.run_id,
         modeling_dataset_name=cfg.datasets.silver.modeling.table_path,
@@ -308,7 +316,7 @@ shap_feature_importance
 # save sample advisor output dataset
 dataio.write.to_delta_table(
     shap_feature_importance,
-    f"staging_sst_01.{cfg.institution_id}_silver.training_{cfg.model.run_id}_shap_feature_importance",
+    f"sst_dev.{cfg.institution_id}_silver.training_{cfg.model.run_id}_shap_feature_importance",
     spark_session=spark,
 )
 
@@ -328,6 +336,6 @@ support_score_distribution
 # save sample advisor output dataset
 dataio.write.to_delta_table(
     support_score_distribution,
-    f"staging_sst_01.{cfg.institution_id}_silver.training_{cfg.model.run_id}_support_overview",
+    f"sst_dev.{cfg.institution_id}_silver.training_{cfg.model.run_id}_support_overview",
     spark_session=spark,
 )

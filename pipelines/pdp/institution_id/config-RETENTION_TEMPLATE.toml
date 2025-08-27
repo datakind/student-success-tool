@@ -55,7 +55,7 @@ type_ = "retention"
 max_academic_year = "2024"
 
 [modeling.feature_selection]
-incomplete_threshold = 0.5
+incomplete_threshold = 0.8
 low_variance_threshold = 0.0
 collinear_threshold = 10.0
 # force_include_cols = []
