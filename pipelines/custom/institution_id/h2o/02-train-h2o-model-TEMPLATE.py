@@ -48,7 +48,6 @@ from student_success_tool import dataio, modeling, utils
 from student_success_tool.modeling import h2o_modeling
 from student_success_tool.configs import h2o_configs
 
-import h2o
 
 h2o_modeling.utils.safe_h2o_init()
 
@@ -220,7 +219,9 @@ experiment_id, aml, train, valid, test = (
 if evaluate_model_bias := (training_params.get("split_col") is not None):
     df_features = df.drop(columns=cfg.non_feature_cols)
 else:
-    df_features = h2o_modeling.evaluation.extract_training_data_from_model(experiment_id)
+    df_features = h2o_modeling.evaluation.extract_training_data_from_model(
+        experiment_id
+    )
 
 # COMMAND ----------
 
@@ -249,9 +250,11 @@ for run_id in top_runs.values():
             " and bias assessment",
         )
         # Run imputation on df_features (includes all splits)
-        df_features_imp = h2o_modeling.imputation.SklearnImputerWrapper.load_and_transform(
-            df=df_features,
-            run_id=run_id,
+        df_features_imp = (
+            h2o_modeling.imputation.SklearnImputerWrapper.load_and_transform(
+                df=df_features,
+                run_id=run_id,
+            )
         )
         # Load model and predict
         model = h2o_modeling.utils.load_h2o_model(run_id=run_id)
