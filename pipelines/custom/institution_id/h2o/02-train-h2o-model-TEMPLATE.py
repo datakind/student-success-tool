@@ -220,7 +220,7 @@ experiment_id, aml, train, valid, test = (
 if evaluate_model_bias := (training_params.get("split_col") is not None):
     df_features = df.drop(columns=cfg.non_feature_cols)
 else:
-    df_features = modeling.evaluation.extract_training_data_from_model(experiment_id)
+    df_features = h2o_modeling.evaluation.extract_training_data_from_model(experiment_id)
 
 # COMMAND ----------
 
@@ -248,23 +248,26 @@ for run_id in top_runs.values():
             run_id,
             " and bias assessment",
         )
-        # load model and predict
-        # features are already preprocessed (no need for imputer)
+        # Run imputation on df_features (includes all splits)
+        df_features_imp = h2o_modeling.imputation.SklearnImputerWrapper.load_and_transform(
+            df=df_features,
+            run_id=run_id,
+        )
+        # Load model and predict
         model = h2o_modeling.utils.load_h2o_model(run_id=run_id)
-        h2o_frame = h2o.H2OFrame(df_features)
-        preds_df = model.predict(h2o_frame).as_data_frame()
-
-        # NOTE: H2O preds_df has False column first then True column
-        # True column is at idx == 2
+        labels, probs = h2o_modeling.inference.predict_h2o(
+            features=df_features_imp,
+            model=model,
+            pos_label=cfg.pos_label,
+        )
         df_pred = df.assign(
             **{
-                cfg.pred_col: preds_df["predict"].to_numpy(),
-                cfg.pred_prob_col: preds_df.iloc[
-                    :, 2 if cfg.pos_label else 1
-                ].to_numpy(),
+                cfg.pred_col: labels,
+                cfg.pred_prob_col: probs,
             }
         )
 
+        # Evaluate performance & bias
         modeling.evaluation.evaluate_performance(
             df_pred,
             target_col=cfg.target_col,

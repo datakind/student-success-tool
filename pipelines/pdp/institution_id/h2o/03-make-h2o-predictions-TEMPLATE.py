@@ -149,8 +149,8 @@ unique_ids = df_test[cfg.student_id_col]
 
 # COMMAND ----------
 
-pred_probs = h2o_modeling.inference.predict_probs_h2o(
-    features,
+pred_labels, pred_probs = h2o_modeling.inference.predict_h2o(
+    features_df,
     model=model,
     feature_names=model_feature_names,
     pos_label=cfg.pos_label,
@@ -166,19 +166,15 @@ pd.Series(pred_probs).describe()
 # COMMAND ----------
 
 # Sample background data for performance optimization
-bd = df_train.sample(
+df_bd = df_train.sample(
     n=min(cfg.inference.background_data_sample, len(df_test)),
     random_state=cfg.random_state,
 )
 
-# Convert to H2OFrame
-h2o_bd = h2o.H2OFrame(bd)
-h2o_features = h2o.H2OFrame(features)
-
 contribs_df = h2o_modeling.inference.compute_h2o_shap_contributions(
     model=model,
-    h2o_frame=h2o_features,
-    background_data=h2o_bd,
+    df=features_df,
+    background_data=df_bd,
 )
 contribs_df
 
@@ -186,7 +182,7 @@ contribs_df
 
 # Group one-hot encoding and missing value flags
 grouped_contribs_df = h2o_modeling.inference.group_shap_values(contribs_df)
-grouped_features = h2o_modeling.inference.group_feature_values(features)
+grouped_features = h2o_modeling.inference.group_feature_values(features_df)
 
 if mlflow.active_run():
     mlflow.end_run()
@@ -195,7 +191,7 @@ with mlflow.start_run(run_id=cfg.model.run_id):
     # Create & log SHAP summary plot (default to group missing flags)
     h2o_modeling.inference.plot_grouped_shap(
         contribs_df=contribs_df,
-        features_df=features,
+        features_df=features_df,
         original_dtypes=imputer.input_dtypes,
     )
 
@@ -242,7 +238,6 @@ dataio.write.to_delta_table(
 # COMMAND ----------
 
 # Log MLFlow confusion matrix & roc table figures in silver schema
-
 with mlflow.start_run(run_id=cfg.model.run_id) as run:
     confusion_matrix = modeling.evaluation.log_confusion_matrix(
         institution_id=cfg.institution_id,
