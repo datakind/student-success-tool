@@ -83,40 +83,81 @@ def test_plot_grouped_shap_calls_summary_plot(mock_summary_plot, mock_log_figure
     mock_summary_plot.assert_called_once()
 
 
-@mock.patch("student_success_tool.modeling.h2o_modeling.inference.h2o.H2OFrame")
-def test_compute_h2o_shap_contributions_with_bias_drop(mock_h2o_frame):
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils._to_pandas")
+@mock.patch(
+    "student_success_tool.modeling.h2o_modeling.inference.predict_contribs_batched"
+)
+@mock.patch(
+    "student_success_tool.modeling.h2o_modeling.inference.get_h2o_used_features",
+    return_value=["feature1", "feature2"],
+)
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils._to_h2o")
+def test_compute_h2o_shap_contributions_with_bias_drop(
+    mock_to_h2o,
+    mock_get_used,
+    mock_predict_contribs_batched,
+    mock_to_pandas,
+):
+    # Inputs
+    df = pd.DataFrame({"feature1": [1, 2], "feature2": [3, 4], "other": [5, 6]})
     mock_model = mock.MagicMock()
-    mock_model.predict_contributions.return_value.as_data_frame.return_value = (
-        pd.DataFrame(
-            {"feature1": [0.1, 0.2], "feature2": [0.3, 0.4], "BiasTerm": [0.5, 0.6]}
-        )
-    )
-    mock_model._model_json = {"output": {"names": ["feature1", "feature2", "target"]}}
 
-    h2o_frame = mock.MagicMock()
-    h2o_frame.nrows = 2
-    h2o_frame.__getitem__.return_value.nrows = 2
-    h2o_frame.__getitem__.return_value.as_data_frame.return_value = pd.DataFrame(
-        {"feature1": [1, 2], "feature2": [3, 4]}
-    )
+    # _to_h2o returns an H2OFrame-like object that supports slicing with __getitem__
+    hf_mock = mock.MagicMock(name="hf_mock")
+    hf_subset = mock.MagicMock(name="hf_subset")
+    hf_mock.__getitem__.return_value = hf_subset
+    mock_to_h2o.return_value = hf_mock
 
+    # SHAP contributions returned by batched predictor (already bias-dropped)
+    contribs_return = pd.DataFrame({"feature1": [0.1, 0.2], "feature2": [0.3, 0.4]})
+    mock_predict_contribs_batched.return_value = contribs_return
+
+    # When return_features=True, convert hf_subset back to pandas
+    features_subset_return = pd.DataFrame({"feature1": [1, 2], "feature2": [3, 4]})
+    mock_to_pandas.return_value = features_subset_return
+
+    # Call
     contribs, inputs = inference.compute_h2o_shap_contributions(
-        mock_model,
-        h2o_frame,
+        model=mock_model,
+        df=df,
         drop_bias=True,
         return_features=True,
     )
 
-    assert "BiasTerm" not in contribs.columns
-    assert list(inputs.columns) == ["feature1", "feature2"]
+    # _to_h2o called with df and no *_missing_flag columns -> force_enum_cols == []
+    mock_to_h2o.assert_called_once_with(df, force_enum_cols=[])
+    mock_get_used.assert_called_once_with(mock_model)
+    hf_mock.__getitem__.assert_called_once_with(["feature1", "feature2"])
 
-    contribs = inference.compute_h2o_shap_contributions(
-        mock_model,
-        h2o_frame,
+    # predict_contribs_batched called with (model, hf_subset, ...) -> check positional args
+    args, kwargs = mock_predict_contribs_batched.call_args
+    assert args[0] is mock_model
+    assert args[1] is hf_subset
+    assert kwargs["batch_rows"] == 1000
+    assert kwargs["top_n"] is None
+    assert kwargs["bottom_n"] == 0
+    assert kwargs["compare_abs"] is True
+    assert kwargs["output_format"] is None
+    assert kwargs["drop_bias"] is True
+    assert kwargs["output_space"] is True
+    assert kwargs["background_frame"] is None
+
+    # Returned frames
+    pd.testing.assert_frame_equal(contribs, contribs_return)
+    pd.testing.assert_frame_equal(inputs, features_subset_return)
+    assert list(contribs.columns) == ["feature1", "feature2"]
+
+    # Call again with return_features=False -> only contribs returned; no extra _to_pandas call
+    mock_to_pandas.reset_mock()
+    mock_predict_contribs_batched.return_value = contribs_return
+    contribs_only = inference.compute_h2o_shap_contributions(
+        model=mock_model,
+        df=df,
         drop_bias=True,
+        return_features=False,
     )
-    assert "BiasTerm" not in contribs.columns
-    assert contribs.shape == (2, 2)
+    pd.testing.assert_frame_equal(contribs_only, contribs_return)
+    mock_to_pandas.assert_not_called()
 
 
 def test_group_missing_flags_aggregated_correctly():

@@ -78,7 +78,7 @@ def predict_h2o(
             - labels: predicted class labels
             - probs: predicted probabilities for the positive class
     """
-    # Step 1: convert features to H2OFrame
+    # Convert features to H2OFrame
     if isinstance(features, np.ndarray):
         if feature_names is None:
             raise ValueError("feature_names must be provided when using a numpy array.")
@@ -87,13 +87,13 @@ def predict_h2o(
     missing_flags = [c for c in features.columns if c.endswith("_missing_flag")]
     h2o_features = utils._to_h2o(features, force_enum_cols=missing_flags)
 
-    # Step 2: run prediction
+    # Run prediction & convert back to pandas
     pred_df = utils._to_pandas(model.predict(h2o_features))
 
-    # Step 3: extract label column
+    # Extract label column
     labels = pred_df["predict"].to_numpy()
 
-    # Step 4: extract probability for pos_label
+    # Extract probability for pos_label
     if pos_label is not None:
         pos_label_str = str(pos_label)
         if pos_label_str not in pred_df.columns:
@@ -102,7 +102,7 @@ def predict_h2o(
             )
         probs = pred_df[pos_label_str].to_numpy(dtype=float)
     else:
-        # Assume binary classification → use the second probability column
+        # Assume binary classification -> use the second probability column
         prob_cols = [c for c in pred_df.columns if c != "predict"]
         if len(prob_cols) < 2:
             raise ValueError(
@@ -203,9 +203,9 @@ def predict_contribs_batched(
 
 def compute_h2o_shap_contributions(
     model: H2OEstimator,
-    h2o_frame: h2o.H2OFrame,
+    df: pd.DataFrame,
     *,
-    background_data: t.Optional[h2o.H2OFrame] = None,
+    background_data: t.Optional[pd.DataFrame] = None,
     drop_bias: bool = True,
     batch_rows: int = 1000,
     top_n: t.Optional[int] = None,
@@ -223,8 +223,8 @@ def compute_h2o_shap_contributions(
 
     Args:
         model: Trained H2O model.
-        h2o_frame: Input frame with predictors and identifiers.
-        background_data: Reference frame for SHAP baseline. Defaults to None.
+        df: Input pandas dataframe with predictors and identifiers.
+        background_data: Reference dataframe for SHAP baseline. Defaults to None.
         drop_bias: If True, drop the BiasTerm column. Defaults to True.
         batch_rows: Maximum number of rows per batch. Defaults to 1000.
         top_n: Return only the top N features by contribution. Defaults to None.
@@ -243,18 +243,31 @@ def compute_h2o_shap_contributions(
               else None.
 
     """
-    LOGGER.info("Computing SHAP contributions with batching...")
+
+    LOGGER.info("Preparing data for H2O inference...")
+
+    # Convert features & background data to H2OFrames
+    missing_flags = [c for c in df.columns if c.endswith("_missing_flag")]
+    h2o_features = utils._to_h2o(df, force_enum_cols=missing_flags)
+
+    if background_data is not None:
+        missing_flags = [
+            c for c in background_data.columns if c.endswith("_missing_flag")
+        ]
+        h2o_bd = utils._to_h2o(background_data, force_enum_cols=missing_flags)
+    else:
+        h2o_bd = None
 
     # Select only the features the model actually uses
     used_features = get_h2o_used_features(model)
     if used_features:
-        hf_subset = h2o_frame[used_features]
-        bg_subset = (
-            background_data[used_features] if background_data is not None else None
-        )
+        hf_subset = h2o_features[used_features]
+        bg_subset = h2o_bd[used_features] if h2o_bd is not None else None
     else:
-        hf_subset = h2o_frame
-        bg_subset = background_data
+        hf_subset = h2o_features
+        bg_subset = h2o_bd
+
+    LOGGER.info("Computing SHAP contributions with batching...")
 
     # Compute contributions on the subset
     contribs_df = predict_contribs_batched(
