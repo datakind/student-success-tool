@@ -87,6 +87,14 @@ def predict_h2o(
     missing_flags = [c for c in features.columns if c.endswith("_missing_flag")]
     h2o_features = utils._to_h2o(features, force_enum_cols=missing_flags)
 
+    # Log H2OFrame dtypes and a quick preview
+    try:
+        types_summary = ", ".join(f"{col}: {dtype}" for col, dtype in h2o_features.types.items())
+        LOGGER.debug("After H2O conversion: %d rows × %d cols. Dtypes → %s",
+                    h2o_features.nrows, h2o_features.ncols, types_summary)
+    except Exception as e:
+        LOGGER.warning("Failed to log H2OFrame details: %s", e)
+    
     # Run prediction & convert back to pandas
     pred_df = utils._to_pandas(model.predict(h2o_features))
 
