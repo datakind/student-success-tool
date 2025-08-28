@@ -57,29 +57,60 @@ def get_h2o_used_features(model: H2OEstimator) -> t.List[str]:
     return [c for c in names if c not in non_predictors]
 
 
-def predict_probs_h2o(
+def predict_h2o(
     features: pd.DataFrame | np.ndarray,
-    model: H2OEstimator,
     *,
     feature_names: t.Optional[list[str]] = None,
-    pos_label: t.Optional[bool | str] = None,
-    dtypes: t.Optional[dict[str, object]] = None,
-) -> np.ndarray:
+) -> "h2o.H2OFrame":
+    """Convert features into an H2OFrame with dtype correction and missing-flag handling.
+
+    Args:
+        features: Input features as pandas.DataFrame or numpy.ndarray.
+        feature_names: Column names (required if features is ndarray).
+        dtypes: Optional dtype mapping to cast DataFrame before conversion.
+
+    Returns:
+        h2o.H2OFrame: Features as an H2OFrame, with categorical corrections applied.
     """
-    Predict target probabilities using an H2O model.
-    """
+    # Convert ndarray → pandas
     if isinstance(features, np.ndarray):
         if feature_names is None:
             raise ValueError("feature_names must be provided when using a numpy array.")
         features = pd.DataFrame(features, columns=feature_names)
 
-    if dtypes:
-        features = features.astype(dtypes)
-
+    # Identify missing-flag columns to force enum conversion
     missing_flags = [c for c in features.columns if c.endswith("_missing_flag")]
-    h2o_features = utils._to_h2o(features, force_enum_cols=missing_flags)
+
+    return utils._to_h2o(features, force_enum_cols=missing_flags)
+
+
+def predict_probs_h2o(
+    features: pd.DataFrame | np.ndarray,
+    model: "H2OEstimator",
+    *,
+    feature_names: t.Optional[list[str]] = None,
+    pos_label: t.Optional[bool | str] = None,
+) -> np.ndarray:
+    """Predict target probabilities using an H2O model.
+
+    Args:
+        features: Features as pandas.DataFrame or numpy.ndarray.
+        model: Fitted H2O estimator.
+        feature_names: Required if features is numpy.ndarray.
+        pos_label: Positive label to extract probabilities for. If None, returns all class probabilities.
+
+    Returns:
+        np.ndarray: Array of predicted probabilities.
+    """
+    # Convert features to H2OFrame & Predict with model
+    h2o_features = predict_h2o(
+        features, feature_names=feature_names,
+    )
+
+    # Convert back to pandas
     pred = utils._to_pandas(model.predict(h2o_features))
 
+    # Extract probabilities
     if pos_label is not None:
         pos_label_str = str(pos_label)
         if pos_label_str not in pred.columns:
