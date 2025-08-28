@@ -152,7 +152,7 @@ df_test = imputer.transform(df_test)
 
 # COMMAND ----------
 
-features = df_test.loc[:, model_feature_names]
+features_df = df_test.loc[:, model_feature_names]
 unique_ids = df_test[cfg.student_id_col]
 
 # COMMAND ----------
