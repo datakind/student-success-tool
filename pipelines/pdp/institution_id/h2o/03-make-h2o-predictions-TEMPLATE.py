@@ -42,7 +42,6 @@ from student_success_tool.modeling import h2o_modeling
 from student_success_tool.configs import h2o_configs
 
 
-
 h2o_modeling.utils.safe_h2o_init()
 
 # COMMAND ----------
