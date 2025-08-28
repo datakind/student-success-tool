@@ -371,10 +371,10 @@ def log_roc_table(
         # Prepare inputs for ROC
         y_true = test_df[target_col].values
         X_test = test_df[feature_names]
-        y_scores = inference.predict_probs_h2o(
+        ylabels, y_scores = inference.predict_h2o(
             X_test,
             model=model,
-        )[:, 1]
+        )
 
         # Calculate ROC table manually and plot all thresholds.
         # Down the line, we might want to specify a threshold to reduce plot density

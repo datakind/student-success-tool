@@ -59,68 +59,58 @@ def get_h2o_used_features(model: H2OEstimator) -> t.List[str]:
 
 def predict_h2o(
     features: pd.DataFrame | np.ndarray,
+    model: H2OEstimator,
     *,
     feature_names: t.Optional[list[str]] = None,
-) -> "h2o.H2OFrame":
-    """Convert features into an H2OFrame with dtype correction and missing-flag handling.
+    pos_label: t.Optional[bool | str] = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Predict labels and probabilities using an H2O model.
 
-    Args:
-        features: Input features as pandas.DataFrame or numpy.ndarray.
-        feature_names: Column names (required if features is ndarray).
-        dtypes: Optional dtype mapping to cast DataFrame before conversion.
+    Parameters:
+        features: Features as pandas.DataFrame or numpy.ndarray.
+        model: Trained H2O estimator.
+        feature_names: Required if features is a numpy.ndarray.
+        pos_label: Label to extract probability for. If None, assumes binary classification and
+            picks the second probability column (index 2).
 
     Returns:
-        h2o.H2OFrame: Features as an H2OFrame, with categorical corrections applied.
+        tuple[np.ndarray, np.ndarray]:
+            - labels: predicted class labels
+            - probs: predicted probabilities for the positive class
     """
-    # Convert ndarray → pandas
+    # Step 1: convert features to H2OFrame
     if isinstance(features, np.ndarray):
         if feature_names is None:
             raise ValueError("feature_names must be provided when using a numpy array.")
         features = pd.DataFrame(features, columns=feature_names)
 
-    # Identify missing-flag columns to force enum conversion
     missing_flags = [c for c in features.columns if c.endswith("_missing_flag")]
+    h2o_features = utils._to_h2o(features, force_enum_cols=missing_flags)
 
-    return utils._to_h2o(features, force_enum_cols=missing_flags)
+    # Step 2: run prediction
+    pred_df = utils._to_pandas(model.predict(h2o_features))
 
+    # Step 3: extract label column
+    labels = pred_df["predict"].to_numpy()
 
-def predict_probs_h2o(
-    features: pd.DataFrame | np.ndarray,
-    model: "H2OEstimator",
-    *,
-    feature_names: t.Optional[list[str]] = None,
-    pos_label: t.Optional[bool | str] = None,
-) -> np.ndarray:
-    """Predict target probabilities using an H2O model.
-
-    Args:
-        features: Features as pandas.DataFrame or numpy.ndarray.
-        model: Fitted H2O estimator.
-        feature_names: Required if features is numpy.ndarray.
-        pos_label: Positive label to extract probabilities for. If None, returns all class probabilities.
-
-    Returns:
-        np.ndarray: Array of predicted probabilities.
-    """
-    # Convert features to H2OFrame & Predict with model
-    h2o_features = predict_h2o(
-        features, feature_names=feature_names,
-    )
-
-    # Convert back to pandas
-    pred = utils._to_pandas(model.predict(h2o_features))
-
-    # Extract probabilities
+    # Step 4: extract probability for pos_label
     if pos_label is not None:
         pos_label_str = str(pos_label)
-        if pos_label_str not in pred.columns:
+        if pos_label_str not in pred_df.columns:
             raise ValueError(
-                f"pos_label {pos_label_str} not found in prediction output columns: {pred.columns}"
+                f"pos_label {pos_label_str} not found in prediction output columns: {pred_df.columns}"
             )
-        return np.array(pred[pos_label_str].values)
+        probs = pred_df[pos_label_str].to_numpy(dtype=float)
     else:
-        prob_cols = [col for col in pred.columns if col != "predict"]
-        return np.array(pred[prob_cols].values)
+        # Assume binary classification → use the second probability column
+        prob_cols = [c for c in pred_df.columns if c != "predict"]
+        if len(prob_cols) < 2:
+            raise ValueError(
+                "Expected at least two probability columns for binary classification."
+            )
+        probs = pred_df[prob_cols[1]].to_numpy(dtype=float)
+
+    return labels, probs
 
 
 def predict_contribs_batched(
