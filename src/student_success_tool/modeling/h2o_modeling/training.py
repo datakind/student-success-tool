@@ -3,7 +3,6 @@ import typing as t
 
 from mlflow.tracking import MlflowClient
 import pandas as pd
-from pandas.api.types import is_categorical_dtype, is_object_dtype, is_string_dtype
 
 import h2o
 from h2o.automl import H2OAutoML
@@ -138,8 +137,7 @@ def run_h2o_automl_classification(
     h2o_splits: dict[str, h2o.H2OFrame] = {}
     for k, v in df_splits.items():
         missing_flags = [c for c in v.columns if c.endswith("_missing_flag")]
-        hf = h2o.H2OFrame(v)
-        hf = correct_h2o_dtypes(hf, v, force_enum_cols=missing_flags)
+        hf = utils._to_h2o(v, force_enum_cols=missing_flags)
         hf[target_col] = hf[target_col].asfactor()
         h2o_splits[k] = hf
 
@@ -185,74 +183,3 @@ def run_h2o_automl_classification(
     )
 
     return experiment_id, aml, train, valid, test
-
-
-def correct_h2o_dtypes(
-    h2o_df: h2o.H2OFrame,
-    original_df: pd.DataFrame,
-    force_enum_cols: t.Optional[t.List[str]] = None,
-    cardinality_threshold: int = 100,
-) -> h2o.H2OFrame:
-    """
-    Correct H2OFrame dtypes based on original pandas DataFrame, targeting cases where
-    originally non-numeric columns were inferred as numeric by H2O.
-
-    Args:
-        h2o_df: H2OFrame created from original_df
-        original_df: Original pandas DataFrame with dtype info
-        force_enum_cols: Optional list of column names to forcibly convert to enum
-        cardinality_threshold: Max unique values to allow for enum conversion
-
-    Returns:
-        h2o_df (possibly modified)
-    """
-    force_enum_cols = set(force_enum_cols or [])
-    converted_columns = []
-
-    LOGGER.info("Starting H2O dtype correction.")
-
-    for col in original_df.columns:
-        if col not in h2o_df.columns:
-            LOGGER.debug(f"Skipping '{col}': not found in H2OFrame.")
-            continue
-
-        orig_dtype = original_df[col].dtype
-        h2o_type = h2o_df.types.get(col)
-        is_non_numeric = (
-            is_categorical_dtype(original_df[col])
-            or is_object_dtype(original_df[col])
-            or is_string_dtype(original_df[col])
-        )
-        h2o_is_numeric = h2o_type in ("int", "real")
-        nunique = original_df[col].nunique(dropna=True)
-
-        LOGGER.debug(
-            f"Column '{col}': orig_dtype={orig_dtype}, h2o_dtype={h2o_type}, "
-            f"non_numeric={is_non_numeric}, unique={nunique}"
-        )
-
-        should_force = col in force_enum_cols
-        needs_correction = (is_non_numeric and h2o_is_numeric) or should_force
-
-        if needs_correction:
-            if not should_force and nunique > cardinality_threshold:
-                LOGGER.warning(
-                    f"Skipping '{col}': high cardinality ({nunique}) for enum conversion."
-                )
-                continue
-
-            LOGGER.info(
-                f"Proposing '{col}' to enum "
-                f"(originally {orig_dtype}, inferred as {h2o_type})."
-            )
-
-            try:
-                h2o_df[col] = h2o_df[col].asfactor()
-                converted_columns.append(col)
-            except Exception as e:
-                LOGGER.warning(f"Failed to convert '{col}' to enum: {e}")
-
-    LOGGER.info(
-        f"H2O dtype correction complete. {len(converted_columns)} column(s) affected: {converted_columns}"
-    )
-    return h2o_df

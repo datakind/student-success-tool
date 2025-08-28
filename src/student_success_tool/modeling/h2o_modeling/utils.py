@@ -13,6 +13,9 @@ from mlflow.models import Model, infer_signature
 from mlflow.tracking import MlflowClient
 from mlflow.artifacts import download_artifacts
 import pandas as pd
+import numpy as np
+from pandas.api.types import is_categorical_dtype, is_object_dtype, is_string_dtype
+
 
 import h2o
 from h2o.automl import H2OAutoML
@@ -508,6 +511,125 @@ def set_or_create_experiment(
         return experiment_id
     except Exception as e:
         raise RuntimeError(f"Failed to create or set MLflow experiment: {e}")
+
+
+def correct_h2o_dtypes(
+    h2o_df: h2o.H2OFrame,
+    original_df: pd.DataFrame,
+    force_enum_cols: t.Optional[t.List[str]] = None,
+) -> h2o.H2OFrame:
+    """
+    Correct H2OFrame dtypes based on original pandas DataFrame, ensuring columns
+    inferred as numeric in H2O are restored to categorical/enums if they were
+    non-numeric in pandas.
+
+    Args:
+        h2o_df: H2OFrame created from original_df
+        original_df: Original pandas DataFrame with dtype info
+        force_enum_cols: Optional list of column names to forcibly convert to enum
+
+    Returns:
+        h2o_df (possibly modified)
+    """
+    force_enum_cols = set(force_enum_cols or [])
+    converted_columns = []
+
+    LOGGER.info("Starting H2O dtype correction.")
+
+    for col in original_df.columns:
+        if col not in h2o_df.columns:
+            LOGGER.debug(f"Skipping '{col}': not found in H2OFrame.")
+            continue
+
+        orig_dtype = original_df[col].dtype
+        h2o_type = h2o_df.types.get(col)
+        is_non_numeric = (
+            is_categorical_dtype(original_df[col])
+            or is_object_dtype(original_df[col])
+            or is_string_dtype(original_df[col])
+        )
+        h2o_is_numeric = h2o_type in ("int", "real")
+
+        should_force = col in force_enum_cols
+        needs_correction = (is_non_numeric and h2o_is_numeric) or should_force
+
+        LOGGER.debug(
+            f"Column '{col}': orig_dtype={orig_dtype}, h2o_dtype={h2o_type}, "
+            f"non_numeric={is_non_numeric}, force={should_force}"
+        )
+
+        if needs_correction:
+            try:
+                h2o_df[col] = h2o_df[col].asfactor()
+                converted_columns.append(col)
+                LOGGER.info(
+                    f"Converted '{col}' to enum "
+                    f"(originally {orig_dtype}, inferred as {h2o_type})."
+                )
+            except Exception as e:
+                LOGGER.warning(f"Failed to convert '{col}' to enum: {e}")
+
+    LOGGER.info(
+        f"H2O dtype correction complete. {len(converted_columns)} column(s) affected: {converted_columns}"
+    )
+    return h2o_df
+
+
+def _to_h2o(
+    pobj: t.Any, force_enum_cols: t.Optional[t.List[str]] = None
+) -> h2o.H2OFrame:
+    """Convert common Python objects to an H2OFrame.
+
+    This function wraps multiple input types into an H2OFrame and applies
+    `correct_h2o_dtypes` so that categorical columns from pandas are preserved
+    as enums in H2O.
+
+    Args:
+        pobj (Any):
+            The object to convert. Supported types:
+              - `pandas.DataFrame`: Converted directly to H2OFrame.
+              - `pandas.Series`: Converted to single-column H2OFrame.
+              - `numpy.ndarray`: Converted to H2OFrame via a pandas.DataFrame wrapper.
+              - `h2o.H2OFrame`: Returned as-is.
+        force_enum_cols (Optional[List[str]]):
+            Optional list of column names to force conversion to enum
+            regardless of dtype.
+
+    Returns:
+        h2o.H2OFrame:
+            The converted H2OFrame with corrected dtypes.
+
+    Raises:
+        TypeError: If the input type is unsupported or `None`.
+    """
+    if pobj is None:
+        raise TypeError("_to_h2o: cannot convert None")
+
+    # Already H2OFrame
+    if H2OFrame is not None and isinstance(pobj, H2OFrame):
+        return pobj
+
+    # Pandas DataFrame
+    if isinstance(pobj, pd.DataFrame):
+        hf = h2o.H2OFrame(pobj)
+        return correct_h2o_dtypes(hf, pobj, force_enum_cols=force_enum_cols)
+
+    # Pandas Series
+    if isinstance(pobj, pd.Series):
+        df = pobj.to_frame()
+        hf = h2o.H2OFrame(df)
+        return correct_h2o_dtypes(hf, df, force_enum_cols=force_enum_cols)
+
+    # Numpy array
+    if isinstance(pobj, np.ndarray):
+        if pobj.ndim == 1:
+            df = pd.DataFrame({0: pobj})
+        else:
+            df = pd.DataFrame(pobj)
+        hf = h2o.H2OFrame(df)
+        return correct_h2o_dtypes(hf, df, force_enum_cols=force_enum_cols)
+
+    raise TypeError(f"_to_h2o: unsupported object type {type(pobj)}")
 
 
 def _to_pandas(hobj: t.Any) -> pd.DataFrame:

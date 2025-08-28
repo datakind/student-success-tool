@@ -1,6 +1,7 @@
 import os
 import unittest.mock as mock
 import pandas as pd
+import pytest
 
 from student_success_tool.modeling.h2o_modeling import utils
 
@@ -224,3 +225,80 @@ def test_log_h2o_model_basic(
     mock_log_metric.assert_any_call("validate_logloss", 0.3)
     mock_log_artifacts.assert_called()
     mock_save_model.assert_called_once()
+
+
+def test_correct_h2o_dtypes_converts_object_column():
+    # Fake pandas DataFrame
+    df = pd.DataFrame(
+        {
+            "cat": ["a", "b", "c"],
+            "num": [1, 2, 3],
+        }
+    )
+
+    # Fake H2OFrame
+    fake_h2o = mock.MagicMock()
+    fake_h2o.columns = ["cat", "num"]
+    fake_h2o.types = {"cat": "int", "num": "real"}  # mis-inferred
+    fake_h2o.__getitem__.side_effect = lambda c: fake_h2o  # allow hf[col]
+    fake_h2o.asfactor.return_value = "converted"
+
+    # Run
+    result = utils.correct_h2o_dtypes(fake_h2o, df)
+
+    # Assertions
+    fake_h2o.__getitem__.assert_any_call("cat")
+    assert result == fake_h2o
+    fake_h2o.asfactor.assert_called_once()
+
+
+@mock.patch(
+    "student_success_tool.modeling.h2o_modeling.utils.correct_h2o_dtypes",
+    return_value="corrected",
+)
+@mock.patch(
+    "student_success_tool.modeling.h2o_modeling.utils.h2o.H2OFrame", return_value="hf"
+)
+def test_to_h2o_from_pandas_dataframe(mock_h2oframe, mock_correct):
+    df = pd.DataFrame({"a": [1, 2, 3]})
+    result = utils._to_h2o(df)
+
+    mock_h2oframe.assert_called_once_with(df)
+    mock_correct.assert_called_once_with("hf", df, force_enum_cols=None)
+    assert result == "corrected"
+
+
+def test_to_pandas_from_h2oframe():
+    class FakeH2OFrame:
+        def as_data_frame(self, **kwargs):
+            return pd.DataFrame({"a": [1, 2]})
+
+    fake_hf = FakeH2OFrame()
+    result = utils._to_pandas(fake_hf)
+
+    assert isinstance(result, pd.DataFrame)
+
+
+def test_to_pandas_from_two_dim_table():
+    class FakeTwoDimTable:
+        def as_data_frame(self):
+            return pd.DataFrame({"metric": [1]})
+
+    fake_tbl = FakeTwoDimTable()
+    result = utils._to_pandas(fake_tbl)
+
+    assert isinstance(result, pd.DataFrame)
+
+
+def test_to_pandas_from_generic_object():
+    class FakeObj:
+        def as_data_frame(self):
+            return pd.DataFrame({"x": [42]})
+
+    result = utils._to_pandas(FakeObj())
+    assert list(result.columns) == ["x"]
+
+
+def test_to_pandas_unsupported_type():
+    with pytest.raises(TypeError):
+        utils._to_pandas(123)  # int is not supported

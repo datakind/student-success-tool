@@ -76,7 +76,8 @@ def predict_probs_h2o(
     if dtypes:
         features = features.astype(dtypes)
 
-    h2o_features = h2o.H2OFrame(features)
+    missing_flags = [c for c in features.columns if c.endswith("_missing_flag")]
+    h2o_features = utils._to_h2o(features, force_enum_cols=missing_flags)
     pred = utils._to_pandas(model.predict(h2o_features))
 
     if pos_label is not None:
