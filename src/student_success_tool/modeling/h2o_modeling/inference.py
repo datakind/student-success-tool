@@ -393,7 +393,7 @@ def create_color_hint_features(
     grouped_df: pd.DataFrame,
     original_dtypes: dict[str, t.Any],
     *,
-    neutralize_for_shap: bool = True,
+    neutralize_for_shap: bool = False,
 ) -> pd.DataFrame:
     """
     Build a color-hint frame for SHAP: categorical cols -> string (or NaN if neutralized);
