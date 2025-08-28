@@ -220,79 +220,110 @@ def test_plot_grouped_shap_works_without_original_dtypes(
 # Tests for inference.predict_h2o
 # -------------------------------
 
-@mock.patch("student_success_tool.modeling.h2o_modeling.utils._to_h2o", return_value="hf")
-def test_predict_h2o_with_dataframe(mock_to_h2o):
+
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils._to_pandas")
+@mock.patch(
+    "student_success_tool.modeling.h2o_modeling.utils._to_h2o", return_value="hf"
+)
+def test_predict_h2o_with_dataframe(mock_to_h2o, mock_to_pandas):
     df = pd.DataFrame({"a": [1, 2], "b_missing_flag": [0, 1]})
-    result = inference.predict_h2o(df)
-    mock_to_h2o.assert_called_once_with(df, force_enum_cols=["b_missing_flag"])
-    assert result == "hf"
+    mock_model = mock.MagicMock()
+    mock_model.predict.return_value = "raw_pred"
+    mock_to_pandas.return_value = pd.DataFrame(
+        {"predict": ["a"], "A": [0.2], "B": [0.8]}  # ✅ two prob cols
+    )
+
+    labels, probs = inference.predict_h2o(df, mock_model)
+
+    np.testing.assert_array_equal(labels, np.array(["a"]))
+    np.testing.assert_array_equal(probs, np.array([0.8]))
 
 
-@mock.patch("student_success_tool.modeling.h2o_modeling.utils._to_h2o", return_value="hf")
-def test_predict_h2o_with_ndarray_and_feature_names(mock_to_h2o):
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils._to_pandas")
+@mock.patch(
+    "student_success_tool.modeling.h2o_modeling.utils._to_h2o", return_value="hf"
+)
+def test_predict_h2o_with_ndarray_and_feature_names(mock_to_h2o, mock_to_pandas):
     arr = np.array([[1, 2], [3, 4]])
     feature_names = ["x", "y_missing_flag"]
-    result = inference.predict_h2o(arr, feature_names=feature_names)
+    mock_model = mock.MagicMock()
+    mock_model.predict.return_value = "raw_pred"
+    mock_to_pandas.return_value = pd.DataFrame(
+        {"predict": ["a"], "A": [0.2], "B": [0.8]}  # ✅ two prob cols
+    )
 
-    mock_to_h2o.assert_called_once()
-    called_df, kwargs = mock_to_h2o.call_args
-    assert list(called_df[0].columns) == feature_names
-    assert kwargs["force_enum_cols"] == ["y_missing_flag"]
-    assert result == "hf"
+    labels, probs = inference.predict_h2o(arr, mock_model, feature_names=feature_names)
+
+    np.testing.assert_array_equal(labels, np.array(["a"]))
+    np.testing.assert_array_equal(probs, np.array([0.8]))
 
 
 def test_predict_h2o_with_ndarray_missing_feature_names_raises():
     arr = np.array([[1, 2], [3, 4]])
+    mock_model = mock.MagicMock()
     with pytest.raises(ValueError, match="feature_names must be provided"):
-        inference.predict_h2o(arr)
+        inference.predict_h2o(arr, mock_model)
 
 
 # -------------------------------
-# Tests for predict_probs_h2o
+# Tests for inference.predict_h2o
 # -------------------------------
+
 
 @mock.patch("student_success_tool.modeling.h2o_modeling.utils._to_pandas")
-@mock.patch("student_success_tool.modeling.h2o_modeling.inference.predict_h2o", return_value="hf")
-def test_predict_probs_h2o_returns_all_probs_when_no_pos_label(mock_predict_h2o, mock_to_pandas):
+@mock.patch(
+    "student_success_tool.modeling.h2o_modeling.utils._to_h2o", return_value="hf"
+)
+def test_predict_h2o_returns_labels_and_probs(mock_to_h2o, mock_to_pandas):
     df = pd.DataFrame({"f1": [1], "f2_missing_flag": [0]})
+    mock_model = mock.MagicMock()
+    mock_model.predict.return_value = "raw_pred"
 
+    # H2O outputs: predict + prob columns
+    mock_to_pandas.return_value = pd.DataFrame(
+        {"predict": ["A"], "A": [0.2], "B": [0.8]}
+    )
+
+    labels, probs = inference.predict_h2o(df, mock_model)
+
+    np.testing.assert_array_equal(labels, np.array(["A"]))
+    np.testing.assert_array_equal(probs, np.array([0.8]))  # defaults to second prob col
+    mock_to_h2o.assert_called_once_with(df, force_enum_cols=["f2_missing_flag"])
+    mock_model.predict.assert_called_once_with("hf")
+    mock_to_pandas.assert_called_once_with("raw_pred")
+
+
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils._to_pandas")
+@mock.patch(
+    "student_success_tool.modeling.h2o_modeling.utils._to_h2o", return_value="hf"
+)
+def test_predict_h2o_with_pos_label(mock_to_h2o, mock_to_pandas):
+    df = pd.DataFrame({"f1": [1], "f2": [2]})
     mock_model = mock.MagicMock()
     mock_model.predict.return_value = "raw_pred"
 
     mock_to_pandas.return_value = pd.DataFrame(
-        {"predict": ["a"], "A": [0.2], "B": [0.8]}
+        {"predict": ["0"], "0": [0.1], "1": [0.9]}
     )
 
-    result = inference.predict_probs_h2o(df, mock_model)
+    labels, probs = inference.predict_h2o(df, mock_model, pos_label=1)
 
-    np.testing.assert_array_equal(result, np.array([[0.2, 0.8]]))
-    mock_model.predict.assert_called_once_with("hf")
+    np.testing.assert_array_equal(labels, np.array(["0"]))
+    np.testing.assert_array_equal(probs, np.array([0.9]))
 
 
 @mock.patch("student_success_tool.modeling.h2o_modeling.utils._to_pandas")
-@mock.patch("student_success_tool.modeling.h2o_modeling.inference.predict_h2o", return_value="hf")
-def test_predict_probs_h2o_with_pos_label(mock_predict_h2o, mock_to_pandas):
-    df = pd.DataFrame({"f1": [1], "f2": [2]})
-    mock_model = mock.MagicMock()
-
-    mock_to_pandas.return_value = pd.DataFrame(
-        {"predict": ["a"], "0": [0.1], "1": [0.9]}
-    )
-
-    result = inference.predict_probs_h2o(df, mock_model, pos_label=1)
-
-    np.testing.assert_array_equal(result, np.array([0.9]))
-
-
-@mock.patch("student_success_tool.modeling.h2o_modeling.utils._to_pandas")
-@mock.patch("student_success_tool.modeling.h2o_modeling.inference.predict_h2o", return_value="hf")
-def test_predict_probs_h2o_with_missing_pos_label_raises(mock_predict_h2o, mock_to_pandas):
+@mock.patch(
+    "student_success_tool.modeling.h2o_modeling.utils._to_h2o", return_value="hf"
+)
+def test_predict_h2o_with_missing_pos_label_raises(mock_to_h2o, mock_to_pandas):
     df = pd.DataFrame({"f1": [1]})
     mock_model = mock.MagicMock()
+    mock_model.predict.return_value = "raw_pred"
 
     mock_to_pandas.return_value = pd.DataFrame(
-        {"predict": ["a"], "A": [0.2], "B": [0.8]}
+        {"predict": ["A"], "A": [0.2], "B": [0.8]}
     )
 
     with pytest.raises(ValueError, match="pos_label X not found"):
-        inference.predict_probs_h2o(df, mock_model, pos_label="X")
+        inference.predict_h2o(df, mock_model, pos_label="X")
