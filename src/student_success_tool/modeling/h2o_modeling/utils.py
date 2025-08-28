@@ -550,7 +550,7 @@ def correct_h2o_dtypes(
         )
         h2o_is_numeric = h2o_type in ("int", "real")
 
-        should_force = col in force_enum_cols
+        should_force = col in force_enum_cols and h2o_type not in ("enum",)
         needs_correction = (is_non_numeric and h2o_is_numeric) or should_force
 
         LOGGER.debug(

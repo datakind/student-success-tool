@@ -380,23 +380,17 @@ def create_color_hint_features(
     original_dtypes: dict[str, t.Any],
 ) -> pd.DataFrame:
     """Build a color-hint frame for SHAP: categorical cols → string values; numeric/bool → numeric values.
-
-    Args:
-        grouped_df: Features after grouping one-hots/missing flags; rows align with SHAP rows.
-        original_dtypes: Mapping {col_name: dtype-like} from the raw data (pre-imputation/encoding).
-                         Values may be strings (e.g., "category", "int64"); they are normalized.
-
-    Returns:
-        DataFrame shaped like `grouped_df`. For columns considered categorical,
-        the series is cast to pandas string dtype; for numeric/bool, values are kept numeric.
     """
     out = pd.DataFrame(index=grouped_df.index)
+
+    LOGGER.info("Starting color-hint feature creation for %d columns.", len(grouped_df.columns))
 
     for col in grouped_df.columns:
         dt_raw = original_dtypes.get(col, None)
         try:
             dt = pandas_dtype(dt_raw) if dt_raw is not None else None
-        except Exception:
+        except Exception as e:
+            LOGGER.warning("Failed to normalize dtype for '%s' (raw=%s): %s", col, dt_raw, e)
             dt = None
 
         is_cat = (
@@ -409,8 +403,24 @@ def create_color_hint_features(
             and not is_bool_dtype(dt)
         )
 
-        # Cast categorical columns to string; keep numeric/bool as-is
-        out[col] = grouped_df[col].astype("string") if is_cat else grouped_df[col]
+        if is_cat:
+            LOGGER.debug(
+                "Column '%s': raw_dtype=%s → normalized=%s → treating as categorical (string).",
+                col,
+                dt_raw,
+                dt,
+            )
+            out[col] = grouped_df[col].astype("string")
+        else:
+            LOGGER.debug(
+                "Column '%s': raw_dtype=%s → normalized=%s → keeping as numeric/bool.",
+                col,
+                dt_raw,
+                dt,
+            )
+            out[col] = grouped_df[col]
+
+    LOGGER.debug("Color-hint feature creation complete. Output shape=%s", out.shape)
 
     return out
 
