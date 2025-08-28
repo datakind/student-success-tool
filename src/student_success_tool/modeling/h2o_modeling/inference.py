@@ -89,12 +89,18 @@ def predict_h2o(
 
     # Log H2OFrame dtypes and a quick preview
     try:
-        types_summary = ", ".join(f"{col}: {dtype}" for col, dtype in h2o_features.types.items())
-        LOGGER.debug("After H2O conversion: %d rows × %d cols. Dtypes → %s",
-                    h2o_features.nrows, h2o_features.ncols, types_summary)
+        types_summary = ", ".join(
+            f"{col}: {dtype}" for col, dtype in h2o_features.types.items()
+        )
+        LOGGER.debug(
+            "After H2O conversion: %d rows × %d cols. Dtypes -> %s",
+            h2o_features.nrows,
+            h2o_features.ncols,
+            types_summary,
+        )
     except Exception as e:
         LOGGER.warning("Failed to log H2OFrame details: %s", e)
-    
+
     # Run prediction & convert back to pandas
     pred_df = utils._to_pandas(model.predict(h2o_features))
 
@@ -386,19 +392,27 @@ def group_feature_values(
 def create_color_hint_features(
     grouped_df: pd.DataFrame,
     original_dtypes: dict[str, t.Any],
+    *,
+    neutralize_for_shap: bool = True,
 ) -> pd.DataFrame:
-    """Build a color-hint frame for SHAP: categorical cols → string values; numeric/bool → numeric values.
+    """
+    Build a color-hint frame for SHAP: categorical cols -> string (or NaN if neutralized);
+    numeric/bool -> numeric values.
+    SHAP is dumb and will force string columns as 'int'.
     """
     out = pd.DataFrame(index=grouped_df.index)
-
-    LOGGER.info("Starting color-hint feature creation for %d columns.", len(grouped_df.columns))
+    LOGGER.info(
+        "Starting color-hint feature creation for %d columns.", len(grouped_df.columns)
+    )
 
     for col in grouped_df.columns:
         dt_raw = original_dtypes.get(col, None)
         try:
             dt = pandas_dtype(dt_raw) if dt_raw is not None else None
         except Exception as e:
-            LOGGER.warning("Failed to normalize dtype for '%s' (raw=%s): %s", col, dt_raw, e)
+            LOGGER.warning(
+                "Failed to normalize dtype for '%s' (raw=%s): %s", col, dt_raw, e
+            )
             dt = None
 
         is_cat = (
@@ -412,16 +426,25 @@ def create_color_hint_features(
         )
 
         if is_cat:
-            LOGGER.debug(
-                "Column '%s': raw_dtype=%s → normalized=%s → treating as categorical (string).",
-                col,
-                dt_raw,
-                dt,
-            )
-            out[col] = grouped_df[col].astype("string")
+            if neutralize_for_shap:
+                LOGGER.debug(
+                    "Column '%s': %s -> %s -> categorical (neutralized to NaN for SHAP).",
+                    col,
+                    dt_raw,
+                    dt,
+                )
+                out[col] = pd.Series(pd.NA, index=grouped_df.index)
+            else:
+                LOGGER.debug(
+                    "Column '%s': %s -> %s -> categorical (kept as string for color).",
+                    col,
+                    dt_raw,
+                    dt,
+                )
+                out[col] = grouped_df[col].astype("string")
         else:
             LOGGER.debug(
-                "Column '%s': raw_dtype=%s → normalized=%s → keeping as numeric/bool.",
+                "Column '%s': %s -> %s -> numeric/bool (kept for coloring).",
                 col,
                 dt_raw,
                 dt,
@@ -429,7 +452,6 @@ def create_color_hint_features(
             out[col] = grouped_df[col]
 
     LOGGER.debug("Color-hint feature creation complete. Output shape=%s", out.shape)
-
     return out
 
 
@@ -487,7 +509,9 @@ def plot_grouped_shap(
     # NOTE: original dtypes should be available from sklearn imputer step during training
     if original_dtypes is not None:
         color_hint = create_color_hint_features(
-            grouped_df=grouped_feats, original_dtypes=original_dtypes
+            grouped_df=grouped_feats,
+            original_dtypes=original_dtypes,
+            neutralize_for_shap=True,
         )
         features_for_plot = color_hint
     else:
