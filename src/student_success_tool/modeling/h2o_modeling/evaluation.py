@@ -371,7 +371,7 @@ def log_roc_table(
         # Prepare inputs for ROC
         y_true = test_df[target_col].values
         X_test = test_df[feature_names]
-        ylabels, y_scores = inference.predict_h2o(
+        _, y_scores = inference.predict_h2o(
             X_test,
             model=model,
         )
