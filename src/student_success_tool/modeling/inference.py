@@ -407,10 +407,10 @@ def top_shap_features(
             )
         )
 
-
     top_features["feature_value"] = top_features["feature_value"].astype(str)
 
     return top_features
+
 
 def top_feature_boxstats(
     features: pd.DataFrame,
@@ -434,7 +434,9 @@ def top_feature_boxstats(
     top_feats = mean_abs.sort_values(ascending=False)
 
     # Restrict stats to numeric columns
-    stats_source = features.select_dtypes(include=[np.number]) if numeric_only else features
+    stats_source = (
+        features.select_dtypes(include=[np.number]) if numeric_only else features
+    )
 
     rows = []
     for feat in top_feats.index:
@@ -444,7 +446,11 @@ def top_feature_boxstats(
                 {
                     "feature_name": feat,
                     "feature_shap_value": float(top_feats[feat]),
-                    "min": np.nan, "Q1": np.nan, "median": np.nan, "Q3": np.nan, "max": np.nan,
+                    "min": np.nan,
+                    "Q1": np.nan,
+                    "median": np.nan,
+                    "Q3": np.nan,
+                    "max": np.nan,
                     "count": int(features[feat].notna().sum()),
                     "n_missing": int(features[feat].isna().sum()),
                 }
@@ -466,7 +472,11 @@ def top_feature_boxstats(
             }
         )
 
-    feature_boxstats = pd.DataFrame(rows).sort_values("feature_shap_value", ascending=False).reset_index(drop=True)
+    feature_boxstats = (
+        pd.DataFrame(rows)
+        .sort_values("feature_shap_value", ascending=False)
+        .reset_index(drop=True)
+    )
     if features_table is not None:
         feature_boxstats[
             ["feature_readable_name", "feature_short_desc", "feature_long_desc"]
@@ -476,6 +486,7 @@ def top_feature_boxstats(
             )
         )
     return feature_boxstats
+
 
 def support_score_distribution_table(
     df_serving: pd.DataFrame,
