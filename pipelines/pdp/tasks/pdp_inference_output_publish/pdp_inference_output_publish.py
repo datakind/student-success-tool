@@ -135,6 +135,7 @@ def main():
     cc_email_list = ["education@datakind.org"]
     password = w.dbutils.secrets.get(scope="sst", key="MANDRILL_PASSWORD")
     logging.info("Sending email notification")
+    logging.info(f"Notification email will be sent to {args.notification_email}")
     send_inference_completion_email(
         sender_email, [args.notification_email], cc_email_list, username, password
     )

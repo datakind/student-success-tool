@@ -88,6 +88,7 @@ def send_inference_completion_email(
     Returns:
       Nothing.
     """
+    print(COMPLETION_SUCCESS_MESSAGE)
     send_email(
         sender_email,
         receiver_email_list,
@@ -118,6 +119,7 @@ def send_inference_kickoff_email(
     Returns:
       Nothing.
     """
+    print(INFERENCE_KICKOFF_MESSAGE)
     send_email(
         sender_email,
         receiver_email_list,
