@@ -273,7 +273,7 @@ class ModelInferenceTask:
         except Exception as e:
             logging.error("Error computing top %d shap features table: %s", n, e)
             return None
-    
+
     def features_box_whiskers_table(
         self,
         features: pd.DataFrame,
@@ -282,7 +282,9 @@ class ModelInferenceTask:
         features_table = dataio.read_features_table("assets/pdp/features_table.toml")
         try:
             feature_boxstats = inference.top_feature_boxstats(
-                features=features, shap_values=shap_values, features_table=features_table
+                features=features,
+                shap_values=shap_values,
+                features_table=features_table,
             )
             return feature_boxstats
 
@@ -474,7 +476,7 @@ class ModelInferenceTask:
                 )
 
                 box_whiskers_table = self.features_box_whiskers_table(
-                    features=df_processed[model_feature_names], 
+                    features=df_processed[model_feature_names],
                     shap_values=shap_values.values,
                 )
 
@@ -494,7 +496,7 @@ class ModelInferenceTask:
                     msg = "Box plot table is empty: cannot write inference summary tables."
                     logging.error(msg)
                     raise Exception(msg)
-                
+
                 self.write_data_to_delta(
                     inference_features_with_most_impact,
                     f"inference_{self.args.db_run_id}_features_with_most_impact",
