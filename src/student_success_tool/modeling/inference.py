@@ -416,6 +416,7 @@ def top_feature_boxstats(
     features: pd.DataFrame,
     shap_values: npt.NDArray[np.float64],
     numeric_only: bool = True,
+    features_table: t.Optional[dict[str, dict[str, str]]] = None,
 ) -> pd.DataFrame:
     """
     Per-feature summary for the GLOBAL top-N features (by mean |SHAP|).
@@ -465,7 +466,16 @@ def top_feature_boxstats(
             }
         )
 
-    return pd.DataFrame(rows).sort_values("feature_shap_value", ascending=False).reset_index(drop=True)
+    feature_boxstats = pd.DataFrame(rows).sort_values("feature_shap_value", ascending=False).reset_index(drop=True)
+    if features_table is not None:
+        feature_boxstats[
+            ["feature_readable_name", "feature_short_desc", "feature_long_desc"]
+        ] = feature_boxstats["feature_name"].apply(
+            lambda feature: pd.Series(
+                _get_mapped_feature_name(feature, features_table, metadata=True)
+            )
+        )
+    return feature_boxstats
 
 def support_score_distribution_table(
     df_serving: pd.DataFrame,
