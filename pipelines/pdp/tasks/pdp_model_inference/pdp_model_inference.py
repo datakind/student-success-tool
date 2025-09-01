@@ -261,7 +261,7 @@ class ModelInferenceTask:
         features: pd.DataFrame,
         unique_ids: pd.Series,
         shap_values: npt.NDArray[np.float64],
-        n: int = 5,
+        n: int = 10,
     ) -> pd.DataFrame:
         features_table = dataio.read_features_table("assets/pdp/features_table.toml")
         try:
