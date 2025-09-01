@@ -120,6 +120,8 @@ def send_inference_kickoff_email(
       Nothing.
     """
     print(INFERENCE_KICKOFF_MESSAGE)
+    print("This is the REAL send_inference_kickoff_email being called!")
+    raise Exception("DEBUG: This should stop the workflow if this function is used.")
     send_email(
         sender_email,
         receiver_email_list,
