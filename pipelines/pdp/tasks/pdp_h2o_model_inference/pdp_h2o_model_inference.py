@@ -34,15 +34,18 @@ import numpy.typing as npt
 import student_success_tool.dataio as dataio
 from student_success_tool import modeling as modeling
 from student_success_tool.modeling import inference
+import pkgutil
 print("configs at:", modeling.__file__)
 print("submodules:", [m.name for m in pkgutil.iter_modules(modeling.__path__)])
 from student_success_tool.modeling.h2o_modeling import utils as h2o_utils
 from student_success_tool.modeling.h2o_modeling import inference as h2o_inference
 from student_success_tool.modeling.h2o_modeling import evaluation as h2o_evaluation
 from student_success_tool.modeling.h2o_modeling import imputation as h2o_imputation
-import pkgutil, student_success_tool.configs as configs
+import student_success_tool.configs as configs
 print("configs at:", configs.__file__)
 print("submodules:", [m.name for m in pkgutil.iter_modules(configs.__path__)])
+from student_success_tool.configs.h2o_configs.pdp import PDPProjectConfig
+
 from student_success_tool.modeling.evaluation import plot_shap_beeswarm
 from student_success_tool.utils import emails
 from mlflow.tracking import MlflowClient
@@ -81,7 +84,7 @@ class ModelInferenceTask:
     def read_config(self, toml_file_path: str):
         """Reads the institution's model's configuration file."""
         try:
-            cfg = dataio.read_config(toml_file_path, schema=configs.h2o_configs.pdp.PDPProjectConfig)
+            cfg = dataio.read_config(toml_file_path, schema=PDPProjectConfig)
             return cfg
         except FileNotFoundError:
             logging.error("Configuration file not found at %s", toml_file_path)
@@ -158,7 +161,6 @@ class ModelInferenceTask:
         self,
         model,
         df_processed: pd.DataFrame,
-        model_feature_names: list[str],
     ) -> pd.DataFrame | None:
         """Calculates SHAP values."""
 
