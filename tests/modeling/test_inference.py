@@ -477,7 +477,7 @@ def test_top_shap_features_behavior(sample_data):
 
 
 def test_features_boxstats(sample_data):
-    features, unique_ids, shap_values, features_table = sample_data
+    features, _, shap_values, features_table = sample_data
     result = top_feature_boxstats(features, shap_values, features_table=features_table)
     # Check output shape and columns
     assert isinstance(result, pd.DataFrame)
@@ -496,7 +496,6 @@ def test_features_boxstats(sample_data):
         "feature_long_desc",
     }
 
-    # --- B) numeric_only=True: non-numeric column gets NaN stats but correct counts ---
     features_mixed = pd.DataFrame(
         {
             "num": [1.0, 2.0, 3.0, np.nan],
@@ -513,19 +512,16 @@ def test_features_boxstats(sample_data):
         ],
         dtype=np.float64,
     )
+    out = top_feature_boxstats(features_mixed, shap_mixed)
 
-    out_true = top_feature_boxstats(features_mixed, shap_mixed, numeric_only=True)
-
-    row_cat = out_true.loc[out_true["feature_name"] == "cat"].iloc[0]
-    assert np.isnan(row_cat["min"])
-    assert np.isnan(row_cat["Q1"])
-    assert np.isnan(row_cat["median"])
-    assert np.isnan(row_cat["Q3"])
-    assert np.isnan(row_cat["max"])
-    assert row_cat["count"] == 3  # non-nulls in "cat"
+    # "cat" included with NaN stats but correct counts
+    row_cat = out.loc[out["feature_name"] == "cat"].iloc[0]
+    assert row_cat[["min", "Q1", "median", "Q3", "max"]].isna().all()
+    assert row_cat["count"] == 3
     assert row_cat["n_missing"] == 1
 
-    row_num = out_true.loc[out_true["feature_name"] == "num"].iloc[0]
+    # Numeric column has real stats
+    row_num = out.loc[out["feature_name"] == "num"].iloc[0]
     s = features_mixed["num"]
     assert row_num["min"] == float(s.min())
     assert row_num["max"] == float(s.max())
@@ -534,31 +530,6 @@ def test_features_boxstats(sample_data):
     assert row_num["Q3"] == float(s.quantile(0.75, interpolation="linear"))
     assert row_num["count"] == int(s.notna().sum())
     assert row_num["n_missing"] == int(s.isna().sum())
-
-    # --- C) numeric_only=False vs True: identical output for all-numeric data ---
-    features_allnum = pd.DataFrame(
-        {
-            "x": [1.0, 2.0, 3.0, 4.0],
-            "y": [10.0, 10.0, 20.0, 20.0],
-            "z": [0.0, 1.0, 0.0, 1.0],
-        }
-    )
-    shap_allnum: npt.NDArray[np.float64] = np.array(
-        [
-            [0.0, 1.0, 0.5],
-            [0.0, 1.0, 0.5],
-            [0.0, 0.0, 0.5],
-            [1.0, 0.0, 0.5],
-        ],
-        dtype=np.float64,
-    )
-    out_true_all = top_feature_boxstats(features_allnum, shap_allnum, numeric_only=True)
-    out_false_all = top_feature_boxstats(
-        features_allnum, shap_allnum, numeric_only=False
-    )
-    pd.testing.assert_frame_equal(
-        out_true_all.reset_index(drop=True), out_false_all.reset_index(drop=True)
-    )
 
 
 def test_handles_fewer_than_10_features():

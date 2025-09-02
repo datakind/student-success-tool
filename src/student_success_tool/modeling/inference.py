@@ -415,7 +415,6 @@ def top_shap_features(
 def top_feature_boxstats(
     features: pd.DataFrame,
     shap_values: npt.NDArray[np.float64],
-    numeric_only: bool = True,
     features_table: t.Optional[dict[str, dict[str, str]]] = None,
 ) -> pd.DataFrame:
     """
@@ -434,14 +433,12 @@ def top_feature_boxstats(
     top_feats = mean_abs.sort_values(ascending=False)
 
     # Restrict stats to numeric columns
-    stats_source = (
-        features.select_dtypes(include=[np.number]) if numeric_only else features
-    )
+    stats_source = features.select_dtypes(include=[np.number])
 
     rows = []
     for feat in top_feats.index:
         if feat not in stats_source.columns:
-            # Non-numeric top feature (e.g., one-hot column)—include row with NaNs for stats
+            # Non-numeric top feature — include row with NaN stats, but correct counts.
             rows.append(
                 {
                     "feature_name": feat,
