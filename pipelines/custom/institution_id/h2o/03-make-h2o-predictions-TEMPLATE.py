@@ -124,7 +124,10 @@ df_train = h2o_modeling.evaluation.extract_training_data_from_model(
 )
 if cfg.split_col:
     df_train = df_train.loc[df_train[cfg.split_col].eq("train"), :]
-df_train.shape
+
+# Load and transform using sklearn imputer
+imputer = h2o_modeling.imputation.SklearnImputerWrapper.load(run_id=cfg.model.run_id)
+df_train = imputer.transform(df_train)
 
 # COMMAND ----------
 
@@ -141,8 +144,7 @@ else:
 if run_type == "train":
     df_test = df_test.sample(n=min(200, len(df_test)), random_state=cfg.random_state)
 
-# Load and transform using sklearn imputer
-imputer = h2o_modeling.imputation.SklearnImputerWrapper.load(run_id=cfg.model.run_id)
+# transform with imputer
 df_test = imputer.transform(df_test)
 
 # COMMAND ----------
