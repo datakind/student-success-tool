@@ -181,12 +181,9 @@ class ModelInferenceTask:
                 random_state=self.cfg.random_state,
             )
 
-            # Extract features
-            features = df_processed.loc[:, model_feature_names]
-
             contribs_df = h2o_inference.compute_h2o_shap_contributions(
                 model=model,
-                df=features,
+                df=df_processed,
                 background_data=bd,
             )
             return contribs_df
