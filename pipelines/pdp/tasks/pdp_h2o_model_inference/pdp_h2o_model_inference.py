@@ -362,7 +362,7 @@ class ModelInferenceTask:
             with mlflow.start_run(run_id=self.cfg.model.run_id):
                 # full_model_name = f"{self.args.DB_workspace}.{self.args.databricks_institution_name}_gold.{self.args.model_name}"
                 # --- SHAP Summary Plot ---
-                shap_fig = plot_shap_beeswarm(grouped_shap_values)
+                # shap_fig = plot_shap_beeswarm(grouped_shap_values)
 
                 # Inference_features_with_most_impact TABLE
                 inference_features_with_most_impact = self.top_n_features(
