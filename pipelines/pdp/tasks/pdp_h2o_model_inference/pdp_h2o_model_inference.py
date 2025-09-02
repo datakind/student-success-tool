@@ -19,11 +19,9 @@ import typing as t
 import sys
 import importlib
 
-import h2o
 import mlflow
 import numpy as np
 import pandas as pd
-import shap
 from databricks.connect import DatabricksSession
 from databricks.sdk import WorkspaceClient
 from email.headerregistry import Address
@@ -32,18 +30,11 @@ import numpy.typing as npt
 
 # Import project-specific modules
 import student_success_tool.dataio as dataio
-from student_success_tool import modeling as modeling
 from student_success_tool.modeling import inference
-import pkgutil
-print("configs at:", modeling.__file__)
-print("submodules:", [m.name for m in pkgutil.iter_modules(modeling.__path__)])
 from student_success_tool.modeling.h2o_modeling import utils as h2o_utils
 from student_success_tool.modeling.h2o_modeling import inference as h2o_inference
 from student_success_tool.modeling.h2o_modeling import evaluation as h2o_evaluation
 from student_success_tool.modeling.h2o_modeling import imputation as h2o_imputation
-import student_success_tool.configs as configs
-print("configs at:", configs.__file__)
-print("submodules:", [m.name for m in pkgutil.iter_modules(configs.__path__)])
 from student_success_tool.configs.h2o_configs.pdp import PDPProjectConfig
 
 from student_success_tool.utils import emails
@@ -160,6 +151,7 @@ class ModelInferenceTask:
         self,
         model,
         df_processed: pd.DataFrame,
+        imputer: h2o_imputation.SklearnImputerWrapper,
     ) -> pd.DataFrame | None:
         """Calculates SHAP values."""
 
@@ -169,10 +161,7 @@ class ModelInferenceTask:
                 automl_experiment_id=self.model_experiment_id,
             )
 
-            train_features = h2o_imputation.SklearnImputerWrapper.load_and_transform(
-                df=df_train,
-                run_id=self.model_run_id,
-            )
+            train_features = imputer.transform(df=df_train)
 
             # Sample background data for performance optimization
             bd =  train_features.sample(
@@ -316,10 +305,10 @@ class ModelInferenceTask:
         model = self.load_mlflow_model()
 
         # Load and transform using sklearn imputer
-        df_processed = h2o_imputation.SklearnImputerWrapper.load_and_transform(
-            df=df_processed,
+        imputer = h2o_imputation.SklearnImputerWrapper.load(
             run_id=self.model_run_id,
         )
+        df_processed = imputer.transform(df=df_processed)
         
         model_feature_names = h2o_inference.get_h2o_used_features(model)
         df_features = df_processed.loc[:, model_feature_names]
@@ -340,11 +329,19 @@ class ModelInferenceTask:
             MANDRILL_PASSWORD,
         )
 
-        df_predicted = self.predict(model, df_features, model_feature_names)
+        df_predicted = self.predict(
+            model=model,
+            df=df_features,
+            model_feature_names=model_feature_names
+        )
         self.write_data_to_delta(df_predicted, "predicted_dataset")
 
         # --- SHAP Values Calculation ---
-        shap_values = self.calculate_shap_values(model, df_features)
+        shap_values = self.calculate_shap_values(
+            model=model,
+            df_processed=df_features,
+            imputer=imputer,
+        )
 
         if shap_values is not None:  # Proceed only if SHAP values were calculated
             logging.info(f"now cfg.model.run_id = {self.cfg.model.run_id}")
@@ -358,8 +355,6 @@ class ModelInferenceTask:
 
             with mlflow.start_run(run_id=self.cfg.model.run_id):
                 # full_model_name = f"{self.args.DB_workspace}.{self.args.databricks_institution_name}_gold.{self.args.model_name}"
-                # --- SHAP Summary Plot ---
-                # shap_fig = plot_shap_beeswarm(grouped_shap_values)
 
                 # Inference_features_with_most_impact TABLE
                 inference_features_with_most_impact = self.top_n_features(
@@ -442,10 +437,6 @@ class ModelInferenceTask:
                     spark_df.coalesce(1).write.format("csv").option(
                         "header", "true"
                     ).mode("overwrite").save(result_path + "inference_output")
-                    # # Write the SHAP chart png to the volume
-                    # shap_fig.savefig(
-                    #     result_path + "shap_chart.png", bbox_inches="tight"
-                    # )
                 else:
                     logging.error(
                         "Empty Shap results, cannot create the SHAP chart and table"
