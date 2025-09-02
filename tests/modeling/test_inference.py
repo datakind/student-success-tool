@@ -475,11 +475,10 @@ def test_top_shap_features_behavior(sample_data):
         .all()
     )
 
+
 def test_features_boxstats(sample_data):
     features, unique_ids, shap_values, features_table = sample_data
-    result = top_feature_boxstats(
-        features, shap_values, features_table=features_table
-    )
+    result = top_feature_boxstats(features, shap_values, features_table=features_table)
     # Check output shape and columns
     assert isinstance(result, pd.DataFrame)
     assert set(result.columns) == {
@@ -497,7 +496,7 @@ def test_features_boxstats(sample_data):
         "feature_long_desc",
     }
 
-        # --- B) numeric_only=True: non-numeric column gets NaN stats but correct counts ---
+    # --- B) numeric_only=True: non-numeric column gets NaN stats but correct counts ---
     features_mixed = pd.DataFrame(
         {
             "num": [1.0, 2.0, 3.0, np.nan],
@@ -538,7 +537,11 @@ def test_features_boxstats(sample_data):
 
     # --- C) numeric_only=False vs True: identical output for all-numeric data ---
     features_allnum = pd.DataFrame(
-        {"x": [1.0, 2.0, 3.0, 4.0], "y": [10.0, 10.0, 20.0, 20.0], "z": [0.0, 1.0, 0.0, 1.0]}
+        {
+            "x": [1.0, 2.0, 3.0, 4.0],
+            "y": [10.0, 10.0, 20.0, 20.0],
+            "z": [0.0, 1.0, 0.0, 1.0],
+        }
     )
     shap_allnum: npt.NDArray[np.float64] = np.array(
         [
@@ -550,9 +553,14 @@ def test_features_boxstats(sample_data):
         dtype=np.float64,
     )
     out_true_all = top_feature_boxstats(features_allnum, shap_allnum, numeric_only=True)
-    out_false_all = top_feature_boxstats(features_allnum, shap_allnum, numeric_only=False)
-    pd.testing.assert_frame_equal(out_true_all.reset_index(drop=True), out_false_all.reset_index(drop=True))
-    
+    out_false_all = top_feature_boxstats(
+        features_allnum, shap_allnum, numeric_only=False
+    )
+    pd.testing.assert_frame_equal(
+        out_true_all.reset_index(drop=True), out_false_all.reset_index(drop=True)
+    )
+
+
 def test_handles_fewer_than_10_features():
     features = pd.DataFrame(
         {
