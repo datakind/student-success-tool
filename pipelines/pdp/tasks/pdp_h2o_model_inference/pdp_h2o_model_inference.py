@@ -117,24 +117,20 @@ class ModelInferenceTask:
         self, model, df: pd.DataFrame, model_feature_names: t.List
     ) -> pd.DataFrame:
         """Performs inference and adds predictions to the DataFrame."""
-
-        # Load and transform using sklearn imputer
-        imputer = h2o_imputation.SklearnImputerWrapper.load(run_id=self.model_run_id)
-        features = imputer.transform(df)
-
+    
         # Convert to h2o frame and run prediction
-        df_predicted = features.copy()
-        h2o_frame = h2o.H2OFrame(df_predicted)
-        pred = h2o_utils._to_pandas(model.predict(h2o_frame))
-
-        df_predicted["predicted_label"] = pred["predict"].values
-        df_predicted["predicted_prob"] = h2o_inference.predict_probs_h2o(
+        df_predicted = df.copy()
+        labels, probs = h2o_inference.predict_h2o(
             df_predicted,
             model=model,
             feature_names=model_feature_names,
             pos_label=self.cfg.pos_label,
         )
-        return df_predicted
+
+        return df_predicted.assign(
+            predicted_prob=probs,
+            predicted_label=labels,
+        )
 
     def write_data_to_delta(self, df: pd.DataFrame, table_name_suffix: str):
         """Writes a DataFrame to a Delta Lake table."""
@@ -161,25 +157,29 @@ class ModelInferenceTask:
         """Calculates SHAP values."""
 
         try:
-            # --- SHAP Values Calculation ---
+            # Load and preprocess training data
             df_train = h2o_evaluation.extract_training_data_from_model(
                 automl_experiment_id=self.model_experiment_id,
             )
 
+            train_features = h2o_imputation.SklearnImputerWrapper.load_and_transform(
+                df=df_train,
+                run_id=self.model_run_id,
+            )
+
             # Sample background data for performance optimization
-            bd = df_train.sample(self.cfg.inference.background_data_sample)
+            bd =  train_features.sample(
+                n=min(self.cfg.inference.background_data_sample, len(df_processed)),
+                random_state=self.cfg.random_state,
+            )
 
             # Extract features
             features = df_processed.loc[:, model_feature_names]
 
-            # Convert to H2OFrame
-            h2o_bd = h2o.H2OFrame(bd)
-            h2o_features = h2o.H2OFrame(features)
-
             contribs_df = h2o_inference.compute_h2o_shap_contributions(
                 model=model,
-                h2o_frame=h2o_features,
-                background_data=h2o_bd,
+                df=features,
+                background_data=bd,
             )
             return contribs_df
         except Exception as e:
@@ -276,7 +276,6 @@ class ModelInferenceTask:
         unique_ids,
         df_predicted,
         grouped_shap_values,
-        model_feature_names,
     ):
         """
         Selects top features to display and store
@@ -290,23 +289,16 @@ class ModelInferenceTask:
         # --- Load features table ---
         features_table = dataio.read_features_table("assets/pdp/features_table.toml")
 
-        # --- Inference Parameters ---
-        inference_params = {
-            "num_top_features": 5,
-            "min_prob_pos_label": 0.5,
-        }
-
-        pred_probs = df_predicted["predicted_prob"]
         # --- Feature Selection for Display ---
         try:
             result = inference.select_top_features_for_display(
                 grouped_features,
                 unique_ids,
-                pred_probs,
+                df_predicted["predicted_prob"],
                 grouped_shap_values.values,
-                n_features=inference_params["num_top_features"],
+                n_features=self.cfg.inference.num_top_features,
                 features_table=features_table,
-                needs_support_threshold_prob=inference_params["min_prob_pos_label"],
+                needs_support_threshold_prob=self.cfg.inference.min_prob_pos_label,
             )
             return result
 
@@ -320,6 +312,13 @@ class ModelInferenceTask:
             self.args.processed_dataset_path, spark_session=self.spark_session
         )
         model = self.load_mlflow_model()
+
+        # Load and transform using sklearn imputer
+        df_processed = h2o_imputation.SklearnImputerWrapper.load_and_transform(
+            df=df_processed,
+            run_id=self.model_run_id,
+        )
+        
         model_feature_names = h2o_inference.get_h2o_used_features(model)
         df_features = df_processed.loc[:, model_feature_names]
         unique_ids = df_processed[self.cfg.student_id_col]
