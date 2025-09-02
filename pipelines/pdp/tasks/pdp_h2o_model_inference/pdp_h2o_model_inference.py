@@ -424,7 +424,6 @@ class ModelInferenceTask:
                     unique_ids,
                     df_predicted,
                     grouped_shap_values,
-                    model_feature_names,
                 )
 
                 # --- Save Results to ext/ folder in Gold volume. ---
