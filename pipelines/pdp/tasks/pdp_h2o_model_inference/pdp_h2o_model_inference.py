@@ -220,14 +220,10 @@ class ModelInferenceTask:
         features_table = dataio.read_features_table("assets/pdp/features_table.toml")
 
         # --- Inference Parameters ---
-        inference_params = {
-            "num_top_features": 5,
-            "min_prob_pos_label": 0.5,
-        }
-
+        inference_params = self.cfg.inference
         pred_probs = df_predicted["predicted_prob"]
+        
         # --- Feature Selection for Display ---
-
         try:
             result = inference.support_score_distribution_table(
                 df_serving=grouped_features,
