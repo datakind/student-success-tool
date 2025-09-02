@@ -218,7 +218,6 @@ class ModelInferenceTask:
         unique_ids,
         df_predicted,
         grouped_shap_values,
-        model_feature_names,
     ):
         """
         Selects top features to display and store
@@ -243,13 +242,12 @@ class ModelInferenceTask:
 
         try:
             result = inference.support_score_distribution_table(
-                grouped_features,
-                unique_ids,
-                pred_probs,
-                grouped_shap_values,
+                df_serving=grouped_features,
+                unique_ids=unique_ids,
+                pred_probs=pred_probs,
+                shap_values=grouped_shap_values,
                 inference_params=inference_params,
                 features_table=features_table,
-                model_feature_names=model_feature_names,
             )
 
             return result
@@ -394,7 +392,6 @@ class ModelInferenceTask:
                     unique_ids,
                     df_predicted,
                     grouped_shap_values,
-                    model_feature_names,
                 )
                 if inference_features_with_most_impact is None:
                     msg = "Inference features with most impact is empty: cannot write inference summary tables."
