@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 from pandas.api.types import is_numeric_dtype
 from unittest.mock import patch
+import numpy.typing as npt
 
 from student_success_tool.modeling.inference import (
     _get_mapped_feature_name,
@@ -14,6 +15,7 @@ from student_success_tool.modeling.inference import (
     generate_ranked_feature_table,
     top_shap_features,
     support_score_distribution_table,
+    top_feature_boxstats,
 )
 
 
@@ -472,6 +474,62 @@ def test_top_shap_features_behavior(sample_data):
         .apply(lambda x: isinstance(x, str) or x is None)
         .all()
     )
+
+
+def test_features_boxstats(sample_data):
+    features, _, shap_values, features_table = sample_data
+    result = top_feature_boxstats(features, shap_values, features_table=features_table)
+    # Check output shape and columns
+    assert isinstance(result, pd.DataFrame)
+    assert set(result.columns) == {
+        "feature_name",
+        "feature_shap_value",
+        "min",
+        "Q1",
+        "median",
+        "Q3",
+        "max",
+        "count",
+        "n_missing",
+        "feature_readable_name",
+        "feature_short_desc",
+        "feature_long_desc",
+    }
+
+    features_mixed = pd.DataFrame(
+        {
+            "num": [1.0, 2.0, 3.0, np.nan],
+            "cat": ["a", "b", None, "a"],  # non-numeric
+            "num2": [10, 20, 30, 40],
+        }
+    )
+    shap_mixed: npt.NDArray[np.float64] = np.array(
+        [
+            [0.2, 0.1, 1.0],
+            [0.2, 0.1, 0.0],
+            [0.2, 0.1, 0.0],
+            [0.2, 0.1, 0.0],
+        ],
+        dtype=np.float64,
+    )
+    out = top_feature_boxstats(features_mixed, shap_mixed)
+
+    # "cat" included with NaN stats but correct counts
+    row_cat = out.loc[out["feature_name"] == "cat"].iloc[0]
+    assert row_cat[["min", "Q1", "median", "Q3", "max"]].isna().all()
+    assert row_cat["count"] == 3
+    assert row_cat["n_missing"] == 1
+
+    # Numeric column has real stats
+    row_num = out.loc[out["feature_name"] == "num"].iloc[0]
+    s = features_mixed["num"]
+    assert row_num["min"] == float(s.min())
+    assert row_num["max"] == float(s.max())
+    assert row_num["median"] == float(s.quantile(0.5, interpolation="linear"))
+    assert row_num["Q1"] == float(s.quantile(0.25, interpolation="linear"))
+    assert row_num["Q3"] == float(s.quantile(0.75, interpolation="linear"))
+    assert row_num["count"] == int(s.notna().sum())
+    assert row_num["n_missing"] == int(s.isna().sum())
 
 
 def test_handles_fewer_than_10_features():
