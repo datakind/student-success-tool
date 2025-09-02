@@ -36,7 +36,7 @@ from student_success_tool.modeling.h2o_modeling import utils as h2o_utils
 from student_success_tool.modeling.h2o_modeling import inference as h2o_inference
 from student_success_tool.modeling.h2o_modeling import evaluation as h2o_evaluation
 from student_success_tool.modeling.h2o_modeling import imputation as h2o_imputation
-from student_success_tool.configs.h2o_configs.pdp import PDPProjectConfig
+from student_success_tool.configs import h2o_configs
 from student_success_tool.modeling.evaluation import plot_shap_beeswarm
 from student_success_tool.utils import emails
 from mlflow.tracking import MlflowClient
@@ -75,7 +75,7 @@ class ModelInferenceTask:
     def read_config(self, toml_file_path: str):
         """Reads the institution's model's configuration file."""
         try:
-            cfg = dataio.read_config(toml_file_path, schema=PDPProjectConfig)
+            cfg = dataio.read_config(toml_file_path, schema=h2o_configs.pdp.PDPProjectConfig)
             return cfg
         except FileNotFoundError:
             logging.error("Configuration file not found at %s", toml_file_path)
