@@ -46,7 +46,6 @@ print("configs at:", configs.__file__)
 print("submodules:", [m.name for m in pkgutil.iter_modules(configs.__path__)])
 from student_success_tool.configs.h2o_configs.pdp import PDPProjectConfig
 
-from student_success_tool.modeling.evaluation import plot_shap_beeswarm
 from student_success_tool.utils import emails
 from mlflow.tracking import MlflowClient
 
