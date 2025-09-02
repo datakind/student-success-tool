@@ -151,7 +151,6 @@ class ModelInferenceTask:
         self,
         model,
         df_processed: pd.DataFrame,
-        imputer: h2o_imputation.SklearnImputerWrapper,
     ) -> pd.DataFrame | None:
         """Calculates SHAP values."""
 
@@ -161,7 +160,7 @@ class ModelInferenceTask:
                 automl_experiment_id=self.model_experiment_id,
             )
 
-            train_features = imputer.transform(df=df_train)
+            train_features = self.sklearn_imputer.transform(df=df_train)
 
             # Sample background data for performance optimization
             bd =  train_features.sample(
@@ -305,10 +304,10 @@ class ModelInferenceTask:
         model = self.load_mlflow_model()
 
         # Load and transform using sklearn imputer
-        imputer = h2o_imputation.SklearnImputerWrapper.load(
+        self.sklearn_imputer = h2o_imputation.SklearnImputerWrapper.load(
             run_id=self.model_run_id,
         )
-        df_processed = imputer.transform(df=df_processed)
+        df_processed = self.sklearn_imputer.transform(df=df_processed)
         
         model_feature_names = h2o_inference.get_h2o_used_features(model)
         df_features = df_processed.loc[:, model_feature_names]
@@ -340,7 +339,6 @@ class ModelInferenceTask:
         shap_values = self.calculate_shap_values(
             model=model,
             df_processed=df_features,
-            imputer=imputer,
         )
 
         if shap_values is not None:  # Proceed only if SHAP values were calculated
