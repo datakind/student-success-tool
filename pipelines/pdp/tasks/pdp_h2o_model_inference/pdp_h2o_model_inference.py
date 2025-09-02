@@ -442,10 +442,10 @@ class ModelInferenceTask:
                     spark_df.coalesce(1).write.format("csv").option(
                         "header", "true"
                     ).mode("overwrite").save(result_path + "inference_output")
-                    # Write the SHAP chart png to the volume
-                    shap_fig.savefig(
-                        result_path + "shap_chart.png", bbox_inches="tight"
-                    )
+                    # # Write the SHAP chart png to the volume
+                    # shap_fig.savefig(
+                    #     result_path + "shap_chart.png", bbox_inches="tight"
+                    # )
                 else:
                     logging.error(
                         "Empty Shap results, cannot create the SHAP chart and table"
