@@ -116,7 +116,7 @@ class ModelInferenceTask:
         self, model, df: pd.DataFrame, model_feature_names: t.List
     ) -> pd.DataFrame:
         """Performs inference and adds predictions to the DataFrame."""
-
+    
         # Convert to h2o frame and run prediction
         df_predicted = df.copy()
         labels, probs = h2o_inference.predict_h2o(
@@ -163,7 +163,7 @@ class ModelInferenceTask:
             train_features = self.sklearn_imputer.transform(df=df_train)
 
             # Sample background data for performance optimization
-            bd = train_features.sample(
+            bd =  train_features.sample(
                 n=min(self.cfg.inference.background_data_sample, len(df_processed)),
                 random_state=self.cfg.random_state,
             )
@@ -224,10 +224,9 @@ class ModelInferenceTask:
             "num_top_features": 5,
             "min_prob_pos_label": 0.5,
         }
-
         pred_probs = df_predicted["predicted_prob"]
+        
         # --- Feature Selection for Display ---
-
         try:
             result = inference.support_score_distribution_table(
                 df_serving=grouped_features,
@@ -308,7 +307,7 @@ class ModelInferenceTask:
             run_id=self.model_run_id,
         )
         df_processed = self.sklearn_imputer.transform(df=df_processed)
-
+        
         model_feature_names = h2o_inference.get_h2o_used_features(model)
         df_features = df_processed.loc[:, model_feature_names]
         unique_ids = df_processed[self.cfg.student_id_col]
@@ -329,7 +328,9 @@ class ModelInferenceTask:
         )
 
         df_predicted = self.predict(
-            model=model, df=df_features, model_feature_names=model_feature_names
+            model=model,
+            df=df_features,
+            model_feature_names=model_feature_names
         )
         self.write_data_to_delta(df_predicted, "predicted_dataset")
 
