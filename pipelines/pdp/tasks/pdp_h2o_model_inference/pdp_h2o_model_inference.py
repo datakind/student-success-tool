@@ -32,7 +32,10 @@ import numpy.typing as npt
 
 # Import project-specific modules
 import student_success_tool.dataio as dataio
+from student_success_tool import modeling as modeling
 from student_success_tool.modeling import inference
+print("configs at:", modeling.__file__)
+print("submodules:", [m.name for m in pkgutil.iter_modules(modeling.__path__)])
 from student_success_tool.modeling.h2o_modeling import utils as h2o_utils
 from student_success_tool.modeling.h2o_modeling import inference as h2o_inference
 from student_success_tool.modeling.h2o_modeling import evaluation as h2o_evaluation
