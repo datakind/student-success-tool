@@ -7,6 +7,7 @@ from mlflow.tracking import MlflowClient
 # export .md to .pdf
 import markdown
 from weasyprint import HTML
+import time
 
 # resolving files in templates module within package
 from importlib.abc import Traversable
@@ -62,23 +63,55 @@ class ModelCard(t.Generic[C]):
         self.logo_path = self._resolve(
             "student_success_tool.reporting.template.assets", self.LOGO_FILENAME
         )
+        self.timings: dict[str, float] = {}  #  keep simple timing stats
+
+    # small helper to time any callable and record duration
+    def _time(self, label: str, fn, *args, **kwargs):
+        t0 = time.perf_counter()
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            dt = time.perf_counter() - t0
+            self.timings[label] = self.timings.get(label, 0.0) + dt
+            LOGGER.info(f" {label}: {dt:.3f}s")
+
+    #  optional: pretty summary at the end
+    def _log_timing_summary(self):
+        if not self.timings:
+            return
+        LOGGER.info("====== ModelCard timing summary ======")
+        for k, v in self.timings.items():
+            LOGGER.info(f"  {k:>28}: {v:.3f}s")
+        LOGGER.info("=====================================")
 
     def build(self):
         """
         Builds the model card by performing the following steps:
-        1. Loads the MLflow model.
-        2. Finds the model version from the MLflow client based on the run ID.
-        3. Extracts the training data from the MLflow run.
-        4. Registers all sections in the section registry.
-        5. Collects all metadata for the model card.
-        6. Renders the model card using the template and context.
+        ...
         """
-        self.load_model()
-        self.find_model_version()
-        self.extract_training_data()
-        self._register_sections()
-        self.collect_metadata()
-        self.render()
+        self._time("load_model", self.load_model)                       # 
+        self._time("find_model_version", self.find_model_version)       # 
+        self._time("extract_training_data", self.extract_training_data) # 
+        self._time("_register_sections", self._register_sections)       # 
+        self._time("collect_metadata", self.collect_metadata)           # 
+        self._time("render", self.render)                               # 
+        self._log_timing_summary()                                      # 
+    # def build(self):
+    #     """
+    #     Builds the model card by performing the following steps:
+    #     1. Loads the MLflow model.
+    #     2. Finds the model version from the MLflow client based on the run ID.
+    #     3. Extracts the training data from the MLflow run.
+    #     4. Registers all sections in the section registry.
+    #     5. Collects all metadata for the model card.
+    #     6. Renders the model card using the template and context.
+    #     """
+    #     self.load_model()
+    #     self.find_model_version()
+    #     self.extract_training_data()
+    #     self._register_sections()
+    #     self.collect_metadata()
+    #     self.render()
 
     def load_model(self):
         """
