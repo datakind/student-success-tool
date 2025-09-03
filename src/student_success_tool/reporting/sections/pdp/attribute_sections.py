@@ -12,7 +12,6 @@ def register_attribute_sections(card, registry):
     """
     LOGGER.info("Starting pdp attribute section creation")
 
-
     @registry.register("development_note_section")
     def development_note():
         """

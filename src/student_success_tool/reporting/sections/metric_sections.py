@@ -2,6 +2,7 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+
 def register_metric_sections(card, registry):
     """
     Registers metric sections for a model, specifically the training metric and sample weights.
