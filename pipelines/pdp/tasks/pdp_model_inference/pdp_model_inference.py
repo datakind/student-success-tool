@@ -273,6 +273,24 @@ class ModelInferenceTask:
         except Exception as e:
             logging.error("Error computing top %d shap features table: %s", n, e)
             return None
+    
+    def features_box_whiskers_table(
+        self,
+        features: pd.DataFrame,
+        shap_values: npt.NDArray[np.float64],
+    ) -> pd.DataFrame:
+        features_table = dataio.read_features_table("assets/pdp/features_table.toml")
+        try:
+            feature_boxstats = inference.top_feature_boxstats(
+                features=features,
+                shap_values=shap_values,
+                features_table=features_table,
+            )
+            return feature_boxstats
+
+        except Exception as e:
+            logging.error("Error computing box features %d shap features table: %s", e)
+            return None
 
     def support_score_distribution(
         self, df_serving, unique_ids, df_predicted, shap_values
@@ -443,6 +461,10 @@ class ModelInferenceTask:
                     df_predicted,
                     shap_values,
                 )
+                box_whiskers_table = self.features_box_whiskers_table(
+                    features=df_processed[model_feature_names],
+                    shap_values=shap_values.values,
+                )
                 if inference_features_with_most_impact is None:
                     msg = "Inference features with most impact is empty: cannot write inference summary tables."
                     logging.error(msg)
@@ -453,6 +475,10 @@ class ModelInferenceTask:
                     raise Exception(msg)
                 if support_overview_table is None:
                     msg = "Support overview table is empty: cannot write inference summary tables."
+                    logging.error(msg)
+                    raise Exception(msg)
+                if box_whiskers_table is None:
+                    msg = "Box plot table is empty: cannot write inference summary tables."
                     logging.error(msg)
                     raise Exception(msg)
                 self.write_data_to_delta(
@@ -467,7 +493,10 @@ class ModelInferenceTask:
                     support_overview_table,
                     f"inference_{self.args.db_run_id}_support_overview",
                 )
-
+                self.write_data_to_delta(
+                    box_whiskers_table,
+                    f"inference_{self.cfg.model.run_id}_box_plot_table",
+                )
                 # Shap Result Table
                 shap_results = self.get_top_features_for_display(
                     df_processed[model_feature_names],
