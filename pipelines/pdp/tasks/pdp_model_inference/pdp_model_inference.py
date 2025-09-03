@@ -495,7 +495,7 @@ class ModelInferenceTask:
                 )
                 self.write_data_to_delta(
                     box_whiskers_table,
-                    f"inference_{self.cfg.model.run_id}_box_plot_table",
+                    f"inference_{self.args.db_run_id}_box_plot_table",
                 )
                 # Shap Result Table
                 shap_results = self.get_top_features_for_display(
