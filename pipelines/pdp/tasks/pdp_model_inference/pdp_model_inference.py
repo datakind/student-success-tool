@@ -374,7 +374,7 @@ class ModelInferenceTask:
         df_processed = dataio.from_delta_table(
             self.args.processed_dataset_path, spark_session=self.spark_session
         )
-        df_processed = df_processed[:30] # this is to subset for testing since shap takes forever, turn off for production
+        # df_processed = df_processed[:30] # this is to subset for testing since shap takes forever, turn off for production
         unique_ids = df_processed[self.cfg.student_id_col]
 
         model = self.load_mlflow_model()
