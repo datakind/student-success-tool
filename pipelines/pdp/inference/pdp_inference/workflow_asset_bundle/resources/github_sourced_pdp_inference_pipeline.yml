@@ -25,7 +25,8 @@ resources:
               - "/Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/inference_jobs/{{job.parameters.db_run_id}}"
               - --custom_schemas_path
               - "{{job.parameters.custom_schemas_path}}"
-          job_cluster_key: pdp-inference-pipeline-cluster
+          # job_cluster_key: pdp-inference-pipeline-cluster
+          existing_cluster_id: 5507-145238-6we6v2w3
           libraries:
             - pypi:
                 package: git+https://github.com/datakind/student-success-tool.git@${var.pip_install_branch}
@@ -54,7 +55,8 @@ resources:
               - "/Volumes/{{job.parameters.DB_workspace}}/{{job.parameters.databricks_institution_name}}_gold/gold_volume/inference_inputs/inference_config.toml"
               - --custom_schemas_path
               - "{{job.parameters.custom_schemas_path}}"
-          job_cluster_key: pdp-inference-pipeline-cluster
+          #job_cluster_key: pdp-inference-pipeline-cluster
+          existing_cluster_id: 5507-145238-6we6v2w3
           libraries:
             - pypi:
                 package: git+https://github.com/datakind/student-success-tool.git@${var.pip_install_branch}
@@ -81,7 +83,8 @@ resources:
               - --environment
               - SERVING
               - "{{job.parameters.fail_on_anomalies}}"
-          job_cluster_key: pdp-inference-pipeline-cluster
+          # job_cluster_key: pdp-inference-pipeline-cluster
+          existing_cluster_id: 5507-145238-6we6v2w3
         # - task_key: data_validation
         #   depends_on:
         #     - task_key: data_preprocessing
@@ -105,7 +108,8 @@ resources:
               - --environment
               - SERVING
               - "{{job.parameters.fail_on_anomalies}}"
-          job_cluster_key: pdp-inference-pipeline-cluster
+          #job_cluster_key: pdp-inference-pipeline-cluster
+          existing_cluster_id: 5507-145238-6we6v2w3
           libraries:
             - pypi:
                 package: tensorflow_data_validation==1.16.1
@@ -140,7 +144,8 @@ resources:
               - "{{job.parameters.DB_workspace}}.{{job.parameters.databricks_institution_name}}_silver.modeling"
               - --custom_schemas_path
               - "{{job.parameters.custom_schemas_path}}"
-          job_cluster_key: pdp-inference-pipeline-cluster
+          #job_cluster_key: pdp-inference-pipeline-cluster
+          existing_cluster_id: 5507-145238-6we6v2w3
           libraries:
             - pypi:
                 package: git+https://github.com/datakind/student-success-tool.git@${var.pip_install_branch}
@@ -179,31 +184,32 @@ resources:
               - "{{job.parameters.gcp_bucket_name}}"
               - --notification_email
               - "{{job.parameters.notification_email}}"
-          job_cluster_key: pdp-inference-pipeline-cluster
+          #job_cluster_key: pdp-inference-pipeline-cluster
+          existing_cluster_id: 5507-145238-6we6v2w3
           libraries:
             - pypi:
                 package: git+https://github.com/datakind/student-success-tool.git@${var.pip_install_branch}
-      job_clusters:
-        - job_cluster_key: pdp-inference-pipeline-cluster
-          new_cluster:
-            cluster_name: ""
-            spark_version: 15.4.x-cpu-ml-scala2.12
-            spark_conf:
-              spark.master: local[*, 4]
-              spark.databricks.cluster.profile: singleNode
-            gcp_attributes:
-              use_preemptible_executors: false
-              # google_service_account: ${var.pipeline_sa_email}
-              availability: ON_DEMAND_GCP
-              zone_id: HA
-            node_type_id: n2-standard-16
-            custom_tags:
-              ResourceClass: SingleNode
-              x-databricks-nextgen-cluster: "true"
-            enable_elastic_disk: true
-            data_security_mode: SINGLE_USER
-            runtime_engine: STANDARD
-            num_workers: 0
+      # job_clusters:
+      #   - job_cluster_key: pdp-inference-pipeline-cluster
+      #     new_cluster:
+      #       cluster_name: ""
+      #       spark_version: 15.4.x-cpu-ml-scala2.12
+      #       spark_conf:
+      #         spark.master: local[*, 4]
+      #         spark.databricks.cluster.profile: singleNode
+      #       gcp_attributes:
+      #         use_preemptible_executors: false
+      #         # google_service_account: ${var.pipeline_sa_email}
+      #         availability: ON_DEMAND_GCP
+      #         zone_id: HA
+      #       node_type_id: n2-standard-16
+      #       custom_tags:
+      #         ResourceClass: SingleNode
+      #         x-databricks-nextgen-cluster: "true"
+      #       enable_elastic_disk: true
+      #       data_security_mode: SINGLE_USER
+      #       runtime_engine: STANDARD
+      #       num_workers: 0
       git_source:
         git_url: https://github.com/datakind/student-success-tool
         git_provider: gitHub
