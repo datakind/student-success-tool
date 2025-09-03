@@ -53,6 +53,7 @@ class ModelInferenceTask:
         self.args = args
         self.spark_session = self.get_spark_session()
         self.cfg = self.read_config(self.args.toml_file_path)
+        self.db_run_id = self.args.db_run_id
 
     def get_spark_session(self) -> DatabricksSession | None:
         """
@@ -490,19 +491,19 @@ class ModelInferenceTask:
 
                 self.write_data_to_delta(
                     inference_features_with_most_impact,
-                    f"inference_{self.cfg.model.run_id}_features_with_most_impact",
+                    f"inference_{self.db_run_id}_features_with_most_impact",
                 )
                 self.write_data_to_delta(
                     shap_feature_importance,
-                    f"inference_{self.cfg.model.run_id}_shap_feature_importance",
+                    f"inference_{self.db_run_id}_shap_feature_importance",
                 )
                 self.write_data_to_delta(
                     support_overview_table,
-                    f"inference_{self.cfg.model.run_id}_support_overview",
+                    f"inference_{self.db_run_id}_support_overview",
                 )
                 self.write_data_to_delta(
                     box_whiskers_table,
-                    f"inference_{self.cfg.model.run_id}_box_plot_table",
+                    f"inference_{self.db_run_id}_box_plot_table",
                 )
 
                 # Shap Result Table
