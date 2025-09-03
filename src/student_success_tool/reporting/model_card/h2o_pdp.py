@@ -8,6 +8,10 @@ from .base import ModelCard
 from ..sections.pdp import register_sections as register_pdp_sections
 from ..utils import utils
 
+import logging
+
+LOGGER = logging.getLogger(__name__)
+
 
 class H2OPDPModelCard(ModelCard[PDPProjectConfig]):
     def __init__(
@@ -159,6 +163,8 @@ class H2OPDPModelCard(ModelCard[PDPProjectConfig]):
         """
         # Clearing registry for overrides
         self.section_registry.clear()
+
+        LOGGER.info("Registering sections...")
 
         # Register PDP-specific sections
         register_pdp_sections(self, self.section_registry)
