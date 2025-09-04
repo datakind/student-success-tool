@@ -11,7 +11,6 @@ import random
 import mlflow
 from mlflow.models import Model, infer_signature
 from mlflow.tracking import MlflowClient
-from mlflow.artifacts import download_artifacts
 import pandas as pd
 import numpy as np
 from pandas.api.types import is_categorical_dtype, is_object_dtype, is_string_dtype
