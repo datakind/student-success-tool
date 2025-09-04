@@ -437,7 +437,7 @@ def test_first_student_terms_at_num_credits_earned(
     ["include_cols", "exp"],
     [
         (
-            ["term_is_pre_cohort"],
+            ["term_is_pre_cohort", "term_is_core"],
             pd.DataFrame(
                 data={
                     "student_id": ["01", "02", "03", "04", "05"],
