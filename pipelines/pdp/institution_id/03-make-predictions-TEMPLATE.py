@@ -277,8 +277,8 @@ dataio.write.to_delta_table(
 
 # Log MLFlow confusion matrix & roc table figures in silver schema
 
-# edit catalog as need be 
-catalog="sst_dev"
+# edit catalog as need be
+catalog = "sst_dev"
 
 with mlflow.start_run() as run:
     confusion_matrix = evaluation.log_confusion_matrix(
