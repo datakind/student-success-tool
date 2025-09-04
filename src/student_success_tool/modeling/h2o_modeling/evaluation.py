@@ -116,7 +116,7 @@ def extract_training_data_from_model(
     with tempfile.TemporaryDirectory() as tmpdir:
         parquet_fp = mlflow.artifacts.download_artifacts(
             run_id=data_run_id,
-            artifact_path="inputs/full_dataset.parquet",  # ← single file, not the whole "inputs" dir
+            artifact_path="inputs/full_dataset.parquet",
             dst_path=tmpdir,
         )
         return pd.read_parquet(parquet_fp)
@@ -135,7 +135,7 @@ def extract_number_of_runs_from_model_training(
     with tempfile.TemporaryDirectory() as tmpdir:
         csv_fp = mlflow.artifacts.download_artifacts(
             run_id=data_run_id,
-            artifact_path="leaderboard/h2o_leaderboard.csv",  # ← single file
+            artifact_path="leaderboard/h2o_leaderboard.csv",
             dst_path=tmpdir,
         )
         df_leaderboard = pd.read_csv(csv_fp)
