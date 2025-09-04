@@ -437,13 +437,12 @@ def test_first_student_terms_at_num_credits_earned(
     ["include_cols", "exp"],
     [
         (
-            ["term_is_pre_cohort", "term_is_core"],
+            ["term_is_pre_cohort"],
             pd.DataFrame(
                 data={
                     "student_id": ["01", "02", "03", "04", "05"],
                     "term_rank": [4, 5, 2, 4, 8],
                     "term_is_pre_cohort": [False, False, False, False, False],
-                    "term_is_core": [True, True, True, True, True],
                 },
                 index=pd.Index([1, 4, 7, 9, 10], dtype="int64"),
             ).astype({"student_id": "string"}),
