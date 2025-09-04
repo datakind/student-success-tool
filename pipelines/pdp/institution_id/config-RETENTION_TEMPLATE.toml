@@ -43,7 +43,7 @@ key_course_ids = []
 
 [preprocessing.selection]
 # if fall-to-fall retention, add cohort_term = "FALL"
-student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year_1 = "ASSOCIATE'S DEGREE" }
+student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year_1 = "ASSOCIATE'S DEGREE", cohort_term = core_terms }
 
 [preprocessing.checkpoint]
 name = "end_of_first_term"
