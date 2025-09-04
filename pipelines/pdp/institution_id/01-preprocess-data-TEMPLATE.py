@@ -245,6 +245,7 @@ df_student_terms["term_is_pre_cohort"].value_counts(dropna=False)
 
 # TODO: choose checkpoint function suitable for school's use case
 # parameters should be specified in the config
+# MAKE SURE TO SPECIFY exclude_non_core_terms and exclude_pre_cohort_terms per school's needs!
 df_ckpt = checkpoints.pdp.TODO(
     df_student_terms,
     sort_cols=cfg.preprocessing.checkpoint.sort_cols,
