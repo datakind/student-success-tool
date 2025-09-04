@@ -13,7 +13,7 @@ def df_test_max_term():
             "enrollment_intensity": ["FT", "FT", "PT", "PT", "FT"],
             "term_rank": [1, 2, 4, 5, 10],
             "term_is_pre_cohort": [False, False, True, False, False],
-            "term_is_core": [True, True, True],
+            "term_is_core": [True, True, True, True, True],
         },
     ).astype({"student_id": "string", "enrollment_intensity": "string"})
 
