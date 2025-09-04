@@ -34,18 +34,31 @@ LOGGER = logging.getLogger(__name__)
 def safe_h2o_init(base_port: int = 54321, mem_per_cluster: str = "4G") -> None:
     """
     Initialize a unique H2O cluster per Databricks task (or randomly if no task id).
-    Ensures isolation across parallel runs and caps memory usage. This also works in
-    a databricks workflow or interactively in a notebook.
+    Hardens the server by binding to localhost so REST endpoints (incl. /3/ImportFiles)
+    are not reachable from the network.
     """
-
     task_id = os.environ.get("DATABRICKS_TASK_RUN_ID")
     if task_id:
         port = base_port + (int(task_id) % 10000)
     else:
         port = base_port + random.randint(0, 1000)
 
-    LOGGER.info(f"Starting H2O cluster at port {port}...")
-    h2o.init(port=port, nthreads=-1, max_mem_size=mem_per_cluster)
+    LOGGER.info(f"Starting H2O cluster at 127.0.0.1:{port} (localhost only)...")
+    h2o.init(
+        ip="127.0.0.1",
+        port=port,
+        nthreads=-1,
+        max_mem_size=mem_per_cluster,
+        bind_to_localhost=True,   # restrict server to local machine
+    )
+
+    # Safety check: verify we really connected to localhost
+    conn = h2o.connection()
+    base_url = getattr(conn, "base_url", "")
+    if not ("127.0.0.1" in base_url or "localhost" in base_url):
+        LOGGER.warning(
+            "H2O is not bound to localhost. This may expose REST endpoints on the network."
+        )
 
 
 def download_model_artifact(run_id: str, artifact_subdir: str = "model") -> str:
@@ -73,7 +86,7 @@ def load_h2o_model(
     Initializes H2O, downloads the UC-compatible H2O model artifact from MLflow, and loads it.
     """
     if not h2o.connection():
-        h2o.init()
+        safe_h2o_init()
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         local_model_dir = download_artifacts(
