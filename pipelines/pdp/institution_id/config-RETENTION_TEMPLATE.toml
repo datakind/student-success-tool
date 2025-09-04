@@ -42,8 +42,8 @@ key_course_subject_areas = []
 key_course_ids = []
 
 [preprocessing.selection]
-# default is usually fall-to-fall retention, if otherwise then change to core_terms
-student_criteria = { enrollment_type = "", credential_type_sought_year_1 = "", cohort_term = "FALL" }
+# default is usually fall-to-fall retention, if otherwise then change to core_terms 
+student_criteria = { cohort_term = "FALL" }
 
 [preprocessing.checkpoint]
 name = "end_of_first_term"
@@ -55,7 +55,7 @@ type_ = "retention"
 max_academic_year = "2024"
 
 [modeling.feature_selection]
-incomplete_threshold = 0.8
+incomplete_threshold = 0.2
 low_variance_threshold = 0.0
 collinear_threshold = 10.0
 # force_include_cols = []

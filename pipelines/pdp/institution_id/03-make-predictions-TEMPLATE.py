@@ -277,16 +277,19 @@ dataio.write.to_delta_table(
 
 # Log MLFlow confusion matrix & roc table figures in silver schema
 
+# edit catalog as need be 
+catalog="sst_dev"
+
 with mlflow.start_run() as run:
     confusion_matrix = evaluation.log_confusion_matrix(
-        catalog="sst_dev",
+        catalog=catalog,
         institution_id=cfg.institution_id,
         automl_run_id=cfg.model.run_id,
     )
 
     # Log roc curve table for front-end
     roc_logs = evaluation.log_roc_table(
-        catalog="sst_dev",
+        catalog=catalog,
         institution_id=cfg.institution_id,
         automl_run_id=cfg.model.run_id,
         modeling_dataset_name=cfg.datasets.silver.modeling.table_path,
