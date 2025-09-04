@@ -49,7 +49,7 @@ def safe_h2o_init(base_port: int = 54321, mem_per_cluster: str = "4G") -> None:
         port=port,
         nthreads=-1,
         max_mem_size=mem_per_cluster,
-        bind_to_localhost=True,   # restrict server to local machine
+        bind_to_localhost=True,  # restrict server to local machine
     )
 
     # Safety check: verify we really connected to localhost
