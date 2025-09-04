@@ -117,10 +117,11 @@ def compute_target(
         df,
         checkpoint=ft.partial(
             checkpoints.pdp.first_student_terms_within_cohort,
-            term_is_pre_cohort_col=term_is_pre_cohort_col,
             student_id_cols=student_id_cols,
             sort_cols=term_rank_col,
             include_cols=(student_id_cols + [term_rank_col, enrollment_intensity_col]),
+            term_is_pre_cohort_col=term_is_pre_cohort_col,
+            term_is_core_col="term_is_core",
         ),
         intensity_time_limits=intensity_time_limits,
         max_term_rank=max_term_rank,
