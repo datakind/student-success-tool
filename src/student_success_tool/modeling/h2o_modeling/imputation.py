@@ -203,7 +203,7 @@ class SklearnImputerWrapper:
 
             # 1) All NaNs -> constant fill
             if n_obs == 0:
-                if is_bool_dtype(s):
+                if is_bool_dtype(s.dtype):
                     imputer = SimpleImputer(strategy="constant", fill_value=False)
                 elif is_numeric_dtype(s):
                     fill_val = 0 if is_integer_dtype(s) else 0.0
@@ -219,7 +219,7 @@ class SklearnImputerWrapper:
                 continue
 
             # 3) Some NaNs -> choose strategy by dtype (check skew for numerics)
-            if is_bool_dtype(s):
+            if is_bool_dtype(s.dtype):
                 strategy = "most_frequent"
             elif is_numeric_dtype(s):
                 skew = skew_vals.get(col, 0)
@@ -333,7 +333,7 @@ class SklearnImputerWrapper:
         df = df.copy()
         for col in df.columns:
             if df[col].isnull().any():
-                df[f"{col}_missing_flag"] = df[col].isnull()
+                df[f"{col}_missing_flag"] = df[col].isnull().astype(bool)
         return df
 
     @classmethod
