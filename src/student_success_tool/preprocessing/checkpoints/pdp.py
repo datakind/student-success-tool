@@ -190,7 +190,6 @@ def first_student_terms_at_num_credits_earned(
 def first_student_terms_within_cohort(
     df: pd.DataFrame,
     *,
-    term_is_pre_cohort_col: str = "term_is_pre_cohort",
     student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
