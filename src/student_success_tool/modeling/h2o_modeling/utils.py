@@ -61,45 +61,50 @@ def safe_h2o_init(base_port: int = 54321, mem_per_cluster: str = "4G") -> None:
         )
 
 
+def download_artifact_file(
+    run_id: str, artifact_path: str, dst_dir: str | None = None
+) -> str:
+    """
+    Download a single artifact file (e.g., 'model/model.h2o') and return its local path.
+    This avoids slow directory listings in GCS/DBFS.
+    """
+    if dst_dir is None:
+        dst_dir = tempfile.mkdtemp()
+    # mlflow will create subdirs as needed; returns the local file path
+    return mlflow.artifacts.download_artifacts(
+        run_id=run_id,
+        artifact_path=artifact_path,
+        dst_path=dst_dir,
+    )
+
+
 def download_model_artifact(run_id: str, artifact_subdir: str = "model") -> str:
     """
-    Downloads a model directory artifact from MLflow and returns the local path.
-
-    Args:
-        run_id: MLflow run ID.
-        artifact_subdir: Subdirectory in the run artifacts, usually 'model'.
-
-    Returns:
-        Path to the downloaded model directory.
+    Back-compat wrapper that now downloads ONLY model.h2o instead of the whole folder.
+    Returns the local file path to model.h2o.
     """
-    local_dir = tempfile.mkdtemp()
-    artifact_path = mlflow.artifacts.download_artifacts(
-        run_id=run_id, artifact_path=artifact_subdir, dst_path=local_dir
-    )
-    return artifact_path  # already includes artifact_subdir
+    return download_artifact_file(run_id, f"{artifact_subdir}/model.h2o")
 
 
 def load_h2o_model(
     run_id: str, artifact_path: str = "model"
 ) -> h2o.model.model_base.ModelBase:
     """
-    Initializes H2O, downloads the UC-compatible H2O model artifact from MLflow, and loads it.
+    Initializes H2O and loads the model by downloading a single file:
+    artifact_path/model.h2o
     """
     if not h2o.connection():
         safe_h2o_init()
 
     with tempfile.TemporaryDirectory() as tmp_dir:
-        local_model_dir = download_artifacts(
-            run_id=run_id, artifact_path=artifact_path, dst_path=tmp_dir
+        local_model_file = download_artifact_file(
+            run_id, f"{artifact_path}/model.h2o", tmp_dir
         )
-
-        model_file = os.path.join(local_model_dir, "model.h2o")
-        if not os.path.exists(model_file):
+        if not os.path.exists(local_model_file):
             raise FileNotFoundError(
-                f"Expected model.h2o not found in {local_model_dir}"
+                f"Expected model.h2o not found at {local_model_file}"
             )
-
-        return h2o.load_model(model_file)
+        return h2o.load_model(local_model_file)
 
 
 def log_h2o_experiment(
