@@ -52,8 +52,9 @@ intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
 name = "term 2 including only core terms"
 type_ = "nth"
 n = 1
-term_is_core_col = "term_is_core"
+# TODO: edit based on school's preferences for checkpoint; default is core terms only and excluding any pre-cohort terms 
 exclude_non_core_terms = true
+exclude_pre_cohort_terms = true
 
 # Option 2
 # name = "30_credits_earned"

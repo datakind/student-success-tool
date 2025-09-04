@@ -48,6 +48,9 @@ student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year
 [preprocessing.checkpoint]
 name = "end_of_first_term"
 type_ = "first"
+# TODO: edit based on school's preferences for checkpoint; default is core terms only and excluding any pre-cohort terms 
+exclude_non_core_terms = true
+exclude_pre_cohort_terms = true
 
 [preprocessing.target]
 name = "retention"
