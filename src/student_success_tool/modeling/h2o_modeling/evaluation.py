@@ -2,10 +2,7 @@ import typing as t
 import logging
 from collections.abc import Callable
 
-import shutil
-import uuid
 import tempfile
-import os
 import mlflow
 
 import matplotlib.pyplot as plt
