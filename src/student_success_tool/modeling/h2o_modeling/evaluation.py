@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 import shutil
 import uuid
-
+import tempfile
 import os
 import mlflow
 
@@ -91,42 +91,38 @@ def generate_all_classification_plots(
         mlflow.log_figure(fig, f"{prefix}_{name}.png")
 
 
+def _get_data_run_id(automl_experiment_id: str, data_runname: str) -> str:
+    run_df = mlflow.search_runs(
+        experiment_ids=[automl_experiment_id], output_format="pandas"
+    )
+    assert isinstance(run_df, pd.DataFrame)
+    # pick the most recent run with this name
+    matches = run_df[run_df["tags.mlflow.runName"] == data_runname]
+    if matches.empty:
+        raise RuntimeError(
+            f"No run found with runName={data_runname!r} in experiment {automl_experiment_id}"
+        )
+    data_run_id = matches.sort_values("start_time", ascending=False).iloc[0]["run_id"]
+    return str(data_run_id)
+
+
 def extract_training_data_from_model(
     automl_experiment_id: str,
     data_runname: str = "H2O AutoML Experiment Summary and Storage",
 ) -> pd.DataFrame:
     """
-    Read training data from a model into a pandas DataFrame. This allows us to run more
-    evaluations of the model, ensuring that we are using the same train/test/validation split
-
-    Args:
-        automl_experiment_id: Experiment ID of the AutoML experiment
-        data_runname: The runName tag designating where there training data is stored
-
-    Returns:
-        The data used for training a model, with train/test/validation flags
+    Load the concatenated train/val/test dataset logged by the summary run.
+    (Fetches a single file to avoid slow folder listings.)
     """
-    run_df = mlflow.search_runs(
-        experiment_ids=[automl_experiment_id], output_format="pandas"
-    )
-    assert isinstance(run_df, pd.DataFrame)  # type guard
-    data_run_id = run_df[run_df["tags.mlflow.runName"] == data_runname]["run_id"].item()
+    data_run_id = _get_data_run_id(automl_experiment_id, data_runname)
 
-    # Create temp directory to download input data from MLflow
-    input_temp_dir = os.path.join(
-        os.environ["SPARK_LOCAL_DIRS"], "tmp", str(uuid.uuid4())[:8]
-    )
-    os.makedirs(input_temp_dir)
-
-    # Download the artifact and read it into a pandas DataFrame
-    input_data_path = mlflow.artifacts.download_artifacts(
-        run_id=data_run_id, artifact_path="inputs", dst_path=input_temp_dir
-    )
-    df_loaded = pd.read_parquet(os.path.join(input_data_path, "full_dataset.parquet"))
-    # Delete the temp data
-    shutil.rmtree(input_temp_dir)
-
-    return df_loaded
+    with tempfile.TemporaryDirectory() as tmpdir:
+        parquet_fp = mlflow.artifacts.download_artifacts(
+            run_id=data_run_id,
+            artifact_path="inputs/full_dataset.parquet",  # ← single file, not the whole "inputs" dir
+            dst_path=tmpdir,
+        )
+        return pd.read_parquet(parquet_fp)
 
 
 def extract_number_of_runs_from_model_training(
@@ -134,40 +130,19 @@ def extract_number_of_runs_from_model_training(
     data_runname: str = "H2O AutoML Experiment Summary and Storage",
 ) -> int:
     """
-    Read number of runs from an H2O model. This is available from the h2o_leaderboard.csv,
-    which is saved under the "H2O AutoML Experiment Summary and Storage" run which is available
-    in an experiment. The leaderboard contains information on every run that was created during
-    H2O training. We only log the top 50 models, so it's typically hundreds of models. Each row
-    is a separate run in h2o_leaderboard.csv so the length of the dataframe is the number of models.
-
-    Args:
-        automl_experiment_id: Experiment ID of the AutoML experiment
-        data_runname: The runName tag designating where there training data is stored
-
-    Returns:
-        The data used for training a model, with train/test/validation flags
+    Count rows in h2o_leaderboard.csv (logged by the summary run).
+    (Fetches a single file to avoid slow folder listings.)
     """
-    run_df = mlflow.search_runs(
-        experiment_ids=[automl_experiment_id], output_format="pandas"
-    )
-    assert isinstance(run_df, pd.DataFrame)  # type guard
-    data_run_id = run_df[run_df["tags.mlflow.runName"] == data_runname]["run_id"].item()
+    data_run_id = _get_data_run_id(automl_experiment_id, data_runname)
 
-    # Create temp directory to download input data from MLflow
-    input_temp_dir = os.path.join(
-        os.environ["SPARK_LOCAL_DIRS"], "tmp", str(uuid.uuid4())[:8]
-    )
-    os.makedirs(input_temp_dir)
-
-    # Download the artifact and read it into a pandas DataFrame
-    input_data_path = mlflow.artifacts.download_artifacts(
-        run_id=data_run_id, artifact_path="leaderboard", dst_path=input_temp_dir
-    )
-    df_leaderboard = pd.read_csv(os.path.join(input_data_path, "h2o_leaderboard.csv"))
-    # Delete the temp data
-    shutil.rmtree(input_temp_dir)
-
-    return int(df_leaderboard.shape[0])
+    with tempfile.TemporaryDirectory() as tmpdir:
+        csv_fp = mlflow.artifacts.download_artifacts(
+            run_id=data_run_id,
+            artifact_path="leaderboard/h2o_leaderboard.csv",  # ← single file
+            dst_path=tmpdir,
+        )
+        df_leaderboard = pd.read_csv(csv_fp)
+        return int(df_leaderboard.shape[0])
 
 
 ############
