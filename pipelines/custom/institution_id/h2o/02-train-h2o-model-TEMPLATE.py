@@ -44,9 +44,8 @@ from pyspark.dbutils import DBUtils
 dbutils = DBUtils(spark)
 client = MlflowClient()
 
-from student_success_tool import dataio, modeling, utils
+from student_success_tool import configs, dataio, modeling, utils
 from student_success_tool.modeling import h2o_modeling
-from student_success_tool.configs import h2o_configs
 
 
 h2o_modeling.utils.safe_h2o_init()
@@ -87,7 +86,7 @@ job_run_id = utils.databricks.get_db_widget_param("job_run_id", default="interac
 
 # project configuration stored as a config file in TOML format
 cfg = dataio.read_config(
-    "./config-TEMPLATE.toml", schema=h2o_configs.custom.CustomProjectConfig
+    "./config-TEMPLATE.toml", schema=configs.custom.CustomProjectConfig
 )
 cfg
 

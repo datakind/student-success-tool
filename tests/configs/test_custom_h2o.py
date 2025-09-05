@@ -7,7 +7,7 @@ import pydantic as pyd
 import pathlib
 import pytest
 
-from student_success_tool.configs.h2o_configs import custom
+from student_success_tool.configs import custom
 
 
 SRC_ROOT = (

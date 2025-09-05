@@ -3,7 +3,7 @@ from mlflow.tracking import MlflowClient
 
 # internal SST modules
 from ...modeling import h2o_modeling
-from ...configs.h2o_configs.pdp import PDPProjectConfig
+from ...configs.pdp import PDPProjectConfig
 from .base import ModelCard
 from ..sections.pdp import register_sections as register_pdp_sections
 from ..utils import utils

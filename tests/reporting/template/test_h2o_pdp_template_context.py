@@ -3,7 +3,7 @@ import pandas as pd
 import re
 from unittest.mock import patch
 from student_success_tool.reporting.model_card.h2o_pdp import H2OPDPModelCard
-from student_success_tool.configs.h2o_configs.pdp import PDPProjectConfig
+from student_success_tool.configs.pdp import PDPProjectConfig
 
 
 class DummyTrainingConfig:

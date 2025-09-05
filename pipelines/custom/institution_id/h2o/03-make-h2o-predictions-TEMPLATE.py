@@ -37,9 +37,8 @@ import mlflow
 import pandas as pd
 from databricks.connect import DatabricksSession
 
-from student_success_tool import dataio, modeling
+from student_success_tool import configs, dataio, modeling
 from student_success_tool.modeling import h2o_modeling
-from student_success_tool.configs import h2o_configs
 
 
 import h2o
@@ -83,7 +82,7 @@ mlflow.autolog(disable=True)
 
 # project configuration stored as a config file in TOML format
 cfg = dataio.read_config(
-    "./config-TEMPLATE.toml", schema=h2o_configs.custom.CustomProjectConfig
+    "./config-TEMPLATE.toml", schema=configs.custom.CustomProjectConfig
 )
 cfg
 

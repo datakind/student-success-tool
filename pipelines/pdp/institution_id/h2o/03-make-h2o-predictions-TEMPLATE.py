@@ -37,9 +37,8 @@ import mlflow
 import pandas as pd
 from databricks.connect import DatabricksSession
 
-from student_success_tool import dataio, modeling
+from student_success_tool import configs, dataio, modeling
 from student_success_tool.modeling import h2o_modeling
-from student_success_tool.configs import h2o_configs
 
 
 h2o_modeling.utils.safe_h2o_init()
@@ -72,7 +71,7 @@ mlflow.autolog(disable=True)
 # COMMAND ----------
 
 # project configuration should be stored in a config file in TOML format
-cfg = dataio.read_config("./config.toml", schema=h2o_configs.pdp.PDPProjectConfig)
+cfg = dataio.read_config("./config.toml", schema=configs.pdp.PDPProjectConfig)
 cfg
 
 # COMMAND ----------

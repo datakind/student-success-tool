@@ -7,6 +7,12 @@ import pydantic as pyd
 from ..preprocessing.features.pdp import constants
 from ..utils import types
 
+# allowed primary metrics by framework
+_ALLOWED_BY_FRAMEWORK = {
+    "sklearn": {"f1", "log_loss", "precision", "accuracy", "roc_auc"},
+    "h2o": {"logloss", "auc", "aucpr", "rmse", "mae", "mean_per_class_error"},
+}
+
 
 class PDPProjectConfig(pyd.BaseModel):
     """Configuration schema for SST PDP projects."""
@@ -82,6 +88,54 @@ class PDPProjectConfig(pyd.BaseModel):
     # NOTE: this is for *pydantic* model -- not ML model -- configuration
     model_config = pyd.ConfigDict(extra="forbid", strict=True)
 
+    @pyd.model_validator(mode="after")
+    def _normalize_and_validate_metric_using_framework(self) -> "PDPProjectConfig":
+        fw = "sklearn"
+        if self.model and self.model.framework:
+            fw = self.model.framework
+
+        if (
+            self.modeling
+            and self.modeling.training
+            and self.modeling.training.primary_metric
+        ):
+            pm = self.modeling.training.primary_metric
+            allowed = _ALLOWED_BY_FRAMEWORK.get(fw)
+            if not allowed:
+                raise ValueError(f"Unknown framework '{fw}' for metric normalization")
+
+            # choose framework-preferred spelling for log loss
+            if pm in {"logloss", "log_loss"}:
+                pm = "logloss" if fw == "h2o" else "log_loss"
+
+            # final gate
+            if pm not in allowed:
+                raise ValueError(
+                    f"Unsupported primary_metric '{pm}' for framework '{fw}'. "
+                    f"Allowed: {sorted(allowed)}"
+                )
+            self.modeling.training.primary_metric = pm
+        return self
+
+    @pyd.model_validator(mode="after")
+    def _validate_h2o_inference_background_sample(self) -> "PDPProjectConfig":
+        # Default to sklearn if framework is unset (keeps STANDARD behavior)
+        fw = "sklearn"
+        if self.model and self.model.framework:
+            fw = self.model.framework
+
+        # Only enforce for H2O
+        if fw != "h2o":
+            return self
+
+        if self.inference and self.inference.background_data_sample is not None:
+            n = self.inference.background_data_sample
+            if not (500 <= n <= 2000):
+                raise ValueError(
+                    "For H2O, inference.background_data_sample must be between 500 and 2000."
+                )
+        return self
+
 
 class BronzeDatasetConfig(pyd.BaseModel):
     raw_course: "DatasetIOConfig"
@@ -128,7 +182,7 @@ class DatasetIOConfig(pyd.BaseModel):
 class ModelConfig(pyd.BaseModel):
     experiment_id: str
     run_id: str
-    framework: t.Optional[t.Literal["sklearn", "xgboost", "lightgbm"]] = None
+    framework: t.Literal["sklearn", "h2o"] = "sklearn"
 
     @pyd.computed_field  # type: ignore[misc]
     @property
@@ -402,4 +456,4 @@ class EvaluationConfig(pyd.BaseModel):
 class InferenceConfig(pyd.BaseModel):
     num_top_features: int = pyd.Field(default=5)
     min_prob_pos_label: t.Optional[float] = 0.5
-    # TODO: extend this configuration, maybe?
+    background_data_sample: t.Optional[int] = 500

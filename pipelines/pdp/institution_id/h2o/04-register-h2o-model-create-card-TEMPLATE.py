@@ -30,9 +30,8 @@ import mlflow
 import logging
 from databricks.connect import DatabricksSession
 
-from student_success_tool import dataio, modeling
+from student_success_tool import configs, dataio, modeling
 from student_success_tool.modeling import h2o_modeling
-from student_success_tool.configs import h2o_configs
 from student_success_tool.reporting.model_card.h2o_pdp import H2OPDPModelCard
 
 h2o_modeling.utils.safe_h2o_init()
@@ -71,9 +70,7 @@ os.environ["MLFLOW_ENABLE_ARTIFACTS_PROGRESS_BAR"] = "false"
 # it'll start out with just basic info: institution_id, institution_name
 # but as each step of the pipeline gets built, more parameters will be moved
 # from hard-coded notebook variables to shareable, persistent config fields
-cfg = dataio.read_config(
-    "./config-TEMPLATE.toml", schema=h2o_configs.pdp.PDPProjectConfig
-)
+cfg = dataio.read_config("./config-TEMPLATE.toml", schema=configs.pdp.PDPProjectConfig)
 cfg
 
 # COMMAND ----------
