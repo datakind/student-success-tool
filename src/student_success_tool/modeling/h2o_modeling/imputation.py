@@ -15,6 +15,7 @@ from pandas.api.types import (
     is_numeric_dtype,
     is_bool_dtype,
     is_categorical_dtype,
+    is_string_dtype,
     is_integer_dtype,
     is_object_dtype,
     pandas_dtype,
@@ -52,13 +53,15 @@ class SklearnImputerWrapper:
         Returns:
             The fitted scikit-learn `Pipeline` instance.
         """
-        # Normalize all missing values to np.nan (handles None, pd.NA, np.nan)
-        df = df.replace({None: np.nan})
-        df = df.mask(df.isna(), np.nan)
-
+        # record originals before coercion so we can cast back in transform()
         self.input_dtypes = df.dtypes.to_dict()
         self.input_feature_names = df.columns.tolist()
 
+        # normalize & coerce for sklearn
+        df = self._normalize_missing(df)
+        df = self._coerce_extension_types_for_sklearn(df)
+
+        # add flags after normalization/coercion (flags have no NA)
         df = self._add_missingness_flags(df)
         self.missing_flag_cols = [c for c in df.columns if c.endswith("_missing_flag")]
 
@@ -94,8 +97,10 @@ class SklearnImputerWrapper:
         )
 
         orig_index = df.index  # Lock in row order
-        df = df.replace({None: np.nan})
         df_original = df.copy()
+
+        df = self._normalize_missing(df)
+        df = self._coerce_extension_types_for_sklearn(df)
 
         # Compute extra columns (e.g. student_id_col) before subsetting so we can reattach later
         raw_features = list(self.input_feature_names or [])
@@ -446,3 +451,52 @@ class SklearnImputerWrapper:
         if instance.output_feature_names is not None:
             instance.validate(transformed[instance.output_feature_names])
         return transformed
+
+    def _coerce_extension_types_for_sklearn(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Make all columns sklearn-safe (no pd.NA makes it into object arrays).
+        - boolean/BooleanDtype  -> float64 (1.0/0.0/np.nan)
+        - nullable integers      -> float64 with np.nan
+        - pandas string dtype    -> object with np.nan
+        - pandas Float64Dtype    -> float64 (plain numpy)
+        - categories             -> object with np.nan
+        """
+        df = df.copy()
+        for col in df.columns:
+            dt = df[col].dtype
+
+            # 1) Booleans -> float64
+            if is_bool_dtype(dt):
+                df[col] = df[col].astype("float64")
+                continue
+
+            # 2) Nullable ints -> float64
+            if is_integer_dtype(dt) and str(dt).startswith(("Int", "UInt")):
+                df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
+                continue
+
+            # 3) Pandas Float64Dtype -> float64 (plain)
+            if str(dt) == "Float64":
+                df[col] = df[col].astype("float64")
+                continue
+
+            # 4) Pandas StringDtype -> object (ensure np.nan, not <NA>)
+            if is_string_dtype(dt) or str(dt).startswith("string"):
+                s = df[col].astype("object")
+                df[col] = s.where(~pd.isna(s), np.nan)
+                continue
+
+            # 5) Categoricals -> object (ensure np.nan)
+            if is_categorical_dtype(dt):
+                s = df[col].astype("object")
+                df[col] = s.where(~pd.isna(s), np.nan)
+                continue
+
+            # Others (float64, float32, plain object already w/ np.nan) are fine.
+        return df
+
+    def _normalize_missing(self, df: pd.DataFrame) -> pd.DataFrame:
+        # Convert any logical missing to np.nan without comparing to pd.NA
+        df = df.replace({None: np.nan})
+        df = df.mask(df.isna(), np.nan)
+        return df

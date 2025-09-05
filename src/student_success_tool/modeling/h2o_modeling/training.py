@@ -161,7 +161,12 @@ def run_h2o_automl_classification(
     LOGGER.info(
         "H2O AutoML config -> training_rows=%d, nfolds=%d, "
         "metric=%s, stopping_tolerance=%.1e, stopping_rounds=%d, include_algos=%s",
-        n_rows, nfolds, metric, stopping_tolerance, stopping_rounds, ",".join(frameworks)
+        n_rows,
+        nfolds,
+        metric,
+        stopping_tolerance,
+        stopping_rounds,
+        ",".join(frameworks),
     )
 
     aml = H2OAutoML(
