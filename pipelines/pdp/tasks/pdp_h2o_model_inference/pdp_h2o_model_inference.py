@@ -15,25 +15,28 @@ This is a POC script, it is advised to review and tests before using in producti
 import logging
 import os
 import argparse
-from joblib import Parallel, delayed
-from typing import List, Optional
+import typing as t
 import sys
 import importlib
 
 import mlflow
 import numpy as np
 import pandas as pd
-import shap
 from databricks.connect import DatabricksSession
 from databricks.sdk import WorkspaceClient
 from email.headerregistry import Address
 import numpy.typing as npt
 
+
 # Import project-specific modules
 import student_success_tool.dataio as dataio
 from student_success_tool.modeling import inference
-from student_success_tool.configs.pdp import PDPProjectConfig
-from student_success_tool.modeling.evaluation import plot_shap_beeswarm
+from student_success_tool.modeling.h2o_modeling import utils as h2o_utils
+from student_success_tool.modeling.h2o_modeling import inference as h2o_inference
+from student_success_tool.modeling.h2o_modeling import evaluation as h2o_evaluation
+from student_success_tool.modeling.h2o_modeling import imputation as h2o_imputation
+from student_success_tool.configs.h2o_configs.pdp import PDPProjectConfig
+
 from student_success_tool.utils import emails
 from mlflow.tracking import MlflowClient
 
@@ -81,46 +84,52 @@ class ModelInferenceTask:
             raise
 
     def load_mlflow_model(self):
-        """Loads the MLflow model."""
         client = MlflowClient(registry_uri="databricks-uc")
         full_model_name = f"{self.args.DB_workspace}.{self.args.databricks_institution_name}_gold.{self.args.model_name}"
 
-        # List all versions of the model
-        all_versions = client.search_model_versions(f"name='{full_model_name}'")
-
-        # Sort by version number and create uri for latest model
-        latest_version = max(all_versions, key=lambda v: int(v.version))
-        model_uri = f"models:/{full_model_name}/{latest_version.version}"
-
         try:
-            load_model_func = {
-                "sklearn": mlflow.sklearn.load_model,
-                "xgboost": mlflow.xgboost.load_model,
-                "lightgbm": mlflow.lightgbm.load_model,
-                "pyfunc": mlflow.pyfunc.load_model,  # Default
-            }.get(self.args.model_type, mlflow.pyfunc.load_model)
-            model = load_model_func(model_uri)
+            # Choose max version and grab associated model run id
+            mv = max(
+                client.search_model_versions(f"name='{full_model_name}'"),
+                key=lambda v: int(v.version),
+            )
+            self.model_run_id = mv.run_id
+
+            # Look up the run details and assign the experiment id
+            run = client.get_run(self.model_run_id)
+            self.model_experiment_id = run.info.experiment_id
+
+            # Load h2o model
+            model = h2o_utils.load_h2o_model(run_id=self.model_run_id)
+
             logging.info(
-                "MLflow '%s' model loaded from '%s'", self.args.model_type, model_uri
+                "Loaded H2O model from run_id=%s (version=%s)",
+                self.model_run_id,
+                mv.version,
             )
             return model
         except Exception as e:
-            logging.error("Error loading MLflow model: %s", e)
-            raise  # Critical error; re-raise to halt execution
+            logging.error("Error loading MLflow model via run_id: %s", e)
+            raise
 
-    def predict(self, model, df: pd.DataFrame) -> pd.DataFrame:
+    def predict(
+        self, model, df: pd.DataFrame, model_feature_names: t.List
+    ) -> pd.DataFrame:
         """Performs inference and adds predictions to the DataFrame."""
-        try:
-            model_feature_names = model.named_steps["column_selector"].get_params()[
-                "cols"
-            ]
-        except AttributeError:
-            model_feature_names = model.metadata.get_input_schema().input_names()
-        df_serving = df[model_feature_names]
-        df_predicted = df_serving.copy()
-        df_predicted["predicted_label"] = model.predict(df_serving)
-        df_predicted["predicted_prob"] = model.predict_proba(df_serving)[:, 1]
-        return df_predicted
+
+        # Convert to h2o frame and run prediction
+        df_predicted = df.copy()
+        labels, probs = h2o_inference.predict_h2o(
+            df_predicted,
+            model=model,
+            feature_names=model_feature_names,
+            pos_label=self.cfg.pos_label,
+        )
+
+        return df_predicted.assign(
+            predicted_prob=probs,
+            predicted_label=labels,
+        )
 
     def write_data_to_delta(self, df: pd.DataFrame, table_name_suffix: str):
         """Writes a DataFrame to a Delta Lake table."""
@@ -138,135 +147,52 @@ class ModelInferenceTask:
             )
             raise
 
-    @staticmethod
-    def predict_proba(
-        X: pd.DataFrame,
-        model,
-        feature_names: Optional[List[str]] = None,
-        pos_label: Optional[bool | str] = None,
-    ) -> np.ndarray:
-        """Predicts probabilities using the provided model.  Handles data prep."""
-
-        if feature_names is None:
-            feature_names = model.named_steps["column_selector"].get_params()["cols"]
-        if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(data=X, columns=feature_names)
-        pred_probs = model.predict_proba(X)
-        if pos_label is not None:
-            return pred_probs[:, model.classes_.tolist().index(pos_label)]
-        else:
-            return pred_probs
-
-    def parallel_explanations(
-        self,
-        model,
-        df_features: pd.DataFrame,
-        explainer: shap.Explainer,
-        model_feature_names: List[str],
-        n_jobs: Optional[int] = -1,
-    ) -> shap.Explanation:
-        """
-        Calculates SHAP explanations in parallel using joblib.
-
-        Args:
-            model: mlflow.pyfunc.PyFuncModel.
-            df_features pd.DataFrame: The feature dataset to calculate SHAP values for.
-            explainer (shap.Explainer): The SHAP explainer object.
-            model_feature_names (List[str]): List of feature names corresponding to the columns in `df_features`.
-            n_jobs (Optional[int]): The number of jobs to run in parallel. Defaults to -1 (use all available CPUs).
-
-        Returns:
-            shap.Explanation: The combined SHAP explanation object.
-        """
-
-        logging.info("Calculating SHAP values for %s records", len(df_features))
-
-        chunk_size = 10
-        chuncks_count = max(1, len(df_features) // chunk_size)
-        chunks = np.array_split(df_features, chuncks_count)
-
-        results = Parallel(n_jobs=n_jobs)(
-            delayed(lambda model, chunk, explainer: explainer(chunk))(
-                model, chunk, explainer
-            )
-            for chunk in chunks
-        )
-
-        combined_values = np.concatenate([r.values for r in results], axis=0)
-        combined_data = np.concatenate([r.data for r in results], axis=0)
-        combined_explanation = shap.Explanation(
-            values=combined_values,
-            data=combined_data,
-            feature_names=model_feature_names,
-        )
-        return combined_explanation
-
     def calculate_shap_values(
         self,
         model,
         df_processed: pd.DataFrame,
-        model_feature_names: list[str],
     ) -> pd.DataFrame | None:
         """Calculates SHAP values."""
 
         try:
-            # --- SHAP Values Calculation ---
-            # TODO: Consider saving the explainer during training.
-            shap_ref_data_size = 100  # Consider getting from config.
-
-            df_train = dataio.from_delta_table(
-                self.args.modeling_table_path, spark_session=self.spark_session
-            )
-            train_mode = df_train.mode().iloc[0]  # Use .iloc[0] for single row
-            df_ref = (
-                df_train.sample(
-                    n=min(shap_ref_data_size, df_train.shape[0]),
-                    random_state=self.cfg.random_state,
-                )
-                .fillna(train_mode)
-                .loc[:, model_feature_names]
-            )
-            logging.info(
-                f"Object dtype columns: {df_ref.select_dtypes(include=['object']).columns.tolist()}"
+            # Load and preprocess training data
+            df_train = h2o_evaluation.extract_training_data_from_model(
+                automl_experiment_id=self.model_experiment_id,
             )
 
-            ref_dtypes = df_ref.dtypes.apply(lambda dt: dt.name).to_dict()
+            train_features = self.sklearn_imputer.transform(df=df_train)
 
-            explainer = shap.explainers.KernelExplainer(
-                lambda x: self.predict_proba(
-                    pd.DataFrame(x, columns=model_feature_names).astype(ref_dtypes),
-                    model=model,
-                    feature_names=model_feature_names,
-                    pos_label=self.cfg.pos_label,
-                ),
-                df_ref.astype(ref_dtypes),
-                link="identity",
+            # Sample background data for performance optimization
+            bd = train_features.sample(
+                n=min(self.cfg.inference.background_data_sample, len(df_processed)),
+                random_state=self.cfg.random_state,
             )
 
-            shap_values_explanation = self.parallel_explanations(
+            contribs_df = h2o_inference.compute_h2o_shap_contributions(
                 model=model,
-                df_features=df_processed[model_feature_names],
-                explainer=explainer,
-                model_feature_names=model_feature_names,
-                n_jobs=1,
+                df=df_processed,
+                background_data=bd,
             )
-
-            return shap_values_explanation
+            return contribs_df
         except Exception as e:
             logging.error("Error during SHAP value calculation: %s", e)
             raise
 
     def top_n_features(
         self,
-        features: pd.DataFrame,
+        grouped_features: pd.DataFrame,
         unique_ids: pd.Series,
-        shap_values: npt.NDArray[np.float64],
+        grouped_shap_values: npt.NDArray[np.float64],
         n: int = 10,
     ) -> pd.DataFrame:
         features_table = dataio.read_features_table("assets/pdp/features_table.toml")
         try:
             top_n_shap_features = inference.top_shap_features(
-                features, unique_ids, shap_values, n, features_table=features_table
+                grouped_features,
+                unique_ids,
+                grouped_shap_values,
+                n,
+                features_table=features_table,
             )
             return top_n_shap_features
 
@@ -274,26 +200,12 @@ class ModelInferenceTask:
             logging.error("Error computing top %d shap features table: %s", n, e)
             return None
 
-    def features_box_whiskers_table(
-        self,
-        features: pd.DataFrame,
-        shap_values: npt.NDArray[np.float64],
-    ) -> pd.DataFrame:
-        features_table = dataio.read_features_table("assets/pdp/features_table.toml")
-        try:
-            feature_boxstats = inference.top_feature_boxstats(
-                features=features,
-                shap_values=shap_values,
-                features_table=features_table,
-            )
-            return feature_boxstats
-
-        except Exception as e:
-            logging.error("Error computing box features %d shap features table: %s", e)
-            return None
-
     def support_score_distribution(
-        self, df_serving, unique_ids, df_predicted, shap_values
+        self,
+        grouped_features,
+        unique_ids,
+        df_predicted,
+        grouped_shap_values,
     ):
         """
         Selects top features to display and store
@@ -312,16 +224,15 @@ class ModelInferenceTask:
             "num_top_features": 5,
             "min_prob_pos_label": 0.5,
         }
-
         pred_probs = df_predicted["predicted_prob"]
-        # --- Feature Selection for Display ---
 
+        # --- Feature Selection for Display ---
         try:
             result = inference.support_score_distribution_table(
-                df_serving,
-                unique_ids,
-                pred_probs,
-                shap_values,
+                df_serving=grouped_features,
+                unique_ids=unique_ids,
+                pred_probs=pred_probs,
+                shap_values=grouped_shap_values,
                 inference_params=inference_params,
                 features_table=features_table,
             )
@@ -332,7 +243,7 @@ class ModelInferenceTask:
             logging.error("Error computing support score distribution table: %s", e)
             return None
 
-    def inference_shap_feature_importance(self, df_serving, shap_values):
+    def inference_shap_feature_importance(self, grouped_features, grouped_shap_values):
         """
         Selects top important features to display and store
         """
@@ -343,13 +254,17 @@ class ModelInferenceTask:
             return None
         features_table = dataio.read_features_table("assets/pdp/features_table.toml")
         shap_feature_importance = inference.generate_ranked_feature_table(
-            df_serving, shap_values.values, features_table
+            grouped_features, grouped_shap_values.values, features_table
         )
 
         return shap_feature_importance
 
     def get_top_features_for_display(
-        self, df_serving, unique_ids, df_predicted, shap_values, model_feature_names
+        self,
+        grouped_features,
+        unique_ids,
+        df_predicted,
+        grouped_shap_values,
     ):
         """
         Selects top features to display and store
@@ -363,23 +278,16 @@ class ModelInferenceTask:
         # --- Load features table ---
         features_table = dataio.read_features_table("assets/pdp/features_table.toml")
 
-        # --- Inference Parameters ---
-        inference_params = {
-            "num_top_features": 5,
-            "min_prob_pos_label": 0.5,
-        }
-
-        pred_probs = df_predicted["predicted_prob"]
         # --- Feature Selection for Display ---
         try:
             result = inference.select_top_features_for_display(
-                df_serving,
+                grouped_features,
                 unique_ids,
-                pred_probs,
-                shap_values.values,
-                n_features=inference_params["num_top_features"],
+                df_predicted["predicted_prob"],
+                grouped_shap_values.values,
+                n_features=self.cfg.inference.num_top_features,
                 features_table=features_table,
-                needs_support_threshold_prob=inference_params["min_prob_pos_label"],
+                needs_support_threshold_prob=self.cfg.inference.min_prob_pos_label,
             )
             return result
 
@@ -392,16 +300,21 @@ class ModelInferenceTask:
         df_processed = dataio.from_delta_table(
             self.args.processed_dataset_path, spark_session=self.spark_session
         )
-        # df_processed = df_processed[:30] # this is to subset for testing since shap takes forever, turn off for production
-        unique_ids = df_processed[self.cfg.student_id_col]
-
         model = self.load_mlflow_model()
-        model_feature_names = model.named_steps["column_selector"].get_params()["cols"]
+
+        # Load and transform using sklearn imputer
+        self.sklearn_imputer = h2o_imputation.SklearnImputerWrapper.load(
+            run_id=self.model_run_id,
+        )
+        df_processed = self.sklearn_imputer.transform(df=df_processed)
+
+        model_feature_names = h2o_inference.get_h2o_used_features(model)
+        df_features = df_processed.loc[:, model_feature_names]
+        unique_ids = df_processed[self.cfg.student_id_col]
 
         # --- Email notify users ---
         # Uncomment below once we want to enable CC'ing to DK's email.
         # Secrets from Databricks
-        # comment for testing blah
         w = WorkspaceClient()
         MANDRILL_USERNAME = w.dbutils.secrets.get(scope="sst", key="MANDRILL_USERNAME")
         MANDRILL_PASSWORD = w.dbutils.secrets.get(scope="sst", key="MANDRILL_PASSWORD")
@@ -414,12 +327,15 @@ class ModelInferenceTask:
             MANDRILL_PASSWORD,
         )
 
-        df_predicted = self.predict(model, df_processed)
+        df_predicted = self.predict(
+            model=model, df=df_features, model_feature_names=model_feature_names
+        )
         self.write_data_to_delta(df_predicted, "predicted_dataset")
 
         # --- SHAP Values Calculation ---
         shap_values = self.calculate_shap_values(
-            model, df_processed, model_feature_names
+            model=model,
+            df_processed=df_features,
         )
 
         if shap_values is not None:  # Proceed only if SHAP values were calculated
@@ -427,24 +343,17 @@ class ModelInferenceTask:
             logging.info(
                 f"now cfg.model.experiment_id = {self.cfg.model.experiment_id}"
             )
+
+            # Group shap values and features by base name
+            grouped_shap_values = h2o_inference.group_shap_values(shap_values)
+            grouped_features = h2o_inference.group_feature_values(df_features)
+
             with mlflow.start_run(run_id=self.cfg.model.run_id):
-                # --- SHAP Summary Plot ---
-                shap_fig = plot_shap_beeswarm(shap_values)
+                # full_model_name = f"{self.args.DB_workspace}.{self.args.databricks_institution_name}_gold.{self.args.model_name}"
 
                 # Inference_features_with_most_impact TABLE
                 inference_features_with_most_impact = self.top_n_features(
-                    df_processed[model_feature_names], unique_ids, shap_values.values
-                )
-                support_scores = pd.DataFrame(
-                    {
-                        "student_id": unique_ids.values,  # From the original df_test
-                        "support_score": df_predicted["predicted_prob"].values,
-                    }
-                )
-                inference_features_with_most_impact = (
-                    inference_features_with_most_impact.merge(
-                        support_scores, on="student_id", how="left"
-                    )
+                    grouped_features, unique_ids, grouped_shap_values
                 )
                 support_scores = pd.DataFrame(
                     {
@@ -465,21 +374,15 @@ class ModelInferenceTask:
                 )
                 # shap_feature_importance TABLE
                 shap_feature_importance = self.inference_shap_feature_importance(
-                    df_processed[model_feature_names], shap_values
+                    grouped_features, grouped_shap_values
                 )
                 # # support_overview TABLE
                 support_overview_table = self.support_score_distribution(
-                    df_processed[model_feature_names],
+                    grouped_features,
                     unique_ids,
                     df_predicted,
-                    shap_values,
+                    grouped_shap_values,
                 )
-
-                box_whiskers_table = self.features_box_whiskers_table(
-                    features=df_processed[model_feature_names],
-                    shap_values=shap_values.values,
-                )
-
                 if inference_features_with_most_impact is None:
                     msg = "Inference features with most impact is empty: cannot write inference summary tables."
                     logging.error(msg)
@@ -492,39 +395,25 @@ class ModelInferenceTask:
                     msg = "Support overview table is empty: cannot write inference summary tables."
                     logging.error(msg)
                     raise Exception(msg)
-                if box_whiskers_table is None:
-                    msg = "Box plot table is empty: cannot write inference summary tables."
-                    logging.error(msg)
-                    raise Exception(msg)
-
                 self.write_data_to_delta(
                     inference_features_with_most_impact,
-                    f"inference_{self.args.db_run_id}_features_with_most_impact",
+                    f"inference_{self.cfg.model.run_id}_features_with_most_impact",
                 )
                 self.write_data_to_delta(
                     shap_feature_importance,
-                    f"inference_{self.args.db_run_id}_shap_feature_importance",
+                    f"inference_{self.cfg.model.run_id}_shap_feature_importance",
                 )
                 self.write_data_to_delta(
                     support_overview_table,
-                    f"inference_{self.args.db_run_id}_support_overview",
-                )
-                self.write_data_to_delta(
-                    box_whiskers_table,
-                    f"inference_{self.cfg.model.run_id}_box_plot_table",
-                )
-                self.write_data_to_delta(
-                    box_whiskers_table,
-                    f"inference_{self.cfg.model.run_id}_box_plot_table",
+                    f"inference_{self.cfg.model.run_id}_support_overview",
                 )
 
                 # Shap Result Table
                 shap_results = self.get_top_features_for_display(
-                    df_processed[model_feature_names],
+                    grouped_features,
                     unique_ids,
                     df_predicted,
-                    shap_values,
-                    model_feature_names,
+                    grouped_shap_values,
                 )
 
                 # --- Save Results to ext/ folder in Gold volume. ---
@@ -543,10 +432,6 @@ class ModelInferenceTask:
                     spark_df.coalesce(1).write.format("csv").option(
                         "header", "true"
                     ).mode("overwrite").save(result_path + "inference_output")
-                    # Write the SHAP chart png to the volume
-                    shap_fig.savefig(
-                        result_path + "shap_chart.png", bbox_inches="tight"
-                    )
                 else:
                     logging.error(
                         "Empty Shap results, cannot create the SHAP chart and table"

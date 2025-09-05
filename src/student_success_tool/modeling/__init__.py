@@ -6,4 +6,5 @@ from . import (
     registration,
     training,
     utils,
+    h2o_modeling,
 )

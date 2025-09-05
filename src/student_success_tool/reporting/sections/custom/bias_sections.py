@@ -26,6 +26,8 @@ def resolve_student_group_label(card, group_key):
 
 def register_bias_sections(card, registry):
     # Register base sections
+    LOGGER.info("Starting custom bias section creation")
+
     base_bias_sections.register_bias_sections(card, registry)
 
     bias_levels = ["high", "moderate", "low"]

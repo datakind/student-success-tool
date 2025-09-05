@@ -2,9 +2,15 @@ from .. import (
     bias_sections as base_bias_sections,
 )
 
+import logging
+
+LOGGER = logging.getLogger(__name__)
+
 
 def register_bias_sections(card, registry):
     base_bias_sections.register_bias_sections(card, registry)
+
+    LOGGER.info("Starting custom attribute section creation")
 
     @registry.register("bias_groups_section")
     def bias_groups_section():

@@ -10,6 +10,7 @@ def register_attribute_sections(card, registry):
     checkpoint, and target population. All of this information is gathered from the model's
     config.toml file.
     """
+    LOGGER.info("Starting custom attribute section creation")
 
     @registry.register("development_note_section")
     def development_note():

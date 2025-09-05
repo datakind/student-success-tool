@@ -1,8 +1,14 @@
+import logging
+
+LOGGER = logging.getLogger(__name__)
+
+
 def register_metric_sections(card, registry):
     """
     Registers metric sections for a model, specifically the training metric and sample weights.
     If sample weights are not used, then that particular section is skipped.
     """
+    LOGGER.info("Starting metric section creation")
 
     @registry.register("primary_metric_section")
     def primary_metric():

@@ -13,6 +13,8 @@ def register_evaluation_sections(card, registry):
     We assume all necessary formatting in terms of rows and columns of the table is done in the
     mlflow artifact.
     """
+    LOGGER.info("Starting custom evaluation section creation")
+
     performance_section = [f"{card.format.header_level(4)}Model Performance\n"]
     split_artifacts = utils.list_paths_in_directory(
         run_id=card.run_id, directory="metrics"

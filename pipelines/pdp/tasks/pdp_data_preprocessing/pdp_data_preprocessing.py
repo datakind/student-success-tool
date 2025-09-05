@@ -18,6 +18,7 @@ import mlflow
 import pandas as pd
 import sys
 import importlib
+import tomllib
 
 from databricks.connect import DatabricksSession
 from databricks.sdk.runtime import dbutils
@@ -51,6 +52,9 @@ class DataProcessingTask:
         self.spark_session = self.get_spark_session()
         self.args = args
         self.cfg = self.read_config(self.args.toml_file_path)
+        # hack - remove when we move this to the main config
+        with open(self.args.inference_toml_file_path, "rb") as f:
+            self.inf_cfg = tomllib.load(f)
 
     def get_spark_session(self) -> DatabricksSession | None:
         """
@@ -111,6 +115,58 @@ class DataProcessingTask:
             logging.error("Spark session not initialized. Cannot read delta tables.")
             raise
 
+    def select_inference_cohort(
+        self, df_course: pd.DataFrame, df_cohort: pd.DataFrame
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """
+        Selects the specified cohorts from the course and cohort DataFrames.
+
+        Args:
+            df_course: The course DataFrame.
+            df_cohort: The cohort DataFrame.
+            cohorts_list: List of cohorts to select (e.g., ["fall 2023", "spring 2024"]).
+
+        Returns:
+            A tuple containing the filtered course and cohort DataFrames.
+
+        Raises:
+            ValueError: If filtering results in empty DataFrames.
+        """
+        # change to main config when its updated
+        cohorts_list = self.inf_cfg["inference_cohort"]
+
+        # We only have cohort and cohort term split up, so combine and strip to lower to prevent cap issues
+        df_course["cohort_selection"] = (
+            df_course["cohort_term"].astype(str).str.lower()
+            + " "
+            + df_course["cohort"].astype(str).str.lower()
+        )
+        df_cohort["cohort_selection"] = (
+            df_cohort["cohort_term"].astype(str).str.lower()
+            + " "
+            + df_cohort["cohort"].astype(str).str.lower()
+        )
+
+        # Subset both datsets to only these cohorts
+        df_course_filtered = df_course[df_course["cohort_selection"].isin(cohorts_list)]
+        df_cohort_filtered = df_cohort[df_cohort["cohort_selection"].isin(cohorts_list)]
+
+        # Log confirmation we are selecting the correct cohorts
+        logging.info("Selected cohorts: %s", cohorts_list)
+
+        # Throw error if either dataset is empty after filtering
+        if df_course_filtered.empty or df_cohort_filtered.empty:
+            logging.error("Selected cohorts resulted in empty DataFrames.")
+            raise ValueError("Selected cohorts resulted in empty DataFrames.")
+
+        logging.info(
+            "Cohort selection completed. Course shape: %s, Cohort shape: %s",
+            df_course_filtered.shape,
+            df_cohort_filtered.shape,
+        )
+
+        return df_course_filtered, df_cohort_filtered
+
     def preprocess_data(
         self, df_course: pd.DataFrame, df_cohort: pd.DataFrame
     ) -> pd.DataFrame:
@@ -132,6 +188,10 @@ class DataProcessingTask:
         # Read preprocessing target parameters from config
         student_criteria = self.cfg.preprocessing.selection.student_criteria
         student_id_col = self.cfg.student_id_col
+
+        # Select correct cohort
+
+        df_course, df_cohort = self.select_inference_cohort(df_course, df_cohort)
 
         # Create student-term dataset
         df_student_terms = preprocessing.pdp.make_student_term_dataset(
@@ -158,12 +218,49 @@ class DataProcessingTask:
                 enrollment_year_col="year_of_enrollment_at_cohort_inst",
                 valid_enrollment_year=1,
             )
+        elif checkpoint_type == "first":
+            logging.info("Checkpoint type: first")
+            df_ckpt = checkpoints.pdp.first_student_terms(
+                df=df_student_terms,
+                student_id_cols=student_id_col,
+                sort_cols=self.cfg.preprocessing.checkpoint.sort_cols,
+                include_cols=self.cfg.preprocessing.checkpoint.include_cols,
+            )
+        elif checkpoint_type == "last":
+            logging.info("Checkpoint type: last")
+            df_ckpt = checkpoints.pdp.last_student_terms_in_enrollment_year(
+                df_student_terms,
+                enrollment_year=self.cfg.preprocessing.checkpoint.enrollment_year,
+                enrollment_year_col=self.cfg.preprocessing.checkpoint.enrollment_year_col,
+                student_id_cols=student_id_col,
+                sort_cols=self.cfg.preprocessing.checkpoint.sort_cols,
+                include_cols=self.cfg.preprocessing.checkpoint.include_cols,
+            )
         elif checkpoint_type == "first_at_num_credits_earned":
             logging.info("Checkpoint type: first_at_num_credits_earned")
             df_ckpt = checkpoints.pdp.first_student_terms_at_num_credits_earned(
                 df_student_terms,
                 min_num_credits=self.cfg.preprocessing.checkpoint.min_num_credits,
             )
+
+        elif checkpoint_type == "first_within_cohort":
+            logging.info("Checkpoint type: first_within_cohort")
+            df_ckpt = checkpoints.pdp.first_student_terms_within_cohort(
+                df_student_terms,
+                term_is_pre_cohort_col=self.cfg.preprocessing.checkpoint.term_is_pre_cohort_col,
+                student_id_cols=student_id_col,
+            )
+        elif checkpoint_type == "last_in_enrollment_year":
+            logging.info("Checkpoint type: last_in_enrollment_year")
+            df_ckpt = checkpoints.pdp.last_student_terms_in_enrollment_year(
+                df_student_terms,
+                enrollment_year=self.cfg.preprocessing.checkpoint.enrollment_year,
+                enrollment_year_col=self.cfg.preprocessing.checkpoint.enrollment_year_col,
+                student_id_cols=student_id_col,
+            )
+        else:
+            logging.error("Unknown checkpoint type: %s", checkpoint_type)
+            raise ValueError(f"Unknown checkpoint type: {checkpoint_type}")
 
         df_processed = pd.merge(
             df_ckpt, pd.Series(selected_students.index), how="inner", on=student_id_col
@@ -254,6 +351,12 @@ def parse_arguments() -> argparse.Namespace:
         "--toml_file_path", type=str, required=True, help="Path to configuration file"
     )
     parser.add_argument(
+        "--inference_toml_file_path",
+        type=str,
+        required=True,
+        help="Path to configuration file",
+    )
+    parser.add_argument(
         "--custom_schemas_path",
         required=False,
         help="Folder path to store custom schemas folders",
@@ -263,13 +366,13 @@ def parse_arguments() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_arguments()
+
     try:
         sys.path.append(args.custom_schemas_path)
         sys.path.append(
             f"/Volumes/staging_sst_01/{args.databricks_institution_name}_gold/gold_volume/inference_inputs"
         )
         schemas = importlib.import_module("schemas")
-        # schemas = importlib.import_module(f"{args.databricks_institution_name}.schemas")
         logging.info("Running task with custom schema")
     except Exception:
         from student_success_tool.dataio.schemas import pdp as schemas

@@ -61,7 +61,7 @@ def make_mock_frame(columns):
 @mock.patch("student_success_tool.modeling.h2o_modeling.utils.log_h2o_experiment")
 @mock.patch("student_success_tool.modeling.h2o_modeling.training.H2OAutoML")
 @mock.patch("student_success_tool.modeling.h2o_modeling.training.h2o.H2OFrame")
-@mock.patch("student_success_tool.modeling.h2o_modeling.training.correct_h2o_dtypes")
+@mock.patch("student_success_tool.modeling.h2o_modeling.utils._to_h2o")
 @mock.patch(
     "student_success_tool.modeling.h2o_modeling.training.imputation.SklearnImputerWrapper"
 )

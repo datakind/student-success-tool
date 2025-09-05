@@ -92,6 +92,14 @@ class SklearnImputerWrapper:
 
         orig_index = df.index  # Lock in row order
         df = df.replace({None: np.nan})
+        df_original = df.copy()
+
+        # Compute extra columns (e.g. student_id_col) before subsetting so we can reattach later
+        raw_features = list(self.input_feature_names or [])
+        missing = set(raw_features) - set(df.columns)
+        if missing:
+            raise ValueError(f"Missing required input features: {missing}")
+        extra_cols = [c for c in df_original.columns if c not in raw_features]
 
         # Filter/reorder to match training-time input
         if self.input_feature_names is not None:
@@ -157,7 +165,15 @@ class SklearnImputerWrapper:
             if col in result.columns:
                 result[col] = pd.Series(result[col]).astype("boolean")
 
-        self.validate(result)
+        # Reattach extras (avoid name collisions with imputed output)
+        extra_cols = [c for c in extra_cols if c not in result.columns]
+        if extra_cols:
+            result = pd.concat(
+                [result, df_original.loc[orig_index, extra_cols]], axis=1
+            )
+
+        # Validate only the imputed columns
+        self.validate(result[self.output_feature_names])
         return result
 
     def _build_pipeline(self, df: pd.DataFrame) -> Pipeline:
@@ -187,7 +203,7 @@ class SklearnImputerWrapper:
 
             # 1) All NaNs -> constant fill
             if n_obs == 0:
-                if is_bool_dtype(s):
+                if is_bool_dtype(s.dtype):
                     imputer = SimpleImputer(strategy="constant", fill_value=False)
                 elif is_numeric_dtype(s):
                     fill_val = 0 if is_integer_dtype(s) else 0.0
@@ -203,7 +219,7 @@ class SklearnImputerWrapper:
                 continue
 
             # 3) Some NaNs -> choose strategy by dtype (check skew for numerics)
-            if is_bool_dtype(s):
+            if is_bool_dtype(s.dtype):
                 strategy = "most_frequent"
             elif is_numeric_dtype(s):
                 skew = skew_vals.get(col, 0)
@@ -317,7 +333,7 @@ class SklearnImputerWrapper:
         df = df.copy()
         for col in df.columns:
             if df[col].isnull().any():
-                df[f"{col}_missing_flag"] = df[col].isnull()
+                df[f"{col}_missing_flag"] = df[col].isnull().astype(bool)
         return df
 
     @classmethod
@@ -423,15 +439,7 @@ class SklearnImputerWrapper:
             Imputed DataFrame with same index as input.
         """
         instance = cls.load(run_id=run_id, artifact_path=artifact_path)
-
-        # Filter and/or reorder columns if input_feature_names are available
-        if instance.input_feature_names:
-            missing = set(instance.input_feature_names) - set(df.columns)
-            if missing:
-                raise ValueError(f"Missing required input features: {missing}")
-
-            df = df[instance.input_feature_names]
-
         transformed = instance.transform(df)
-        instance.validate(transformed)
+        if instance.output_feature_names is not None:
+            instance.validate(transformed[instance.output_feature_names])
         return transformed
