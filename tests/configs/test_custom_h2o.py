@@ -11,7 +11,7 @@ from student_success_tool.configs import custom
 
 
 SRC_ROOT = (
-    pathlib.Path(__file__).parents[3]
+    pathlib.Path(__file__).parents[2]
     / "pipelines"
     / "custom"
     / "institution_id"
@@ -26,7 +26,7 @@ def template_cfg_dict():
         return tomllib.load(f)
 
 
-def test_template_pdp_cfgs(template_cfg_dict):
+def test_template_custom_cfgs(template_cfg_dict):
     result = custom.CustomProjectConfig.model_validate(template_cfg_dict)
     print(result)
     assert isinstance(result, pyd.BaseModel)
