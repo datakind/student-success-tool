@@ -52,7 +52,10 @@ class SklearnImputerWrapper:
         Returns:
             The fitted scikit-learn `Pipeline` instance.
         """
+        # Normalize all missing values to np.nan (handles None, pd.NA, np.nan)
         df = df.replace({None: np.nan})
+        df = df.mask(df.isna(), np.nan)
+
         self.input_dtypes = df.dtypes.to_dict()
         self.input_feature_names = df.columns.tolist()
 
