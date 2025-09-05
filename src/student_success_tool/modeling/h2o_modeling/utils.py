@@ -374,6 +374,12 @@ def log_h2o_experiment_summary(
 import time
 
 
+import time
+import sys
+import contextlib
+import os
+
+
 @contextlib.contextmanager
 def suppress_output():
     """Silence stdout/stderr for noisy calls (e.g., H2O progress bars)."""
@@ -383,6 +389,17 @@ def suppress_output():
         contextlib.redirect_stderr(fnull),
     ):
         yield
+
+
+def _tmark() -> float:
+    return time.monotonic()
+
+
+def _tlog(label: str, start: float) -> None:
+    dur = time.monotonic() - start
+    msg = f"[TIMING] {label}: {dur:.2f}s"
+    LOGGER.info(msg)
+    print(msg, flush=True)
 
 
 def log_h2o_model(
@@ -398,17 +415,17 @@ def log_h2o_model(
     primary_metric: str = "logloss",
 ) -> dict | None:
     try:
-        t0 = time.monotonic()
+        t0 = _tmark()
         model = h2o.get_model(model_id)
-        LOGGER.info("[TIMING] get_model(%s): %.2fs", model_id, time.monotonic() - t0)
+        _tlog(f"get_model({model_id})", t0)
 
         # ---- metrics calc
-        t1 = time.monotonic()
+        t1 = _tmark()
         with suppress_output():
             metrics = evaluation.get_metrics_near_threshold_all_splits(
                 model, train, valid, test, threshold=threshold
             )
-        LOGGER.info("[TIMING] metrics: %.2fs", time.monotonic() - t1)
+        _tlog("metrics", t1)
 
         if mlflow.active_run():
             mlflow.end_run()
@@ -419,25 +436,20 @@ def log_h2o_model(
             mlflow.set_tag("mlflow.primaryMetric", f"validate_{primary_metric}")
 
             # ---- comparison plot (compute+log)
-            t2 = time.monotonic()
-            # If you keep it here, at least it times. (Or precompute once and re-log per run.)
+            t2 = _tmark()
             with suppress_output():
                 evaluation.create_and_log_h2o_model_comparison(aml=aml)
-            LOGGER.info("[TIMING] comparison_plot: %.2fs", time.monotonic() - t2)
+            _tlog("comparison_plot", t2)
 
             # ---- per-split predictions + plots
             for split_name, frame in zip(
                 ["train", "val", "test"], [train, valid, test]
             ):
-                t_split = time.monotonic()
+                t_split = _tmark()
                 y_true = _to_pandas(frame[target_col]).values.flatten()
-
                 with suppress_output():
                     preds = model.predict(frame)
-                positive_class_label = preds.col_names[-1]
-
-                # _to_pandas can be chatty; silence only the conversion if needed
-                with suppress_output():
+                    positive_class_label = preds.col_names[-1]
                     y_proba = _to_pandas(preds[positive_class_label]).values.flatten()
                 y_pred = (y_proba >= threshold).astype(int)
 
@@ -456,57 +468,47 @@ def log_h2o_model(
                     evaluation.generate_all_classification_plots(
                         y_true, y_pred, y_proba, prefix=split_name
                     )
-                LOGGER.info(
-                    "[TIMING] %s split: %.2fs", split_name, time.monotonic() - t_split
-                )
+                _tlog(f"{split_name} split", t_split)
 
             # ---- params/metrics logging
-            t3 = time.monotonic()
+            t3 = _tmark()
             log_model_metadata_to_mlflow(
                 model_id=model_id,
                 model=model,
                 metrics=metrics,
                 exclude_keys={"model_id"},
             )
-            LOGGER.info(
-                "[TIMING] log_model_metadata_to_mlflow: %.2fs", time.monotonic() - t3
-            )
+            _tlog("log_model_metadata_to_mlflow", t3)
 
             # ---- signature + UC-compatible model artifacts
-            t4 = time.monotonic()
+            t4 = _tmark()
             X_df = _to_pandas(train.drop(target_col, axis=1))
             X_sample = X_df.head(200)  # sampling keeps this snappy
             with suppress_output():
                 y_pred_sample = model.predict(_to_h2o(X_sample)).as_data_frame()
-            signature = infer_signature(X_sample, y_pred_sample)
-
-            with suppress_output():
+                # UC-compatible logging can be chatty too
+                signature = infer_signature(X_sample, y_pred_sample)
                 log_h2o_model_metadata_for_uc(
                     h2o_model=model,
                     artifact_path="model",
                     signature=signature,
                 )
-            LOGGER.info(
-                "[TIMING] log_h2o_model_metadata_for_uc: %.2fs", time.monotonic() - t4
-            )
+            _tlog("log_h2o_model_metadata_for_uc", t4)
 
             # ---- imputer artifacts
             if imputer is not None:
-                t5 = time.monotonic()
+                t5 = _tmark()
                 with suppress_output():
                     imputer.log_pipeline(artifact_path="sklearn_imputer")
-                LOGGER.info(
-                    "[TIMING] imputer.log_pipeline: %.2fs", time.monotonic() - t5
-                )
+                _tlog("imputer.log_pipeline", t5)
 
         metrics["mlflow_run_id"] = run_id
-        LOGGER.info(
-            "[TIMING] TOTAL log_h2o_model(%s): %.2fs", model_id, time.monotonic() - t0
-        )
+        _tlog(f"TOTAL log_h2o_model({model_id})", t0)
         return metrics
 
     except Exception as e:
         LOGGER.exception("Failed to evaluate and log model %s: %s", model_id, e)
+        print(f"[TIMING] ERROR log_h2o_model({model_id}): {e}", flush=True)
         return None
 
 
