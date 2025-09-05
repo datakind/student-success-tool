@@ -374,21 +374,17 @@ def log_h2o_experiment_summary(
 import time
 
 
-import time
-import sys
-import contextlib
-import os
 
 
-@contextlib.contextmanager
-def suppress_output():
-    """Silence stdout/stderr for noisy calls (e.g., H2O progress bars)."""
-    with (
-        open(os.devnull, "w") as fnull,
-        contextlib.redirect_stdout(fnull),
-        contextlib.redirect_stderr(fnull),
-    ):
-        yield
+# @contextlib.contextmanager
+# def suppress_output():
+#     """Silence stdout/stderr for noisy calls (e.g., H2O progress bars)."""
+#     with (
+#         open(os.devnull, "w") as fnull,
+#         contextlib.redirect_stdout(fnull),
+#         contextlib.redirect_stderr(fnull),
+#     ):
+#         yield
 
 
 def _tmark() -> float:
@@ -437,8 +433,8 @@ def log_h2o_model(
 
             # ---- comparison plot (compute+log)
             t2 = _tmark()
-            with suppress_output():
-                evaluation.create_and_log_h2o_model_comparison(aml=aml)
+            # with suppress_output():
+            evaluation.create_and_log_h2o_model_comparison(aml=aml)
             _tlog("comparison_plot", t2)
 
             # ---- per-split predictions + plots
@@ -447,10 +443,10 @@ def log_h2o_model(
             ):
                 t_split = _tmark()
                 y_true = _to_pandas(frame[target_col]).values.flatten()
-                with suppress_output():
-                    preds = model.predict(frame)
-                    positive_class_label = preds.col_names[-1]
-                    y_proba = _to_pandas(preds[positive_class_label]).values.flatten()
+                # with suppress_output():
+                preds = model.predict(frame)
+                positive_class_label = preds.col_names[-1]
+                y_proba = _to_pandas(preds[positive_class_label]).values.flatten()
                 y_pred = (y_proba >= threshold).astype(int)
 
                 tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
@@ -464,10 +460,10 @@ def log_h2o_model(
                     }
                 )
 
-                with suppress_output():
-                    evaluation.generate_all_classification_plots(
-                        y_true, y_pred, y_proba, prefix=split_name
-                    )
+                # with suppress_output():
+                evaluation.generate_all_classification_plots(
+                    y_true, y_pred, y_proba, prefix=split_name
+                )
                 _tlog(f"{split_name} split", t_split)
 
             # ---- params/metrics logging
@@ -484,22 +480,22 @@ def log_h2o_model(
             t4 = _tmark()
             X_df = _to_pandas(train.drop(target_col, axis=1))
             X_sample = X_df.head(200)  # sampling keeps this snappy
-            with suppress_output():
-                y_pred_sample = model.predict(_to_h2o(X_sample)).as_data_frame()
-                # UC-compatible logging can be chatty too
-                signature = infer_signature(X_sample, y_pred_sample)
-                log_h2o_model_metadata_for_uc(
-                    h2o_model=model,
-                    artifact_path="model",
-                    signature=signature,
-                )
+            # with suppress_output():
+            y_pred_sample = model.predict(_to_h2o(X_sample)).as_data_frame()
+            # UC-compatible logging can be chatty too
+            signature = infer_signature(X_sample, y_pred_sample)
+            log_h2o_model_metadata_for_uc(
+                h2o_model=model,
+                artifact_path="model",
+                signature=signature,
+            )
             _tlog("log_h2o_model_metadata_for_uc", t4)
 
             # ---- imputer artifacts
             if imputer is not None:
                 t5 = _tmark()
-                with suppress_output():
-                    imputer.log_pipeline(artifact_path="sklearn_imputer")
+                # with suppress_output():
+                imputer.log_pipeline(artifact_path="sklearn_imputer")
                 _tlog("imputer.log_pipeline", t5)
 
         metrics["mlflow_run_id"] = run_id
