@@ -147,22 +147,22 @@ def run_h2o_automl_classification(
     processed_model_features = [c for c in train.columns if c not in exclude_cols]
     LOGGER.info(f"Running H2O AutoML with {len(processed_model_features)} features...")
 
-    # # Create stopping criteria based on dataset size
-    # n_rows = int(train.nrows)
-    # if n_rows < 3000:
-    #     nfolds = 10
-    #     stopping_tolerance = 3e-4
-    #     stopping_rounds = 10
-    # else:
-    #     nfolds = 5
-    #     stopping_tolerance = 1e-4
-    #     stopping_rounds = 5
+    # Create stopping criteria based on dataset size
+    n_rows = int(train.nrows)
+    if n_rows < 3000:
+        nfolds = 10
+        stopping_tolerance = 3e-4
+        stopping_rounds = 10
+    else:
+        nfolds = 5
+        stopping_tolerance = 1e-4
+        stopping_rounds = 5
 
-    # LOGGER.info(
-    #     "H2O AutoML config -> training_rows=%d, nfolds=%d, fold_assignment=Stratified, "
-    #     "metric=%s, stopping_tolerance=%.1e, stopping_rounds=%d, include_algos=%s",
-    #     n_rows, nfolds, metric, stopping_tolerance, stopping_rounds, ",".join(frameworks)
-    # )
+    LOGGER.info(
+        "H2O AutoML config -> training_rows=%d, nfolds=%d, "
+        "metric=%s, stopping_tolerance=%.1e, stopping_rounds=%d, include_algos=%s",
+        n_rows, nfolds, metric, stopping_tolerance, stopping_rounds, ",".join(frameworks)
+    )
 
     aml = H2OAutoML(
         max_runtime_secs=timeout_minutes * 60,
@@ -171,10 +171,9 @@ def run_h2o_automl_classification(
         seed=seed,
         verbosity="info",
         include_algos=frameworks,
-        # nfolds=nfolds,
-        # stopping_tolerance=stopping_tolerance,
-        # stopping_rounds=stopping_rounds,
-        nfolds = 0,
+        nfolds=nfolds,
+        stopping_tolerance=stopping_tolerance,
+        stopping_rounds=stopping_rounds,
     )
 
     # Only pass weights_column if it exists in the data
