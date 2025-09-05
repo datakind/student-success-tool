@@ -374,17 +374,15 @@ def log_h2o_experiment_summary(
 import time
 
 
-
-
-# @contextlib.contextmanager
-# def suppress_output():
-#     """Silence stdout/stderr for noisy calls (e.g., H2O progress bars)."""
-#     with (
-#         open(os.devnull, "w") as fnull,
-#         contextlib.redirect_stdout(fnull),
-#         contextlib.redirect_stderr(fnull),
-#     ):
-#         yield
+@contextlib.contextmanager
+def suppress_output():
+    """Silence stdout/stderr for noisy calls (e.g., H2O progress bars)."""
+    with (
+        open(os.devnull, "w") as fnull,
+        contextlib.redirect_stdout(fnull),
+        contextlib.redirect_stderr(fnull),
+    ):
+        yield
 
 
 def _tmark() -> float:
