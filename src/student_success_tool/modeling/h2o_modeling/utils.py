@@ -259,141 +259,15 @@ def log_h2o_experiment_summary(
             mlflow.log_artifact(schema_path, artifact_path="inputs")
 
 
-# def log_h2o_model(
-#     *,
-#     aml: H2OAutoML,
-#     model_id: str,
-#     train: h2o.H2OFrame,
-#     valid: h2o.H2OFrame,
-#     test: h2o.H2OFrame,
-#     threshold: float = 0.5,
-#     target_col: str = "target",
-#     imputer: t.Optional[imputation.SklearnImputerWrapper] = None,
-#     primary_metric: str = "logloss",
-# ) -> dict | None:
-#     """
-#     Evaluates a single H2O model and logs metrics, plots, and artifacts to MLflow.
-
-#     Args:
-#         model_id: The H2O model ID to evaluate.
-#         train: H2OFrame for training.
-#         valid: H2OFrame for validation.
-#         test: H2OFrame for testing.
-#         threshold: Classification threshold for binary metrics.
-#         imputer: Optional SklearnImputerWrapper used in preprocessing.
-#         artifact_path: MLflow artifact path for saving imputer files.
-
-#     Returns:
-#         dict of metrics with `mlflow_run_id`, or None on failure.
-#     """
-#     try:
-#         model = h2o.get_model(model_id)
-#         with (
-#             open(os.devnull, "w") as fnull,
-#             contextlib.redirect_stdout(fnull),
-#             contextlib.redirect_stderr(fnull),
-#         ):
-#             metrics = evaluation.get_metrics_near_threshold_all_splits(
-#                 model, train, valid, test, threshold=threshold
-#             )
-
-#             if mlflow.active_run():
-#                 mlflow.end_run()
-
-#             with mlflow.start_run():
-#                 active_run = mlflow.active_run()
-#                 if active_run is not None:  # type check
-#                     run_id = active_run.info.run_id
-
-#                 # Assign initial sort key for mlflow UI
-#                 primary_metric_key = f"validate_{primary_metric}"
-#                 mlflow.set_tag("mlflow.primaryMetric", primary_metric_key)
-
-#                 # Create & log model comparisons plot
-#                 evaluation.create_and_log_h2o_model_comparison(aml=aml)
-
-#                 # Log Classification Plots
-#                 for split_name, frame in zip(
-#                     ["train", "val", "test"], [train, valid, test]
-#                 ):
-#                     y_true = _to_pandas(frame[target_col]).values.flatten()
-#                     preds = model.predict(frame)
-#                     positive_class_label = preds.col_names[-1]
-#                     y_proba = _to_pandas(preds[positive_class_label]).values.flatten()
-#                     y_pred = (y_proba >= threshold).astype(int)
-
-#                     # Log Confusion matrix metrics for FE tables
-#                     label = "validate" if split_name == "val" else split_name
-#                     tn, fp, fn, tp = confusion_matrix(
-#                         y_true, y_pred, labels=[0, 1]
-#                     ).ravel()
-
-#                     metrics.update(
-#                         {
-#                             f"{label}_true_positives": float(tp),
-#                             f"{label}_true_negatives": float(tn),
-#                             f"{label}_false_positives": float(fp),
-#                             f"{label}_false_negatives": float(fn),
-#                         }
-#                     )
-
-#                     evaluation.generate_all_classification_plots(
-#                         y_true, y_pred, y_proba, prefix=split_name
-#                     )
-
-#                 log_model_metadata_to_mlflow(
-#                     model_id=model_id,
-#                     model=model,
-#                     metrics=metrics,
-#                     exclude_keys={"model_id"},
-#                 )
-
-#                 X_sample = _to_pandas(train.drop(target_col, axis=1))
-#                 y_pred_sample = model.predict(train).as_data_frame()
-#                 signature = infer_signature(X_sample, y_pred_sample)
-
-#                 log_h2o_model_metadata_for_uc(
-#                     h2o_model=model,
-#                     artifact_path="model",
-#                     signature=signature,
-#                 )
-
-#                 # Log Imputer Artifacts
-#                 if imputer is not None:
-#                     try:
-#                         imputer.log_pipeline(artifact_path="sklearn_imputer")
-#                     except Exception as e:
-#                         LOGGER.warning(f"Failed to log imputer artifacts: {e}")
-
-#             metrics["mlflow_run_id"] = run_id
-#             return metrics
-
-#     except Exception as e:
-#         LOGGER.exception(f"Failed to evaluate and log model {model_id}: {e}")
-#         return None
-import time
-
-
 @contextlib.contextmanager
-def suppress_output():
-    """Silence stdout/stderr for noisy calls (e.g., H2O progress bars)."""
+def _suppress_output():
+    """Silence stdout/stderr just for chatty H2O calls."""
     with (
         open(os.devnull, "w") as fnull,
         contextlib.redirect_stdout(fnull),
         contextlib.redirect_stderr(fnull),
     ):
         yield
-
-
-def _tmark() -> float:
-    return time.monotonic()
-
-
-def _tlog(label: str, start: float) -> None:
-    dur = time.monotonic() - start
-    msg = f"[TIMING] {label}: {dur:.2f}s"
-    LOGGER.info(msg)
-    print(msg, flush=True)
 
 
 def log_h2o_model(
@@ -408,45 +282,54 @@ def log_h2o_model(
     imputer: t.Optional[imputation.SklearnImputerWrapper] = None,
     primary_metric: str = "logloss",
 ) -> dict | None:
+    """
+    Evaluates a single H2O model and logs metrics, plots, and artifacts to MLflow.
+    Optimizations:
+      - restrict output suppression to chatty calls only
+      - sample small subset for signature prediction (avoid full-train predict)
+    """
     try:
-        t0 = _tmark()
+        # ---- get model
         model = h2o.get_model(model_id)
-        _tlog(f"get_model({model_id})", t0)
 
-        # ---- metrics calc
-        t1 = _tmark()
-        with suppress_output():
-            metrics = evaluation.get_metrics_near_threshold_all_splits(
-                model, train, valid, test, threshold=threshold
-            )
-        _tlog("metrics", t1)
+        # ---- compute scalar metrics once (no logging here)
+        metrics = evaluation.get_metrics_near_threshold_all_splits(
+            model, train, valid, test, threshold=threshold
+        )
 
+        # ---- ensure clean run context
         if mlflow.active_run():
             mlflow.end_run()
 
         with mlflow.start_run():
             active_run = mlflow.active_run()
             run_id = active_run.info.run_id if active_run else None
+
+            # primary metric tag (for sorting in UI)
             mlflow.set_tag("mlflow.primaryMetric", f"validate_{primary_metric}")
 
-            # ---- comparison plot (compute+log)
-            t2 = _tmark()
-            # with suppress_output():
-            evaluation.create_and_log_h2o_model_comparison(aml=aml)
-            _tlog("comparison_plot", t2)
+            # ---- model comparison plot (you said you need it each run)
+            # keep this where it is, but only silence its progress bars
+            with _suppress_output():
+                evaluation.create_and_log_h2o_model_comparison(aml=aml)
 
-            # ---- per-split predictions + plots
+            # ---- per-split predictions, confusion matrix + plots
             for split_name, frame in zip(
-                ["train", "val", "test"], [train, valid, test]
+                ("train", "val", "test"), (train, valid, test)
             ):
-                t_split = _tmark()
+                # y_true (pandas)
                 y_true = _to_pandas(frame[target_col]).values.flatten()
-                # with suppress_output():
-                preds = model.predict(frame)
+
+                # predict probabilities (silence H2O chatter only)
+                with _suppress_output():
+                    preds = model.predict(frame)
                 positive_class_label = preds.col_names[-1]
+
+                # pull prob column to pandas
                 y_proba = _to_pandas(preds[positive_class_label]).values.flatten()
                 y_pred = (y_proba >= threshold).astype(int)
 
+                # confusion matrix counts (for FE tables)
                 tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
                 label = "validate" if split_name == "val" else split_name
                 metrics.update(
@@ -458,51 +341,68 @@ def log_h2o_model(
                     }
                 )
 
-                # with suppress_output():
-                evaluation.generate_all_classification_plots(
-                    y_true, y_pred, y_proba, prefix=split_name
-                )
-                _tlog(f"{split_name} split", t_split)
+                # classification plots (ROC/PR/etc)
+                with _suppress_output():
+                    evaluation.generate_all_classification_plots(
+                        y_true, y_pred, y_proba, prefix=split_name
+                    )
 
-            # ---- params/metrics logging
-            t3 = _tmark()
+            # ---- params + metrics (use the batched version you implemented)
             log_model_metadata_to_mlflow(
                 model_id=model_id,
                 model=model,
                 metrics=metrics,
                 exclude_keys={"model_id"},
             )
-            _tlog("log_model_metadata_to_mlflow", t3)
 
-            # ---- signature + UC-compatible model artifacts
-            t4 = _tmark()
-            X_df = _to_pandas(train.drop(target_col, axis=1))
-            X_sample = X_df.head(200)  # sampling keeps this snappy
-            # with suppress_output():
-            y_pred_sample = model.predict(_to_h2o(X_sample)).as_data_frame()
-            # UC-compatible logging can be chatty too
+            # ---- signature + UC artifacts (avoid full-train predict)
+            # sample a small slice from the H2OFrame for signature inference
+            # prefer first 200 rows; if nrows unavailable, just slice 200
+            try:
+                nrows = int(getattr(train, "nrows", 200))
+            except Exception:
+                nrows = 200
+            n = max(1, min(200, nrows))
+
+            # Small H2OFrame sample (includes target, drop it later for X)
+            sample_hf = train[:n, :]
+
+            # Convert the sample to pandas for signature inputs
+            X_df = _to_pandas(sample_hf)
+            if isinstance(X_df, pd.DataFrame):
+                X_sample = X_df.drop(columns=[target_col], errors="ignore")
+            else:
+                # very defensive fallback; shouldn't happen in normal runs
+                X_sample = pd.DataFrame({"__f__": [0.0]})
+
+            # Predict on the *same small sample* (fast) for signature outputs
+            with _suppress_output():
+                y_pred_sample = model.predict(sample_hf).as_data_frame()
+            if hasattr(y_pred_sample, "as_data_frame"):
+                y_pred_sample = y_pred_sample.as_data_frame()
+
             signature = infer_signature(X_sample, y_pred_sample)
+
+            # Use the optimized UC logger (minimal uploads, /local_disk0, no dir walk)
             log_h2o_model_metadata_for_uc(
                 h2o_model=model,
                 artifact_path="model",
                 signature=signature,
+                # include_env_files=False by default for speed
             )
-            _tlog("log_h2o_model_metadata_for_uc", t4)
 
-            # ---- imputer artifacts
+            # ---- imputer artifacts (keep, but no need to silence unless it’s chatty)
             if imputer is not None:
-                t5 = _tmark()
-                # with suppress_output():
-                imputer.log_pipeline(artifact_path="sklearn_imputer")
-                _tlog("imputer.log_pipeline", t5)
+                try:
+                    imputer.log_pipeline(artifact_path="sklearn_imputer")
+                except Exception as e:
+                    LOGGER.warning(f"Failed to log imputer artifacts: {e}")
 
         metrics["mlflow_run_id"] = run_id
-        _tlog(f"TOTAL log_h2o_model({model_id})", t0)
         return metrics
 
     except Exception as e:
-        LOGGER.exception("Failed to evaluate and log model %s: %s", model_id, e)
-        print(f"[TIMING] ERROR log_h2o_model({model_id}): {e}", flush=True)
+        LOGGER.exception(f"Failed to evaluate and log model {model_id}: {e}")
         return None
 
 
@@ -510,6 +410,7 @@ def log_h2o_model_metadata_for_uc(
     h2o_model: ModelBase,
     artifact_path: str,
     signature: mlflow.models.signature.ModelSignature,
+    include_env_files: bool = False,
 ) -> None:
     """
     Custom H2O model logger (Unity Catalog-compatible & future-proof for MLflow 3.x).
@@ -521,16 +422,18 @@ def log_h2o_model_metadata_for_uc(
         artifact_path: Subdir in MLflow run artifacts (e.g. "model").
         signature: Optional MLflow signature object (mlflow.models.signature.ModelSignature).
     """
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # 1. Save raw H2O model
-        model_path = h2o.save_model(h2o_model, path=tmpdir, force=True)
+    # Prefer fast local SSD on Databricks
+    base_tmp = "/local_disk0" if os.path.exists("/local_disk0") else None
+    with tempfile.TemporaryDirectory(dir=base_tmp) as tmpdir:
+        # 1) Save raw H2O model to fast local disk
+        model_saved_path = h2o.save_model(h2o_model, path=tmpdir, force=True)
 
-        # Normalize filename to "model.h2o"
+        # Normalize filename to "model.h2o" in the same fs
         final_model_path = os.path.join(tmpdir, "model.h2o")
-        if model_path != final_model_path:
-            os.rename(model_path, final_model_path)
+        if model_saved_path != final_model_path:
+            os.rename(model_saved_path, final_model_path)
 
-        # 2. Build MLmodel metadata
+        # 2) Build MLmodel metadata (minimal)
         mlmodel = Model(artifact_path=artifact_path, flavors={})
         mlmodel.add_flavor(
             "h2o",
@@ -540,27 +443,37 @@ def log_h2o_model_metadata_for_uc(
         if signature is not None:
             mlmodel.signature = signature
 
-        mlmodel.save(os.path.join(tmpdir, "MLmodel"))
+        # Convert the MLmodel to YAML text and log directly (no dir walk)
+        mlmodel_path = os.path.join(tmpdir, "MLmodel")
+        mlmodel.save(mlmodel_path)
+        with open(mlmodel_path, "r") as f:
+            mlmodel_yaml = f.read()
+        mlflow.log_text(mlmodel_yaml, artifact_file=f"{artifact_path}/MLmodel")
 
-        # 3. Minimal environment specs
-        reqs_path = os.path.join(tmpdir, "requirements.txt")
-        with open(reqs_path, "w") as f:
-            f.write(f"h2o=={h2o.__version__}\n")
+        # 3) (Optional) minimal env files. Skip by default for speed.
+        if include_env_files:
+            # Small files, but still I/O + upload; only do if you need them.
+            reqs_path = os.path.join(tmpdir, "requirements.txt")
+            with open(reqs_path, "w") as f:
+                f.write(f"h2o=={h2o.__version__}\n")
+            mlflow.log_artifact(reqs_path, artifact_path=artifact_path)
 
-        conda_env = {
-            "name": "h2o_env",
-            "channels": ["defaults", "conda-forge"],
-            "dependencies": [
-                f"h2o={h2o.__version__}",
-                "pip",
-                {"pip": [f"mlflow=={mlflow.__version__}"]},
-            ],
-        }
-        with open(os.path.join(tmpdir, "conda.yaml"), "w") as f:
-            yaml.safe_dump(conda_env, f)
+            conda_env = {
+                "name": "h2o_env",
+                "channels": ["defaults", "conda-forge"],
+                "dependencies": [
+                    f"h2o={h2o.__version__}",
+                    "pip",
+                    {"pip": [f"mlflow=={mlflow.__version__}"]},
+                ],
+            }
+            conda_path = os.path.join(tmpdir, "conda.yaml")
+            with open(conda_path, "w") as f:
+                yaml.safe_dump(conda_env, f)
+            mlflow.log_artifact(conda_path, artifact_path=artifact_path)
 
-        # 4. Log directory to MLflow artifacts
-        mlflow.log_artifacts(tmpdir, artifact_path=artifact_path)
+        # 4) Upload the big file LAST (single call, no directory walk)
+        mlflow.log_artifact(final_model_path, artifact_path=artifact_path)
 
 
 def log_model_metadata_to_mlflow(
@@ -569,25 +482,16 @@ def log_model_metadata_to_mlflow(
     metrics: dict[str, t.Any],
     exclude_keys: t.Optional[set[str]] = None,
 ) -> None:
-    """
-    Logs model ID, hyperparameters, and metrics to MLflow.
-
-    Args:
-        model_id: ID string of the H2O model.
-        model: H2O model object.
-        metrics: Dictionary of metrics to log.
-        exclude_keys: Optional set of metric keys to exclude from logging.
-    """
     exclude_keys = exclude_keys or set()
 
-    # Log model ID
+    # 1) model_id as a single param
     mlflow.log_param("model_id", model_id)
 
-    # Log hyperparameters
+    # 2) Hyperparameters in one batch
     try:
         hyperparams = {
             k: str(v)
-            for k, v in model._parms.items()
+            for k, v in getattr(model, "_parms", {}).items()
             if (
                 v is not None
                 and k != "model_id"
@@ -595,25 +499,24 @@ def log_model_metadata_to_mlflow(
             )
         }
         if hyperparams:
-            mlflow.log_params(hyperparams)
+            mlflow.log_params(hyperparams)  # ← batch
     except Exception as e:
         LOGGER.warning(f"Failed to log hyperparameters for model {model_id}: {e}")
 
-    # Log metrics
+    # 3) Metrics in one batch (cast to float & drop non-numeric)
+    numeric_metrics: dict[str, float] = {}
     for k, v in metrics.items():
         if k in exclude_keys:
             continue
         try:
-            if isinstance(v, (float, int)):
-                mlflow.log_metric(k, float(v))
-            elif isinstance(v, str):
-                mlflow.log_metric(k, float(v))  # Best-effort conversion
-            else:
-                LOGGER.warning(
-                    f"Skipping metric '{k}': unsupported type {type(v).__name__}"
-                )
-        except (ValueError, TypeError) as e:
-            LOGGER.warning(f"Could not log metric '{k}' with value '{v}': {e}")
+            numeric_metrics[k] = float(v)
+        except (TypeError, ValueError):
+            # Skip non-numeric metrics silently or warn once if you prefer
+            continue
+
+    if numeric_metrics:
+        # This is a single batch call under the hood
+        mlflow.log_metrics(numeric_metrics)
 
 
 def set_or_create_experiment(
