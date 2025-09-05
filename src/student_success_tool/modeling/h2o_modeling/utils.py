@@ -391,12 +391,12 @@ def log_h2o_model(
                 # include_env_files=False by default for speed
             )
 
-            # ---- imputer artifacts (keep, but no need to silence unless it’s chatty)
-            if imputer is not None:
-                try:
-                    imputer.log_pipeline(artifact_path="sklearn_imputer")
-                except Exception as e:
-                    LOGGER.warning(f"Failed to log imputer artifacts: {e}")
+            # # ---- imputer artifacts (keep, but no need to silence unless it’s chatty)
+            # if imputer is not None:
+            #     try:
+            #         imputer.log_pipeline(artifact_path="sklearn_imputer")
+            #     except Exception as e:
+            #         LOGGER.warning(f"Failed to log imputer artifacts: {e}")
 
         metrics["mlflow_run_id"] = run_id
         return metrics
