@@ -141,8 +141,15 @@ def test_log_h2o_experiment_summary_basic(
 
 
 @mock.patch("student_success_tool.modeling.h2o_modeling.utils.h2o.save_model")
-@mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.log_artifacts")
-@mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.log_metric")
+@mock.patch(
+    "student_success_tool.modeling.h2o_modeling.utils.mlflow.log_artifact"
+)  # single file
+@mock.patch(
+    "student_success_tool.modeling.h2o_modeling.utils.mlflow.log_text"
+)  # MLmodel yaml
+@mock.patch(
+    "student_success_tool.modeling.h2o_modeling.utils.mlflow.log_metrics"
+)  # batched metrics
 @mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.log_param")
 @mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.active_run")
 @mock.patch("student_success_tool.modeling.h2o_modeling.utils.mlflow.start_run")
@@ -156,14 +163,15 @@ def test_log_h2o_model_basic(
     mock_start_run,
     mock_active_run,
     mock_log_param,
-    mock_log_metric,
-    mock_log_artifacts,
+    mock_log_metrics,  # batched
+    mock_log_text,
+    mock_log_artifact,
     mock_save_model,
 ):
     import pandas as pd
     from mlflow.models import infer_signature as real_infer_signature
 
-    # return a real signature (not a MagicMock!)
+    # real signature object (not a MagicMock)
     mock_infer_signature.return_value = real_infer_signature(
         pd.DataFrame({"x": [1.0, 2.0, 3.0]}),
         pd.DataFrame({"y": [0.0, 1.0, 0.0]}),
@@ -174,7 +182,7 @@ def test_log_h2o_model_basic(
     mock_get_model.return_value = mock_model
     mock_save_model.return_value = "/tmp/h2o_models/m1"
 
-    # Mock predictions
+    # predictions
     preds = mock.MagicMock()
     preds.col_names = ["p0", "p1"]
     prob_frame = mock.MagicMock()
@@ -182,18 +190,18 @@ def test_log_h2o_model_basic(
     preds.__getitem__.return_value = prob_frame
     mock_model.predict.return_value = preds
 
-    # ---- Mock eval metrics
+    # eval metrics
     mock_eval.get_metrics_near_threshold_all_splits.return_value = {
         "validate_logloss": 0.3
     }
 
-    # ---- Mock H2OFrame
+    # H2OFrame → pandas for target
     target_frame = mock.MagicMock()
     target_frame.as_data_frame.return_value = pd.DataFrame({"target": [0, 1]})
     frame_mock = mock.MagicMock()
     frame_mock.__getitem__.return_value = target_frame
 
-    # ---- Mock run
+    # MLflow run
     mock_run = mock.MagicMock()
     mock_run.__enter__.return_value = mock_run
     mock_start_run.return_value = mock_run
@@ -207,7 +215,7 @@ def test_log_h2o_model_basic(
 
     mock_save_model.side_effect = fake_save_model
 
-    # ---- Run function
+    # ---- Execute
     result = utils.log_h2o_model(
         aml=mock.MagicMock(),
         model_id="m1",
@@ -221,9 +229,18 @@ def test_log_h2o_model_basic(
     assert result is not None
     assert "validate_logloss" in result
     assert result["mlflow_run_id"] == "run-123"
+
+    # model_id param
     mock_log_param.assert_any_call("model_id", "m1")
-    mock_log_metric.assert_any_call("validate_logloss", 0.3)
-    mock_log_artifacts.assert_called()
+
+    # batched metrics contain our value
+    assert mock_log_metrics.called
+    logged_metrics = mock_log_metrics.call_args[0][0]  # dict
+    assert logged_metrics.get("validate_logloss") == 0.3
+
+    # MLmodel + model.h2o were logged
+    assert mock_log_text.called  # MLmodel yaml
+    assert mock_log_artifact.called  # model/model.h2o
     mock_save_model.assert_called_once()
 
 
