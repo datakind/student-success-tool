@@ -391,7 +391,7 @@ def log_h2o_model(
                 # include_env_files=False by default for speed
             )
 
-            # ---- imputer artifacts 
+            # ---- imputer artifacts
             if imputer is not None:
                 try:
                     imputer.log_pipeline(artifact_path="sklearn_imputer")
