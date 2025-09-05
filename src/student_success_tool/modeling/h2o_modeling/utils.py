@@ -289,15 +289,15 @@ def log_h2o_model(
       - sample small subset for signature prediction (avoid full-train predict)
     """
     try:
-        # ---- get model
+        # get model
         model = h2o.get_model(model_id)
 
-        # ---- compute scalar metrics once (no logging here)
+        # compute scalar metrics once (no logging here)
         metrics = evaluation.get_metrics_near_threshold_all_splits(
             model, train, valid, test, threshold=threshold
         )
 
-        # ---- ensure clean run context
+        # ensure clean run context
         if mlflow.active_run():
             mlflow.end_run()
 
@@ -305,22 +305,22 @@ def log_h2o_model(
             active_run = mlflow.active_run()
             run_id = active_run.info.run_id if active_run else None
 
-            # primary metric tag (for sorting in UI)
+            # primary metric tag
             mlflow.set_tag("mlflow.primaryMetric", f"validate_{primary_metric}")
 
-            # ---- model comparison plot (you said you need it each run)
+            # model comparison plot
             # keep this where it is, but only silence its progress bars
             with _suppress_output():
                 evaluation.create_and_log_h2o_model_comparison(aml=aml)
 
-            # ---- per-split predictions, confusion matrix + plots
+            # per-split predictions, confusion matrix + plots
             for split_name, frame in zip(
                 ("train", "val", "test"), (train, valid, test)
             ):
                 # y_true (pandas)
                 y_true = _to_pandas(frame[target_col]).values.flatten()
 
-                # predict probabilities (silence H2O chatter only)
+                # predict probabilities
                 with _suppress_output():
                     preds = model.predict(frame)
                 positive_class_label = preds.col_names[-1]
@@ -347,7 +347,7 @@ def log_h2o_model(
                         y_true, y_pred, y_proba, prefix=split_name
                     )
 
-            # ---- params + metrics (use the batched version you implemented)
+            # params + metrics (use the batched version you implemented)
             log_model_metadata_to_mlflow(
                 model_id=model_id,
                 model=model,
@@ -355,7 +355,7 @@ def log_h2o_model(
                 exclude_keys={"model_id"},
             )
 
-            # ---- signature + UC artifacts (avoid full-train predict)
+            # signature + UC artifacts (avoid full-train predict)
             # sample a small slice from the H2OFrame for signature inference
             # prefer first 200 rows; if nrows unavailable, just slice 200
             try:
@@ -391,14 +391,14 @@ def log_h2o_model(
                 # include_env_files=False by default for speed
             )
 
-            # ---- imputer artifacts
+            # imputer artifacts
             if imputer is not None:
                 try:
                     imputer.log_pipeline(artifact_path="sklearn_imputer")
                 except Exception as e:
                     LOGGER.warning(f"Failed to log imputer artifacts: {e}")
 
-        metrics["mlflow_run_id"] = run_id
+        metrics["mlflow_run_id"] = str(run_id)
         return metrics
 
     except Exception as e:
