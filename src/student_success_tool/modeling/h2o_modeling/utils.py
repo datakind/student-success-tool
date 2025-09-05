@@ -383,7 +383,7 @@ def log_h2o_model(
 
             signature = infer_signature(X_sample, y_pred_sample)
 
-            # Use the optimized UC logger (minimal uploads, /local_disk0, no dir walk)
+            # Optimized UC logger
             log_h2o_model_metadata_for_uc(
                 h2o_model=model,
                 artifact_path="model",
@@ -391,12 +391,12 @@ def log_h2o_model(
                 # include_env_files=False by default for speed
             )
 
-            # # ---- imputer artifacts (keep, but no need to silence unless it’s chatty)
-            # if imputer is not None:
-            #     try:
-            #         imputer.log_pipeline(artifact_path="sklearn_imputer")
-            #     except Exception as e:
-            #         LOGGER.warning(f"Failed to log imputer artifacts: {e}")
+            # ---- imputer artifacts 
+            if imputer is not None:
+                try:
+                    imputer.log_pipeline(artifact_path="sklearn_imputer")
+                except Exception as e:
+                    LOGGER.warning(f"Failed to log imputer artifacts: {e}")
 
         metrics["mlflow_run_id"] = run_id
         return metrics
