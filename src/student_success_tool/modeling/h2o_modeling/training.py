@@ -155,8 +155,7 @@ def run_h2o_automl_classification(
         nfolds = 5
 
     LOGGER.info(
-        "H2O AutoML config -> training_rows=%d, nfolds=%d, "
-        "metric=%s, include_algos=%s",
+        "H2O AutoML config -> training_rows=%d, nfolds=%d, metric=%s, include_algos=%s",
         n_rows,
         nfolds,
         metric,
@@ -170,7 +169,7 @@ def run_h2o_automl_classification(
         seed=seed,
         verbosity="info",
         include_algos=frameworks,
-        nfolds=nfolds
+        nfolds=nfolds,
     )
 
     # Only pass weights_column if it exists in the data

@@ -347,13 +347,14 @@ def log_h2o_model(
                         y_true, y_pred, y_proba, prefix=split_name
                     )
 
-            # params + metrics (use the batched version you implemented)
-            log_model_metadata_to_mlflow(
-                model_id=model_id,
-                model=model,
-                metrics=metrics,
-                exclude_keys={"model_id"},
-            )
+            with _suppress_output():
+                # params + metrics (use the batched version you implemented)
+                log_model_metadata_to_mlflow(
+                    model_id=model_id,
+                    model=model,
+                    metrics=metrics,
+                    exclude_keys={"model_id"},
+                )
 
             # signature + UC artifacts (avoid full-train predict)
             # sample a small slice from the H2OFrame for signature inference
@@ -383,13 +384,14 @@ def log_h2o_model(
 
             signature = infer_signature(X_sample, y_pred_sample)
 
-            # Optimized UC logger
-            log_h2o_model_metadata_for_uc(
-                h2o_model=model,
-                artifact_path="model",
-                signature=signature,
-                # include_env_files=False by default for speed
-            )
+            with _suppress_output():
+                # Optimized UC logger
+                log_h2o_model_metadata_for_uc(
+                    h2o_model=model,
+                    artifact_path="model",
+                    signature=signature,
+                    # include_env_files=False by default for speed
+                )
 
             # imputer artifacts
             if imputer is not None:
