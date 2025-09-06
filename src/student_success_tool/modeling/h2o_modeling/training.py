@@ -149,23 +149,17 @@ def run_h2o_automl_classification(
 
     # Create stopping criteria based on dataset size
     n_rows = int(train.nrows)
-    if n_rows < 3000:
+    if n_rows < 1500:
         nfolds = 10
-        stopping_tolerance = 3e-4
-        stopping_rounds = 10
     else:
         nfolds = 5
-        stopping_tolerance = 1e-4
-        stopping_rounds = 5
 
     LOGGER.info(
         "H2O AutoML config -> training_rows=%d, nfolds=%d, "
-        "metric=%s, stopping_tolerance=%.1e, stopping_rounds=%d, include_algos=%s",
+        "metric=%s, include_algos=%s",
         n_rows,
         nfolds,
         metric,
-        stopping_tolerance,
-        stopping_rounds,
         ",".join(frameworks),
     )
 
@@ -176,9 +170,7 @@ def run_h2o_automl_classification(
         seed=seed,
         verbosity="info",
         include_algos=frameworks,
-        nfolds=nfolds,
-        stopping_tolerance=stopping_tolerance,
-        stopping_rounds=stopping_rounds,
+        nfolds=nfolds
     )
 
     # Only pass weights_column if it exists in the data
@@ -186,7 +178,6 @@ def run_h2o_automl_classification(
         x=processed_model_features,
         y=target_col,
         training_frame=train,
-        validation_frame=valid,
         leaderboard_frame=valid,
     )
     if sample_weight_col in df.columns:

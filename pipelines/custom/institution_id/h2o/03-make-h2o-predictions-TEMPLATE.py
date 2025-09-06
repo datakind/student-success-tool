@@ -39,7 +39,7 @@ from databricks.connect import DatabricksSession
 
 from student_success_tool import configs, dataio, modeling
 from student_success_tool.modeling import h2o_modeling
-
+from py4j.protocol import Py4JJavaError
 
 import h2o
 
