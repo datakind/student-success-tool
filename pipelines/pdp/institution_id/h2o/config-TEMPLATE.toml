@@ -1,0 +1,80 @@
+institution_id = "INST_ID"
+institution_name = "INST NAME"
+
+student_id_col = "student_id"
+target_col = "target"
+split_col = "split"
+sample_weight_col = "sample_weight"
+student_group_cols = ["student_age", "race", "ethnicity", "gender", "first_gen"]
+pred_col = "pred"
+pred_prob_col = "pred_prob"
+pos_label = true
+random_state = 12345
+
+[datasets.bronze]
+raw_course = { file_path = "/Volumes/CATALOG/INST_ID_bronze/INST_ID_bronze_file_volume/FILE_NAME_COURSE.csv" }
+raw_cohort = { file_path = "/Volumes/CATALOG/INST_ID_bronze/INST_ID_bronze_file_volume/FILE_NAME_COHORT.csv" }
+
+[datasets.silver]
+preprocessed = { table_path = "CATALOG.INST_ID_silver.DATASET_NAME_preprocessed" }
+modeling = { table_path = "CATALOG.INST_ID_silver.DATASET_NAME_modeling" }
+
+[datasets.gold]
+advisor_output = { table_path = "CATALOG.INST_ID_gold.INST_ID_advisor_output" }
+
+[model]
+experiment_id = "EXPERIMENT_ID"
+run_id = "RUN_ID"
+framework = "h2o"
+
+[preprocessing]
+splits = { train = 0.6, test = 0.2, validate = 0.2 }
+sample_class_weight = "balanced"
+include_pre_cohort_courses = false
+
+[preprocessing.features]
+min_passing_grade = 1.0
+min_num_credits_full_time = 12
+# NOTE: single quotes *required* here; it's TOML syntax for literal strings
+course_level_pattern = '^TODO(?P<course_level>\d)TODO$'
+core_terms = ["FALL", "SPRING"]
+key_course_subject_areas = ["24", "51", ["27", "31"]]
+key_course_ids = ["ENGL101", "MATH101", ["ENGL102", "MATH102"]]
+
+[preprocessing.selection]
+student_criteria = { enrollment_type = "FIRST-TIME", credential_type_sought_year_1 = "Bachelor's Degree" }
+intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
+
+[preprocessing.checkpoint]
+name = "30_credits_earned"
+type_ = "first_at_num_credits_earned"
+min_num_credits = 30.0
+num_credits_col = "cumsum_num_credits_earned"
+
+[preprocessing.target]
+name = "graduation_150pct_time"
+type_ = "graduation"
+intensity_time_limits = { FULL-TIME = [3.0, "year"], PART-TIME = [6.0, "year"] }
+years_to_degree_col = "first_year_to_associates_at_cohort_inst"
+num_terms_in_year = 4
+max_term_rank = "infer"
+
+[modeling.feature_selection]
+incomplete_threshold = 0.5
+low_variance_threshold = 0.0
+collinear_threshold = 10.0
+# force_include_cols = []
+
+[modeling.training]
+primary_metric = "logloss"
+timeout_minutes = 10
+# exclude_frameworks = ["XGBoost", "GBM"]
+# exclude_cols = []
+
+[modeling.evaluation]
+topn_runs_included = 5
+
+[inference]
+num_top_features = 5
+min_prob_pos_label = 0.5
+background_data_sample = 500
