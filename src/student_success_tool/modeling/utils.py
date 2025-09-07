@@ -5,9 +5,9 @@ import tomlkit
 from tomlkit.items import Table
 
 
-import numpy as np
 import pandas as pd
 import sklearn.utils
+from sklearn.model_selection import train_test_split
 
 import pydantic as pyd
 
@@ -21,52 +21,67 @@ S = t.TypeVar("S", bound=pyd.BaseModel)
 def compute_dataset_splits(
     df: pd.DataFrame,
     *,
-    label_fracs: t.Optional[dict[str, float]] = None,
     stratify_col: t.Optional[str] = None,
+    label_fracs: t.Optional[dict[str, float]] = None,
     seed: t.Optional[int] = None,
+    shuffle: bool = True,
 ) -> pd.Series:
     """
-    Random 3-way split with optional stratification by target.
-    Preserves reproducibility with numpy RNG.
+    Assign each row of a DataFrame to "train", "validate", or "test"
+    according to user-specified fractions. Wraps sklearn's
+    ``train_test_split`` to ensure stratification, reproducibility,
+    and exact partitioning with no leftover rows.
+
+    Parameters:
+    df: The input dataset to split.
+    stratify_col: Column name to use for stratified sampling (e.g., the target label).
+    label_fracs: Mapping of {"train": x, "validate": y, "test": z}.
+    seed: Random seed passed to sklearn for reproducibility.
+    shuffle: Whether to shuffle rows before splitting.
+
+    Returns:
+        pd.Series: A Series of dtype "string" aligned to ``df.index`` with values
+        in {"train", "validate", "test"}.
     """
     if label_fracs is None:
         label_fracs = _DEFAULT_SPLIT_LABEL_FRACS
 
-    labels = ["train", "validate", "test"]
-    p = np.array([label_fracs[l] for l in labels], dtype=float)
-    p = p / p.sum()
+    # Normalize fractions
+    total = sum(label_fracs.values())
+    fracs = {k: v / total for k, v in label_fracs.items()}
 
-    rng = np.random.default_rng(seed=seed)
+    train_frac = fracs["train"]
+    valid_frac = fracs["validate"]
+    test_frac = fracs["test"]
+
+    stratify_vec = df[stratify_col] if stratify_col else None
+
+    # train vs temp
+    df_train, df_temp = train_test_split(
+        df,
+        test_size=(1 - train_frac),
+        stratify=stratify_vec,
+        random_state=seed,
+        shuffle=shuffle,
+    )
+
+    # validate vs test (within temp)
+    valid_size = valid_frac / (valid_frac + test_frac)
+    stratify_vec_temp = df_temp[stratify_col] if stratify_col else None
+    df_valid, df_test = train_test_split(
+        df_temp,
+        test_size=(1 - valid_size),
+        stratify=stratify_vec_temp,
+        random_state=seed,
+        shuffle=shuffle,
+    )
+
+    # Build final split Series
     split = pd.Series(index=df.index, dtype="string", name="split")
-
-    if stratify_col is None or stratify_col not in df.columns:
-        # Unstratified
-        choice = rng.choice(labels, size=len(df), p=p)
-        split[:] = choice
-        return split
-
-    # Stratified: shuffle indices within each class, then allocate
-    y = pd.Categorical(df[stratify_col])
-    for cls in y.categories:
-        idx = df.index[y == cls]
-        n = len(idx)
-        if n == 0:
-            continue
-
-        # randomize order within this class
-        idx_shuffled = rng.permutation(idx)
-
-        # split counts for this class
-        n_train = int(round(p[0] * n))
-        n_valid = int(round(p[1] * n))
-        # whatever's left goes to test
-        n_test = n - n_train - n_valid
-
-        split.loc[idx_shuffled[:n_train]] = "train"
-        split.loc[idx_shuffled[n_train : n_train + n_valid]] = "validate"
-        split.loc[idx_shuffled[n_train + n_valid :]] = "test"
-
-    return split.astype("string")
+    split.loc[df_train.index] = "train"
+    split.loc[df_valid.index] = "validate"
+    split.loc[df_test.index] = "test"
+    return split
 
 
 def compute_sample_weights(

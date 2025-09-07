@@ -1,6 +1,7 @@
 import pandas as pd
 import pytest
 import tomlkit
+import numpy as np
 
 from student_success_tool.modeling import utils
 
@@ -9,20 +10,20 @@ from student_success_tool.modeling import utils
     ["df", "label_fracs", "shuffle", "seed"],
     [
         (
-            pd.DataFrame(data=list(range(1000))),
-            {"train": 0.5, "test": 0.5},
+            pd.DataFrame({"x": range(1000)}),
+            {"train": 0.6, "validate": 0.2, "test": 0.2},
             True,
             10,
         ),
         (
-            pd.DataFrame(data=list(range(1000))),
-            {"train": 0.6, "test": 0.2, "valid": 0.2},
+            pd.DataFrame({"x": range(1000)}),
+            {"train": 0.6, "validate": 0.2, "test": 0.2},
             False,
             11,
         ),
         (
-            pd.DataFrame(data=list(range(1000))),
-            {"train": 0.5, "test": 0.5},
+            pd.DataFrame({"x": range(1000)}),
+            {"train": 0.5, "validate": 0.25, "test": 0.25},
             True,
             42,
         ),
@@ -30,30 +31,75 @@ from student_success_tool.modeling import utils
 )
 def test_compute_dataset_splits(df, label_fracs, shuffle, seed):
     obs = utils.compute_dataset_splits(
-        df, label_fracs=label_fracs, shuffle=shuffle, seed=seed
+        df,
+        stratify_col=None,
+        label_fracs=label_fracs,
+        shuffle=shuffle,
+        seed=seed,
     )
     assert isinstance(obs, pd.Series)
     assert len(obs) == len(df)
-    labels = list(label_fracs.keys())
-    fracs = list(label_fracs.values())
-    obs_value_counts = obs.value_counts(normalize=True)
+    assert obs.isna().sum() == 0
+    assert set(obs.unique()) <= {"train", "validate", "test"}
+
+    labels = ["train", "validate", "test"]
+    fracs = [label_fracs[l] for l in labels]
+
+    obs_value_counts = (
+        obs.value_counts(normalize=True)
+        .reindex(labels, fill_value=0.0)
+        .astype("float64")
+    )
+    # make expected index dtype match observed
+    exp_index = pd.Index(labels, dtype=obs_value_counts.index.dtype, name="split")
     exp_value_counts = pd.Series(
-        data=fracs,
-        index=pd.Index(labels, dtype="string", name="split"),
+        data=np.array(fracs) / np.sum(fracs),
+        index=exp_index,
         name="proportion",
-        dtype="Float64",
+        dtype="float64",
     )
-    assert (
-        pd.testing.assert_series_equal(
-            obs_value_counts, exp_value_counts, rtol=0.15, check_like=True
-        )
-        is None
+
+    pd.testing.assert_series_equal(
+        obs_value_counts,
+        exp_value_counts,
+        rtol=0.15,
+        check_exact=False,
+        check_names=True,
     )
+
+    # Reproducibility with same seed
     if seed is not None:
         obs2 = utils.compute_dataset_splits(
-            df, label_fracs=label_fracs, shuffle=shuffle, seed=seed
+            df,
+            stratify_col=None,
+            label_fracs=label_fracs,
+            shuffle=shuffle,
+            seed=seed,
         )
         assert obs.equals(obs2)
+
+
+def test_compute_dataset_splits_stratified_preserves_prevalence():
+    # Imbalanced target
+    n = 3000
+    rng = np.random.default_rng(7)
+    y = pd.Series(rng.choice([0, 1], size=n, p=[0.8, 0.2]), name="target")
+    df = pd.DataFrame({"x": rng.normal(size=n), "target": y})
+
+    splits = utils.compute_dataset_splits(
+        df,
+        stratify_col="target",
+        label_fracs={"train": 0.6, "validate": 0.2, "test": 0.2},
+        seed=123,
+        shuffle=True,
+    )
+
+    prev_overall = df["target"].mean()
+    prev_by_split = df.groupby(splits)["target"].mean()
+
+    # Each split’s prevalence should be close to overall (within a few points)
+    for split_name, prev in prev_by_split.items():
+        assert abs(prev - prev_overall) < 0.03  # 3 percentage points
 
 
 @pytest.mark.parametrize(
