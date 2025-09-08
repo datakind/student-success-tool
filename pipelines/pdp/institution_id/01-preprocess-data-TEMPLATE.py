@@ -103,18 +103,19 @@ df_course.head()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Checking for Gateway Math/English courses for Custom Features
+# MAGIC ### Checking for Gateway Math/English courses and CIP codes for Custom Features
 # MAGIC
-# MAGIC Please add the below key course lists to your config by combining the course prefix and numbers and check with your school if they would like to expand the list at all.
-# MAGIC
+# MAGIC Please add the below key course lists to your config by combining the course prefix and numbers, as well as the respective CIP codes (typically CIP code 27: Mathematics and Statistics and 23: English Language and Literature/Letters), and check with your school if they would like to expand the list at all.
 
 # COMMAND ----------
 
-# check for gateway courses
+# check for gateway courses and cip codes
 df_course[
     (df_course["math_or_english_gateway"] == "M")
     | (df_course["math_or_english_gateway"] == "E")
-][["course_prefix", "course_number", "course_name"]].value_counts().sort_index()
+][
+    ["course_prefix", "course_number", "course_name", "course_cip"]
+].value_counts().sort_index()
 
 # COMMAND ----------
 
@@ -132,6 +133,11 @@ course_list = (
 )
 
 print(course_list)
+
+# COMMAND ----------
+
+# confirm cip code list, then add to config
+cip_code_list = ["23", "27"]
 
 # COMMAND ----------
 
@@ -239,6 +245,7 @@ df_student_terms["term_is_pre_cohort"].value_counts(dropna=False)
 
 # TODO: choose checkpoint function suitable for school's use case
 # parameters should be specified in the config
+# MAKE SURE TO SPECIFY exclude_non_core_terms and exclude_pre_cohort_terms per school's needs!
 df_ckpt = checkpoints.pdp.TODO(
     df_student_terms,
     sort_cols=cfg.preprocessing.checkpoint.sort_cols,
