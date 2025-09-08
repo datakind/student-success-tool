@@ -41,7 +41,7 @@ predict_file_path = "/Volumes/CATALOG/INST_ID_bronze/.../FILE_NAME_semester_infe
 
 [datasets.silver.cohort]
 train_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_cohort_train"
-predict_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_preprocessed_inference"
+predict_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_cohort_inference"
 
 [datasets.silver.course]
 train_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_course_train"
@@ -50,6 +50,10 @@ predict_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_course_inference"
 [datasets.silver.semester]
 train_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_semester_train"
 predict_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_semester_inference"
+
+[datasets.silver.preprocessed]
+primary_keys = ["student_id"]
+train_table_path = "CATALOG.INST_ID_silver.DATASET_NAME_preprocessed_train"
 
 [datasets.silver.modeling]
 primary_keys = ["student_id"]
