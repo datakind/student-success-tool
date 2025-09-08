@@ -13,8 +13,12 @@ from mlflow.models import Model, infer_signature
 from mlflow.tracking import MlflowClient
 import pandas as pd
 import numpy as np
-from pandas.api.types import is_categorical_dtype, is_object_dtype, is_string_dtype
-
+from pandas.api.types import (
+    is_categorical_dtype,
+    is_object_dtype,
+    is_string_dtype,
+    is_integer_dtype,
+)
 
 import h2o
 from h2o.automl import H2OAutoML
@@ -58,6 +62,8 @@ def safe_h2o_init(base_port: int = 54321, mem_per_cluster: str = "4G") -> None:
         LOGGER.warning(
             "H2O is not bound to localhost. This may expose REST endpoints on the network."
         )
+    # Stop H2O progress bars globally
+    h2o.no_progress()
 
 
 def download_artifact_file(
@@ -347,13 +353,14 @@ def log_h2o_model(
                         y_true, y_pred, y_proba, prefix=split_name
                     )
 
-            # params + metrics (use the batched version you implemented)
-            log_model_metadata_to_mlflow(
-                model_id=model_id,
-                model=model,
-                metrics=metrics,
-                exclude_keys={"model_id"},
-            )
+            with _suppress_output():
+                # params + metrics (use the batched version you implemented)
+                log_model_metadata_to_mlflow(
+                    model_id=model_id,
+                    model=model,
+                    metrics=metrics,
+                    exclude_keys={"model_id"},
+                )
 
             # signature + UC artifacts (avoid full-train predict)
             # sample a small slice from the H2OFrame for signature inference
@@ -381,15 +388,23 @@ def log_h2o_model(
             if hasattr(y_pred_sample, "as_data_frame"):
                 y_pred_sample = y_pred_sample.as_data_frame()
 
+            X_sample = X_sample.copy()
+            maybe_na_ints = [
+                c for c in X_sample.columns if is_integer_dtype(X_sample[c].dtype)
+            ]
+            for c in maybe_na_ints:
+                X_sample[c] = X_sample[c].astype("float64")
+
             signature = infer_signature(X_sample, y_pred_sample)
 
-            # Optimized UC logger
-            log_h2o_model_metadata_for_uc(
-                h2o_model=model,
-                artifact_path="model",
-                signature=signature,
-                # include_env_files=False by default for speed
-            )
+            with _suppress_output():
+                # Optimized UC logger
+                log_h2o_model_metadata_for_uc(
+                    h2o_model=model,
+                    artifact_path="model",
+                    signature=signature,
+                    # include_env_files=False by default for speed
+                )
 
             # imputer artifacts
             if imputer is not None:
