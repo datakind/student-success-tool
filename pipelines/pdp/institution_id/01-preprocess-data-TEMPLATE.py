@@ -323,7 +323,9 @@ if splits:
     df_preprocessed = df_preprocessed.assign(
         **{
             split_col: ft.partial(
-                modeling.utils.compute_dataset_splits, seed=cfg.random_state
+                modeling.utils.compute_dataset_splits,
+                seed=cfg.random_state,
+                stratify_col=cfg.target_col,
             )
         }
     )
