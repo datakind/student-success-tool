@@ -122,7 +122,7 @@ def compute_target(
             include_cols=(student_id_cols + [term_rank_col, enrollment_intensity_col]),
             term_is_pre_cohort_col=term_is_pre_cohort_col,
             term_is_core_col="term_is_core",
-            exclude_non_core_terms=False, 
+            exclude_non_core_terms=False,
         ),
         intensity_time_limits=intensity_time_limits,
         max_term_rank=max_term_rank,
