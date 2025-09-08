@@ -319,7 +319,7 @@ shap_feature_importance
 # save sample advisor output dataset
 dataio.write.to_delta_table(
     shap_feature_importance,
-    f"sst_dev.{cfg.institution_id}_silver.training_{cfg.model.run_id}_shap_feature_importance",
+    f"catalog.{cfg.institution_id}_silver.training_{cfg.model.run_id}_shap_feature_importance",
     spark_session=spark,
 )
 
@@ -339,6 +339,6 @@ support_score_distribution
 # save sample advisor output dataset
 dataio.write.to_delta_table(
     support_score_distribution,
-    f"sst_dev.{cfg.institution_id}_silver.training_{cfg.model.run_id}_support_overview",
+    f"catalog.{cfg.institution_id}_silver.training_{cfg.model.run_id}_support_overview",
     spark_session=spark,
 )
