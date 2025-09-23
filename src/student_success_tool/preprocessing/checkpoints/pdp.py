@@ -81,17 +81,17 @@ def first_student_terms(
 ) -> pd.DataFrame:
     """
     For each student, get the first (0th) row in ``df`` in ascending order of ``sort_cols`` ,
-    and a configurable subset of columns.
+    and a configurable subset of columns. Default includes both core and non-core terms (summers and winters), as well as any pre-cohort terms.
 
     Args:
         df: Student-term dataset.
         student_id_cols: Column(s) that uniquely identify students in ``df`` .
         sort_cols: Column(s) used to sort students' terms, typically chronologically.
-        include_cols
+        include_cols: Column(s) included in output
         term_is_pre_cohort_col: Column identifying if a term is pre-cohort
-        exclude_pre_cohort_terms:
+        exclude_pre_cohort_terms: Boolean identifying whether or not to exclude pre-cohort terms; True means exclude, False means don't exclude
         term_is_core_col: Column identifying if a term is a core term, where core terms are by default FALL and SPRING
-        exclude_non_core_terms:
+        exclude_non_core_terms: Boolean identifying whether or not to exclude pre-cohort terms; True means exclude, False means don't exclude
 
     See Also:
         - :func:`nth_student_terms()`
@@ -122,17 +122,17 @@ def last_student_terms(
 ) -> pd.DataFrame:
     """
     For each student, get the last (-1th) row in ``df`` in ascending order of ``sort_cols`` ,
-    and a configurable subset of columns.
+    and a configurable subset of columns. Default includes non-core terms (summers and winters).
 
     Args:
         df: Student-term dataset.
         student_id_cols: Column(s) that uniquely identify students in ``df`` .
         sort_cols: Column(s) used to sort students' terms, typically chronologically.
-        include_cols
+        include_cols: Column(s) included in output
         term_is_pre_cohort_col: Column identifying if a term is pre-cohort
-        exclude_pre_cohort_terms:
+        exclude_pre_cohort_terms: Boolean identifying whether or not to exclude pre-cohort terms; True means exclude, False means don't exclude
         term_is_core_col: Column identifying if a term is a core term, where core terms are by default FALL and SPRING
-        exclude_non_core_terms:
+        exclude_non_core_terms: Boolean identifying whether or not to exclude pre-cohort terms; True means exclude, False means don't exclude
 
     See Also:
         - :func:`nth_student_terms()`
@@ -190,15 +190,18 @@ def first_student_terms_at_num_credits_earned(
 def first_student_terms_within_cohort(
     df: pd.DataFrame,
     *,
-    term_is_pre_cohort_col: str = "term_is_pre_cohort",
     student_id_cols: str | list[str] = "student_id",
     sort_cols: str | list[str] = "term_rank",
     include_cols: t.Optional[list[str]] = None,
+    term_is_pre_cohort_col: str = "term_is_pre_cohort",
+    exclude_pre_cohort_terms: bool = True,
+    term_is_core_col: str = "term_is_core",
+    exclude_non_core_terms: bool = True,
 ) -> pd.DataFrame:
     """
     For each student, get the first row in ``df`` in ascending order of ``sort_cols``
     for which the term occurred *within* the student's cohort, i.e. not prior to
-    their official start of enrollment.
+    their official start of enrollment. By default, we start with counting core terms, excluding non-core terms like winter and spring, and exclude any pre-cohort courses.
 
     Args:
         df: Student-term dataset.
@@ -215,11 +218,14 @@ def first_student_terms_within_cohort(
         although such cases are very unlikely.
     """
     return first_student_terms(
-        # exclude rows that are "pre-cohort"
-        df.loc[df[term_is_pre_cohort_col].eq(False), :],
+        df,
         student_id_cols=student_id_cols,
         sort_cols=sort_cols,
         include_cols=include_cols,
+        term_is_pre_cohort_col=term_is_pre_cohort_col,
+        exclude_pre_cohort_terms=exclude_pre_cohort_terms,
+        term_is_core_col=term_is_core_col,
+        exclude_non_core_terms=exclude_non_core_terms,
     )
 
 

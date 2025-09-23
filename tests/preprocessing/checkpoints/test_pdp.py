@@ -444,7 +444,7 @@ def test_first_student_terms_at_num_credits_earned(
                     "term_rank": [4, 5, 2, 4, 8],
                     "term_is_pre_cohort": [False, False, False, False, False],
                 },
-                index=pd.Index([1, 3, 5, 6, 7], dtype="int64"),
+                index=pd.Index([1, 4, 7, 9, 10], dtype="int64"),
             ).astype({"student_id": "string"}),
         ),
     ],
@@ -452,10 +452,13 @@ def test_first_student_terms_at_num_credits_earned(
 def test_first_student_terms_within_cohort(df_test, include_cols, exp):
     obs = pdp.first_student_terms_within_cohort(
         df_test,
-        term_is_pre_cohort_col="term_is_pre_cohort",
         student_id_cols="student_id",
         sort_cols="term_rank",
         include_cols=include_cols,
+        term_is_pre_cohort_col="term_is_pre_cohort",
+        exclude_pre_cohort_terms=True,
+        term_is_core_col="term_is_core",
+        exclude_non_core_terms=True,
     )
     assert isinstance(obs, pd.DataFrame)
     pd.testing.assert_frame_equal(
@@ -475,7 +478,7 @@ def test_first_student_terms_within_cohort(df_test, include_cols, exp):
                     "term_rank": [4, 5, 3, 4, 8],
                     "enrollment_year": [1, 1, 1, 1, 1],
                 },
-                index=pd.Index([1, 4, 8, 9, 10], dtype="int64"),
+                index=pd.Index([1, 4, 7, 9, 10], dtype="int64"),
             ).astype({"student_id": "string"}),
         ),
         (

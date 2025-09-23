@@ -26,12 +26,8 @@
 # we need to manually install a certain version of pandas and scikit-learn in order
 # for our models to load and run properly.
 
-# %pip install git+https://github.com/datakind/student-success-tool.git@feat/h2o
+# %pip install git+https://github.com/datakind/student-success-tool.git@feat/h2o_sample_weight
 # %restart_python
-
-# COMMAND ----------
-
-# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -43,10 +39,11 @@ from databricks.connect import DatabricksSession
 
 from student_success_tool import configs, dataio, modeling
 from student_success_tool.modeling import h2o_modeling
+from py4j.protocol import Py4JJavaError
 
 import h2o
 
-h2o.init()
+h2o_modeling.utils.safe_h2o_init()
 h2o.display.toggle_user_tips(False)
 
 # COMMAND ----------
@@ -62,6 +59,13 @@ try:
 except Exception:
     logging.warning("unable to create spark session; are you in a Databricks runtime?")
     pass
+
+try:
+    # Get the pipeline type from job definition
+    run_type = dbutils.widgets.get("run_type")  # noqa: F821
+except Py4JJavaError:
+    # Run script interactively
+    run_type = "predict"
 
 # COMMAND ----------
 
@@ -119,7 +123,10 @@ df_train = h2o_modeling.evaluation.extract_training_data_from_model(
 )
 if cfg.split_col:
     df_train = df_train.loc[df_train[cfg.split_col].eq("train"), :]
-df_train.shape
+
+# Load and transform using sklearn imputer
+imputer = h2o_modeling.imputation.SklearnImputerWrapper.load(run_id=cfg.model.run_id)
+df_train = imputer.transform(df_train)
 
 # COMMAND ----------
 
@@ -133,13 +140,11 @@ if cfg.split_col and cfg.split_col in df.columns:
 else:
     df_test = df.copy(deep=True)
 
-student_ids = df_test.student_id
+if run_type == "train":
+    df_test = df_test.sample(n=min(200, len(df_test)), random_state=cfg.random_state)
 
-# Load and transform using sklearn imputer
-df_test = h2o_modeling.imputation.SklearnImputerWrapper.load_and_transform(
-    df_test, run_id=cfg.model.run_id
-)
-df_test["student_id"] = student_ids
+# transform with imputer
+df_test = imputer.transform(df_test)
 
 # COMMAND ----------
 
@@ -148,13 +153,13 @@ df_test["student_id"] = student_ids
 
 # COMMAND ----------
 
-features = df_test.loc[:, model_feature_names]
+features_df = df_test.loc[:, model_feature_names]
 unique_ids = df_test[cfg.student_id_col]
 
 # COMMAND ----------
 
-pred_probs = h2o_modeling.inference.predict_probs_h2o(
-    features,
+pred_labels, pred_probs = h2o_modeling.inference.predict_h2o(
+    features_df,
     model=model,
     feature_names=model_feature_names,
     pos_label=cfg.pos_label,
@@ -169,35 +174,34 @@ pd.Series(pred_probs).describe()
 
 # COMMAND ----------
 
-train = h2o.H2OFrame(df_train)
-h2o_features = h2o.H2OFrame(features)
+# Sample background data for performance optimization
+df_bd = df_train.sample(
+    n=min(cfg.inference.background_data_sample, len(df_test)),
+    random_state=cfg.random_state,
+)
 
-contribs_df, preprocessed_df = h2o_modeling.inference.compute_h2o_shap_contributions(
+contribs_df = h2o_modeling.inference.compute_h2o_shap_contributions(
     model=model,
-    h2o_frame=h2o_features,
-    background_data=train,
+    df=features_df,
+    background_data=df_bd,
 )
 contribs_df
 
 # COMMAND ----------
 
 # Group one-hot encoding and missing value flags
-grouped_contribs_df = h2o_modeling.inference.group_shap_values(
-    contribs_df, group_missing_flags=True
-)
-grouped_features = h2o_modeling.inference.group_feature_values(
-    features, group_missing_flags=True
-)
+grouped_contribs_df = h2o_modeling.inference.group_shap_values(contribs_df)
+grouped_features = h2o_modeling.inference.group_feature_values(features_df)
 
-# COMMAND ----------
+if mlflow.active_run():
+    mlflow.end_run()
 
 with mlflow.start_run(run_id=cfg.model.run_id):
     # Create & log SHAP summary plot (default to group missing flags)
     h2o_modeling.inference.plot_grouped_shap(
         contribs_df=contribs_df,
-        preprocessed_df=preprocessed_df,
-        original_df=features,
-        group_missing_flags=True,
+        features_df=features_df,
+        original_dtypes=imputer.input_dtypes,
     )
 
     # Create & log ranked features by SHAP magnitude
@@ -243,19 +247,42 @@ dataio.write.to_delta_table(
 # COMMAND ----------
 
 # Log MLFlow confusion matrix & roc table figures in silver schema
-
-with mlflow.start_run() as run:
+with mlflow.start_run(run_id=cfg.model.run_id):
     confusion_matrix = modeling.evaluation.log_confusion_matrix(
         institution_id=cfg.institution_id,
         automl_run_id=cfg.model.run_id,
     )
 
     # Log roc curve table for front-end
-    roc_logs = modeling.evaluation.log_roc_table(
+    roc_logs = h2o_modeling.evaluation.log_roc_table(
         institution_id=cfg.institution_id,
         automl_run_id=cfg.model.run_id,
-        modeling_dataset_name=cfg.datasets.silver.modeling.table_path,
+        modeling_dataset_name=cfg.datasets.silver["modeling"].train_table_path,
     )
+
+# COMMAND ----------
+
+shap_feature_importance = modeling.inference.generate_ranked_feature_table(
+    features=grouped_features, shap_values=grouped_contribs_df.to_numpy()
+)
+if shap_feature_importance is not None and features_table is not None:
+    shap_feature_importance[
+        ["readable_feature_name", "short_feature_desc", "long_feature_desc"]
+    ] = shap_feature_importance["Feature Name"].apply(
+        lambda feature: pd.Series(
+            modeling.inference._get_mapped_feature_name(
+                feature, features_table, metadata=True
+            )
+        )
+    )
+    shap_feature_importance.columns = shap_feature_importance.columns.str.replace(
+        " ", "_"
+    ).str.lower()
+
+    # Drop short feature desc & long feature desc if they aren't available
+    for col in shap_feature_importance.columns:
+        if shap_feature_importance[col].isna().all():
+            shap_feature_importance = shap_feature_importance.drop(col, axis=1)
 
 # COMMAND ----------
 
@@ -272,7 +299,7 @@ support_score_distribution = modeling.inference.support_score_distribution_table
     df_serving=grouped_features,
     unique_ids=unique_ids,
     pred_probs=pred_probs,
-    shap_values=grouped_contribs_df.to_numpy(),
+    shap_values=grouped_contribs_df,
     inference_params=cfg.inference.dict(),
 )
 support_score_distribution

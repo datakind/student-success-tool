@@ -27,7 +27,7 @@
 # we need to manually install a certain version of pandas and scikit-learn in order
 # for our models to load and run properly.
 
-# %pip install git+https://github.com/datakind/student-success-tool.git@feat/h2o
+# %pip install git+https://github.com/datakind/student-success-tool.git@feat/h2o_sample_weight
 # %restart_python
 
 # COMMAND ----------
@@ -47,13 +47,11 @@ client = MlflowClient()
 from student_success_tool import configs, dataio, modeling, utils
 from student_success_tool.modeling import h2o_modeling
 
-import h2o
+
+h2o_modeling.utils.safe_h2o_init()
 
 # HACK: Disable the mlflow widget template otherwise it freaks out
 os.environ["MLFLOW_ENABLE_ARTIFACTS_PROGRESS_BAR"] = "false"
-
-logging.info("Starting H2O cluster...")
-h2o.init()
 
 # COMMAND ----------
 
@@ -198,8 +196,9 @@ training_params = {
     "student_id_col": cfg.student_id_col,
     "target_col": cfg.target_col,
     "split_col": cfg.split_col,
+    "sample_weight_col": cfg.sample_weight_col,
     "pos_label": cfg.pos_label,
-    "primary_metric": "logloss",
+    "primary_metric": cfg.modeling.training.primary_metric,
     "timeout_minutes": cfg.modeling.training.timeout_minutes,
     "exclude_cols": sorted(
         set(
@@ -240,7 +239,9 @@ experiment_id, aml, train, valid, test = (
 if evaluate_model_bias := (training_params.get("split_col") is not None):
     df_features = df.drop(columns=cfg.non_feature_cols)
 else:
-    df_features = modeling.evaluation.extract_training_data_from_model(experiment_id)
+    df_features = h2o_modeling.evaluation.extract_training_data_from_model(
+        experiment_id
+    )
 
 # COMMAND ----------
 
@@ -268,19 +269,28 @@ for run_id in top_runs.values():
             run_id,
             " and bias assessment",
         )
-        # load model and predict
-        # features are already preprocessed (no need for imputer)
+        # Run imputation on df_features (includes all splits)
+        df_features_imp = (
+            h2o_modeling.imputation.SklearnImputerWrapper.load_and_transform(
+                df=df_features,
+                run_id=run_id,
+            )
+        )
+        # Load model and predict
         model = h2o_modeling.utils.load_h2o_model(run_id=run_id)
-        h2o_frame = h2o.H2OFrame(df_features)
-        preds_df = model.predict(h2o_frame).as_data_frame()
-
+        labels, probs = h2o_modeling.inference.predict_h2o(
+            features=df_features_imp,
+            model=model,
+            pos_label=cfg.pos_label,
+        )
         df_pred = df.assign(
             **{
-                cfg.pred_col: preds_df["predict"].values,
-                cfg.pred_prob_col: preds_df.iloc[:, 1].values,
+                cfg.pred_col: labels,
+                cfg.pred_prob_col: probs,
             }
         )
 
+        # Evaluate performance & bias
         modeling.evaluation.evaluate_performance(
             df_pred,
             target_col=cfg.target_col,

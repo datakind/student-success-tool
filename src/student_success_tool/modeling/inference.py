@@ -412,6 +412,79 @@ def top_shap_features(
     return top_features
 
 
+def top_feature_boxstats(
+    features: pd.DataFrame,
+    shap_values: npt.NDArray[np.float64],
+    features_table: t.Optional[dict[str, dict[str, str]]] = None,
+) -> pd.DataFrame:
+    """
+    Per-feature summary for the GLOBAL top-N features (by mean |SHAP|).
+    Returns min, Q1, median, Q3, max suitable for box/whisker plotting,
+    along with mean absolute SHAP for reference.
+    """
+    if features.empty or shap_values.size == 0:
+        raise ValueError("Input data cannot be empty.")
+    if shap_values.shape != (features.shape[0], features.shape[1]):
+        raise ValueError(
+            f"shap_values shape {shap_values.shape} must match features shape {features.shape}"
+        )
+
+    mean_abs = pd.Series(np.mean(np.abs(shap_values), axis=0), index=features.columns)
+    top_feats = mean_abs.sort_values(ascending=False)
+
+    # Restrict stats to numeric columns
+    stats_source = features.select_dtypes(include=[np.number])
+
+    rows = []
+    for feat in top_feats.index:
+        if feat not in stats_source.columns:
+            # Non-numeric top feature — include row with NaN stats, but correct counts.
+            rows.append(
+                {
+                    "feature_name": feat,
+                    "feature_shap_value": float(top_feats[feat]),
+                    "min": np.nan,
+                    "Q1": np.nan,
+                    "median": np.nan,
+                    "Q3": np.nan,
+                    "max": np.nan,
+                    "count": int(features[feat].notna().sum()),
+                    "n_missing": int(features[feat].isna().sum()),
+                }
+            )
+            continue
+
+        col = stats_source[feat]
+        rows.append(
+            {
+                "feature_name": feat,
+                "feature_shap_value": float(top_feats[feat]),
+                "min": float(col.min()),
+                "Q1": float(col.quantile(0.25, interpolation="linear")),
+                "median": float(col.quantile(0.5, interpolation="linear")),
+                "Q3": float(col.quantile(0.75, interpolation="linear")),
+                "max": float(col.max()),
+                "count": int(col.notna().sum()),
+                "n_missing": int(col.isna().sum()),
+            }
+        )
+
+    feature_boxstats = (
+        pd.DataFrame(rows)
+        .sort_values("feature_shap_value", ascending=False)
+        .reset_index(drop=True)
+    )
+    if features_table is not None:
+        feature_boxstats[
+            ["feature_readable_name", "feature_short_desc", "feature_long_desc"]
+        ] = feature_boxstats["feature_name"].apply(
+            lambda feature: pd.Series(
+                _get_mapped_feature_name(feature, features_table, metadata=True)
+            )
+        )
+    return feature_boxstats
+
+
 def support_score_distribution_table(
     df_serving: pd.DataFrame,
     unique_ids: t.Any,

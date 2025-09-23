@@ -20,9 +20,7 @@
 # we need to manually install a certain version of pandas and scikit-learn in order
 # for our models to load and run properly.
 
-# %pip install "student-success-tool==0.3.10"
-# %pip install "pandas==1.5.3"
-# %pip install "scikit-learn==1.3.0"
+# %pip install git+https://github.com/datakind/student-success-tool.git@feat/h2o_sample_weight
 # %restart_python
 
 # COMMAND ----------
@@ -32,8 +30,11 @@ import mlflow
 import logging
 from databricks.connect import DatabricksSession
 
-from student_success_tool import dataio, configs, modeling
-from student_success_tool.reporting.model_card.custom import CustomModelCard
+from student_success_tool import configs, dataio, modeling
+from student_success_tool.modeling import h2o_modeling
+from student_success_tool.reporting.model_card.h2o_custom import H2OCustomModelCard
+
+h2o_modeling.utils.safe_h2o_init()
 
 # COMMAND ----------
 
@@ -49,7 +50,7 @@ except Exception:
 # HACK: hardcode uc base path and mlflow client
 # NOTE: registry uri needs to be set before creating the client
 # to avoid mlflow REST exception when registering the model
-catalog = "sst_dev"
+catalog = "staging_sst_01"
 mlflow.set_registry_uri("databricks-uc")
 client = mlflow.tracking.MlflowClient()
 
@@ -107,7 +108,7 @@ modeling.registration.register_mlflow_model(
 # COMMAND ----------
 
 # Initialize card
-card = CustomModelCard(
+card = H2OCustomModelCard(
     config=cfg, catalog=catalog, model_name=model_name, mlflow_client=client
 )
 

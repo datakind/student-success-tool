@@ -65,7 +65,7 @@ num_terms_in_year = 4
 max_term_rank = "infer"
 
 [modeling.feature_selection]
-incomplete_threshold = 0.5
+incomplete_threshold = 0.2
 low_variance_threshold = 0.0
 collinear_threshold = 10.0
 # force_include_cols = []
