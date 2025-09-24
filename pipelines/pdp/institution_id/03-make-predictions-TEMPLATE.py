@@ -287,9 +287,9 @@ with mlflow.start_run() as run:
 # COMMAND ----------
 
 shap_feature_importance = inference.generate_shap_feature_importance(
-    features=features, 
+    features=features,
     shap_values=df_shap_values[model_feature_names].to_numpy(),
-    features_table=features_table
+    features_table=features_table,
 )
 shap_feature_importance
 

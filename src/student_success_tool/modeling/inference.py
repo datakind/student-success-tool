@@ -273,29 +273,28 @@ def _get_mapped_feature_name(
                 return feature_name, None, None
             return feature_name
 
+
 def generate_shap_feature_importance(
     features: pd.DataFrame,
     shap_values: npt.NDArray[np.float64],
     features_table: t.Optional[dict[str, dict[str, str]]] = None,
 ) -> pd.DataFrame:
-
     shap_feature_importance = generate_ranked_feature_table(
-            features, shap_values, features_table
-        )
+        features, shap_values, features_table
+    )
     if shap_feature_importance is not None and features_table is not None:
-            shap_feature_importance[
-                ["readable_feature_name", "short_feature_desc", "long_feature_desc"]
-            ] = shap_feature_importance["Feature Name"].apply(
-                lambda feature: pd.Series(
-                    _get_mapped_feature_name(
-                        feature, features_table, metadata=True
-                    )
-                )
+        shap_feature_importance[
+            ["readable_feature_name", "short_feature_desc", "long_feature_desc"]
+        ] = shap_feature_importance["Feature Name"].apply(
+            lambda feature: pd.Series(
+                _get_mapped_feature_name(feature, features_table, metadata=True)
             )
-            shap_feature_importance.columns = (
-                shap_feature_importance.columns.str.replace(" ", "_").str.lower()
-            )                             
+        )
+        shap_feature_importance.columns = shap_feature_importance.columns.str.replace(
+            " ", "_"
+        ).str.lower()
     return shap_feature_importance
+
 
 def calculate_shap_values_spark_udf(
     dfs: t.Iterator[pd.DataFrame],

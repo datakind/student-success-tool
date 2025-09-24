@@ -273,7 +273,7 @@ class ModelInferenceTask:
         except Exception as e:
             logging.error("Error computing top %d shap features table: %s", n, e)
             return None
-    
+
     def features_box_whiskers_table(
         self,
         features: pd.DataFrame,
