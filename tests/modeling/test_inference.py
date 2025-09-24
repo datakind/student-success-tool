@@ -379,10 +379,8 @@ def test_generate_shap_feature_importance(
             "long_feature_desc",
         }
 
-        # Check sorting
         assert result["average_shap_magnitude"].is_monotonic_decreasing
 
-        # Check core data matches
         pd.testing.assert_series_equal(
             base_df["Feature Name"].reset_index(drop=True),
             result["feature_name"].reset_index(drop=True),
@@ -393,12 +391,10 @@ def test_generate_shap_feature_importance(
             result["average_shap_magnitude"].to_numpy(),
         )
 
-        # Check metadata columns exist and contain valid types (None or str)
         for col in ["short_feature_desc", "long_feature_desc"]:
             assert col in result
             assert result[col].map(lambda x: x is None or isinstance(x, str)).all()
 
-        # readable_feature_name should exist and match feature_name (case-insensitive)
         assert "readable_feature_name" in result
         assert (
             result["readable_feature_name"]
@@ -406,7 +402,6 @@ def test_generate_shap_feature_importance(
             .equals(result["feature_name"].str.lower())
         )
 
-        # Check specific feature name presence
         assert "English or Math Gateway" in result["feature_name"].values
 
     else:
