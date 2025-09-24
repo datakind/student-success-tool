@@ -344,8 +344,20 @@ class ModelInferenceTask:
             return None
         features_table = dataio.read_features_table("assets/pdp/features_table.toml")
         shap_feature_importance = inference.generate_ranked_feature_table(
-            df_serving, shap_values.values, features_table
+            df_serving, shap_values.values
         )
+
+        if shap_feature_importance is not None and features_table is not None:
+            shap_feature_importance[
+                ["readable_feature_name", "short_feature_desc", "long_feature_desc"]
+            ] = shap_feature_importance["Feature Name"].apply(
+                lambda feature: pd.Series(
+                    inference._get_mapped_feature_name(feature, features_table, metadata=True)
+                )
+            )
+            shap_feature_importance.columns = shap_feature_importance.columns.str.replace(
+                " ", "_"
+            ).str.lower()
 
         return shap_feature_importance
 
