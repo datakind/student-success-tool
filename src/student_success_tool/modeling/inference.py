@@ -268,7 +268,7 @@ def _get_mapped_feature_name(
                 if match := re.fullmatch(fkey, feature_col):
                     feature_name = fval["name"].format(*match.groups())
                     if metadata:
-                        short_desc, long_desc = _descs(entry)
+                        short_desc, long_desc = _descs(fval)
                         return feature_name, short_desc, long_desc
                     return feature_name
     try:
@@ -276,7 +276,7 @@ def _get_mapped_feature_name(
             nm = fval.get("name")
             if nm and nm.strip().lower() == feature_col:
                 if metadata:
-                    short_desc, long_desc = _descs(entry)
+                    short_desc, long_desc = _descs(fval)
                     return nm, short_desc, long_desc
                 return nm
     except Exception:
