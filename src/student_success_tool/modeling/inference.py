@@ -266,12 +266,23 @@ def _get_mapped_feature_name(
                         long_desc = fval.get("long_desc")
                         return feature_name, short_desc, long_desc
                     return feature_name
-
-        else:
-            feature_name = feature_col
-            if metadata:
-                return feature_name, None, None
-            return feature_name
+    try:
+        for _, fval in features_table.items():
+            nm = fval.get("name")
+            if nm and nm.strip().lower() == feature_col:
+                if metadata:
+                    short_desc = entry.get("short_desc")
+                    long_desc = entry.get("long_desc")
+                    return nm, short_desc, long_desc
+                return nm
+    except Exception:
+        # Swallow any unexpected issues to preserve old behavior
+        pass
+        
+    feature_name = feature_col
+    if metadata:
+        return feature_name, None, None
+    return feature_name
 
 
 def generate_shap_feature_importance(

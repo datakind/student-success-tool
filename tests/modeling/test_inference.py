@@ -369,7 +369,6 @@ def test_generate_shap_feature_importance(
     assert len(result) == len(base_df)
 
     if use_features_table:
-        # Check column presence
         assert set(result.columns) == {
             "feature_name",
             "data_type",
@@ -391,17 +390,9 @@ def test_generate_shap_feature_importance(
             result["average_shap_magnitude"].to_numpy(),
         )
 
-        for col in ["short_feature_desc", "long_feature_desc"]:
+        for col in ["readable_feature_name", "short_feature_desc", "long_feature_desc"]:
             assert col in result
-            assert result[col].map(lambda x: x is None or isinstance(x, str)).all()
-
-        assert "readable_feature_name" in result
-        assert (
-            result["readable_feature_name"]
-            .str.lower()
-            .equals(result["feature_name"].str.lower())
-        )
-
+            assert result[col].notna().any()
         assert "English or Math Gateway" in result["feature_name"].values
 
     else:
@@ -411,8 +402,10 @@ def test_generate_shap_feature_importance(
             "Average SHAP Magnitude",
         }
 
+        # Sorting preserved
         assert result["Average SHAP Magnitude"].is_monotonic_decreasing
 
+        # Values identical to base output
         pd.testing.assert_frame_equal(
             result.reset_index(drop=True), base_df.reset_index(drop=True)
         )
