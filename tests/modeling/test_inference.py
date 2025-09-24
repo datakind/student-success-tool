@@ -305,15 +305,21 @@ def ranked_feature_table_data():
         ]
     )
     features_table = {
-        "pell_status": {"name": "Pell Status", 
-                        "short_desc": "Pell eligibility",
-                        "long_desc": "Indicates whether the student is eligible for a Pell Grant.",},
-        "english_math_gateway": {"name": "English or Math Gateway", 
-                                 "short_desc": "Gateway course status",
-                                 "long_desc": "Indicates whether a student attempted or passed gateway English/Math.",},
-        "term_gpa": {"name": "Term GPA", 
-                     "short_desc": "Term GPA value",
-                     "long_desc": "Student's GPA for the academic term, on a 4.0 scale.",},
+        "pell_status": {
+            "name": "Pell Status",
+            "short_desc": "Pell eligibility",
+            "long_desc": "Indicates whether the student is eligible for a Pell Grant.",
+        },
+        "english_math_gateway": {
+            "name": "English or Math Gateway",
+            "short_desc": "Gateway course status",
+            "long_desc": "Indicates whether a student attempted or passed gateway English/Math.",
+        },
+        "term_gpa": {
+            "name": "Term GPA",
+            "short_desc": "Term GPA value",
+            "long_desc": "Student's GPA for the academic term, on a 4.0 scale.",
+        },
     }
     return features, shap_values, features_table
 
@@ -343,12 +349,17 @@ def test_generate_ranked_feature_table(ranked_feature_table_data, use_features_t
     else:
         assert "term_gpa" in result["Feature Name"].values
 
+
 @pytest.mark.parametrize("use_features_table", [True, False])
-def test_generate_shap_feature_importance(ranked_feature_table_data, use_features_table):
+def test_generate_shap_feature_importance(
+    ranked_feature_table_data, use_features_table
+):
     features, shap_values, features_table = ranked_feature_table_data
     selected_features_table = features_table if use_features_table else None
 
-    base_df = generate_ranked_feature_table(features, shap_values, selected_features_table)
+    base_df = generate_ranked_feature_table(
+        features, shap_values, selected_features_table
+    )
 
     result = generate_shap_feature_importance(
         features, shap_values, selected_features_table
@@ -395,9 +406,12 @@ def test_generate_shap_feature_importance(ranked_feature_table_data, use_feature
         assert result["Average SHAP Magnitude"].is_monotonic_decreasing
 
         # Values identical to base output
-        pd.testing.assert_frame_equal(result.reset_index(drop=True), base_df.reset_index(drop=True))
+        pd.testing.assert_frame_equal(
+            result.reset_index(drop=True), base_df.reset_index(drop=True)
+        )
 
         assert "term_gpa" in result["Feature Name"].values
+
 
 @pytest.mark.parametrize(
     ["feature_col", "features_table", "exp"],
