@@ -273,7 +273,7 @@ class ModelInferenceTask:
         except Exception as e:
             logging.error("Error computing top %d shap features table: %s", n, e)
             return None
-    
+
     def features_box_whiskers_table(
         self,
         features: pd.DataFrame,
@@ -342,7 +342,7 @@ class ModelInferenceTask:
             )
             return None
         features_table = dataio.read_features_table("assets/pdp/features_table.toml")
-        shap_feature_importance = inference.generate_ranked_feature_table(
+        shap_feature_importance = inference.generate_shap_feature_importance(
             df_serving, shap_values.values, features_table
         )
 

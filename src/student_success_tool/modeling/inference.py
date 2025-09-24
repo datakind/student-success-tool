@@ -248,12 +248,18 @@ def _get_mapped_feature_name(
     feature_col: str, features_table: dict[str, dict[str, str]], metadata: bool = False
 ) -> t.Any:
     feature_col = feature_col.lower()  # just in case
+
+    def _descs(entry: dict[str, str]) -> tuple[t.Optional[str], t.Optional[str]]:
+        # Keep original keys first; allow new keys if present
+        short_desc = entry.get("short_desc", entry.get("short_feature_desc"))
+        long_desc = entry.get("long_desc", entry.get("long_feature_desc"))
+        return short_desc, long_desc
+
     if feature_col in features_table:
         entry = features_table[feature_col]
         feature_name = entry["name"]
         if metadata:
-            short_desc = entry.get("short_desc")
-            long_desc = entry.get("long_desc")
+            short_desc, long_desc = _descs(entry)
             return feature_name, short_desc, long_desc
         return feature_name
     else:
@@ -262,16 +268,47 @@ def _get_mapped_feature_name(
                 if match := re.fullmatch(fkey, feature_col):
                     feature_name = fval["name"].format(*match.groups())
                     if metadata:
-                        short_desc = fval.get("short_desc")
-                        long_desc = fval.get("long_desc")
+                        short_desc, long_desc = _descs(fval)
                         return feature_name, short_desc, long_desc
                     return feature_name
+    try:
+        for _, fval in features_table.items():
+            nm = fval.get("name")
+            if nm and nm.strip().lower() == feature_col:
+                if metadata:
+                    short_desc, long_desc = _descs(fval)
+                    return nm, short_desc, long_desc
+                return nm
+    except Exception:
+        # Swallow any unexpected issues to preserve old behavior
+        pass
 
-        else:
-            feature_name = feature_col
-            if metadata:
-                return feature_name, None, None
-            return feature_name
+    feature_name = feature_col
+    if metadata:
+        return feature_name, None, None
+    return feature_name
+
+
+def generate_shap_feature_importance(
+    features: pd.DataFrame,
+    shap_values: npt.NDArray[np.float64],
+    features_table: t.Optional[dict[str, dict[str, str]]] = None,
+) -> pd.DataFrame:
+    shap_feature_importance = generate_ranked_feature_table(
+        features, shap_values, features_table
+    )
+    if shap_feature_importance is not None and features_table is not None:
+        shap_feature_importance[
+            ["readable_feature_name", "short_feature_desc", "long_feature_desc"]
+        ] = shap_feature_importance["Feature Name"].apply(
+            lambda feature: pd.Series(
+                _get_mapped_feature_name(feature, features_table, metadata=True)
+            )
+        )
+        shap_feature_importance.columns = shap_feature_importance.columns.str.replace(
+            " ", "_"
+        ).str.lower()
+    return shap_feature_importance
 
 
 def calculate_shap_values_spark_udf(

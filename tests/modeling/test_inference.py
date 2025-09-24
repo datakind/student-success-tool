@@ -14,6 +14,7 @@ from student_success_tool.modeling.inference import (
     generate_ranked_feature_table,
     top_shap_features,
     support_score_distribution_table,
+    generate_shap_feature_importance,
 )
 
 
@@ -304,9 +305,21 @@ def ranked_feature_table_data():
         ]
     )
     features_table = {
-        "pell_status": {"name": "Pell Status"},
-        "english_math_gateway": {"name": "English or Math Gateway"},
-        "term_gpa": {"name": "Term GPA"},
+        "pell_status": {
+            "name": "Pell Status",
+            "short_desc": "Pell eligibility",
+            "long_desc": "Indicates whether the student is eligible for a Pell Grant.",
+        },
+        "english_math_gateway": {
+            "name": "English or Math Gateway",
+            "short_desc": "Gateway course status",
+            "long_desc": "Indicates whether a student attempted or passed gateway English/Math.",
+        },
+        "term_gpa": {
+            "name": "Term GPA",
+            "short_desc": "Term GPA value",
+            "long_desc": "Student's GPA for the academic term, on a 4.0 scale.",
+        },
     }
     return features, shap_values, features_table
 
@@ -334,6 +347,69 @@ def test_generate_ranked_feature_table(ranked_feature_table_data, use_features_t
     if use_features_table:
         assert "English or Math Gateway" in result["Feature Name"].values
     else:
+        assert "term_gpa" in result["Feature Name"].values
+
+
+@pytest.mark.parametrize("use_features_table", [True, False])
+def test_generate_shap_feature_importance(
+    ranked_feature_table_data, use_features_table
+):
+    features, shap_values, features_table = ranked_feature_table_data
+    selected_features_table = features_table if use_features_table else None
+
+    base_df = generate_ranked_feature_table(
+        features, shap_values, selected_features_table
+    )
+
+    result = generate_shap_feature_importance(
+        features, shap_values, selected_features_table
+    )
+
+    assert isinstance(result, pd.DataFrame) and not result.empty
+    assert len(result) == len(base_df)
+
+    if use_features_table:
+        assert set(result.columns) == {
+            "feature_name",
+            "data_type",
+            "average_shap_magnitude",
+            "readable_feature_name",
+            "short_feature_desc",
+            "long_feature_desc",
+        }
+
+        assert result["average_shap_magnitude"].is_monotonic_decreasing
+
+        pd.testing.assert_series_equal(
+            base_df["Feature Name"].reset_index(drop=True),
+            result["feature_name"].reset_index(drop=True),
+            check_names=False,
+        )
+        assert np.allclose(
+            base_df["Average SHAP Magnitude"].to_numpy(),
+            result["average_shap_magnitude"].to_numpy(),
+        )
+
+        for col in ["readable_feature_name", "short_feature_desc", "long_feature_desc"]:
+            assert col in result
+            assert result[col].notna().any()
+        assert "English or Math Gateway" in result["feature_name"].values
+
+    else:
+        assert set(result.columns) == {
+            "Feature Name",
+            "Data Type",
+            "Average SHAP Magnitude",
+        }
+
+        # Sorting preserved
+        assert result["Average SHAP Magnitude"].is_monotonic_decreasing
+
+        # Values identical to base output
+        pd.testing.assert_frame_equal(
+            result.reset_index(drop=True), base_df.reset_index(drop=True)
+        )
+
         assert "term_gpa" in result["Feature Name"].values
 
 
