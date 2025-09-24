@@ -92,6 +92,8 @@ def main():
     """Main function."""
     logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser()
+        # hack replace any multiple _  if found in the databricks institution name
+
     parser.add_argument(
         "--DB_workspace", required=True, help="Databricks workspace of the task."
     )
@@ -117,6 +119,8 @@ def main():
         help="User's email who triggered the inference run.",
     )
     args = parser.parse_args()
+    # args.databricks_institution_name = args.databricks_institution_name.replace("___", "_")
+
     w = WorkspaceClient()
     logging.info("Publishing files to GCP bucket")
     publish_inference_output_files(
@@ -131,6 +135,7 @@ def main():
     cc_email_list = ["education@datakind.org"]
     password = w.dbutils.secrets.get(scope="sst", key="MANDRILL_PASSWORD")
     logging.info("Sending email notification")
+    logging.info(f"Notification email will be sent to {args.notification_email}")
     send_inference_completion_email(
         sender_email, [args.notification_email], cc_email_list, username, password
     )

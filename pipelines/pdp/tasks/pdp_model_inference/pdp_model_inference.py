@@ -248,7 +248,7 @@ class ModelInferenceTask:
                 df_features=df_processed[model_feature_names],
                 explainer=explainer,
                 model_feature_names=model_feature_names,
-                n_jobs=-1,
+                n_jobs=1,
             )
 
             return shap_values_explanation
@@ -273,7 +273,7 @@ class ModelInferenceTask:
         except Exception as e:
             logging.error("Error computing top %d shap features table: %s", n, e)
             return None
-
+    
     def features_box_whiskers_table(
         self,
         features: pd.DataFrame,
@@ -293,7 +293,7 @@ class ModelInferenceTask:
             return None
 
     def support_score_distribution(
-        self, df_serving, unique_ids, df_predicted, shap_values, model_feature_names
+        self, df_serving, unique_ids, df_predicted, shap_values
     ):
         """
         Selects top features to display and store
@@ -324,7 +324,6 @@ class ModelInferenceTask:
                 shap_values,
                 inference_params=inference_params,
                 features_table=features_table,
-                model_feature_names=model_feature_names,
             )
 
             return result
@@ -407,7 +406,7 @@ class ModelInferenceTask:
         df_processed = dataio.from_delta_table(
             self.args.processed_dataset_path, spark_session=self.spark_session
         )
-        df_processed = df_processed[:30]
+        # df_processed = df_processed[:30] # this is to subset for testing since shap takes forever, turn off for production
         unique_ids = df_processed[self.cfg.student_id_col]
 
         model = self.load_mlflow_model()
@@ -442,7 +441,6 @@ class ModelInferenceTask:
                 f"now cfg.model.experiment_id = {self.cfg.model.experiment_id}"
             )
             with mlflow.start_run(run_id=self.cfg.model.run_id):
-                # full_model_name = f"{self.args.DB_workspace}.{self.args.databricks_institution_name}_gold.{self.args.model_name}"
                 # --- SHAP Summary Plot ---
                 shap_fig = plot_shap_beeswarm(shap_values)
 
@@ -461,7 +459,6 @@ class ModelInferenceTask:
                         support_scores, on="student_id", how="left"
                     )
                 )
-
                 # print or log the inference_features_with_most_impact
                 logging.info(
                     "Inference features with most impact:\n%s",
@@ -477,14 +474,11 @@ class ModelInferenceTask:
                     unique_ids,
                     df_predicted,
                     shap_values,
-                    model_feature_names,
                 )
-
                 box_whiskers_table = self.features_box_whiskers_table(
                     features=df_processed[model_feature_names],
                     shap_values=shap_values.values,
                 )
-
                 if inference_features_with_most_impact is None:
                     msg = "Inference features with most impact is empty: cannot write inference summary tables."
                     logging.error(msg)
@@ -501,24 +495,22 @@ class ModelInferenceTask:
                     msg = "Box plot table is empty: cannot write inference summary tables."
                     logging.error(msg)
                     raise Exception(msg)
-
                 self.write_data_to_delta(
                     inference_features_with_most_impact,
-                    f"inference_{self.cfg.model.run_id}_features_with_most_impact",
+                    f"inference_{self.args.db_run_id}_features_with_most_impact",
                 )
                 self.write_data_to_delta(
                     shap_feature_importance,
-                    f"inference_{self.cfg.model.run_id}_shap_feature_importance",
+                    f"inference_{self.args.db_run_id}_shap_feature_importance",
                 )
                 self.write_data_to_delta(
                     support_overview_table,
-                    f"inference_{self.cfg.model.run_id}_support_overview",
+                    f"inference_{self.args.db_run_id}_support_overview",
                 )
                 self.write_data_to_delta(
                     box_whiskers_table,
-                    f"inference_{self.cfg.model.run_id}_box_plot_table",
+                    f"inference_{self.args.db_run_id}_box_plot_table",
                 )
-
                 # Shap Result Table
                 shap_results = self.get_top_features_for_display(
                     df_processed[model_feature_names],

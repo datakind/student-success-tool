@@ -9,8 +9,11 @@ SMTP_SERVER = "smtp.mandrillapp.com"
 SMTP_PORT = 587  # or 465 for SSL
 COMPLETION_SUCCESS_SUBJECT = "Edvise: Inference Results Available"
 COMPLETION_SUCCESS_MESSAGE = """\
+<<<<<<< HEAD
     Hello!
     
+=======
+>>>>>>> b4f11a8e0996a6475a351dbbc836125b70517bb6
     Your most recent inference results are now available in Edvise. Please log in and download them at your earliest convenience. As a reminder, you should have the StudyID appended file from the NSC SFTP to reconnect our inferences to your students and begin supporting those most in need of intervention.
 
     We are glad to help consult on anything you need clarification on - should new features have made themselves known or other questions arise, do not hesitate to reach out.
@@ -90,6 +93,7 @@ def send_inference_completion_email(
     Returns:
       Nothing.
     """
+    print(COMPLETION_SUCCESS_MESSAGE)
     send_email(
         sender_email,
         receiver_email_list,
@@ -120,6 +124,9 @@ def send_inference_kickoff_email(
     Returns:
       Nothing.
     """
+    print(INFERENCE_KICKOFF_MESSAGE)
+    print("This is the REAL send_inference_kickoff_email being called!")
+    raise Exception("DEBUG: This should stop the workflow if this function is used.")
     send_email(
         sender_email,
         receiver_email_list,
