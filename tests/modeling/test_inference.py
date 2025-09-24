@@ -306,14 +306,14 @@ def ranked_feature_table_data():
     )
     features_table = {
         "pell_status": {"name": "Pell Status", 
-                        "short_feature_desc": "Pell eligibility",
-                        "long_feature_desc": "Indicates whether the student is eligible for a Pell Grant.",},
+                        "short_desc": "Pell eligibility",
+                        "long_desc": "Indicates whether the student is eligible for a Pell Grant.",},
         "english_math_gateway": {"name": "English or Math Gateway", 
-                                 "short_feature_desc": "Gateway course status",
-                                 "long_feature_desc": "Indicates whether a student attempted or passed gateway English/Math.",},
+                                 "short_desc": "Gateway course status",
+                                 "long_desc": "Indicates whether a student attempted or passed gateway English/Math.",},
         "term_gpa": {"name": "Term GPA", 
-                     "short_feature_desc": "Term GPA value",
-                     "long_feature_desc": "Student's GPA for the academic term, on a 4.0 scale.",},
+                     "short_desc": "Term GPA value",
+                     "long_desc": "Student's GPA for the academic term, on a 4.0 scale.",},
     }
     return features, shap_values, features_table
 
